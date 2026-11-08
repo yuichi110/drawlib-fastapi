@@ -1,0 +1,933 @@
+<!--
+ Copyright (c) 2026 Yuichi Ito (yuichi@yuichi.com)
+
+ This software is licensed under the Apache License, Version 2.0.
+ For more information, please visit: https://github.com/yuichi110/drawlib
+
+ This software is provided "as is", without warranty of any kind,
+ express or implied, including but not limited to the warranties of
+ merchantability, fitness for a particular purpose and noninfringement.
+-->
+<!DOCTYPE html>
+<html lang="ja" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dependant DAG・リクエスト単位キャッシュ・yield スコープ — FastAPI Visual Guide (Unofficial · Drawlib Demo)</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-S9N5BZ1VRC');
+    </script>
+    <script>
+        (function() {
+            const saved = localStorage.getItem('drawlib-theme');
+            if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    
+    <link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/en/04_dependencies_and_security/dependency_injection.html">
+    
+    <link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/ja/04_dependencies_and_security/dependency_injection.html">
+    
+    <link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/en/04_dependencies_and_security/dependency_injection.html">
+    
+    
+    
+    <meta name="description" content="FastAPI v0.162.2 はすべてのパスオペレーションとサブ依存関数を再帰的な Dependant 有向非巡回グラフ（DAG）として構築し、リクエスト単位のメモ化キャッシュと二重 AsyncExitStack による yield の解放タイミングを厳密に制御します。">
+    <link rel="canonical" href="https://fastapi.drawlib.com/ja/04_dependencies_and_security/dependency_injection.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="FastAPI ビジュアル解説">
+    <meta property="og:title" content="Dependant DAG・リクエスト単位キャッシュ・yield スコープ — FastAPI ビジュアル解説">
+    <meta property="og:description" content="FastAPI v0.162.2 はすべてのパスオペレーションとサブ依存関数を再帰的な Dependant 有向非巡回グラフ（DAG）として構築し、リクエスト単位のメモ化キャッシュと二重 AsyncExitStack による yield の解放タイミングを厳密に制御します。">
+    <meta property="og:url" content="https://fastapi.drawlib.com/ja/04_dependencies_and_security/dependency_injection.html">
+    <meta property="og:image" content="https://fastapi.drawlib.com/_assets/ogp.png">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:locale:alternate" content="en_US">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Dependant DAG・リクエスト単位キャッシュ・yield スコープ — FastAPI ビジュアル解説">
+    <meta name="twitter:description" content="FastAPI v0.162.2 はすべてのパスオペレーションとサブ依存関数を再帰的な Dependant 有向非巡回グラフ（DAG）として構築し、リクエスト単位のメモ化キャッシュと二重 AsyncExitStack による yield の解放タイミングを厳密に制御します。">
+    <meta name="twitter:image" content="https://fastapi.drawlib.com/_assets/ogp.png">
+    
+    
+    <link rel="icon" type="image/png" href="../../_assets/favicon.png">
+    
+    
+    <link rel="stylesheet" href="../style.css">
+    
+    
+</head>
+<body>
+    <div class="demo-banner" role="region" aria-label="非公式ショーケース案内">
+        <div class="demo-banner-inner">
+            <span class="demo-banner-badge">UNOFFICIAL DEMO</span>
+            
+            <span class="demo-banner-text">
+                <a href="https://www.drawlib.com/" target="_blank" rel="noopener noreferrer">Drawlib</a> と <a href="https://pypi.org/project/pni501/" target="_blank" rel="noopener noreferrer">PNI501</a> で作成した <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a>（v0.162.2, MIT）の非公式ビジュアル解説ショーケースです。
+            </span>
+            <span class="demo-banner-links">
+                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 診断レポート →</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI 公式 Docs ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+            </span>
+            
+        </div>
+    </div>
+    
+    <div class="doc-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI ビジュアル解説">
+                    
+                    FastAPI ビジュアル解説
+                    
+                </a>
+                <div class="sidebar-header-actions">
+                    <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">
+                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                    <button type="button" id="menu-toggle" class="menu-toggle-btn" aria-label="Toggle navigation" aria-expanded="false">
+                        <svg class="icon-hamburger" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        <svg class="icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="sidebar-menu">
+                
+                    
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../index.html" >ガイド概要と全体マップ</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">1. イントロ &amp; クイックスタート</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../01_getting_started/overview.html" >FastAPI の設計思想と内部構造</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../01_getting_started/quickstart.html" >クイックスタートと自動生成 Docs</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">2. 10万行規模の設計ベストプラクティス</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../02_enterprise_architecture/modular_design.html" >境界づけられたコンテキストと階層化</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../02_enterprise_architecture/di_lifespan_testing.html" >大規模 DI・Lifespan 管理・テスト戦略</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">3. ルーティング・入力検証・スキーマ</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../03_routing_and_models/parameters_and_validation.html" >Path・Query・Header・Cookie・Body</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../03_routing_and_models/responses_and_openapi.html" >レスポンス直列化と OpenAPI 3.1</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">4. 依存性注入（DI）とセキュリティ</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item active">
+                                <a href="dependency_injection.html" >Dependant DAG・キャッシュ・yield スコープ</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="security_and_auth.html" >認証・OAuth2 スコープ認可・抽出器</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">5. 非同期並行・ミドルウェア・ストリーミング</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../05_async_and_realtime/concurrency_and_middleware.html" >ASGI ミドルウェアとスレッドプール制御</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../05_async_and_realtime/sse_websockets_streaming.html" >ネイティブ SSE・JSONL・WebSocket</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">6. 可観測性・例外設計・実践テスト</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../06_observability_and_testing/telemetry_and_errors.html" >ネイティブ OpenTelemetry と例外処理</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../06_observability_and_testing/testing_and_deployment.html" >実践テスト手法と本番 ASGI 運用</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">診断レポート &amp; 公式リンク</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/reports/pni501/" target="_blank" rel="noopener noreferrer">PNI501 診断レポート<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI 公式ドキュメント<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">デモのリポジトリ (GitHub)<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                        </ul>
+                    
+                
+            </div>
+        </aside>
+        <div class="content-wrapper">
+            <header class="top-bar">
+                <div class="breadcrumbs">
+                    <span class="crumb">Docs</span>
+                    <span class="crumb-separator">&raquo;</span>
+                    <span class="crumb active">Dependant DAG・リクエスト単位キャッシュ・yield スコープ</span>
+                </div>
+                
+                <div class="lang-switcher">
+                    <details class="lang-dropdown">
+                        <summary class="lang-dropdown-btn" aria-label="Select language">
+                            <svg class="lang-globe-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            <span class="lang-current-label">日本語</span>
+                            <svg class="lang-caret-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </summary>
+                        <div class="lang-dropdown-menu" role="menu">
+                            
+                            <a href="../../en/04_dependencies_and_security/dependency_injection.html" class="lang-option" lang="en" hreflang="en" >
+                                <span>English</span>
+                                
+                            </a>
+                            
+                            <a href="dependency_injection.html" class="lang-option active" lang="ja" hreflang="ja" aria-current="page">
+                                <span>日本語</span>
+                                
+                                <svg class="lang-check-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                
+                            </a>
+                            
+                        </div>
+                    </details>
+                </div>
+                
+            </header>
+            <main class="main-content">
+                <h1>Dependant DAG・リクエスト単位キャッシュ・yield スコープ</h1>
+<p>FastAPI <code>v0.162.2</code> はすべてのパスオペレーションとサブ依存関数を再帰的な <code>Dependant</code> 有向非巡回グラフ（DAG）として構築し、リクエスト単位のメモ化キャッシュと二重 <code>AsyncExitStack</code> による <code>yield</code> の解放タイミングを厳密に制御します。</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/04_dependencies_and_security/dependency_injection/dependant_dag_cache.png" alt="dependency_injection_1" />
+  <figcaption class="drawlib-caption">再帰的な Dependant DAG の解決とリクエスト単位 dependency_cache のメモ化構造</figcaption>
+</figure>
+<details class="drawlib-code-details">
+<summary>Source Code</summary>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.canvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">setup</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.diagrams.architecture</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArchitectureDiagram</span><span class="p">,</span> <span class="n">Node</span><span class="p">,</span> <span class="n">PhosphorIcon</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.icons</span><span class="w"> </span><span class="kn">import</span> <span class="n">phosphor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.lines</span><span class="w"> </span><span class="kn">import</span> <span class="n">line</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.smartarts</span><span class="w"> </span><span class="kn">import</span> <span class="n">CardList</span><span class="p">,</span> <span class="n">Panel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">Styles</span>
+
+<span class="n">setup</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">166</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">98</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
+
+<span class="c1"># Left Zone: Outer Panel framing the Multi-Level Dependant DAG</span>
+<span class="n">dag_panel</span> <span class="o">=</span> <span class="n">Panel</span><span class="p">(</span>
+    <span class="s2">"solve_dependencies() Recursive Dependant DAG"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
+    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_line_width</span><span class="o">=</span><span class="mf">1.2</span><span class="p">),</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.5</span><span class="p">),</span>
+    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">tree_structure</span><span class="p">,</span>
+    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">,</span>
+    <span class="n">header_variant</span><span class="o">=</span><span class="s2">"filled"</span><span class="p">,</span>
+    <span class="n">header_height</span><span class="o">=</span><span class="mf">9.5</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">dag_panel</span><span class="o">.</span><span class="n">draw</span><span class="p">((</span><span class="mf">4.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">102.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">88.0</span><span class="p">,</span> <span class="n">align</span><span class="o">=</span><span class="s2">"bottom_left"</span><span class="p">)</span>
+
+<span class="n">dag</span> <span class="o">=</span> <span class="n">ArchitectureDiagram</span><span class="p">(</span>
+    <span class="n">width</span><span class="o">=</span><span class="mf">96.0</span><span class="p">,</span>
+    <span class="n">height</span><span class="o">=</span><span class="mf">75.0</span><span class="p">,</span>
+    <span class="n">node_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Primary</span><span class="p">,</span>
+    <span class="n">node_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
+    <span class="n">edge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">,</span>
+    <span class="n">edge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">node_card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">endpoint</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Node</span><span class="p">(</span>
+        <span class="s2">"POST /billing/invoices</span><span class="se">\n</span><span class="s2">(Root Dependant)"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span>
+        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">GLOBE</span><span class="p">,</span>
+        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.8</span><span class="p">,</span>
+        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
+        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
+        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">48.0</span><span class="p">,</span> <span class="mf">66.5</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">billing</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Node</span><span class="p">(</span>
+        <span class="s2">"BillingService</span><span class="se">\n</span><span class="s2">Depends()"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span>
+        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">RECEIPT</span><span class="p">,</span>
+        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.8</span><span class="p">,</span>
+        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">25.0</span><span class="p">,</span> <span class="mf">41.5</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">audit</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Node</span><span class="p">(</span>
+        <span class="s2">"AuditLogger</span><span class="se">\n</span><span class="s2">Depends()"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span>
+        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">SCROLL</span><span class="p">,</span>
+        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.8</span><span class="p">,</span>
+        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">71.0</span><span class="p">,</span> <span class="mf">41.5</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">db_dep</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Node</span><span class="p">(</span>
+        <span class="s2">"get_db_session()</span><span class="se">\n</span><span class="s2">use_cache=True (1x)"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mi">29</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mf">13.5</span><span class="p">,</span>
+        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">DATABASE</span><span class="p">,</span>
+        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.5</span><span class="p">,</span>
+        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">15.5</span><span class="p">,</span> <span class="mf">9.0</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">settings_dep</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Node</span><span class="p">(</span>
+        <span class="s2">"get_settings()</span><span class="se">\n</span><span class="s2">use_cache=True (1x)"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mi">28</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mf">13.5</span><span class="p">,</span>
+        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">GEAR</span><span class="p">,</span>
+        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.5</span><span class="p">,</span>
+        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">48.0</span><span class="p">,</span> <span class="mf">9.0</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">nonce_dep</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Node</span><span class="p">(</span>
+        <span class="s2">"generate_nonce()</span><span class="se">\n</span><span class="s2">use_cache=False (2x)"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mi">29</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mf">13.5</span><span class="p">,</span>
+        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">ARROW_CLOCKWISE</span><span class="p">,</span>
+        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.5</span><span class="p">,</span>
+        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WarningNeutral</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">80.5</span><span class="p">,</span> <span class="mf">9.0</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1"># Root fan-out (|dx|=23 &lt; |dy|=25 -&gt; clean bottom-to-top anchors)</span>
+<span class="n">dag</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">endpoint</span><span class="p">,</span> <span class="n">billing</span><span class="p">,</span> <span class="n">routing</span><span class="o">=</span><span class="s2">"direct"</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+<span class="n">dag</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">endpoint</span><span class="p">,</span> <span class="n">audit</span><span class="p">,</span> <span class="n">routing</span><span class="o">=</span><span class="s2">"direct"</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+<span class="n">dag</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">7.0</span><span class="p">,</span> <span class="mf">6.5</span><span class="p">))</span>
+
+<span class="c1"># Sub-dependency edges across open canvas corridor y=[23.0, 41.0]</span>
+<span class="c1"># 1. First-time executions from BillingService (solid dark strokes)</span>
+<span class="n">line</span><span class="p">((</span><span class="mf">28.0</span><span class="p">,</span> <span class="mf">41.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">20.0</span><span class="p">,</span> <span class="mf">23.0</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">)</span>
+<span class="n">line</span><span class="p">((</span><span class="mf">32.0</span><span class="p">,</span> <span class="mf">41.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">52.5</span><span class="p">,</span> <span class="mf">23.0</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">)</span>
+
+<span class="c1"># 2. Per-request cache hits from AuditLogger (dashed primary strokes)</span>
+<span class="n">line</span><span class="p">((</span><span class="mf">74.0</span><span class="p">,</span> <span class="mf">41.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">25.0</span><span class="p">,</span> <span class="mf">23.0</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryDashedBold</span><span class="p">)</span>
+<span class="n">line</span><span class="p">((</span><span class="mf">78.0</span><span class="p">,</span> <span class="mf">41.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">57.5</span><span class="p">,</span> <span class="mf">23.0</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryDashedBold</span><span class="p">)</span>
+
+<span class="c1"># 3. Uncached fresh invocations with use_cache=False (warning strokes)</span>
+<span class="n">line</span><span class="p">((</span><span class="mf">36.0</span><span class="p">,</span> <span class="mf">41.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">85.0</span><span class="p">,</span> <span class="mf">23.0</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WarningBold</span><span class="p">)</span>
+<span class="n">line</span><span class="p">((</span><span class="mf">82.0</span><span class="p">,</span> <span class="mf">41.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">90.0</span><span class="p">,</span> <span class="mf">23.0</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WarningBold</span><span class="p">)</span>
+
+<span class="c1"># Right Zone: Per-Request Cache Mechanics Panel</span>
+<span class="n">cache_panel</span> <span class="o">=</span> <span class="n">Panel</span><span class="p">(</span>
+    <span class="s2">"dependency_cache Dict"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
+    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_line_width</span><span class="o">=</span><span class="mf">1.2</span><span class="p">),</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.5</span><span class="p">),</span>
+    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span>
+    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">,</span>
+    <span class="n">header_variant</span><span class="o">=</span><span class="s2">"filled"</span><span class="p">,</span>
+    <span class="n">header_height</span><span class="o">=</span><span class="mf">9.5</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">cache_panel</span><span class="o">.</span><span class="n">draw</span><span class="p">((</span><span class="mf">110.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">52.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">88.0</span><span class="p">,</span> <span class="n">align</span><span class="o">=</span><span class="s2">"bottom_left"</span><span class="p">)</span>
+<span class="n">c_xy</span><span class="p">,</span> <span class="n">c_w</span><span class="p">,</span> <span class="n">c_h</span> <span class="o">=</span> <span class="n">cache_panel</span><span class="o">.</span><span class="n">get_content_box</span><span class="p">(</span>
+    <span class="p">(</span><span class="mf">110.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">),</span>
+    <span class="n">width</span><span class="o">=</span><span class="mf">52.0</span><span class="p">,</span>
+    <span class="n">height</span><span class="o">=</span><span class="mf">88.0</span><span class="p">,</span>
+    <span class="n">padding</span><span class="o">=</span><span class="p">(</span><span class="mf">3.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">),</span>
+    <span class="n">align</span><span class="o">=</span><span class="s2">"bottom_left"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">cards</span> <span class="o">=</span> <span class="n">CardList</span><span class="p">(</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
+    <span class="n">description_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">badge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
+    <span class="n">badge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">spacing</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">cards</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="s2">"Cache Key Tuple"</span><span class="p">,</span>
+    <span class="s2">"(call, tuple(scopes), scope)</span><span class="se">\n</span><span class="s2">in _get_cache_key()"</span><span class="p">,</span>
+    <span class="n">badge_text</span><span class="o">=</span><span class="s2">"1"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">cards</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="s2">"Solid -&gt; Dashed Hit"</span><span class="p">,</span>
+    <span class="s2">"use_cache=True runs 1x;</span><span class="se">\n</span><span class="s2">AuditLogger reuses same DB"</span><span class="p">,</span>
+    <span class="n">badge_text</span><span class="o">=</span><span class="s2">"2"</span><span class="p">,</span>
+    <span class="n">badge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span>
+    <span class="n">badge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">cards</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="s2">"use_cache=False"</span><span class="p">,</span>
+    <span class="s2">"Skips cache lookup; runs</span><span class="se">\n</span><span class="s2">generate_nonce() 2x freshly"</span><span class="p">,</span>
+    <span class="n">badge_text</span><span class="o">=</span><span class="s2">"3"</span><span class="p">,</span>
+    <span class="n">badge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WarningNeutral</span><span class="p">,</span>
+    <span class="n">badge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">cards</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="s2">"Threadpool Dispatch"</span><span class="p">,</span>
+    <span class="s2">"async def awaits directly;</span><span class="se">\n</span><span class="s2">def runs in AnyIO worker"</span><span class="p">,</span>
+    <span class="n">badge_text</span><span class="o">=</span><span class="s2">"4"</span><span class="p">,</span>
+    <span class="n">badge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
+    <span class="n">badge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">cards</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">c_xy</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">c_w</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">c_h</span><span class="p">)</span>
+
+<span class="n">save</span><span class="p">()</span>
+</code></pre>
+</details>
+<h2>1. Dependant DAG の構築と解決アルゴリズム</h2>
+<p>FastAPI はルート登録時に <code>get_dependant()</code> を呼び出し、すべてのエンドポイント引数・<code>Annotated[..., Depends()]</code> マーカー・<code>Security()</code> 宣言を解析して不変の <code>Dependant</code> データクラス木（<code>fastapi/dependencies/models.py</code>）へとコンパイルします。リクエスト処理時のホットパスでは型リフレクションを行わず、<code>solve_dependencies()</code>（<code>fastapi/dependencies/utils.py</code>）が構築済みの DAG を深さ優先で走査します。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left"><code>Dependant</code> / 解決機構</th>
+<th style="text-align:left">内部モジュール位置</th>
+<th style="text-align:left">リクエスト実行時の責務</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong><code>Dependant</code> データクラス</strong></td>
+<td style="text-align:left"><code>fastapi/dependencies/models.py</code></td>
+<td style="text-align:left">抽出対象の <code>path_params</code>・<code>query_params</code>・<code>header_params</code>・<code>cookie_params</code>・<code>body_params</code>、子の <code>dependencies</code>、OAuth2 スコープ、<code>use_cache</code>、<code>scope</code> を保持します。</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>_get_cache_key()</code></strong></td>
+<td style="text-align:left"><code>fastapi/dependencies/models.py</code></td>
+<td style="text-align:left"><code>(dependant.call, scopes_for_cache, computed_scope)</code> のタプルを算出し、累積 OAuth2 スコープが一致する場合にのみセキュリティ依存のキャッシュを共有します。</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>solve_dependencies()</code></strong></td>
+<td style="text-align:left"><code>fastapi/dependencies/utils.py</code></td>
+<td style="text-align:left">子 <code>Dependant</code> ノードを再帰的に解決し、<code>app.dependency_overrides</code> の適用・<code>dependency_cache</code> への格納・検証エラーの集約を行ったうえで親 Callable を呼び出します。</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>実行ディスパッチ</strong></td>
+<td style="text-align:left"><code>fastapi/dependencies/utils.py</code></td>
+<td style="text-align:left"><code>async def</code> コルーチンはイベントループ上で直接 <code>await</code> し、同期 <code>def</code> は <code>run_in_threadpool()</code> へ委譲し、ジェネレータは <code>AsyncExitStack</code> に登録します。</td>
+</tr>
+</tbody>
+</table>
+<h3>1.1 リクエスト単位メモ化（<code>use_cache=True</code> と <code>use_cache=False</code>）</h3>
+<p>実践的なレイヤード設計では、エンドポイントが <code>BillingService</code> と <code>AuditLogger</code> の両方を注入し、その双方が <code>get_db_session</code> と <code>get_settings</code> に依存するような「ひし形（ダイヤモンド）依存」が頻出します。FastAPI はデフォルトで <code>Depends(..., use_cache=True)</code> を有効にしており、<code>solve_dependencies()</code> 内でリクエスト固有の辞書 <code>dependency_cache: dict[DependencyCacheKey, Any]</code> を管理します。</p>
+<ul>
+<li><strong>リクエスト内シングルトン共有（<code>use_cache=True</code>）</strong>: 先に解決される <code>BillingService</code> が <code>get_db_session()</code> を 1 回だけ実行し、戻り値を <code>(get_db_session, (), &quot;&quot;)</code> キーで保存します。直後に同一リクエスト内で <code>AuditLogger</code> が <code>get_db_session</code> を要求すると、FastAPI はキャッシュから同一の Python オブジェクト（<code>billing.db is billing.audit.db</code>）を返し、複数サービス間のトランザクション整合性を保証します。</li>
+<li><strong>毎回新規実行（<code>use_cache=False</code>）</strong>: <code>Depends(generate_trace_nonce, use_cache=False)</code> を指定するとキャッシュ参照をスキップし、注入箇所ごとに毎回新しく関数を呼び出します。</li>
+<li><strong>OAuth2 スコープを考慮したキャッシュ分離</strong>: サブ依存が <code>SecurityScopes</code> を受け取る場合（詳細は <a href="security_and_auth.html">認証・OAuth2 スコープ認可・抽出器</a> を参照）、<code>_uses_scopes()</code> によって <code>tuple(sorted(set(oauth_scopes)))</code> がキャッシュキーへ組み込まれ、要求スコープの異なる呼び出し同士の衝突を防ぎます。</li>
+</ul>
+<blockquote>
+<p>[!IMPORTANT]
+FastAPI の依存関数や Pydantic モデルをネストしたスコープ内で定義するモジュールでは、<code>from __future__ import annotations</code> の使用を避けてください。FastAPI はルート登録時に <code>Annotated[T, Depends(...)]</code> の型メタデータを評価するため、解決不能なローカルシンボルを参照する文字列化アノテーションは依存として認識されず、必須クエリパラメータ（<code>422 Unprocessable Entity</code>）として扱われます。</p>
+</blockquote>
+<h3>1.2 多階層サブ依存・クラス依存・パラメータ化 Callable</h3>
+<p>FastAPI では通常の関数だけでなく、クラスのコンストラクタ（<code>__init__</code>）や呼び出し可能インスタンス（<code>__call__</code>）もそのまま依存ノードとして利用できます。</p>
+<ol>
+<li><strong>クラス依存の省略記法（<code>Annotated[BillingService, Depends()]</code>）</strong>: <code>Depends()</code> の引数を省略すると、FastAPI はパラメータの型注釈（<code>BillingService</code>）を検査し、サブ依存を再帰解決したうえで <code>__init__</code> を呼び出します。</li>
+<li><strong>パラメータ化された Callable インスタンス（<code>RoleChecker([&quot;admin&quot;, &quot;finance&quot;])</code>）</strong>: 設定値を受け取るクラスに <code>async def __call__(self, ...)</code> を実装することで、クロージャやグローバル変数に頼らず再利用可能な認可ガードを量産できます。</li>
+<li><strong>ルーター／アプリ単位のガード（<code>dependencies=[Depends(...)]</code>）</strong>: <code>APIRouter(...)</code>・<code>@router.post(..., dependencies=[...])</code>・<code>FastAPI(dependencies=[...])</code> に <code>dependencies</code> を渡すと、各エンドポイントの関数シグネチャを汚さずに共通検証や認可ガードを実行できます（リクエスト単位キャッシュも同様に共有されます）。</li>
+</ol>
+<pre><code class="language-python"><span class="kn">import</span><span class="w"> </span><span class="nn">secrets</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">Header</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">status</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.testclient</span><span class="w"> </span><span class="kn">import</span> <span class="n">TestClient</span>
+
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">AppSettings</span><span class="p">:</span>
+    <span class="n">tenant_header</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"X-Tenant-ID"</span>
+    <span class="n">currency</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"USD"</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_settings</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">AppSettings</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">AppSettings</span><span class="p">()</span>
+
+
+<span class="n">session_counter</span> <span class="o">=</span> <span class="mi">0</span>
+
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_db_session</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">]:</span>
+    <span class="k">global</span> <span class="n">session_counter</span>
+    <span class="n">session_counter</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"session_id"</span><span class="p">:</span> <span class="n">session_counter</span><span class="p">,</span> <span class="s2">"driver"</span><span class="p">:</span> <span class="s2">"asyncpg"</span><span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_trace_nonce</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">secrets</span><span class="o">.</span><span class="n">token_hex</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">AuditLogger</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">db</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">],</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db_session</span><span class="p">)],</span>
+        <span class="n">settings</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">AppSettings</span><span class="p">,</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_settings</span><span class="p">)],</span>
+        <span class="n">nonce</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Depends</span><span class="p">(</span><span class="n">generate_trace_nonce</span><span class="p">,</span> <span class="n">use_cache</span><span class="o">=</span><span class="kc">False</span><span class="p">)],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="n">db</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="n">settings</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nonce</span> <span class="o">=</span> <span class="n">nonce</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">BillingService</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">db</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">],</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db_session</span><span class="p">)],</span>
+        <span class="n">settings</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">AppSettings</span><span class="p">,</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_settings</span><span class="p">)],</span>
+        <span class="n">audit</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">AuditLogger</span><span class="p">,</span> <span class="n">Depends</span><span class="p">()],</span>
+        <span class="n">nonce</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Depends</span><span class="p">(</span><span class="n">generate_trace_nonce</span><span class="p">,</span> <span class="n">use_cache</span><span class="o">=</span><span class="kc">False</span><span class="p">)],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="n">db</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="n">settings</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">audit</span> <span class="o">=</span> <span class="n">audit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nonce</span> <span class="o">=</span> <span class="n">nonce</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">RoleChecker</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">allowed_roles</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">allowed_roles</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">allowed_roles</span><span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_role</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Header</span><span class="p">()]</span> <span class="o">=</span> <span class="s2">"viewer"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">x_role</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">allowed_roles</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+                <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_403_FORBIDDEN</span><span class="p">,</span>
+                <span class="n">detail</span><span class="o">=</span><span class="s2">"Insufficient role privileges"</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">x_role</span>
+
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">verify_tenant_header</span><span class="p">(</span>
+    <span class="n">settings</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">AppSettings</span><span class="p">,</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_settings</span><span class="p">)],</span>
+    <span class="n">x_tenant_id</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Header</span><span class="p">()]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">x_tenant_id</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Missing </span><span class="si">{</span><span class="n">settings</span><span class="o">.</span><span class="n">tenant_header</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">x_tenant_id</span>
+
+
+<span class="n">require_billing_admin</span> <span class="o">=</span> <span class="n">RoleChecker</span><span class="p">([</span><span class="s2">"admin"</span><span class="p">,</span> <span class="s2">"finance"</span><span class="p">])</span>
+
+<span class="n">billing_router</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">(</span>
+    <span class="n">prefix</span><span class="o">=</span><span class="s2">"/billing"</span><span class="p">,</span>
+    <span class="n">dependencies</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">Depends</span><span class="p">(</span><span class="n">verify_tenant_header</span><span class="p">),</span>
+        <span class="n">Depends</span><span class="p">(</span><span class="n">require_billing_admin</span><span class="p">),</span>
+    <span class="p">],</span>
+<span class="p">)</span>
+
+
+<span class="nd">@billing_router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/invoices"</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">create_invoice</span><span class="p">(</span>
+    <span class="n">billing</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">BillingService</span><span class="p">,</span> <span class="n">Depends</span><span class="p">()],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"db_session_id"</span><span class="p">:</span> <span class="n">billing</span><span class="o">.</span><span class="n">db</span><span class="p">[</span><span class="s2">"session_id"</span><span class="p">],</span>
+        <span class="s2">"shared_same_db"</span><span class="p">:</span> <span class="n">billing</span><span class="o">.</span><span class="n">db</span> <span class="ow">is</span> <span class="n">billing</span><span class="o">.</span><span class="n">audit</span><span class="o">.</span><span class="n">db</span><span class="p">,</span>
+        <span class="s2">"distinct_nonces"</span><span class="p">:</span> <span class="n">billing</span><span class="o">.</span><span class="n">nonce</span> <span class="o">!=</span> <span class="n">billing</span><span class="o">.</span><span class="n">audit</span><span class="o">.</span><span class="n">nonce</span><span class="p">,</span>
+        <span class="s2">"currency"</span><span class="p">:</span> <span class="n">billing</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">currency</span><span class="p">,</span>
+    <span class="p">}</span>
+
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">()</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">billing_router</span><span class="p">)</span>
+</code></pre>
+<p>上の構成では <code>get_settings()</code> が 3 箇所（<code>verify_tenant_header</code>・<code>AuditLogger</code>・<code>BillingService</code>）で宣言されていますが、<code>dependency_cache</code> によってリクエストあたり 1 回しか実行されず、<code>billing.db is billing.audit.db</code> も常に <code>True</code> となります。また結合テスト時には <code>app.dependency_overrides[get_db_session] = override_db</code> を設定するだけで、DAG 全体の末端ノードを一括差し替えできます（<a href="../02_enterprise_architecture/di_lifespan_testing.html">大規模 DI・Lifespan 管理・テスト戦略</a> および <a href="../06_observability_and_testing/testing_and_deployment.html">実践テスト手法と本番 ASGI 運用</a> を参照）。</p>
+<h2>2. <code>yield</code> によるリソース管理と二重 <code>AsyncExitStack</code></h2>
+<p><code>async def</code> または同期 <code>def</code> 内で <code>yield</code> を使うジェネレータ依存は、処理を <strong><code>yield</code> 前のセットアップフェーズ</strong> と <strong><code>yield</code> 後のティアダウンフェーズ</strong> に分割します。FastAPI <code>v0.162.2</code> では、<code>fastapi/routing.py</code> の <code>request_response()</code> がすべての HTTP リクエストを ASGI <code>scope</code> 上の <strong>入れ子になった 2 つの <code>AsyncExitStack</code></strong> で包んでいます。</p>
+<ul>
+<li><strong><code>scope[&quot;fastapi_function_astack&quot;]</code>（<code>scope=&quot;function&quot;</code>）</strong>: パスオペレーション関数が <code>Response</code> オブジェクトを返した <strong>直後</strong>、すなわち <code>await response(scope, receive, send)</code> がネットワークへバイト列を送信したりストリーミングを開始する <strong>前</strong> にクリーンアップを実行します。</li>
+<li><strong><code>scope[&quot;fastapi_inner_astack&quot;]</code>（<code>scope=&quot;request&quot;</code>、デフォルト）</strong>: パスオペレーションと <code>await response(scope, receive, send)</code> の双方を外側から包み、HTTP レスポンス送信・ストリーミングチャンク送出・バックグラウンドタスクが <strong>すべて完了した後</strong> にクリーンアップを実行します。</li>
+</ul>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/04_dependencies_and_security/dependency_injection/yield_scope_exit_stacks.png" alt="dependency_injection_2" />
+  <figcaption class="drawlib-caption">FastAPI v0.162.2 の二重 AsyncExitStack ライフサイクル：scope='function' と scope='request' および例外発生時の解放順序</figcaption>
+</figure>
+<details class="drawlib-code-details">
+<summary>Source Code</summary>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.canvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">setup</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.diagrams.sequence</span><span class="w"> </span><span class="kn">import</span> <span class="n">Participant</span><span class="p">,</span> <span class="n">ParticipantGroup</span><span class="p">,</span> <span class="n">PhosphorIcon</span><span class="p">,</span> <span class="n">SequenceDiagram</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">Style</span><span class="p">,</span> <span class="n">Styles</span>
+
+<span class="n">setup</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">166</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">134</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
+
+<span class="n">seq</span> <span class="o">=</span> <span class="n">SequenceDiagram</span><span class="p">(</span>
+    <span class="n">node_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Primary</span><span class="p">,</span>
+    <span class="n">node_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
+    <span class="n">edge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">,</span>
+    <span class="n">edge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">node_card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
+    <span class="n">col_width</span><span class="o">=</span><span class="mf">37.0</span><span class="p">,</span>
+    <span class="n">step_y</span><span class="o">=</span><span class="mf">6.8</span><span class="p">,</span>
+    <span class="n">margin</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">client</span> <span class="o">=</span> <span class="n">seq</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Participant</span><span class="p">(</span>
+        <span class="s2">"ASGI Client"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mi">23</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mf">13.5</span><span class="p">,</span>
+        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">GLOBE</span><span class="p">,</span>
+        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.8</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">runtime</span> <span class="o">=</span> <span class="n">seq</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">ParticipantGroup</span><span class="p">(</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">"FastAPI request_response() Dual AsyncExitStack"</span><span class="p">,</span>
+        <span class="n">padding</span><span class="o">=</span><span class="mf">4.5</span><span class="p">,</span>
+        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
+        <span class="n">text_style</span><span class="o">=</span><span class="n">Style</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.0</span><span class="p">),</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">req_stack</span> <span class="o">=</span> <span class="n">runtime</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Participant</span><span class="p">(</span>
+        <span class="s1">'scope="request"</span><span class="se">\n</span><span class="s1">(inner_astack)'</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mi">26</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span>
+        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">STACK</span><span class="p">,</span>
+        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.8</span><span class="p">,</span>
+        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">fn_stack</span> <span class="o">=</span> <span class="n">runtime</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Participant</span><span class="p">(</span>
+        <span class="s1">'scope="function"</span><span class="se">\n</span><span class="s1">(function_astack)'</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mi">26</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span>
+        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">DATABASE</span><span class="p">,</span>
+        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.8</span><span class="p">,</span>
+        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">endpoint</span> <span class="o">=</span> <span class="n">runtime</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Participant</span><span class="p">(</span>
+        <span class="s2">"Endpoint &amp;</span><span class="se">\n</span><span class="s2">ASGI Response"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mi">26</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span>
+        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">FILE_CODE</span><span class="p">,</span>
+        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.8</span><span class="p">,</span>
+        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
+        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
+        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">client</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">req_stack</span><span class="p">,</span> <span class="s2">"1. Enter outer AsyncExitStack"</span><span class="p">)</span>
+<span class="n">req_stack</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">fn_stack</span><span class="p">,</span> <span class="s2">"2. yield conn -&gt; enter function_astack"</span><span class="p">)</span>
+<span class="n">fn_stack</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">endpoint</span><span class="p">,</span> <span class="s2">"3. yield tx -&gt; await endpoint()"</span><span class="p">)</span>
+
+<span class="k">with</span> <span class="n">seq</span><span class="o">.</span><span class="n">alt</span><span class="p">(</span><span class="s2">"200 OK"</span><span class="p">)</span> <span class="k">as</span> <span class="n">alt_blk</span><span class="p">:</span>
+    <span class="n">alt_blk</span><span class="o">.</span><span class="n">style</span> <span class="o">=</span> <span class="n">Styles</span><span class="o">.</span><span class="n">MutedDashed</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_line_width</span><span class="o">=</span><span class="mf">1.2</span><span class="p">)</span>
+    <span class="n">alt_blk</span><span class="o">.</span><span class="n">text_style</span> <span class="o">=</span> <span class="n">Style</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">)</span>
+    <span class="n">endpoint</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span><span class="n">fn_stack</span><span class="p">,</span> <span class="s2">"4. Return StreamingResponse"</span><span class="p">)</span>
+    <span class="n">seq</span><span class="o">.</span><span class="n">note</span><span class="p">(</span>
+        <span class="s2">"function_astack exits BEFORE send():</span><span class="se">\n</span><span class="s2">commit tx &amp; release DB lock early!"</span><span class="p">,</span>
+        <span class="n">over</span><span class="o">=</span><span class="p">[</span><span class="n">fn_stack</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">],</span>
+        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">endpoint</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span>
+        <span class="n">client</span><span class="p">,</span>
+        <span class="s2">"5. await response(scope, receive, send) [Stream CSV]"</span><span class="p">,</span>
+        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SuccessBold</span><span class="p">,</span>
+        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">endpoint</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span><span class="n">req_stack</span><span class="p">,</span> <span class="s2">"6. Stream done -&gt; inner_astack.__aexit__()"</span><span class="p">)</span>
+
+<span class="k">with</span> <span class="n">seq</span><span class="o">.</span><span class="n">else_</span><span class="p">(</span><span class="s2">"HTTPException"</span><span class="p">)</span> <span class="k">as</span> <span class="n">else_blk</span><span class="p">:</span>
+    <span class="n">else_blk</span><span class="o">.</span><span class="n">style</span> <span class="o">=</span> <span class="n">Styles</span><span class="o">.</span><span class="n">MutedDashed</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_line_width</span><span class="o">=</span><span class="mf">1.2</span><span class="p">)</span>
+    <span class="n">else_blk</span><span class="o">.</span><span class="n">text_style</span> <span class="o">=</span> <span class="n">Style</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">)</span>
+    <span class="n">endpoint</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span>
+        <span class="n">fn_stack</span><span class="p">,</span>
+        <span class="s2">"4b. Raise HTTPException into yield frame"</span><span class="p">,</span>
+        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DangerBold</span><span class="p">,</span>
+        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DangerBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">fn_stack</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span>
+        <span class="n">req_stack</span><span class="p">,</span>
+        <span class="s2">"5b. try...finally: rollback &amp; re-raise (LIFO)"</span><span class="p">,</span>
+        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DangerBold</span><span class="p">,</span>
+        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DangerBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">req_stack</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span>
+        <span class="n">client</span><span class="p">,</span>
+        <span class="s2">"6b. Release conn -&gt; send HTTP error JSON"</span><span class="p">,</span>
+        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DangerBold</span><span class="p">,</span>
+        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DangerBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="p">)</span>
+
+<span class="n">seq</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">83.0</span><span class="p">,</span> <span class="mf">67.0</span><span class="p">),</span> <span class="n">align</span><span class="o">=</span><span class="s2">"center"</span><span class="p">)</span>
+<span class="n">save</span><span class="p">()</span>
+</code></pre>
+</details>
+<h3>2.1 <code>scope=&quot;function&quot;</code> と <code>scope=&quot;request&quot;</code> の使い分け</h3>
+<p><code>scope</code> を省略（<code>scope=None</code>）した場合、<code>_get_computed_scope()</code> はストリーミング応答のジェネレータ内からも安全にリソースを参照できるようデフォルトで <code>&quot;request&quot;</code> を選択します。低速なクライアント回線下で DB コネクションプールの枯渇を防ぐには、用途に応じて <code>scope=&quot;function&quot;</code> と <code>scope=&quot;request&quot;</code> を明示的に使い分けます。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">比較項目</th>
+<th style="text-align:left"><code>Depends(dep, scope=&quot;function&quot;)</code></th>
+<th style="text-align:left"><code>Depends(dep, scope=&quot;request&quot;)</code> <em>（<code>yield</code> のデフォルト）</em></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>登録先スタック</strong></td>
+<td style="text-align:left"><code>request.scope[&quot;fastapi_function_astack&quot;]</code></td>
+<td style="text-align:left"><code>request.scope[&quot;fastapi_inner_astack&quot;]</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>解放タイミング</strong></td>
+<td style="text-align:left"><code>await response(scope, receive, send)</code> の <strong>実行前</strong></td>
+<td style="text-align:left">レスポンス送信・ストリーミング・背景タスクの <strong>完了後</strong></td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>主な適用場面</strong></td>
+<td style="text-align:left">書き込みトランザクション、行ロック、ハンドラ固有の RPC スパン</td>
+<td style="text-align:left"><code>StreamingResponse</code> や SSE 内で読み取るカーソル、リクエスト全体の監査文脈</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>サブ依存の制約</strong></td>
+<td style="text-align:left"><code>&quot;request&quot;</code> と <code>&quot;function&quot;</code> の両方に依存可能</td>
+<td style="text-align:left">より寿命の短い <code>&quot;function&quot;</code> スコープ依存を子に持つことは不可</td>
+</tr>
+</tbody>
+</table>
+<h3>2.2 必須の <code>try...finally</code> クリーンアップと例外再送出</h3>
+<p>あなたの <code>yield</code> 依存が開始された <strong>後</strong> に、兄弟となる別の依存関数やエンドポイント本体が例外（<code>HTTPException</code> やドメイン例外など）を送出すると、Python の <code>AsyncExitStack</code> は待機中の <code>yield</code> 行へ <code>athrow()</code> / <code>throw()</code> でその例外を再注入します。本番コードでは次の 2 原則が絶対条件となります。</p>
+<ol>
+<li><strong>必ず <code>try ... finally:</code> で <code>yield</code> を囲む</strong>: <code>finally:</code> を使わず <code>yield</code> の後ろにそのまま後処理を記述すると、未捕捉例外でリクエストが中断された際にクリーンアップがスキップされ、DB セッションやセマフォがリークします。</li>
+<li><strong><code>yield</code> 後に例外を握りつぶさない</strong>: ロールバック処理のために <code>except Exception:</code> で捕捉する場合（<code>except Exception: await tx.rollback(); raise</code>）も、<strong>必ず例外を再送出（<code>raise</code>）</strong> してください。レスポンス送信前に <code>scope=&quot;request&quot;</code> の依存が例外を握りつぶすと、FastAPI <code>v0.162.2</code> は <code>FastAPIError: Response not awaited</code> を送出して停止します。</li>
+</ol>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncIterator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">status</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.responses</span><span class="w"> </span><span class="kn">import</span> <span class="n">StreamingResponse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.testclient</span><span class="w"> </span><span class="kn">import</span> <span class="n">TestClient</span>
+
+<span class="n">events</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">()</span>
+
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_request_connection</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"req_conn:enter"</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="s2">"conn_pool_1"</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"req_conn:exit"</span><span class="p">)</span>
+
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_db_transaction</span><span class="p">(</span>
+    <span class="n">conn</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_request_connection</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="s2">"request"</span><span class="p">)],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"fn_tx:enter(</span><span class="si">{</span><span class="n">conn</span><span class="si">}</span><span class="s2">)"</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="s2">"tx_active"</span>
+        <span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"fn_tx:commit"</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"fn_tx:rollback"</span><span class="p">)</span>
+        <span class="k">raise</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"fn_tx:exit"</span><span class="p">)</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/reports/export"</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">export_report</span><span class="p">(</span>
+    <span class="n">tx</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db_transaction</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="s2">"function"</span><span class="p">)],</span>
+    <span class="n">fail</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">StreamingResponse</span><span class="p">:</span>
+    <span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"endpoint:body(</span><span class="si">{</span><span class="n">tx</span><span class="si">}</span><span class="s2">)"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">fail</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_409_CONFLICT</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Report snapshot locked"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">stream_rows</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]:</span>
+        <span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"stream:chunk_1"</span><span class="p">)</span>
+        <span class="k">yield</span> <span class="sa">b</span><span class="s2">"id,amount</span><span class="se">\n</span><span class="s2">1,250</span><span class="se">\n</span><span class="s2">"</span>
+
+    <span class="k">return</span> <span class="n">StreamingResponse</span><span class="p">(</span><span class="n">stream_rows</span><span class="p">(),</span> <span class="n">media_type</span><span class="o">=</span><span class="s2">"text/csv"</span><span class="p">)</span>
+</code></pre>
+<p><code>GET /reports/export</code> を実行すると、<code>events</code> には <code>[&quot;req_conn:enter&quot;, &quot;fn_tx:enter(conn_pool_1)&quot;, &quot;endpoint:body(tx_active)&quot;, &quot;fn_tx:commit&quot;, &quot;fn_tx:exit&quot;, &quot;stream:chunk_1&quot;, &quot;req_conn:exit&quot;]</code> の順序が記録されます。<code>&quot;function&quot;</code> スコープのトランザクションは <code>stream_rows()</code> が最初のチャンクを送出する <strong>前</strong> にコミット・解放され、一方で <code>&quot;request&quot;</code> スコープのコネクションはストリーミング完了後まで維持されます。また <code>?fail=true</code> で <code>409 Conflict</code> が発生した場合も、<code>except</code> での再送出と <code>finally:</code> によって <code>[&quot;req_conn:enter&quot;, &quot;fn_tx:enter(conn_pool_1)&quot;, &quot;endpoint:body(tx_active)&quot;, &quot;fn_tx:rollback&quot;, &quot;fn_tx:exit&quot;, &quot;req_conn:exit&quot;]</code> と LIFO 順で確実に解放されます。</p>
+<p>続いて次節 <a href="security_and_auth.html">認証・OAuth2 スコープ認可・抽出器</a> では、<code>fastapi.security</code> がこの <code>Dependant</code> DAG の上に資格情報抽出・階層的 <code>SecurityScopes</code>・OpenAPI 3.1 <code>securitySchemes</code> をどのように統合しているかを解説し、ストリーミングとの組み合わせについては <a href="../05_async_and_realtime/sse_websockets_streaming.html">ネイティブ SSE・JSONL・WebSocket</a> で掘り下げます。</p>
+
+            </main>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Theme toggle
+            const themeBtn = document.getElementById('theme-toggle');
+            if (themeBtn) {
+                themeBtn.addEventListener('click', function() {
+                    const current = document.documentElement.getAttribute('data-theme');
+                    const next = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    localStorage.setItem('drawlib-theme', next);
+                });
+            }
+
+            // Language dropdown outside-click & Escape close
+            const langDropdowns = document.querySelectorAll('.lang-dropdown');
+            if (langDropdowns.length > 0) {
+                document.addEventListener('click', function(e) {
+                    langDropdowns.forEach(function(dd) {
+                        if (dd.hasAttribute('open') && !dd.contains(e.target)) {
+                            dd.removeAttribute('open');
+                        }
+                    });
+                });
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        langDropdowns.forEach(function(dd) {
+                            dd.removeAttribute('open');
+                        });
+                    }
+                });
+            }
+
+            // Mobile menu toggle
+            const menuBtn = document.getElementById('menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            if (menuBtn && sidebar) {
+                function setMenuOpen(open) {
+                    sidebar.classList.toggle('is-open', open);
+                    menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    document.body.classList.toggle('menu-open', open);
+                    if (open) {
+                        const menu = sidebar.querySelector('.sidebar-menu');
+                        if (menu) {
+                            menu.scrollTop = 0;
+                        }
+                    }
+                }
+
+                menuBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const willOpen = !sidebar.classList.contains('is-open');
+                    setMenuOpen(willOpen);
+                });
+
+                // Close menu when clicking outside sidebar
+                document.addEventListener('click', function(e) {
+                    if (sidebar.classList.contains('is-open') && !sidebar.contains(e.target)) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                // Close menu when a navigation link is clicked
+                const navLinks = sidebar.querySelectorAll('.nav-item a');
+                navLinks.forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        setMenuOpen(false);
+                    });
+                });
+
+                // Close on Escape key
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                // Reset menu state when resized above mobile breakpoint
+                window.addEventListener('resize', function() {
+                    if (window.innerWidth > 768 && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,715 @@
+<!--
+ Copyright (c) 2026 Yuichi Ito (yuichi@yuichi.com)
+
+ This software is licensed under the Apache License, Version 2.0.
+ For more information, please visit: https://github.com/yuichi110/drawlib
+
+ This software is provided "as is", without warranty of any kind,
+ express or implied, including but not limited to the warranties of
+ merchantability, fitness for a particular purpose and noninfringement.
+-->
+<!DOCTYPE html>
+<html lang="ja" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>実践テスト手法と本番 ASGI 運用 — FastAPI Visual Guide (Unofficial · Drawlib Demo)</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-S9N5BZ1VRC');
+    </script>
+    <script>
+        (function() {
+            const saved = localStorage.getItem('drawlib-theme');
+            if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    
+    <link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/en/06_observability_and_testing/testing_and_deployment.html">
+    
+    <link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/ja/06_observability_and_testing/testing_and_deployment.html">
+    
+    <link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/en/06_observability_and_testing/testing_and_deployment.html">
+    
+    
+    
+    <meta name="description" content="FastAPI v0.162.2 は、同期的な with TestClient(app) as client: と非同期イベントループ直結の httpx.ASGITransport の双方でミリ秒未満のインメモリ統合テストを実現し、本番環境ではリバースプロキシ配下の ASGI…">
+    <link rel="canonical" href="https://fastapi.drawlib.com/ja/06_observability_and_testing/testing_and_deployment.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="FastAPI ビジュアル解説">
+    <meta property="og:title" content="実践テスト手法と本番 ASGI 運用 — FastAPI ビジュアル解説">
+    <meta property="og:description" content="FastAPI v0.162.2 は、同期的な with TestClient(app) as client: と非同期イベントループ直結の httpx.ASGITransport の双方でミリ秒未満のインメモリ統合テストを実現し、本番環境ではリバースプロキシ配下の ASGI…">
+    <meta property="og:url" content="https://fastapi.drawlib.com/ja/06_observability_and_testing/testing_and_deployment.html">
+    <meta property="og:image" content="https://fastapi.drawlib.com/_assets/ogp.png">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:locale:alternate" content="en_US">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="実践テスト手法と本番 ASGI 運用 — FastAPI ビジュアル解説">
+    <meta name="twitter:description" content="FastAPI v0.162.2 は、同期的な with TestClient(app) as client: と非同期イベントループ直結の httpx.ASGITransport の双方でミリ秒未満のインメモリ統合テストを実現し、本番環境ではリバースプロキシ配下の ASGI…">
+    <meta name="twitter:image" content="https://fastapi.drawlib.com/_assets/ogp.png">
+    
+    
+    <link rel="icon" type="image/png" href="../../_assets/favicon.png">
+    
+    
+    <link rel="stylesheet" href="../style.css">
+    
+    
+</head>
+<body>
+    <div class="demo-banner" role="region" aria-label="非公式ショーケース案内">
+        <div class="demo-banner-inner">
+            <span class="demo-banner-badge">UNOFFICIAL DEMO</span>
+            
+            <span class="demo-banner-text">
+                <a href="https://www.drawlib.com/" target="_blank" rel="noopener noreferrer">Drawlib</a> と <a href="https://pypi.org/project/pni501/" target="_blank" rel="noopener noreferrer">PNI501</a> で作成した <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a>（v0.162.2, MIT）の非公式ビジュアル解説ショーケースです。
+            </span>
+            <span class="demo-banner-links">
+                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 診断レポート →</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI 公式 Docs ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+            </span>
+            
+        </div>
+    </div>
+    
+    <div class="doc-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI ビジュアル解説">
+                    
+                    FastAPI ビジュアル解説
+                    
+                </a>
+                <div class="sidebar-header-actions">
+                    <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">
+                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                    <button type="button" id="menu-toggle" class="menu-toggle-btn" aria-label="Toggle navigation" aria-expanded="false">
+                        <svg class="icon-hamburger" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        <svg class="icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="sidebar-menu">
+                
+                    
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../index.html" >ガイド概要と全体マップ</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">1. イントロ &amp; クイックスタート</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../01_getting_started/overview.html" >FastAPI の設計思想と内部構造</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../01_getting_started/quickstart.html" >クイックスタートと自動生成 Docs</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">2. 10万行規模の設計ベストプラクティス</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../02_enterprise_architecture/modular_design.html" >境界づけられたコンテキストと階層化</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../02_enterprise_architecture/di_lifespan_testing.html" >大規模 DI・Lifespan 管理・テスト戦略</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">3. ルーティング・入力検証・スキーマ</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../03_routing_and_models/parameters_and_validation.html" >Path・Query・Header・Cookie・Body</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../03_routing_and_models/responses_and_openapi.html" >レスポンス直列化と OpenAPI 3.1</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">4. 依存性注入（DI）とセキュリティ</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../04_dependencies_and_security/dependency_injection.html" >Dependant DAG・キャッシュ・yield スコープ</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../04_dependencies_and_security/security_and_auth.html" >認証・OAuth2 スコープ認可・抽出器</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">5. 非同期並行・ミドルウェア・ストリーミング</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../05_async_and_realtime/concurrency_and_middleware.html" >ASGI ミドルウェアとスレッドプール制御</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../05_async_and_realtime/sse_websockets_streaming.html" >ネイティブ SSE・JSONL・WebSocket</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">6. 可観測性・例外設計・実践テスト</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="telemetry_and_errors.html" >ネイティブ OpenTelemetry と例外処理</a>
+                            </li>
+                            
+                            <li class="nav-item active">
+                                <a href="testing_and_deployment.html" >実践テスト手法と本番 ASGI 運用</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">診断レポート &amp; 公式リンク</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/reports/pni501/" target="_blank" rel="noopener noreferrer">PNI501 診断レポート<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI 公式ドキュメント<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">デモのリポジトリ (GitHub)<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                        </ul>
+                    
+                
+            </div>
+        </aside>
+        <div class="content-wrapper">
+            <header class="top-bar">
+                <div class="breadcrumbs">
+                    <span class="crumb">Docs</span>
+                    <span class="crumb-separator">&raquo;</span>
+                    <span class="crumb active">実践テスト手法と本番 ASGI 運用</span>
+                </div>
+                
+                <div class="lang-switcher">
+                    <details class="lang-dropdown">
+                        <summary class="lang-dropdown-btn" aria-label="Select language">
+                            <svg class="lang-globe-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            <span class="lang-current-label">日本語</span>
+                            <svg class="lang-caret-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </summary>
+                        <div class="lang-dropdown-menu" role="menu">
+                            
+                            <a href="../../en/06_observability_and_testing/testing_and_deployment.html" class="lang-option" lang="en" hreflang="en" >
+                                <span>English</span>
+                                
+                            </a>
+                            
+                            <a href="testing_and_deployment.html" class="lang-option active" lang="ja" hreflang="ja" aria-current="page">
+                                <span>日本語</span>
+                                
+                                <svg class="lang-check-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                
+                            </a>
+                            
+                        </div>
+                    </details>
+                </div>
+                
+            </header>
+            <main class="main-content">
+                <h1>実践テスト手法と本番 ASGI 運用</h1>
+<p>FastAPI <code>v0.162.2</code> は、同期的な <code>with TestClient(app) as client:</code> と非同期イベントループ直結の <code>httpx.ASGITransport</code> の双方でミリ秒未満のインメモリ統合テストを実現し、本番環境ではリバースプロキシ配下の ASGI ワーカー・ヘルスプローブ・<code>lifespan</code> による安全なドレイン終了とシームレスに連携します。</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/06_observability_and_testing/testing_and_deployment/testing_modes_architecture.png" alt="testing_and_deployment_1" />
+  <figcaption class="drawlib-caption">インメモリ FastAPI 統合テスト構成：同期 TestClient ポータル方式 vs 非同期 httpx.ASGITransport 直結方式</figcaption>
+</figure>
+<details class="drawlib-code-details">
+<summary>Source Code</summary>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.canvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">setup</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.icons</span><span class="w"> </span><span class="kn">import</span> <span class="n">phosphor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.lines</span><span class="w"> </span><span class="kn">import</span> <span class="n">line</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.shapes</span><span class="w"> </span><span class="kn">import</span> <span class="n">rectangle</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.smartarts</span><span class="w"> </span><span class="kn">import</span> <span class="n">CardList</span><span class="p">,</span> <span class="n">Panel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">Styles</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.text</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span>
+
+<span class="n">setup</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">168</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">88</span><span class="p">)</span>
+
+<span class="n">text</span><span class="p">(</span>
+    <span class="p">(</span><span class="mf">84.0</span><span class="p">,</span> <span class="mf">83.0</span><span class="p">),</span>
+    <span class="s2">"FastAPI In-Memory Integration Testing Modes &amp; Dependency Overrides"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">13.2</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1"># Left Panel: Sync TestClient</span>
+<span class="n">p_sync</span> <span class="o">=</span> <span class="n">Panel</span><span class="p">(</span>
+    <span class="s2">"Mode A: Sync TestClient"</span><span class="p">,</span>
+    <span class="s2">"def test_*()"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
+    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_line_width</span><span class="o">=</span><span class="mf">1.2</span><span class="p">),</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.0</span><span class="p">),</span>
+    <span class="n">description_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">terminal_window</span><span class="p">,</span>
+    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryBold</span><span class="p">,</span>
+    <span class="n">header_height</span><span class="o">=</span><span class="mf">9.0</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">p_sync</span><span class="o">.</span><span class="n">draw</span><span class="p">((</span><span class="mf">5.0</span><span class="p">,</span> <span class="mf">27.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">75.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">50.0</span><span class="p">)</span>
+<span class="n">l_xy</span><span class="p">,</span> <span class="n">l_w</span><span class="p">,</span> <span class="n">l_h</span> <span class="o">=</span> <span class="n">p_sync</span><span class="o">.</span><span class="n">get_content_box</span><span class="p">((</span><span class="mf">5.0</span><span class="p">,</span> <span class="mf">27.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">75.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">50.0</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="p">(</span><span class="mf">3.0</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">))</span>
+
+<span class="n">cl_sync</span> <span class="o">=</span> <span class="n">CardList</span><span class="p">(</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
+    <span class="n">description_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">badge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span>
+    <span class="n">badge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">spacing</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">cl_sync</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"with TestClient(app) as c:"</span><span class="p">,</span> <span class="s2">"Runs lifespan startup &amp; shutdown"</span><span class="p">,</span> <span class="n">badge_text</span><span class="o">=</span><span class="s2">"1"</span><span class="p">)</span>
+<span class="n">cl_sync</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"AnyIO Blocking Portal"</span><span class="p">,</span> <span class="s2">"Bridges sync pytest to worker loop"</span><span class="p">,</span> <span class="n">badge_text</span><span class="o">=</span><span class="s2">"2"</span><span class="p">)</span>
+<span class="n">cl_sync</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"WebSocket Helper"</span><span class="p">,</span> <span class="s2">"Built-in c.websocket_connect()"</span><span class="p">,</span> <span class="n">badge_text</span><span class="o">=</span><span class="s2">"3"</span><span class="p">)</span>
+<span class="n">cl_sync</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">l_xy</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">l_w</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">l_h</span><span class="p">)</span>
+
+<span class="c1"># Right Panel: Native Async ASGITransport</span>
+<span class="n">p_async</span> <span class="o">=</span> <span class="n">Panel</span><span class="p">(</span>
+    <span class="s2">"Mode B: AsyncClient"</span><span class="p">,</span>
+    <span class="s2">"@pytest.mark.anyio"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
+    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.0</span><span class="p">),</span>
+    <span class="n">description_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">lightning</span><span class="p">,</span>
+    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="p">,</span>
+    <span class="n">header_height</span><span class="o">=</span><span class="mf">9.0</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">p_async</span><span class="o">.</span><span class="n">draw</span><span class="p">((</span><span class="mf">88.0</span><span class="p">,</span> <span class="mf">27.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">75.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">50.0</span><span class="p">)</span>
+<span class="n">r_xy</span><span class="p">,</span> <span class="n">r_w</span><span class="p">,</span> <span class="n">r_h</span> <span class="o">=</span> <span class="n">p_async</span><span class="o">.</span><span class="n">get_content_box</span><span class="p">((</span><span class="mf">88.0</span><span class="p">,</span> <span class="mf">27.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">75.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">50.0</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="p">(</span><span class="mf">3.0</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">))</span>
+
+<span class="n">cl_async</span> <span class="o">=</span> <span class="n">CardList</span><span class="p">(</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
+    <span class="n">description_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">badge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
+    <span class="n">badge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">spacing</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">cl_async</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"ASGITransport(app=app)"</span><span class="p">,</span> <span class="s2">"Zero thread-portal context switch"</span><span class="p">,</span> <span class="n">badge_text</span><span class="o">=</span><span class="s2">"1"</span><span class="p">)</span>
+<span class="n">cl_async</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"Async DB Rollbacks"</span><span class="p">,</span> <span class="s2">"Shares async SQLAlchemy session"</span><span class="p">,</span> <span class="n">badge_text</span><span class="o">=</span><span class="s2">"2"</span><span class="p">)</span>
+<span class="n">cl_async</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"Parallel Concurrency"</span><span class="p">,</span> <span class="s2">"anyio.create_task_group() load tests"</span><span class="p">,</span> <span class="n">badge_text</span><span class="o">=</span><span class="s2">"3"</span><span class="p">)</span>
+<span class="n">cl_async</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">r_xy</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">r_w</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">r_h</span><span class="p">)</span>
+
+<span class="c1"># Shared Target FastAPI App + dependency_overrides Banner</span>
+<span class="n">line</span><span class="p">((</span><span class="mf">42.5</span><span class="p">,</span> <span class="mf">27.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">42.5</span><span class="p">,</span> <span class="mf">19.5</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">line_width</span><span class="o">=</span><span class="mf">1.8</span><span class="p">))</span>
+<span class="n">line</span><span class="p">((</span><span class="mf">125.5</span><span class="p">,</span> <span class="mf">27.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">125.5</span><span class="p">,</span> <span class="mf">19.5</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">line_width</span><span class="o">=</span><span class="mf">1.8</span><span class="p">))</span>
+
+<span class="n">rectangle</span><span class="p">((</span><span class="mf">84.0</span><span class="p">,</span> <span class="mf">11.5</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">158.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">14.5</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">2.0</span><span class="p">))</span>
+<span class="n">phosphor</span><span class="o">.</span><span class="n">sliders_horizontal</span><span class="p">((</span><span class="mf">14.0</span><span class="p">,</span> <span class="mf">11.5</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">5.5</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">)</span>
+<span class="n">text</span><span class="p">(</span>
+    <span class="p">(</span><span class="mf">87.0</span><span class="p">,</span> <span class="mf">11.5</span><span class="p">),</span>
+    <span class="s2">"Shared In-Memory ASGI App  •  app.dependency_overrides[prod_dep] = fake_dep  (Always .clear() in finally!)"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">save</span><span class="p">()</span>
+</code></pre>
+</details>
+<h2>1. 同期 <code>TestClient</code> vs ネイティブ非同期 <code>ASGITransport</code></h2>
+<p>どちらのテストハーネスも TCP ソケットを開かずにメモリ上で直接 ASGI メッセージをやり取りしますが、<a href="../02_enterprise_architecture/di_lifespan_testing.html">大規模 DI・Lifespan 管理・テスト戦略</a> で扱った設計に基づき、テスト対象に応じて使い分けます。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">比較軸</th>
+<th style="text-align:left"><code>with TestClient(app) as client:</code></th>
+<th style="text-align:left"><code>httpx.AsyncClient(transport=ASGITransport(app=app))</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>テスト関数の形式</strong></td>
+<td style="text-align:left">標準的な同期関数 <code>def test_...()</code></td>
+<td style="text-align:left">非同期コルーチン <code>@pytest.mark.anyio async def test_...()</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Lifespan の実行</strong></td>
+<td style="text-align:left"><code>with</code> ブロック開始時に起動し、終了時にシャットダウンを実行</td>
+<td style="text-align:left">状態を明示制御するか、非同期 lifespan フィクスチャと併用</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>リアルタイム通信</strong></td>
+<td style="text-align:left">HTTP・SSE・JSONL に加え <code>client.websocket_connect(...)</code> を標準提供</td>
+<td style="text-align:left">同一ループ上で HTTP・SSE（<code>ac.stream(...)</code>）・JSONL を検証可能</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>非同期 DB ロールバック</strong></td>
+<td style="text-align:left">ポータル経由で別ループになるため非同期 DB セッション共有に不向き</td>
+<td style="text-align:left">非同期 DB トランザクションフィクスチャと <strong>完全に同一のイベントループ</strong> を共有</td>
+</tr>
+</tbody>
+</table>
+<h3><code>with TestClient</code> による Lifespan 起動と安全な <code>dependency_overrides</code> 解放</h3>
+<p>大規模リポジトリのテストスイートで頻発するフレーキーテストの主な原因は次の 2 点です。</p>
+<ol>
+<li><strong><code>TestClient</code> で <code>with</code> 文を省略してしまう</strong>: <code>client = TestClient(app)</code> を単体で生成すると、<code>@asynccontextmanager</code> で定義した <code>lifespan</code> の初期化・終了フックが一切実行されません。必ず <code>with TestClient(app) as client:</code> として使用します。</li>
+<li><strong><code>app.dependency_overrides</code> のテスト間リーク</strong>: <code>app.dependency_overrides</code> は <code>FastAPI</code> インスタンス上の辞書を直接書き換えるため、<code>try ... finally: app.dependency_overrides.clear()</code>（または <code>yield</code> 型 pytest フィクスチャ）で確実にリセットし、後続テストへのモック残留を防ぎます。</li>
+</ol>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncGenerator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">contextlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">asynccontextmanager</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">Request</span><span class="p">,</span> <span class="n">Response</span><span class="p">,</span> <span class="n">status</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.testclient</span><span class="w"> </span><span class="kn">import</span> <span class="n">TestClient</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">create_production_app</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">FastAPI</span><span class="p">:</span>
+    <span class="nd">@asynccontextmanager</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">lifespan</span><span class="p">(</span><span class="n">app</span><span class="p">:</span> <span class="n">FastAPI</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AsyncGenerator</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+        <span class="n">app</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">db_ready</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">app</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">events</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"startup:complete"</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">yield</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">app</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">db_ready</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">app</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"shutdown:complete"</span><span class="p">)</span>
+
+    <span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">(</span><span class="n">lifespan</span><span class="o">=</span><span class="n">lifespan</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_exchange_rate</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mf">152.40</span>
+
+    <span class="n">app</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">get_exchange_rate</span> <span class="o">=</span> <span class="n">get_exchange_rate</span>
+
+    <span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/healthz"</span><span class="p">)</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">liveness_probe</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">"status"</span><span class="p">:</span> <span class="s2">"alive"</span><span class="p">}</span>
+
+    <span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/readyz"</span><span class="p">)</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">readiness_probe</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="n">Response</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="s2">"db_ready"</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">=</span> <span class="n">status</span><span class="o">.</span><span class="n">HTTP_503_SERVICE_UNAVAILABLE</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">"status"</span><span class="p">:</span> <span class="s2">"draining"</span><span class="p">}</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">"status"</span><span class="p">:</span> <span class="s2">"ready"</span><span class="p">}</span>
+
+    <span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/quotes/usd-jpy"</span><span class="p">)</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">quote_usd_jpy</span><span class="p">(</span>
+        <span class="n">rate</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_exchange_rate</span><span class="p">)],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">"usd_jpy"</span><span class="p">:</span> <span class="n">rate</span><span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">app</span>
+
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">create_production_app</span><span class="p">()</span>
+<span class="n">app</span><span class="o">.</span><span class="n">dependency_overrides</span><span class="p">[</span><span class="n">app</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">get_exchange_rate</span><span class="p">]</span> <span class="o">=</span> <span class="k">lambda</span><span class="p">:</span> <span class="mf">150.00</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="k">with</span> <span class="n">TestClient</span><span class="p">(</span><span class="n">app</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/readyz"</span><span class="p">)</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span>
+        <span class="k">assert</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/quotes/usd-jpy"</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span> <span class="o">==</span> <span class="p">{</span><span class="s2">"usd_jpy"</span><span class="p">:</span> <span class="mf">150.0</span><span class="p">}</span>
+<span class="k">finally</span><span class="p">:</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">dependency_overrides</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+<span class="k">assert</span> <span class="n">app</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">events</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"startup:complete"</span><span class="p">,</span> <span class="s2">"shutdown:complete"</span><span class="p">]</span>
+</code></pre>
+<h3><code>@pytest.mark.anyio</code> と <code>httpx.ASGITransport</code> によるネイティブ非同期テスト</h3>
+<p>非同期データベーストランザクションのロールバック検証、<a href="telemetry_and_errors.html">ネイティブ OpenTelemetry スパン</a> の検査、並行リクエストの競合テストには、<code>httpx.ASGITransport</code> でアプリを直接駆動します。</p>
+<pre><code class="language-python"><span class="kn">import</span><span class="w"> </span><span class="nn">httpx</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pytest</span>
+
+
+<span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">anyio</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">test_async_readiness_transitions</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">app</span> <span class="o">=</span> <span class="n">create_production_app</span><span class="p">()</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">db_ready</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># Simulate cold pool before readiness</span>
+
+    <span class="n">transport</span> <span class="o">=</span> <span class="n">httpx</span><span class="o">.</span><span class="n">ASGITransport</span><span class="p">(</span><span class="n">app</span><span class="o">=</span><span class="n">app</span><span class="p">)</span>
+    <span class="k">async</span> <span class="k">with</span> <span class="n">httpx</span><span class="o">.</span><span class="n">AsyncClient</span><span class="p">(</span>
+        <span class="n">transport</span><span class="o">=</span><span class="n">transport</span><span class="p">,</span> <span class="n">base_url</span><span class="o">=</span><span class="s2">"http://testserver"</span>
+    <span class="p">)</span> <span class="k">as</span> <span class="n">ac</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="k">await</span> <span class="n">ac</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/healthz"</span><span class="p">))</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="k">await</span> <span class="n">ac</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/readyz"</span><span class="p">))</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">503</span>
+
+        <span class="n">app</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">db_ready</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="k">await</span> <span class="n">ac</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/readyz"</span><span class="p">))</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span>
+</code></pre>
+<hr />
+<h2>2. 本番 ASGI トポロジ・ヘルスプローブ・グレースフルシャットダウン</h2>
+<p>Kubernetes、Cloud Run、systemd などの本番環境では、TLS 終端を行うリバースプロキシやロードバランサーの背後に単一プロセスの Uvicorn ASGI ワーカーを配置し、水平スケーリングはコンテナオーケストレーター側のレプリカ制御に委ねます。</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/06_observability_and_testing/testing_and_deployment/production_asgi_readiness.png" alt="testing_and_deployment_2" />
+  <figcaption class="drawlib-caption">本番 ASGI デプロイトポロジ：TLS リバースプロキシ・Uvicorn ワーカー・ヘルスプローブ・Lifespan ドレイン終了</figcaption>
+</figure>
+<details class="drawlib-code-details">
+<summary>Source Code</summary>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.canvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">setup</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.diagrams.architecture</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArchitectureDiagram</span><span class="p">,</span> <span class="n">GcpIcon</span><span class="p">,</span> <span class="n">Node</span><span class="p">,</span> <span class="n">NodeGroup</span><span class="p">,</span> <span class="n">PhosphorIcon</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">Styles</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.text</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span>
+
+<span class="n">setup</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">176</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">96</span><span class="p">)</span>
+
+<span class="n">text</span><span class="p">(</span>
+    <span class="p">(</span><span class="mf">88.0</span><span class="p">,</span> <span class="mf">91.0</span><span class="p">),</span>
+    <span class="s2">"Production FastAPI ASGI Topology: TLS Ingress, Probes &amp; Lifespan Drain"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">13.0</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">d</span> <span class="o">=</span> <span class="n">ArchitectureDiagram</span><span class="p">(</span>
+    <span class="n">node_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Primary</span><span class="p">,</span>
+    <span class="n">node_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.2</span><span class="p">),</span>
+    <span class="n">edge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">,</span>
+    <span class="n">edge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">node_card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">clients</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Node</span><span class="p">(</span><span class="s2">"HTTPS / WSS</span><span class="se">\n</span><span class="s2">Clients"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">17</span><span class="p">,</span> <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">USERS</span><span class="p">,</span> <span class="n">icon_size</span><span class="o">=</span><span class="mf">6.8</span><span class="p">),</span>
+    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">13.0</span><span class="p">,</span> <span class="mf">62.0</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">kubelet</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Node</span><span class="p">(</span><span class="s2">"Orchestrator</span><span class="se">\n</span><span class="s2">Probes &amp; SIGTERM"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">26</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">17</span><span class="p">,</span> <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">HEARTBEAT</span><span class="p">,</span> <span class="n">icon_size</span><span class="o">=</span><span class="mf">6.8</span><span class="p">,</span> <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">),</span>
+    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">14.0</span><span class="p">,</span> <span class="mf">22.0</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">edge</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">NodeGroup</span><span class="p">(</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">"Edge Ingress"</span><span class="p">,</span>
+        <span class="n">padding</span><span class="o">=</span><span class="mf">4.5</span><span class="p">,</span>
+        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
+        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.8</span><span class="p">,</span> <span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">34.0</span><span class="p">,</span> <span class="mf">44.0</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">proxy</span> <span class="o">=</span> <span class="n">edge</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Node</span><span class="p">(</span>
+        <span class="s2">"TLS Reverse Proxy</span><span class="se">\n</span><span class="s2">Headers &amp; HTTP/2"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mi">28</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span>
+        <span class="n">icon</span><span class="o">=</span><span class="n">GcpIcon</span><span class="o">.</span><span class="n">CLOUD_LOAD_BALANCING</span><span class="p">,</span>
+        <span class="n">icon_size</span><span class="o">=</span><span class="mf">7.0</span><span class="p">,</span>
+        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">18.5</span><span class="p">,</span> <span class="mf">18.0</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">pod</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">NodeGroup</span><span class="p">(</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">"Uvicorn Container"</span><span class="p">,</span>
+        <span class="n">padding</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span>
+        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
+        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.8</span><span class="p">,</span> <span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">80.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">worker</span> <span class="o">=</span> <span class="n">pod</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Node</span><span class="p">(</span>
+        <span class="s2">"FastAPI APIRoute</span><span class="se">\n</span><span class="s2">HTTP • SSE • WS"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mi">17</span><span class="p">,</span>
+        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">CPU</span><span class="p">,</span>
+        <span class="n">icon_size</span><span class="o">=</span><span class="mf">7.0</span><span class="p">,</span>
+        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
+        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="p">,</span>
+        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.2</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">23.0</span><span class="p">,</span> <span class="mf">58.0</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">lifespan_node</span> <span class="o">=</span> <span class="n">pod</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Node</span><span class="p">(</span>
+        <span class="s2">"Lifespan Manager</span><span class="se">\n</span><span class="s2">Init &amp; SIGTERM Drain"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
+        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">ARROWS_CLOCKWISE</span><span class="p">,</span>
+        <span class="n">icon_size</span><span class="o">=</span><span class="mf">6.8</span><span class="p">,</span>
+        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">23.0</span><span class="p">,</span> <span class="mf">34.0</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">probes</span> <span class="o">=</span> <span class="n">pod</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Node</span><span class="p">(</span>
+        <span class="s2">"/healthz &amp; /readyz</span><span class="se">\n</span><span class="s2">200 OK / 503 Drain"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
+        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">SHIELD_CHECK</span><span class="p">,</span>
+        <span class="n">icon_size</span><span class="o">=</span><span class="mf">6.8</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">23.0</span><span class="p">,</span> <span class="mf">12.0</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">db</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Node</span><span class="p">(</span><span class="s2">"PostgreSQL / Redis</span><span class="se">\n</span><span class="s2">Async Pool"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">28</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span> <span class="n">icon</span><span class="o">=</span><span class="n">GcpIcon</span><span class="o">.</span><span class="n">CLOUD_SQL</span><span class="p">,</span> <span class="n">icon_size</span><span class="o">=</span><span class="mf">7.0</span><span class="p">,</span> <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">),</span>
+    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">155.0</span><span class="p">,</span> <span class="mf">62.0</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">cache</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Node</span><span class="p">(</span><span class="s2">"Pool Shutdown</span><span class="se">\n</span><span class="s2">Clean Drain"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">28</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">PLUGS</span><span class="p">,</span> <span class="n">icon_size</span><span class="o">=</span><span class="mf">6.8</span><span class="p">),</span>
+    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">155.0</span><span class="p">,</span> <span class="mf">38.0</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">d</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">clients</span><span class="p">,</span> <span class="n">proxy</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mf">1.2</span><span class="p">)</span>
+<span class="n">d</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">proxy</span><span class="p">,</span> <span class="n">worker</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"ASGI"</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mf">1.2</span><span class="p">)</span>
+<span class="n">d</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">kubelet</span><span class="p">,</span> <span class="n">probes</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"Probes"</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mf">1.2</span><span class="p">)</span>
+<span class="n">d</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">kubelet</span><span class="p">,</span> <span class="n">lifespan_node</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"SIGTERM"</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mf">1.2</span><span class="p">)</span>
+<span class="n">d</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">worker</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mf">1.2</span><span class="p">)</span>
+<span class="n">d</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">lifespan_node</span><span class="p">,</span> <span class="n">cache</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"Close"</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mf">1.2</span><span class="p">)</span>
+
+<span class="n">d</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">3.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">))</span>
+<span class="n">save</span><span class="p">()</span>
+</code></pre>
+</details>
+<h3>本番 ASGI 運用チェックリスト</h3>
+<ol>
+<li><strong>Liveness（<code>/healthz</code>）と Readiness（<code>/readyz</code>）を厳格に分離する</strong>:
+<ul>
+<li><code>/healthz</code>（<strong>生存確認</strong>）は外部 DB 等に一切依存せず、イベントループが応答可能であることだけを即座に <code>200 OK</code> で返します。<code>/healthz</code> 内で外部 DB を叩くと、一時的な DB 瞬断で健全な全 Pod が一斉再起動する連鎖障害を招きます。</li>
+<li><code>/readyz</code>（<strong>受信準備確認</strong>）は <code>lifespan</code> の初期化完了やコネクションプール状態を検査し、起動直後やシャットダウン開始時には <code>503 Service Unavailable</code> を返してロードバランサーからの新規流入を止めます。またテレメトリのノイズを防ぐため、<code>exclude=lambda s: s.get(&quot;path&quot;) in {&quot;/healthz&quot;, &quot;/readyz&quot;}</code> でプローブをトレース対象から除外します。</li>
+</ul>
+</li>
+<li><strong>1 コンテナ 1 プロセスで水平スケールさせる</strong>: Kubernetes や Cloud Run では 1 コンテナあたり単一の <code>uvicorn</code> プロセスを起動し、<code>--timeout-graceful-shutdown</code> を Pod の <code>terminationGracePeriodSeconds</code> に合わせることで、<code>SIGTERM</code> 受信時に処理中の <a href="../05_async_and_realtime/sse_websockets_streaming.html">SSE / WebSocket ストリーム</a> を安全に完了させてから <code>lifespan</code> の <code>finally</code> ブロックでプールを閉じられます。</li>
+<li><strong>プロキシヘッダーの信頼境界を明示する</strong>: サイドカー構成では <code>127.0.0.1</code> にバインドする（または <code>--forwarded-allow-ips</code> を既知のロードバランサー CIDR に限定する）ことで、外部クライアントによる <code>X-Forwarded-For</code> や <code>X-Forwarded-Proto</code> の偽装を防止します。</li>
+</ol>
+<pre><code class="language-bash">uvicorn<span class="w"> </span>app.main:app<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--host<span class="w"> </span><span class="m">127</span>.0.0.1<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--port<span class="w"> </span><span class="m">8000</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--proxy-headers<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--timeout-graceful-shutdown<span class="w"> </span><span class="m">30</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--no-access-log
+</code></pre>
+<p>全 6 章の全体像を振り返るには、<a href="../index.html">ガイド概要と全体マップ</a> へ戻って FastAPI <code>v0.162.2</code> のアーキテクチャマップを参照してください。</p>
+
+            </main>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Theme toggle
+            const themeBtn = document.getElementById('theme-toggle');
+            if (themeBtn) {
+                themeBtn.addEventListener('click', function() {
+                    const current = document.documentElement.getAttribute('data-theme');
+                    const next = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    localStorage.setItem('drawlib-theme', next);
+                });
+            }
+
+            // Language dropdown outside-click & Escape close
+            const langDropdowns = document.querySelectorAll('.lang-dropdown');
+            if (langDropdowns.length > 0) {
+                document.addEventListener('click', function(e) {
+                    langDropdowns.forEach(function(dd) {
+                        if (dd.hasAttribute('open') && !dd.contains(e.target)) {
+                            dd.removeAttribute('open');
+                        }
+                    });
+                });
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        langDropdowns.forEach(function(dd) {
+                            dd.removeAttribute('open');
+                        });
+                    }
+                });
+            }
+
+            // Mobile menu toggle
+            const menuBtn = document.getElementById('menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            if (menuBtn && sidebar) {
+                function setMenuOpen(open) {
+                    sidebar.classList.toggle('is-open', open);
+                    menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    document.body.classList.toggle('menu-open', open);
+                    if (open) {
+                        const menu = sidebar.querySelector('.sidebar-menu');
+                        if (menu) {
+                            menu.scrollTop = 0;
+                        }
+                    }
+                }
+
+                menuBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const willOpen = !sidebar.classList.contains('is-open');
+                    setMenuOpen(willOpen);
+                });
+
+                // Close menu when clicking outside sidebar
+                document.addEventListener('click', function(e) {
+                    if (sidebar.classList.contains('is-open') && !sidebar.contains(e.target)) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                // Close menu when a navigation link is clicked
+                const navLinks = sidebar.querySelectorAll('.nav-item a');
+                navLinks.forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        setMenuOpen(false);
+                    });
+                });
+
+                // Close on Escape key
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                // Reset menu state when resized above mobile breakpoint
+                window.addEventListener('resize', function() {
+                    if (window.innerWidth > 768 && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

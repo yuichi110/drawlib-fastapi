@@ -1,0 +1,946 @@
+<!--
+ Copyright (c) 2026 Yuichi Ito (yuichi@yuichi.com)
+
+ This software is licensed under the Apache License, Version 2.0.
+ For more information, please visit: https://github.com/yuichi110/drawlib
+
+ This software is provided "as is", without warranty of any kind,
+ express or implied, including but not limited to the warranties of
+ merchantability, fitness for a particular purpose and noninfringement.
+-->
+<!DOCTYPE html>
+<html lang="ja" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>境界づけられたコンテキスト・パッケージ設計・内向き依存ルール — FastAPI Visual Guide (Unofficial · Drawlib Demo)</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-S9N5BZ1VRC');
+    </script>
+    <script>
+        (function() {
+            const saved = localStorage.getItem('drawlib-theme');
+            if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    
+    <link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/en/02_enterprise_architecture/modular_design.html">
+    
+    <link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/ja/02_enterprise_architecture/modular_design.html">
+    
+    <link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/en/02_enterprise_architecture/modular_design.html">
+    
+    
+    
+    <meta name="description" content="Python バックエンドを 10万行（100,000+ LOC）規模・数十人以上の開発体制へとスケールさせるには、routers/・models/・schemas/ といった技術レイヤ単位の水平分割から脱却し、厳格な内向き依存ルールに統治された 境界づけられたコンテキスト（Bounded Context）…">
+    <link rel="canonical" href="https://fastapi.drawlib.com/ja/02_enterprise_architecture/modular_design.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="FastAPI ビジュアル解説">
+    <meta property="og:title" content="境界づけられたコンテキスト・パッケージ設計・内向き依存ルール — FastAPI ビジュアル解説">
+    <meta property="og:description" content="Python バックエンドを 10万行（100,000+ LOC）規模・数十人以上の開発体制へとスケールさせるには、routers/・models/・schemas/ といった技術レイヤ単位の水平分割から脱却し、厳格な内向き依存ルールに統治された 境界づけられたコンテキスト（Bounded Context）…">
+    <meta property="og:url" content="https://fastapi.drawlib.com/ja/02_enterprise_architecture/modular_design.html">
+    <meta property="og:image" content="https://fastapi.drawlib.com/_assets/ogp.png">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:locale:alternate" content="en_US">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="境界づけられたコンテキスト・パッケージ設計・内向き依存ルール — FastAPI ビジュアル解説">
+    <meta name="twitter:description" content="Python バックエンドを 10万行（100,000+ LOC）規模・数十人以上の開発体制へとスケールさせるには、routers/・models/・schemas/ といった技術レイヤ単位の水平分割から脱却し、厳格な内向き依存ルールに統治された 境界づけられたコンテキスト（Bounded Context）…">
+    <meta name="twitter:image" content="https://fastapi.drawlib.com/_assets/ogp.png">
+    
+    
+    <link rel="icon" type="image/png" href="../../_assets/favicon.png">
+    
+    
+    <link rel="stylesheet" href="../style.css">
+    
+    
+</head>
+<body>
+    <div class="demo-banner" role="region" aria-label="非公式ショーケース案内">
+        <div class="demo-banner-inner">
+            <span class="demo-banner-badge">UNOFFICIAL DEMO</span>
+            
+            <span class="demo-banner-text">
+                <a href="https://www.drawlib.com/" target="_blank" rel="noopener noreferrer">Drawlib</a> と <a href="https://pypi.org/project/pni501/" target="_blank" rel="noopener noreferrer">PNI501</a> で作成した <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a>（v0.162.2, MIT）の非公式ビジュアル解説ショーケースです。
+            </span>
+            <span class="demo-banner-links">
+                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 診断レポート →</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI 公式 Docs ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+            </span>
+            
+        </div>
+    </div>
+    
+    <div class="doc-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI ビジュアル解説">
+                    
+                    FastAPI ビジュアル解説
+                    
+                </a>
+                <div class="sidebar-header-actions">
+                    <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">
+                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                    <button type="button" id="menu-toggle" class="menu-toggle-btn" aria-label="Toggle navigation" aria-expanded="false">
+                        <svg class="icon-hamburger" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        <svg class="icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="sidebar-menu">
+                
+                    
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../index.html" >ガイド概要と全体マップ</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">1. イントロ &amp; クイックスタート</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../01_getting_started/overview.html" >FastAPI の設計思想と内部構造</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../01_getting_started/quickstart.html" >クイックスタートと自動生成 Docs</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">2. 10万行規模の設計ベストプラクティス</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item active">
+                                <a href="modular_design.html" >境界づけられたコンテキストと階層化</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="di_lifespan_testing.html" >大規模 DI・Lifespan 管理・テスト戦略</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">3. ルーティング・入力検証・スキーマ</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../03_routing_and_models/parameters_and_validation.html" >Path・Query・Header・Cookie・Body</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../03_routing_and_models/responses_and_openapi.html" >レスポンス直列化と OpenAPI 3.1</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">4. 依存性注入（DI）とセキュリティ</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../04_dependencies_and_security/dependency_injection.html" >Dependant DAG・キャッシュ・yield スコープ</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../04_dependencies_and_security/security_and_auth.html" >認証・OAuth2 スコープ認可・抽出器</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">5. 非同期並行・ミドルウェア・ストリーミング</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../05_async_and_realtime/concurrency_and_middleware.html" >ASGI ミドルウェアとスレッドプール制御</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../05_async_and_realtime/sse_websockets_streaming.html" >ネイティブ SSE・JSONL・WebSocket</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">6. 可観測性・例外設計・実践テスト</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../06_observability_and_testing/telemetry_and_errors.html" >ネイティブ OpenTelemetry と例外処理</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../06_observability_and_testing/testing_and_deployment.html" >実践テスト手法と本番 ASGI 運用</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">診断レポート &amp; 公式リンク</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/reports/pni501/" target="_blank" rel="noopener noreferrer">PNI501 診断レポート<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI 公式ドキュメント<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">デモのリポジトリ (GitHub)<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                        </ul>
+                    
+                
+            </div>
+        </aside>
+        <div class="content-wrapper">
+            <header class="top-bar">
+                <div class="breadcrumbs">
+                    <span class="crumb">Docs</span>
+                    <span class="crumb-separator">&raquo;</span>
+                    <span class="crumb active">境界づけられたコンテキスト・パッケージ設計・内向き依存ルール</span>
+                </div>
+                
+                <div class="lang-switcher">
+                    <details class="lang-dropdown">
+                        <summary class="lang-dropdown-btn" aria-label="Select language">
+                            <svg class="lang-globe-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            <span class="lang-current-label">日本語</span>
+                            <svg class="lang-caret-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </summary>
+                        <div class="lang-dropdown-menu" role="menu">
+                            
+                            <a href="../../en/02_enterprise_architecture/modular_design.html" class="lang-option" lang="en" hreflang="en" >
+                                <span>English</span>
+                                
+                            </a>
+                            
+                            <a href="modular_design.html" class="lang-option active" lang="ja" hreflang="ja" aria-current="page">
+                                <span>日本語</span>
+                                
+                                <svg class="lang-check-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                
+                            </a>
+                            
+                        </div>
+                    </details>
+                </div>
+                
+            </header>
+            <main class="main-content">
+                <h1>境界づけられたコンテキスト・パッケージ設計・内向き依存ルール</h1>
+<p>Python バックエンドを <strong>10万行（100,000+ LOC）規模</strong>・数十人以上の開発体制へとスケールさせるには、<code>routers/</code>・<code>models/</code>・<code>schemas/</code> といった技術レイヤ単位の水平分割から脱却し、厳格な内向き依存ルールに統治された <strong>境界づけられたコンテキスト（Bounded Context）</strong> へと移行する必要があります。FastAPI <code>v0.162.2</code> は、階層的に合成可能な <code>APIRouter</code> ツリー、<code>Protocol</code> 親和性の高い依存性注入（DI）、そして Pydantic v2 による厳格な境界契約によって、このモジュラーモノリス設計をネイティブに実現します。</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/02_enterprise_architecture/modular_design/enterprise_bounded_contexts.png" alt="modular_design_1" />
+  <figcaption class="drawlib-caption">水平レイヤ分割のアンチパターンと境界づけられたコンテキストによる10万行規模モジュラーモノリスの対比</figcaption>
+</figure>
+<details class="drawlib-code-details">
+<summary>Source Code</summary>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.canvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">setup</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.icons</span><span class="w"> </span><span class="kn">import</span> <span class="n">phosphor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.lines</span><span class="w"> </span><span class="kn">import</span> <span class="n">line</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.shapes</span><span class="w"> </span><span class="kn">import</span> <span class="n">rectangle</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.smartarts</span><span class="w"> </span><span class="kn">import</span> <span class="n">Panel</span><span class="p">,</span> <span class="n">TreeNode</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">Styles</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.text</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span>
+
+<span class="n">setup</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">164</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">82</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
+
+<span class="n">text</span><span class="p">(</span>
+    <span class="p">(</span><span class="mi">82</span><span class="p">,</span> <span class="mf">76.5</span><span class="p">),</span>
+    <span class="s2">"Package Topology at Scale: Horizontal Sprawl vs. Bounded Contexts"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">13.5</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1"># Left Panel: Anti-Pattern (&gt;15k LOC Horizontal Layer Sprawl)</span>
+<span class="n">left_panel</span> <span class="o">=</span> <span class="n">Panel</span><span class="p">(</span>
+    <span class="s2">"Anti-Pattern: Horizontal Layer Sprawl"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">2.0</span><span class="p">),</span>
+    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DangerNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">2.0</span><span class="p">),</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DangerBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.0</span><span class="p">),</span>
+    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">warning</span><span class="p">,</span>
+    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DangerBold</span><span class="p">,</span>
+    <span class="n">header_variant</span><span class="o">=</span><span class="s2">"filled"</span><span class="p">,</span>
+    <span class="n">header_height</span><span class="o">=</span><span class="mf">8.5</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">left_panel</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">74</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">65</span><span class="p">)</span>
+
+<span class="n">bad_tree</span> <span class="o">=</span> <span class="n">TreeNode</span><span class="p">(</span>
+    <span class="s2">"app/  (100+ files per folder)"</span><span class="p">,</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
+    <span class="n">line_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">MutedBold</span><span class="p">,</span>
+    <span class="n">line_horizontal_margin</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span>
+    <span class="n">line_horizontal_length</span><span class="o">=</span><span class="mf">3.2</span><span class="p">,</span>
+    <span class="n">line_vertical_margin</span><span class="o">=</span><span class="mf">5.2</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">bad_tree</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"routers/   (85 endpoints mixed)"</span><span class="p">,</span> <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.2</span><span class="p">))</span>
+<span class="n">bad_tree</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"models/    (90 coupled ORM tables)"</span><span class="p">,</span> <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.2</span><span class="p">))</span>
+<span class="n">bad_tree</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"schemas/   (140 shared DTOs)"</span><span class="p">,</span> <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.2</span><span class="p">))</span>
+<span class="n">bad_tree</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"crud/      (cross-domain SQL joins)"</span><span class="p">,</span> <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.2</span><span class="p">))</span>
+<span class="n">bad_tree</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">9.5</span><span class="p">,</span> <span class="mf">58.0</span><span class="p">))</span>
+
+<span class="n">rectangle</span><span class="p">(</span>
+    <span class="p">(</span><span class="mi">42</span><span class="p">,</span> <span class="mf">18.0</span><span class="p">),</span>
+    <span class="n">width</span><span class="o">=</span><span class="mi">66</span><span class="p">,</span>
+    <span class="n">height</span><span class="o">=</span><span class="mf">19.0</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DangerNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.5</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">text</span><span class="p">(</span>
+    <span class="p">(</span><span class="mi">42</span><span class="p">,</span> <span class="mf">23.8</span><span class="p">),</span>
+    <span class="s2">"Failure Modes Past ~15,000 LOC"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DangerBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">text</span><span class="p">(</span>
+    <span class="p">(</span><span class="mi">42</span><span class="p">,</span> <span class="mf">14.8</span><span class="p">),</span>
+    <span class="s2">"• Shotgun surgery across 4+ giant folders</span><span class="se">\n</span><span class="s2">• Circular imports between crud/ &amp; models/</span><span class="se">\n</span><span class="s2">• Implicit DB joins block service extraction"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1"># Right Panel: Target 100k+ LOC Modular Monolith</span>
+<span class="n">right_panel</span> <span class="o">=</span> <span class="n">Panel</span><span class="p">(</span>
+    <span class="s2">"100k+ LOC Target: Bounded Context Slices"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">2.0</span><span class="p">),</span>
+    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">2.0</span><span class="p">),</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.0</span><span class="p">),</span>
+    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">shield_check</span><span class="p">,</span>
+    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="p">,</span>
+    <span class="n">header_variant</span><span class="o">=</span><span class="s2">"filled"</span><span class="p">,</span>
+    <span class="n">header_height</span><span class="o">=</span><span class="mf">8.5</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">right_panel</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mi">85</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">74</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">65</span><span class="p">)</span>
+
+<span class="n">good_tree</span> <span class="o">=</span> <span class="n">TreeNode</span><span class="p">(</span>
+    <span class="s2">"src/  (Modular Monolith)"</span><span class="p">,</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
+    <span class="n">line_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">,</span>
+    <span class="n">line_horizontal_margin</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span>
+    <span class="n">line_horizontal_length</span><span class="o">=</span><span class="mf">3.2</span><span class="p">,</span>
+    <span class="n">line_vertical_margin</span><span class="o">=</span><span class="mf">5.2</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">good_tree</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"orders/    (router, use_cases, domain, infra)"</span><span class="p">,</span> <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.2</span><span class="p">))</span>
+<span class="n">good_tree</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"billing/   (router, use_cases, domain, infra)"</span><span class="p">,</span> <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.2</span><span class="p">))</span>
+<span class="n">good_tree</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"identity/  (router, use_cases, domain, infra)"</span><span class="p">,</span> <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.2</span><span class="p">))</span>
+<span class="n">good_tree</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"shared/    (uow, problem_json, telemetry)"</span><span class="p">,</span> <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.2</span><span class="p">))</span>
+<span class="n">good_tree</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">89.5</span><span class="p">,</span> <span class="mf">58.0</span><span class="p">))</span>
+
+<span class="c1"># Mini inward-dependency diagram inside right panel footer</span>
+<span class="n">rectangle</span><span class="p">((</span><span class="mi">102</span><span class="p">,</span> <span class="mf">22.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">8.0</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.5</span><span class="p">),</span> <span class="n">text</span><span class="o">=</span><span class="s2">"orders/"</span><span class="p">,</span> <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.2</span><span class="p">))</span>
+<span class="n">rectangle</span><span class="p">((</span><span class="mi">142</span><span class="p">,</span> <span class="mf">22.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">8.0</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.5</span><span class="p">),</span> <span class="n">text</span><span class="o">=</span><span class="s2">"billing/"</span><span class="p">,</span> <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.2</span><span class="p">))</span>
+<span class="n">rectangle</span><span class="p">((</span><span class="mi">122</span><span class="p">,</span> <span class="mf">11.2</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">7.6</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.5</span><span class="p">),</span> <span class="n">text</span><span class="o">=</span><span class="s2">"shared/ + Public Ports"</span><span class="p">,</span> <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">))</span>
+
+<span class="n">line</span><span class="p">((</span><span class="mi">102</span><span class="p">,</span> <span class="mf">18.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">112</span><span class="p">,</span> <span class="mf">15.0</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">)</span>
+<span class="n">line</span><span class="p">((</span><span class="mi">142</span><span class="p">,</span> <span class="mf">18.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">132</span><span class="p">,</span> <span class="mf">15.0</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">)</span>
+
+<span class="n">save</span><span class="p">()</span>
+</code></pre>
+</details>
+<hr />
+<h2>1. なぜ水平レイヤ分割は 1.5万行を超えると破綻するのか</h2>
+<p>2,000行規模のチュートリアルや初期プロトタイプでは、<code>app/routers/</code>・<code>app/models/</code>・<code>app/schemas/</code>・<code>app/crud/</code> のように技術的役割でディレクトリを分ける構成は直感的で見通しよく機能します。しかしコードベースが <strong>15,000〜100,000行（LOC）以上</strong> に成長すると、この水平分割は <strong>閉鎖性共通の原則（CCP: Common Closure Principle）</strong> に違反し、1つの業務仕様変更がリポジトリ全体に散乱する「散弾銃の手術（Shotgun Surgery）」を引き起こします。</p>
+<h3>ソフトウェア工学の原則：高凝集と境界づけられたコンテキスト</h3>
+<p>大規模コードベースの保守性は、以下の3つの普遍的なソフトウェア設計原則に支えられています。</p>
+<ul>
+<li><strong>技術分類より業務スライスの凝集度を優先する</strong>: 「注文の部分返金」のような1つの機能追加は <code>src/orders/</code> 配下の変更だけで完結すべきであり、複数チームの PR が巨大フォルダ上で衝突する事態を防ぎます。</li>
+<li><strong>明示的なコンテキスト境界（DDD Bounded Context）</strong>: <code>identity/</code> における <code>Account</code>（認証情報・MFA・OAuth スコープ）と、<code>billing/</code> における <code>Account</code>（税務番号・与信枠・請求条件）は本質的に異なる概念です。パッケージを分離することで、全チームが共有する80カラムの「神 <code>User</code> テーブル」の肥大化を阻止できます。</li>
+<li><strong>コンテキスト横断の ORM <code>JOIN</code> 禁止</strong>: 他のコンテキストの SQLAlchemy モデルを直接 import して SQL <code>JOIN</code> するのではなく、公開ポート（<code>Protocol</code>）またはドメインイベント経由でのみ連携します。データ自律性を守ることで、将来 <code>billing/</code> のような高負荷ドメインだけをビジネスロジック無改修でマイクロサービスへ切り出せます。</li>
+</ul>
+<h3>FastAPI での実践：階層的 <code>APIRouter</code> ツリー合成</h3>
+<p>FastAPI の <code>APIRouter</code> は重量級のコントローラ基底クラスではなく、軽量なルート登録ツリーです。各コンテキストは内部のパッケージ構造を自律的に管理し、最上位の合成ルート（<code>src/main.py</code>）に対しては薄い <code>router</code> オブジェクト<strong>のみ</strong>を公開します。</p>
+<pre><code class="language-text">src/
+├── main.py                      # ASGI 合成ルート (lifespan, 例外ハンドラ, v1_router 統合)
+├── shared/                      # 横断基盤 (OpenTelemetry, RFC 9457 エラー応答, UoW 基底)
+├── identity/                    # 境界づけられたコンテキスト: 認証・テナント RBAC
+│   ├── domain/                  # 純粋エンティティ・値オブジェクト・DomainError 派生例外
+│   ├── application/             # UseCase・Protocol ポート定義
+│   ├── infrastructure/          # SQLAlchemy / OIDC アダプタ実装
+│   └── presentation/            # FastAPI APIRouter・Annotated DI 定義・Pydantic DTO
+├── orders/                      # 境界づけられたコンテキスト: 注文ライフサイクル・在庫引当
+│   ├── domain/
+│   ├── application/
+│   ├── infrastructure/
+│   └── presentation/
+└── billing/                     # 境界づけられたコンテキスト: 請求発行・決済キャプチャ
+    ├── domain/
+    ├── application/
+    ├── infrastructure/
+    └── presentation/
+</code></pre>
+<hr />
+<h2>2. 内向き依存ルール（クリーン／ヘキサゴナルアーキテクチャ）</h2>
+<p>ドメイン単位でディレクトリを分割しただけでは不十分です。各コンテキスト（<code>src/orders/</code>）の内部では、すべてのソースコード依存が HTTP 通信層や DB ドライバから <strong>ビジネスルール（Domain Core）へ向かって厳密に内向き</strong> に向かう必要があります。</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/02_enterprise_architecture/modular_design/clean_layering_fastapi_mapping.png" alt="modular_design_2" />
+  <figcaption class="drawlib-caption">クリーン／ヘキサゴナルな内向き依存ルールと FastAPI v0.162.2 コンポーネントの対応関係</figcaption>
+</figure>
+<details class="drawlib-code-details">
+<summary>Source Code</summary>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.canvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">setup</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.diagrams.architecture</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArchitectureDiagram</span><span class="p">,</span> <span class="n">Node</span><span class="p">,</span> <span class="n">NodeGroup</span><span class="p">,</span> <span class="n">PhosphorIcon</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.shapes</span><span class="w"> </span><span class="kn">import</span> <span class="n">rectangle</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">Styles</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.text</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span>
+
+<span class="n">setup</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">180</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">84</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
+
+<span class="n">text</span><span class="p">(</span>
+    <span class="p">(</span><span class="mi">90</span><span class="p">,</span> <span class="mf">78.5</span><span class="p">),</span>
+    <span class="s2">"Inward Dependency Rule Inside Each Bounded Context (src/orders/)"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">13.5</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">diag</span> <span class="o">=</span> <span class="n">ArchitectureDiagram</span><span class="p">(</span>
+    <span class="n">node_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Primary</span><span class="p">,</span>
+    <span class="n">node_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
+    <span class="n">edge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">,</span>
+    <span class="n">edge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">node_card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># 1. Outer Left: HTTP Presentation Layer</span>
+<span class="n">pres_grp</span> <span class="o">=</span> <span class="n">diag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">NodeGroup</span><span class="p">(</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">"1. Presentation (HTTP)"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mi">35</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">2.0</span><span class="p">),</span>
+        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span> <span class="n">text_size</span><span class="o">=</span><span class="mf">10.8</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">22</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">router_node</span> <span class="o">=</span> <span class="n">pres_grp</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Node</span><span class="p">(</span>
+        <span class="s2">"APIRouter &amp;</span><span class="se">\n</span><span class="s2">Pydantic DTOs"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mi">27</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
+        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">GLOBE</span><span class="p">,</span>
+        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="p">(</span><span class="mf">17.5</span><span class="p">,</span> <span class="mi">33</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">di_node</span> <span class="o">=</span> <span class="n">pres_grp</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Node</span><span class="p">(</span>
+        <span class="s2">"Annotated DI &amp;</span><span class="se">\n</span><span class="s2">Error Handlers"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mi">27</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
+        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">PLUGS_CONNECTED</span><span class="p">,</span>
+        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="p">(</span><span class="mf">17.5</span><span class="p">,</span> <span class="mi">12</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1"># 2. Middle Left: Application Layer</span>
+<span class="n">app_grp</span> <span class="o">=</span> <span class="n">diag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">NodeGroup</span><span class="p">(</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">"2. Application"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mi">34</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">2.0</span><span class="p">),</span>
+        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span> <span class="n">text_size</span><span class="o">=</span><span class="mf">10.8</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="p">(</span><span class="mi">52</span><span class="p">,</span> <span class="mi">22</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">uc_node</span> <span class="o">=</span> <span class="n">app_grp</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Node</span><span class="p">(</span>
+        <span class="s2">"PlaceOrder</span><span class="se">\n</span><span class="s2">UseCase"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mi">26</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span>
+        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">GEAR</span><span class="p">,</span>
+        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="p">(</span><span class="mf">17.0</span><span class="p">,</span> <span class="mi">24</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1"># 3. Inner Focal Core: Domain Layer</span>
+<span class="n">dom_grp</span> <span class="o">=</span> <span class="n">diag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">NodeGroup</span><span class="p">(</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">"3. Domain Core (Pure)"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mi">35</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryDashed</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">2.0</span><span class="p">),</span>
+        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span> <span class="n">text_size</span><span class="o">=</span><span class="mf">10.8</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="p">(</span><span class="mi">97</span><span class="p">,</span> <span class="mi">22</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">ent_node</span> <span class="o">=</span> <span class="n">dom_grp</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Node</span><span class="p">(</span>
+        <span class="s2">"OrderEntity &amp;</span><span class="se">\n</span><span class="s2">DomainError"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mi">27</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
+        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">CUBE</span><span class="p">,</span>
+        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
+        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
+        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="p">(</span><span class="mf">17.5</span><span class="p">,</span> <span class="mi">33</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">port_node</span> <span class="o">=</span> <span class="n">dom_grp</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Node</span><span class="p">(</span>
+        <span class="s2">"RepositoryPort</span><span class="se">\n</span><span class="s2">(Protocol)"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mi">27</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
+        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">SHIELD_CHECK</span><span class="p">,</span>
+        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="p">(</span><span class="mf">17.5</span><span class="p">,</span> <span class="mi">12</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1"># 4. Outer Right: Infrastructure Adapters</span>
+<span class="n">infra_grp</span> <span class="o">=</span> <span class="n">diag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">NodeGroup</span><span class="p">(</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">"4. Infrastructure"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mi">31</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">2.0</span><span class="p">),</span>
+        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span> <span class="n">text_size</span><span class="o">=</span><span class="mf">10.8</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="p">(</span><span class="mi">143</span><span class="p">,</span> <span class="mi">22</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">orm_node</span> <span class="o">=</span> <span class="n">infra_grp</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Node</span><span class="p">(</span>
+        <span class="s2">"SqlAlchemyRepo</span><span class="se">\n</span><span class="s2">&amp; HTTPX Client"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span>
+        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">DATABASE</span><span class="p">,</span>
+        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="p">(</span><span class="mf">15.5</span><span class="p">,</span> <span class="mi">24</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1"># Inward Dependency Arrows</span>
+<span class="n">diag</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">router_node</span><span class="p">,</span> <span class="n">uc_node</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"calls"</span><span class="p">)</span>
+<span class="n">diag</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">di_node</span><span class="p">,</span> <span class="n">uc_node</span><span class="p">,</span> <span class="n">routing</span><span class="o">=</span><span class="s2">"orthogonal"</span><span class="p">)</span>
+<span class="n">diag</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">uc_node</span><span class="p">,</span> <span class="n">ent_node</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"uses"</span><span class="p">)</span>
+<span class="n">diag</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">uc_node</span><span class="p">,</span> <span class="n">port_node</span><span class="p">,</span> <span class="n">routing</span><span class="o">=</span><span class="s2">"orthogonal"</span><span class="p">)</span>
+<span class="n">diag</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">orm_node</span><span class="p">,</span> <span class="n">port_node</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"impl"</span><span class="p">,</span> <span class="n">routing</span><span class="o">=</span><span class="s2">"orthogonal"</span><span class="p">)</span>
+
+<span class="n">diag</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+
+<span class="c1"># Bottom Architectural Rule Callout Banner</span>
+<span class="n">rectangle</span><span class="p">(</span>
+    <span class="p">(</span><span class="mi">90</span><span class="p">,</span> <span class="mf">10.5</span><span class="p">),</span>
+    <span class="n">width</span><span class="o">=</span><span class="mi">168</span><span class="p">,</span>
+    <span class="n">height</span><span class="o">=</span><span class="mf">9.5</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.5</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">text</span><span class="p">(</span>
+    <span class="p">(</span><span class="mi">90</span><span class="p">,</span> <span class="mf">10.5</span><span class="p">),</span>
+    <span class="s2">"Golden Rule: Domain Core NEVER imports fastapi, Request, HTTPException, or SQLAlchemy Session globals."</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.8</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">save</span><span class="p">()</span>
+</code></pre>
+</details>
+<h3>なぜ <code>Domain</code> 層で <code>fastapi</code> や <code>HTTPException</code> を import してはならないのか</h3>
+<p>成長中の FastAPI プロジェクトで最も頻発する設計負債が、ドメインサービスやリポジトリの深部で <code>raise HTTPException(status_code=409, detail=...)</code> を送出したり、<code>fastapi.Request</code> をそのまま引数で受け渡したりする実装です。10万行規模では、この結合が3つの重大な問題を生みます。</p>
+<ol>
+<li><strong>HTTP 以外の実行経路で再利用不能になる</strong>: 同じ注文確定ロジックを管理 CLI バッチ、Kafka / PubSub コンシューマ、あるいは非同期ワーカーから呼び出そうとした瞬間に、HTTP ステータスコード（<code>409</code>）や <code>Request</code> ヘッダが破綻します。</li>
+<li><strong>単体テストに HTTP スキャフォールディングを強いられる</strong>: 金額計算や在庫引当の不変条件を検証したいだけにもかかわらず、ダミーの Starlette <code>Request</code> 構築や JSON エラー応答のパースが必要になります。</li>
+<li><strong>ORM セッションの漏洩とトランザクション境界の崩壊</strong>: 生の SQLAlchemy <code>AsyncSession</code> をドメインモデルへ渡すと、計算途中で暗黙の遅延ロード（Lazy Load）が発火し、トランザクション境界が曖昧になります。</li>
+</ol>
+<h3>純粋なドメインポート（<code>Protocol</code>）と UseCase の実装パターン</h3>
+<p>モダンな Python（<code>3.10+</code>）では、依存関係逆転の原則（DIP）を実現するために重厚な抽象基底クラス階層や外部 DI コンテナライブラリを導入する必要はありません。ドメインエンティティは <code>@dataclass(frozen=True, slots=True)</code> で不変化し、インフラ層との境界は標準ライブラリの <code>typing.Protocol</code>（構造的部分型）で宣言します。</p>
+<pre><code class="language-python"><span class="c1"># src/orders/domain/entities.py — FastAPI・Pydantic・ORM への依存ゼロ！</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Protocol</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">DomainError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""トランスポート層に依存しない業務ルール違反の基底例外。"""</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">InsufficientInventoryError</span><span class="p">(</span><span class="n">DomainError</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sku</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">requested</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">available</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sku</span> <span class="o">=</span> <span class="n">sku</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">requested</span> <span class="o">=</span> <span class="n">requested</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">available</span> <span class="o">=</span> <span class="n">available</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"SKU '</span><span class="si">{</span><span class="n">sku</span><span class="si">}</span><span class="s2">' requested </span><span class="si">{</span><span class="n">requested</span><span class="si">}</span><span class="s2"> units, but only </span><span class="si">{</span><span class="n">available</span><span class="si">}</span><span class="s2"> available."</span>
+        <span class="p">)</span>
+
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">OrderLine</span><span class="p">:</span>
+    <span class="n">sku</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">quantity</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">unit_price_cents</span><span class="p">:</span> <span class="nb">int</span>
+
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">OrderEntity</span><span class="p">:</span>
+    <span class="n">order_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">tenant_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">customer_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">lines</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">OrderLine</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">status</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"CONFIRMED"</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">total_cents</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">quantity</span> <span class="o">*</span> <span class="n">line</span><span class="o">.</span><span class="n">unit_price_cents</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">OrderRepositoryPort</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">order</span><span class="p">:</span> <span class="n">OrderEntity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OrderEntity</span><span class="p">:</span> <span class="o">...</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_by_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">order_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OrderEntity</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+
+
+<span class="c1"># src/orders/application/use_cases.py — Protocol ポートを介した純粋なユースケース編成</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">PlaceOrderUseCase</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo</span><span class="p">:</span> <span class="n">OrderRepositoryPort</span><span class="p">,</span> <span class="n">stock_by_sku</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_repo</span> <span class="o">=</span> <span class="n">repo</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stock</span> <span class="o">=</span> <span class="n">stock_by_sku</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">order_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">tenant_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">customer_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">lines</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">OrderLine</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OrderEntity</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+            <span class="n">available</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stock</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">sku</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">quantity</span> <span class="o">&gt;</span> <span class="n">available</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">InsufficientInventoryError</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">sku</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">quantity</span><span class="p">,</span> <span class="n">available</span><span class="p">)</span>
+        <span class="n">entity</span> <span class="o">=</span> <span class="n">OrderEntity</span><span class="p">(</span>
+            <span class="n">order_id</span><span class="o">=</span><span class="n">order_id</span><span class="p">,</span>
+            <span class="n">tenant_id</span><span class="o">=</span><span class="n">tenant_id</span><span class="p">,</span>
+            <span class="n">customer_id</span><span class="o">=</span><span class="n">customer_id</span><span class="p">,</span>
+            <span class="n">lines</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">lines</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_repo</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">entity</span><span class="p">)</span>
+</code></pre>
+<hr />
+<h2>3. DTO と永続化モデルの分離：Mass-Assignment 脆弱性と内部カラム漏洩の防止</h2>
+<p>小規模なプロトタイプでは、HTTP リクエスト JSON・ドメイン状態・DB テーブル行・HTTP レスポンス JSON をたった1つの共有モデルクラスで兼用してしまうケースが見られます。エンタープライズ開発においてこの4つの境界を融合させると、深刻なセキュリティ脆弱性とスキーマ変更の硬直化を招きます。</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/02_enterprise_architecture/modular_design/schema_separation_matrix.png" alt="modular_design_3" />
+  <figcaption class="drawlib-caption">Mass-Assignment（CWE-915）と内部 DB カラム漏洩を構造的に防ぐ4段階モデル分離マトリクス</figcaption>
+</figure>
+<details class="drawlib-code-details">
+<summary>Source Code</summary>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.canvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">setup</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.smartarts</span><span class="w"> </span><span class="kn">import</span> <span class="n">ChevronProcess</span><span class="p">,</span> <span class="n">Table</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">Colors</span><span class="p">,</span> <span class="n">Styles</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.text</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span>
+
+<span class="n">setup</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">168</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">84</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
+
+<span class="n">text</span><span class="p">(</span>
+    <span class="p">(</span><span class="mi">84</span><span class="p">,</span> <span class="mf">78.5</span><span class="p">),</span>
+    <span class="s2">"Strict Boundary Contracts: Inbound DTO -&gt; Domain -&gt; Persistence -&gt; Outbound DTO"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">13.0</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1"># Top Pipeline: 4 Distinct Model Boundaries</span>
+<span class="n">pipeline</span> <span class="o">=</span> <span class="n">ChevronProcess</span><span class="p">(</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.0</span><span class="p">),</span>
+    <span class="n">description_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">corner_angle</span><span class="o">=</span><span class="mf">62.0</span><span class="p">,</span>
+    <span class="n">spacing</span><span class="o">=</span><span class="mf">1.8</span><span class="p">,</span>
+    <span class="n">flat_left_end</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">pipeline</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"1. OrderCreateDTO"</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"extra='forbid' (HTTP In)"</span><span class="p">)</span>
+<span class="n">pipeline</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="s2">"2. OrderEntity"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">"Frozen Domain Core"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.0</span><span class="p">),</span>
+    <span class="n">description_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">pipeline</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"3. OrderRecord"</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"ORM Row (DB Columns)"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">)</span>
+<span class="n">pipeline</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"4. OrderReadDTO"</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"response_model (HTTP Out)"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">)</span>
+<span class="n">pipeline</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">56</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">156</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+
+<span class="c1"># Bottom Comparison Matrix Table (Top-Left anchored at y=50)</span>
+<span class="n">table</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span>
+    <span class="n">cell_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.2</span><span class="p">),</span>
+    <span class="n">header_cell_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
+    <span class="n">header_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
+    <span class="n">border_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">MutedThin</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">table</span><span class="o">.</span><span class="n">set_style_cell_evenodd</span><span class="p">(</span>
+    <span class="n">even_color</span><span class="o">=</span><span class="n">Colors</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
+    <span class="n">even_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.2</span><span class="p">),</span>
+    <span class="n">odd_color</span><span class="o">=</span><span class="n">Colors</span><span class="o">.</span><span class="n">Gray1</span><span class="p">,</span>
+    <span class="n">odd_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.2</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">table</span><span class="o">.</span><span class="n">set_style_cell_header</span><span class="p">(</span>
+    <span class="n">background_color</span><span class="o">=</span><span class="n">Colors</span><span class="o">.</span><span class="n">Primary</span><span class="p">,</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">table</span><span class="o">.</span><span class="n">draw_flexible</span><span class="p">(</span>
+    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span>
+    <span class="n">column_widths</span><span class="o">=</span><span class="p">[</span><span class="mi">32</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">44</span><span class="p">,</span> <span class="mi">50</span><span class="p">],</span>
+    <span class="n">row_heights</span><span class="o">=</span><span class="p">[</span><span class="mf">8.5</span><span class="p">,</span> <span class="mf">8.5</span><span class="p">,</span> <span class="mf">8.5</span><span class="p">,</span> <span class="mf">8.5</span><span class="p">,</span> <span class="mf">8.5</span><span class="p">],</span>
+    <span class="n">data</span><span class="o">=</span><span class="p">[</span>
+        <span class="p">[</span><span class="s2">"Model Class"</span><span class="p">,</span> <span class="s2">"Architectural Layer"</span><span class="p">,</span> <span class="s2">"Key Implementation Guard"</span><span class="p">,</span> <span class="s2">"Failure Prevented at 100k+ LOC"</span><span class="p">],</span>
+        <span class="p">[</span><span class="s2">"OrderCreateDTO"</span><span class="p">,</span> <span class="s2">"Presentation (In)"</span><span class="p">,</span> <span class="s2">"BaseModel + extra='forbid'"</span><span class="p">,</span> <span class="s2">"Blocks mass-assignment (status='PAID')"</span><span class="p">],</span>
+        <span class="p">[</span><span class="s2">"OrderEntity"</span><span class="p">,</span> <span class="s2">"Domain Core"</span><span class="p">,</span> <span class="s2">"@dataclass(frozen=True, slots=True)"</span><span class="p">,</span> <span class="s2">"Enforces invariants without HTTP/ORM"</span><span class="p">],</span>
+        <span class="p">[</span><span class="s2">"OrderRecord"</span><span class="p">,</span> <span class="s2">"Infrastructure"</span><span class="p">,</span> <span class="s2">"SQLAlchemy Declarative Row"</span><span class="p">,</span> <span class="s2">"Isolates indexes, shards &amp; audit columns"</span><span class="p">],</span>
+        <span class="p">[</span><span class="s2">"OrderReadDTO"</span><span class="p">,</span> <span class="s2">"Presentation (Out)"</span><span class="p">,</span> <span class="s2">"response_model=OrderReadDTO"</span><span class="p">,</span> <span class="s2">"Strips internal_fraud_score &amp; PII fields"</span><span class="p">],</span>
+    <span class="p">],</span>
+<span class="p">)</span>
+
+<span class="n">save</span><span class="p">()</span>
+</code></pre>
+</details>
+<h3>FastAPI での実践：入力 <code>extra=&quot;forbid&quot;</code> と出力 <code>response_model</code> による二重防護</h3>
+<p>すべての <code>APIRouter</code> エンドポイントにおいて、<code>ConfigDict(extra=&quot;forbid&quot;)</code> を設定した入力専用 DTO と <code>response_model=OrderReadDTO</code> を対で宣言します。これにより、不正フィールド注入（Mass-Assignment）を入力端で遮断しつつ、<code>internal_fraud_score</code> や <code>shard_routing_key</code> といった永続化層の内部管理カラムが外部レスポンスへ漏洩することを構造的に防止します（Rust 製 <code>TypeAdapter</code> による直列化パイプラインの詳細は <a href="../03_routing_and_models/responses_and_openapi.html">レスポンス直列化と OpenAPI 3.1</a> を参照してください）。</p>
+<pre><code class="language-python"><span class="c1"># src/orders/presentation/router.py — 厳格な DTO 境界契約と階層的 APIRouter 合成</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">status</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">ConfigDict</span><span class="p">,</span> <span class="n">Field</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">OrderLineInputDTO</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">,</span> <span class="n">str_strip_whitespace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">sku</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">min_length</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">pattern</span><span class="o">=</span><span class="sa">r</span><span class="s2">"^[A-Z0-9_-]+$"</span><span class="p">)</span>
+    <span class="n">quantity</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">gt</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">le</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+    <span class="n">unit_price_cents</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">gt</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">OrderCreateDTO</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="c1"># 未定義フィールド（例: status="PAID"）の混入を 422 Unprocessable Content で即座に拒否</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">,</span> <span class="n">str_strip_whitespace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">customer_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">min_length</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">64</span><span class="p">)</span>
+    <span class="n">lines</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">OrderLineInputDTO</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">min_length</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+
+
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">OrderRecord</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""内部管理メタデータを含むインフラ永続化レコード。"""</span>
+
+    <span class="n">order_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">tenant_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">customer_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">total_cents</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">status</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">internal_fraud_score</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.02</span>
+    <span class="n">shard_routing_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"shard-ap-northeast-1a"</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">OrderReadDTO</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""外部公開用レスポンス契約（internal_fraud_score や shard_routing_key を除外）。"""</span>
+
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">from_attributes</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">order_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">customer_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">total_cents</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">status</span><span class="p">:</span> <span class="nb">str</span>
+
+
+<span class="n">orders_router</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">"/orders"</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">"orders"</span><span class="p">])</span>
+
+
+<span class="nd">@orders_router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">""</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">OrderReadDTO</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_201_CREATED</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">create_order</span><span class="p">(</span>
+    <span class="n">payload</span><span class="p">:</span> <span class="n">OrderCreateDTO</span><span class="p">,</span>
+    <span class="n">use_case</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">PlaceOrderUseCase</span><span class="p">,</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_place_order_use_case</span><span class="p">)],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OrderRecord</span><span class="p">:</span>
+    <span class="n">entity</span> <span class="o">=</span> <span class="k">await</span> <span class="n">use_case</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="n">order_id</span><span class="o">=</span><span class="s2">"ord_2026_001"</span><span class="p">,</span>
+        <span class="n">tenant_id</span><span class="o">=</span><span class="s2">"tnt_enterprise"</span><span class="p">,</span>
+        <span class="n">customer_id</span><span class="o">=</span><span class="n">payload</span><span class="o">.</span><span class="n">customer_id</span><span class="p">,</span>
+        <span class="n">lines</span><span class="o">=</span><span class="p">[</span>
+            <span class="n">OrderLine</span><span class="p">(</span>
+                <span class="n">sku</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">sku</span><span class="p">,</span>
+                <span class="n">quantity</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">quantity</span><span class="p">,</span>
+                <span class="n">unit_price_cents</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">unit_price_cents</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">payload</span><span class="o">.</span><span class="n">lines</span>
+        <span class="p">],</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">persist_and_load_record</span><span class="p">(</span><span class="n">entity</span><span class="p">)</span>
+
+
+<span class="c1"># src/main.py — 最上位での API バージョンツリー合成</span>
+<span class="n">v1_router</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">"/api/v1"</span><span class="p">)</span>
+<span class="n">v1_router</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">orders_router</span><span class="p">)</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">"Enterprise Commerce API"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">v1_router</span><span class="p">)</span>
+</code></pre>
+<hr />
+<h2>4. アーキテクチャ境界を CI で機械的に強制する（Fitness Functions）</h2>
+<p>30名以上のエンジニアが並行開発する10万行超のリポジトリでは、Wiki 上のドキュメントに書かれただけの設計規約は納期プレッシャーのもとで必ず形骸化します。パッケージ間の依存方向と型契約は <strong>CI で自動検証される適応度関数（Architectural Fitness Functions）</strong> としてコード化してください。</p>
+<h3>FastAPI のルート／DTO モジュールで <code>from __future__ import annotations</code> を避けるべき理由</h3>
+<p>型注釈を実行時に無視する純粋な静的解析用途とは異なり、FastAPI <code>v0.162.2</code> と Pydantic v2 は <strong>アプリケーション起動時に <code>typing_inspection</code> と <code>get_typed_signature</code> を用いて関数シグネチャと <code>Annotated[...]</code> メタデータを実行時イントロスペクション</strong>し、OpenAPI 3.1 スキーマ・バリデータ・依存グラフを構築します。</p>
+<blockquote>
+<p>[!IMPORTANT]
+<strong>FastAPI 型注釈の実践ルール</strong>: Python <code>3.10+</code> では <code>X | Y</code> ユニオン型や <code>list[str]</code> / <code>dict[str, Any]</code> ジェネリクスが標準で実行時評価でき、Python <code>3.14</code> では PEP 649 による遅延評価もネイティブ実装されています。<strong>FastAPI の <code>router.py</code>・<code>dependencies.py</code>・Pydantic <code>schemas.py</code> では <code>from __future__ import annotations</code> を記述しないでください。</strong> 全注釈を文字列化すると、ローカルスコープ型や <code>if TYPE_CHECKING:</code> 背後の型を参照した際に実行時前方参照解決エラーの原因となります。</p>
+</blockquote>
+<h3>静的ガバナンスの自動化（<code>mypy</code> / <code>ty</code>・<code>ruff</code>・<code>import-linter</code>）</h3>
+<p><code>py.typed</code>（PEP 561）マーカーと厳格な型検査（<code>mypy --strict</code> または Astral <code>ty</code>）、FastAPI 専用ルール（<code>FAST</code>）を有効化した <code>ruff</code>、そしてレイヤ違反の import を即座に CI 失敗させる <code>import-linter</code> を <code>pyproject.toml</code> に統合します。</p>
+<pre><code class="language-toml"><span class="c1"># pyproject.toml — 10万行規模コードベースを守る自動アーキテクチャ検査設定</span>
+<span class="k">[tool.mypy]</span>
+<span class="n">python_version</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"3.12"</span>
+<span class="n">strict</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">plugins</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"pydantic.mypy"</span><span class="p">]</span>
+<span class="n">disallow_any_generics</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+
+<span class="k">[tool.ruff.lint]</span>
+<span class="n">select</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="s2">"E"</span><span class="p">,</span><span class="w"> </span><span class="s2">"F"</span><span class="p">,</span><span class="w"> </span><span class="s2">"I"</span><span class="p">,</span><span class="w"> </span><span class="s2">"B"</span><span class="p">,</span><span class="w"> </span><span class="s2">"UP"</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">"FAST"</span><span class="p">,</span><span class="w">    </span><span class="c1"># FastAPI 専用 Lint ルール (冗長な response_model や Depends 宣言を検出)</span>
+<span class="w">    </span><span class="s2">"TID251"</span><span class="p">,</span><span class="w">  </span><span class="c1"># 禁止モジュールの import 検査</span>
+<span class="p">]</span>
+
+<span class="k">[tool.ruff.lint.per-file-ignores]</span>
+<span class="c1"># Domain・Application 層はフレームワーク非依存を厳守</span>
+<span class="s2">"src/*/domain/**"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[]</span>
+
+<span class="k">[[tool.importlinter.contracts]]</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Domain and Application never import FastAPI or SQLAlchemy"</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"forbidden"</span>
+<span class="n">source_modules</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"src.orders.domain"</span><span class="p">,</span><span class="w"> </span><span class="s2">"src.orders.application"</span><span class="p">]</span>
+<span class="n">forbidden_modules</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"fastapi"</span><span class="p">,</span><span class="w"> </span><span class="s2">"starlette"</span><span class="p">,</span><span class="w"> </span><span class="s2">"sqlalchemy"</span><span class="p">]</span>
+
+<span class="k">[[tool.importlinter.contracts]]</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Bounded Contexts remain independent of peer infrastructure"</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"independence"</span>
+<span class="n">modules</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="s2">"src.orders.infrastructure"</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">"src.billing.infrastructure"</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">"src.identity.infrastructure"</span><span class="p">,</span>
+<span class="p">]</span>
+</code></pre>
+<p>境界づけられたコンテキストと内向き依存レイヤが確立できたところで、次節の <a href="di_lifespan_testing.html">大規模 DI・Lifespan 管理・テスト戦略</a> に進み、コネクションプールの Lifespan 管理、スコープ付き Unit-of-Work セッション注入、RFC 9457 ドメイン例外変換、そして高速テストピラミッドの具体的な構築手法を確認しましょう。</p>
+
+            </main>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Theme toggle
+            const themeBtn = document.getElementById('theme-toggle');
+            if (themeBtn) {
+                themeBtn.addEventListener('click', function() {
+                    const current = document.documentElement.getAttribute('data-theme');
+                    const next = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    localStorage.setItem('drawlib-theme', next);
+                });
+            }
+
+            // Language dropdown outside-click & Escape close
+            const langDropdowns = document.querySelectorAll('.lang-dropdown');
+            if (langDropdowns.length > 0) {
+                document.addEventListener('click', function(e) {
+                    langDropdowns.forEach(function(dd) {
+                        if (dd.hasAttribute('open') && !dd.contains(e.target)) {
+                            dd.removeAttribute('open');
+                        }
+                    });
+                });
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        langDropdowns.forEach(function(dd) {
+                            dd.removeAttribute('open');
+                        });
+                    }
+                });
+            }
+
+            // Mobile menu toggle
+            const menuBtn = document.getElementById('menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            if (menuBtn && sidebar) {
+                function setMenuOpen(open) {
+                    sidebar.classList.toggle('is-open', open);
+                    menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    document.body.classList.toggle('menu-open', open);
+                    if (open) {
+                        const menu = sidebar.querySelector('.sidebar-menu');
+                        if (menu) {
+                            menu.scrollTop = 0;
+                        }
+                    }
+                }
+
+                menuBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const willOpen = !sidebar.classList.contains('is-open');
+                    setMenuOpen(willOpen);
+                });
+
+                // Close menu when clicking outside sidebar
+                document.addEventListener('click', function(e) {
+                    if (sidebar.classList.contains('is-open') && !sidebar.contains(e.target)) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                // Close menu when a navigation link is clicked
+                const navLinks = sidebar.querySelectorAll('.nav-item a');
+                navLinks.forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        setMenuOpen(false);
+                    });
+                });
+
+                // Close on Escape key
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                // Reset menu state when resized above mobile breakpoint
+                window.addEventListener('resize', function() {
+                    if (window.innerWidth > 768 && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

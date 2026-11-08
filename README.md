@@ -50,15 +50,16 @@ drawlib-fastapi/
 ## Reproducing Locally with `uvx`
 
 ```bash
-# Build PNI501 diagnostic report (HTML + A4 Vector PDF)
+# Build everything (Bilingual Visual Guide + PNI501 HTML/PDF Report + Link Check)
+./build.sh
+
+# Or build each portal individually:
+./docs_src/build.sh
 uvx --from pni501 pni report build pni501 \
   --src-dir reports_src \
   --html-output-dir docs/reports/pni501 \
-  -o docs/reports/pni501 \
+  --output-dir docs/reports/pni501 \
   -f html -f pdf
-
-# Build FastAPI Visual Architecture Guide site (EN / JA)
-./docs_src/build.sh
 
 # Preview locally & verify zero broken links
 uvx drawlib serve docs/ --check

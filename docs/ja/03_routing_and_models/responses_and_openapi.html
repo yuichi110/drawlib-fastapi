@@ -1,0 +1,790 @@
+<!--
+ Copyright (c) 2026 Yuichi Ito (yuichi@yuichi.com)
+
+ This software is licensed under the Apache License, Version 2.0.
+ For more information, please visit: https://github.com/yuichi110/drawlib
+
+ This software is provided "as is", without warranty of any kind,
+ express or implied, including but not limited to the warranties of
+ merchantability, fitness for a particular purpose and noninfringement.
+-->
+<!DOCTYPE html>
+<html lang="ja" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>レスポンス直列化・ステータスコード・OpenAPI 3.1 — FastAPI Visual Guide (Unofficial · Drawlib Demo)</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-S9N5BZ1VRC');
+    </script>
+    <script>
+        (function() {
+            const saved = localStorage.getItem('drawlib-theme');
+            if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    
+    <link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/en/03_routing_and_models/responses_and_openapi.html">
+    
+    <link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/ja/03_routing_and_models/responses_and_openapi.html">
+    
+    <link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/en/03_routing_and_models/responses_and_openapi.html">
+    
+    
+    
+    <meta name="description" content="FastAPI は serialize_response() によって出力契約を厳格に強制し、機密フィールドの除去から UTF-8 JSON バイト列への変換までを Pydantic v2 の単一 Rust パスで実行するとともに、入出力分割型の JSON Schema 2020-12 を備えた OpenAPI…">
+    <link rel="canonical" href="https://fastapi.drawlib.com/ja/03_routing_and_models/responses_and_openapi.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="FastAPI ビジュアル解説">
+    <meta property="og:title" content="レスポンス直列化・ステータスコード・OpenAPI 3.1 — FastAPI ビジュアル解説">
+    <meta property="og:description" content="FastAPI は serialize_response() によって出力契約を厳格に強制し、機密フィールドの除去から UTF-8 JSON バイト列への変換までを Pydantic v2 の単一 Rust パスで実行するとともに、入出力分割型の JSON Schema 2020-12 を備えた OpenAPI…">
+    <meta property="og:url" content="https://fastapi.drawlib.com/ja/03_routing_and_models/responses_and_openapi.html">
+    <meta property="og:image" content="https://fastapi.drawlib.com/_assets/ogp.png">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:locale:alternate" content="en_US">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="レスポンス直列化・ステータスコード・OpenAPI 3.1 — FastAPI ビジュアル解説">
+    <meta name="twitter:description" content="FastAPI は serialize_response() によって出力契約を厳格に強制し、機密フィールドの除去から UTF-8 JSON バイト列への変換までを Pydantic v2 の単一 Rust パスで実行するとともに、入出力分割型の JSON Schema 2020-12 を備えた OpenAPI…">
+    <meta name="twitter:image" content="https://fastapi.drawlib.com/_assets/ogp.png">
+    
+    
+    <link rel="icon" type="image/png" href="../../_assets/favicon.png">
+    
+    
+    <link rel="stylesheet" href="../style.css">
+    
+    
+</head>
+<body>
+    <div class="demo-banner" role="region" aria-label="非公式ショーケース案内">
+        <div class="demo-banner-inner">
+            <span class="demo-banner-badge">UNOFFICIAL DEMO</span>
+            
+            <span class="demo-banner-text">
+                <a href="https://www.drawlib.com/" target="_blank" rel="noopener noreferrer">Drawlib</a> と <a href="https://pypi.org/project/pni501/" target="_blank" rel="noopener noreferrer">PNI501</a> で作成した <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a>（v0.162.2, MIT）の非公式ビジュアル解説ショーケースです。
+            </span>
+            <span class="demo-banner-links">
+                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 診断レポート →</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI 公式 Docs ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+            </span>
+            
+        </div>
+    </div>
+    
+    <div class="doc-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI ビジュアル解説">
+                    
+                    FastAPI ビジュアル解説
+                    
+                </a>
+                <div class="sidebar-header-actions">
+                    <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">
+                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                    <button type="button" id="menu-toggle" class="menu-toggle-btn" aria-label="Toggle navigation" aria-expanded="false">
+                        <svg class="icon-hamburger" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        <svg class="icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="sidebar-menu">
+                
+                    
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../index.html" >ガイド概要と全体マップ</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">1. イントロ &amp; クイックスタート</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../01_getting_started/overview.html" >FastAPI の設計思想と内部構造</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../01_getting_started/quickstart.html" >クイックスタートと自動生成 Docs</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">2. 10万行規模の設計ベストプラクティス</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../02_enterprise_architecture/modular_design.html" >境界づけられたコンテキストと階層化</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../02_enterprise_architecture/di_lifespan_testing.html" >大規模 DI・Lifespan 管理・テスト戦略</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">3. ルーティング・入力検証・スキーマ</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="parameters_and_validation.html" >Path・Query・Header・Cookie・Body</a>
+                            </li>
+                            
+                            <li class="nav-item active">
+                                <a href="responses_and_openapi.html" >レスポンス直列化と OpenAPI 3.1</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">4. 依存性注入（DI）とセキュリティ</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../04_dependencies_and_security/dependency_injection.html" >Dependant DAG・キャッシュ・yield スコープ</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../04_dependencies_and_security/security_and_auth.html" >認証・OAuth2 スコープ認可・抽出器</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">5. 非同期並行・ミドルウェア・ストリーミング</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../05_async_and_realtime/concurrency_and_middleware.html" >ASGI ミドルウェアとスレッドプール制御</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../05_async_and_realtime/sse_websockets_streaming.html" >ネイティブ SSE・JSONL・WebSocket</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">6. 可観測性・例外設計・実践テスト</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../06_observability_and_testing/telemetry_and_errors.html" >ネイティブ OpenTelemetry と例外処理</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../06_observability_and_testing/testing_and_deployment.html" >実践テスト手法と本番 ASGI 運用</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">診断レポート &amp; 公式リンク</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/reports/pni501/" target="_blank" rel="noopener noreferrer">PNI501 診断レポート<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI 公式ドキュメント<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">デモのリポジトリ (GitHub)<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                        </ul>
+                    
+                
+            </div>
+        </aside>
+        <div class="content-wrapper">
+            <header class="top-bar">
+                <div class="breadcrumbs">
+                    <span class="crumb">Docs</span>
+                    <span class="crumb-separator">&raquo;</span>
+                    <span class="crumb active">レスポンス直列化・ステータスコード・OpenAPI 3.1</span>
+                </div>
+                
+                <div class="lang-switcher">
+                    <details class="lang-dropdown">
+                        <summary class="lang-dropdown-btn" aria-label="Select language">
+                            <svg class="lang-globe-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            <span class="lang-current-label">日本語</span>
+                            <svg class="lang-caret-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </summary>
+                        <div class="lang-dropdown-menu" role="menu">
+                            
+                            <a href="../../en/03_routing_and_models/responses_and_openapi.html" class="lang-option" lang="en" hreflang="en" >
+                                <span>English</span>
+                                
+                            </a>
+                            
+                            <a href="responses_and_openapi.html" class="lang-option active" lang="ja" hreflang="ja" aria-current="page">
+                                <span>日本語</span>
+                                
+                                <svg class="lang-check-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                
+                            </a>
+                            
+                        </div>
+                    </details>
+                </div>
+                
+            </header>
+            <main class="main-content">
+                <h1>レスポンス直列化・ステータスコード・OpenAPI 3.1</h1>
+<p>FastAPI は <code>serialize_response()</code> によって出力契約を厳格に強制し、機密フィールドの除去から UTF-8 JSON バイト列への変換までを Pydantic v2 の単一 Rust パスで実行するとともに、入出力分割型の JSON Schema 2020-12 を備えた OpenAPI 3.1.0 仕様を遅延合成します。</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/03_routing_and_models/responses_and_openapi/response_serialization_pipeline.png" alt="responses_and_openapi_1" />
+  <figcaption class="drawlib-caption">get_request_handler() および serialize_response() における出力直列化パイプライン</figcaption>
+</figure>
+<details class="drawlib-code-details">
+<summary>Source Code</summary>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.canvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">setup</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.icons</span><span class="w"> </span><span class="kn">import</span> <span class="n">code</span><span class="p">,</span> <span class="n">phosphor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.lines</span><span class="w"> </span><span class="kn">import</span> <span class="n">line</span><span class="p">,</span> <span class="n">lines</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.shapes</span><span class="w"> </span><span class="kn">import</span> <span class="n">rectangle</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.smartarts</span><span class="w"> </span><span class="kn">import</span> <span class="n">ChevronProcess</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">Styles</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.text</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span>
+
+<span class="n">setup</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">168</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">92</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
+
+<span class="c1"># Title Banner</span>
+<span class="n">code</span><span class="o">.</span><span class="n">fastapi</span><span class="p">((</span><span class="mi">11</span><span class="p">,</span> <span class="mf">86.5</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">5.2</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Primary</span><span class="p">)</span>
+<span class="n">text</span><span class="p">(</span>
+    <span class="p">(</span><span class="mf">16.5</span><span class="p">,</span> <span class="mf">86.5</span><span class="p">),</span>
+    <span class="s2">"Outbound Response Pipeline: serialize_response() &amp; Rust TypeAdapter Fast Path"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">12.5</span><span class="p">,</span> <span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1"># Top 5-Stage Macro Pipeline</span>
+<span class="n">macro</span> <span class="o">=</span> <span class="n">ChevronProcess</span><span class="p">(</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.3</span><span class="p">),</span>
+    <span class="n">description_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">corner_angle</span><span class="o">=</span><span class="mf">60.0</span><span class="p">,</span>
+    <span class="n">spacing</span><span class="o">=</span><span class="mf">1.4</span><span class="p">,</span>
+    <span class="n">flat_left_end</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">macro</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"1. Endpoint Return"</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"ORM / Model / dict"</span><span class="p">)</span>
+<span class="n">macro</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"2. Branch Check"</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Response vs Field"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">)</span>
+<span class="n">macro</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="s2">"3. Validate &amp; Strip"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">"Drop secret fields"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.3</span><span class="p">),</span>
+    <span class="n">description_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">macro</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"4. Rust dump_json"</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"1-pass UTF-8 bytes"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">)</span>
+<span class="n">macro</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"5. Header Merge"</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Injected Response"</span><span class="p">)</span>
+<span class="n">macro</span><span class="o">.</span><span class="n">draw</span><span class="p">((</span><span class="mi">6</span><span class="p">,</span> <span class="mi">68</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">156</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">13</span><span class="p">)</span>
+
+<span class="c1"># Bottom Detailed 3-Track Execution Architecture</span>
+<span class="c1"># Left Source Card (x=6..36, y=8..60)</span>
+<span class="n">rectangle</span><span class="p">((</span><span class="mi">21</span><span class="p">,</span> <span class="mi">34</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">52</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">2.0</span><span class="p">))</span>
+<span class="n">phosphor</span><span class="o">.</span><span class="n">code</span><span class="p">((</span><span class="mi">21</span><span class="p">,</span> <span class="mf">52.5</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">6.0</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">)</span>
+<span class="n">text</span><span class="p">((</span><span class="mi">21</span><span class="p">,</span> <span class="mf">44.5</span><span class="p">),</span> <span class="s2">"Endpoint Result"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.0</span><span class="p">))</span>
+<span class="n">text</span><span class="p">(</span>
+    <span class="p">(</span><span class="mi">21</span><span class="p">,</span> <span class="mf">26.5</span><span class="p">),</span>
+    <span class="s2">"• async def: inline</span><span class="se">\n</span><span class="s2">• def: threadpool</span><span class="se">\n</span><span class="s2">• Captures mutated</span><span class="se">\n</span><span class="s2">  response.headers</span><span class="se">\n</span><span class="s2">• Attaches solved</span><span class="se">\n</span><span class="s2">  BackgroundTasks"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1"># Track A (Top, y=53): Rust Fast-Path Serialization</span>
+<span class="c1"># Track B (Middle, y=34): jsonable_encoder Fallback</span>
+<span class="c1"># Track C (Bottom, y=15): Direct Response Subclass Bypass</span>
+<span class="n">tracks</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span>
+        <span class="mi">53</span><span class="p">,</span>
+        <span class="p">(</span><span class="s2">"route.response_field"</span><span class="p">,</span> <span class="s2">"field.validate() + strip"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"TypeAdapter.dump_json()"</span><span class="p">,</span> <span class="s2">"exclude_unset / by_alias"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"Response(bytes)"</span><span class="p">,</span> <span class="s2">"Merges response.headers"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="p">(</span>
+        <span class="mi">34</span><span class="p">,</span>
+        <span class="p">(</span><span class="s2">"response_field is None"</span><span class="p">,</span> <span class="s2">"Unconstrained return"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"jsonable_encoder()"</span><span class="p">,</span> <span class="s2">"Python dict conversion"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"JSONResponse"</span><span class="p">,</span> <span class="s2">"Merges response.headers"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="p">(</span>
+        <span class="mi">15</span><span class="p">,</span>
+        <span class="p">(</span><span class="s2">"isinstance(Response)"</span><span class="p">,</span> <span class="s2">"304 / File / Custom"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"Bypass Serialization"</span><span class="p">,</span> <span class="s2">"Skips response_model"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"Direct ASGI Send"</span><span class="p">,</span> <span class="s2">"Keeps BackgroundTasks"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+    <span class="p">),</span>
+<span class="p">]</span>
+
+<span class="c1"># Orthogonal trunk fan-out from Left Source Card right edge (x=36) -&gt; trunk (x=42) -&gt; Col 1 left edge (x=48)</span>
+<span class="n">line</span><span class="p">((</span><span class="mi">36</span><span class="p">,</span> <span class="mi">34</span><span class="p">),</span> <span class="p">(</span><span class="mi">42</span><span class="p">,</span> <span class="mi">34</span><span class="p">),</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">)</span>
+<span class="n">lines</span><span class="p">([(</span><span class="mi">42</span><span class="p">,</span> <span class="mi">15</span><span class="p">),</span> <span class="p">(</span><span class="mi">42</span><span class="p">,</span> <span class="mi">53</span><span class="p">)],</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">ty</span><span class="p">,</span> <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">s3</span> <span class="ow">in</span> <span class="n">tracks</span><span class="p">:</span>
+    <span class="n">line</span><span class="p">((</span><span class="mi">42</span><span class="p">,</span> <span class="n">ty</span><span class="p">),</span> <span class="p">(</span><span class="mi">48</span><span class="p">,</span> <span class="n">ty</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span> <span class="k">if</span> <span class="n">ty</span> <span class="o">==</span> <span class="mi">53</span> <span class="k">else</span> <span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">)</span>
+
+    <span class="c1"># Col 1: cx=65, w=34 -&gt; x=48..82</span>
+    <span class="n">rectangle</span><span class="p">((</span><span class="mi">65</span><span class="p">,</span> <span class="n">ty</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">34</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">13.5</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">s1</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.8</span><span class="p">))</span>
+    <span class="n">text</span><span class="p">((</span><span class="mi">65</span><span class="p">,</span> <span class="n">ty</span> <span class="o">+</span> <span class="mf">2.4</span><span class="p">),</span> <span class="n">s1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.3</span><span class="p">))</span>
+    <span class="n">text</span><span class="p">((</span><span class="mi">65</span><span class="p">,</span> <span class="n">ty</span> <span class="o">-</span> <span class="mf">2.6</span><span class="p">),</span> <span class="n">s1</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">))</span>
+
+    <span class="c1"># Gap 82 -&gt; 89 (7.0 units)</span>
+    <span class="n">line</span><span class="p">((</span><span class="mi">82</span><span class="p">,</span> <span class="n">ty</span><span class="p">),</span> <span class="p">(</span><span class="mi">89</span><span class="p">,</span> <span class="n">ty</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span> <span class="k">if</span> <span class="n">ty</span> <span class="o">==</span> <span class="mi">53</span> <span class="k">else</span> <span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">)</span>
+
+    <span class="c1"># Col 2: cx=106, w=34 -&gt; x=89..123</span>
+    <span class="n">rectangle</span><span class="p">((</span><span class="mi">106</span><span class="p">,</span> <span class="n">ty</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">34</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">13.5</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">s2</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.8</span><span class="p">))</span>
+    <span class="n">c2_h</span> <span class="o">=</span> <span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span> <span class="k">if</span> <span class="n">s2</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="k">else</span> <span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span>
+    <span class="n">c2_b</span> <span class="o">=</span> <span class="n">Styles</span><span class="o">.</span><span class="n">White</span> <span class="k">if</span> <span class="n">s2</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="k">else</span> <span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span>
+    <span class="n">text</span><span class="p">((</span><span class="mi">106</span><span class="p">,</span> <span class="n">ty</span> <span class="o">+</span> <span class="mf">2.4</span><span class="p">),</span> <span class="n">s2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">style</span><span class="o">=</span><span class="n">c2_h</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.3</span><span class="p">))</span>
+    <span class="n">text</span><span class="p">((</span><span class="mi">106</span><span class="p">,</span> <span class="n">ty</span> <span class="o">-</span> <span class="mf">2.6</span><span class="p">),</span> <span class="n">s2</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">style</span><span class="o">=</span><span class="n">c2_b</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">))</span>
+
+    <span class="c1"># Gap 123 -&gt; 130 (7.0 units)</span>
+    <span class="n">line</span><span class="p">((</span><span class="mi">123</span><span class="p">,</span> <span class="n">ty</span><span class="p">),</span> <span class="p">(</span><span class="mi">130</span><span class="p">,</span> <span class="n">ty</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span> <span class="k">if</span> <span class="n">ty</span> <span class="o">==</span> <span class="mi">53</span> <span class="k">else</span> <span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">)</span>
+
+    <span class="c1"># Col 3: cx=146, w=32 -&gt; x=130..162</span>
+    <span class="n">rectangle</span><span class="p">((</span><span class="mi">146</span><span class="p">,</span> <span class="n">ty</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">13.5</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">s3</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.8</span><span class="p">))</span>
+    <span class="n">text</span><span class="p">((</span><span class="mi">146</span><span class="p">,</span> <span class="n">ty</span> <span class="o">+</span> <span class="mf">2.4</span><span class="p">),</span> <span class="n">s3</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.3</span><span class="p">))</span>
+    <span class="n">text</span><span class="p">((</span><span class="mi">146</span><span class="p">,</span> <span class="n">ty</span> <span class="o">-</span> <span class="mf">2.6</span><span class="p">),</span> <span class="n">s3</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">))</span>
+
+<span class="n">save</span><span class="p">()</span>
+</code></pre>
+</details>
+<p>内部の永続化モデルと外部向け DTO を明確に分離することで、資格情報の誤漏洩を構造的に防ぎながら、Pydantic のコンパイル済み Rust コアによる高速なシリアライズを実現できます。</p>
+<h2>1. レスポンス直列化パイプライン（<code>serialize_response</code>）</h2>
+<p>ルート初期化時（<code>fastapi/routing.py</code> の <code>_populate_api_route_state()</code>）において、FastAPI は明確な優先順位規則に従って <code>route.response_field</code> を決定します。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">エンドポイントの宣言パターン</th>
+<th style="text-align:left"><code>route.response_field</code></th>
+<th style="text-align:left"><code>get_request_handler()</code> における実行時パス</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><code>@app.get(..., response_model=PublicDTO)</code></td>
+<td style="text-align:left"><code>ModelField(mode=&quot;serialization&quot;)</code></td>
+<td style="text-align:left">戻り値の型注釈より優先し、検証後に Rust <code>TypeAdapter.dump_json()</code> を実行</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>async def ep(...) -&gt; PublicDTO:</code>（<code>response_model</code> 省略）</td>
+<td style="text-align:left"><code>ModelField(mode=&quot;serialization&quot;)</code></td>
+<td style="text-align:left">戻り値の型注釈を自動的に <code>response_model</code> として昇格</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>@app.get(..., response_model=None)</code> または <code>-&gt; Response</code></td>
+<td style="text-align:left"><code>None</code></td>
+<td style="text-align:left"><code>ModelField</code> 生成を抑止し、<code>Response | dict</code> などの Union 返却を許容</td>
+</tr>
+<tr>
+<td style="text-align:left">実行時に <code>isinstance(val, Response)</code> を直接返却</td>
+<td style="text-align:left"><em>(バイパス)</em></td>
+<td style="text-align:left"><code>serialize_response()</code> をスキップし、<code>Response</code> インスタンスをそのまま送信</td>
+</tr>
+</tbody>
+</table>
+<p><code>route.response_field</code> が存在し、<code>response_class</code> が既定の <code>JSONResponse</code>（<code>DefaultPlaceholder</code>）である場合、<code>get_request_handler()</code> は高速パス <code>use_dump_json = True</code> を有効化します。</p>
+<ol>
+<li><strong>出力契約の検証と機密フィールド除去</strong>: <code>serialize_response()</code> は返却値（ORM エンティティ・<code>BaseModel</code>・<code>dict</code>）に対し <code>from_attributes=True</code> で <code>field.validate(..., loc=(&quot;response&quot;,))</code> を実行します（<code>async def</code> ではイベントループ上、同期 <code>def</code> では <code>run_in_threadpool</code> 経由）。公開モデルに定義されていない <code>hashed_password</code> や <code>totp_secret</code> などの属性は確実に除去され、契約違反があれば不正データを外部へ返す前にサーバー側の <code>ResponseValidationError</code>（<code>500</code>）を送出します。</li>
+<li><strong>Rust 1 パス JSON バイト列出力（<code>dump_json</code>）</strong>: Python の中間 <code>dict</code> と <code>json.dumps()</code> を経由せず、<code>field.serialize_json()</code> が <code>include</code>・<code>exclude</code>・<code>by_alias</code>・<code>exclude_unset</code>・<code>exclude_defaults</code>・<code>exclude_none</code> を適用したうえで <code>TypeAdapter.dump_json()</code> を呼び出し、生成された UTF-8 <code>bytes</code> を直接 <code>Response(media_type=&quot;application/json&quot;)</code> に格納します。</li>
+<li><strong>ステータスコード別のボディ制御とヘッダ統合</strong>: 引数注入された <code>response: Response</code> 上で設定されたヘッダや Cookie（<code>solved_result.response.headers.raw</code>）は最終レスポンスへ自動追記され、ボディを持たないステータス（<code>204</code>・<code>205</code>・<code>304</code>・<code>1xx</code>）では <code>response.body = b&quot;&quot;</code> が強制されます。</li>
+</ol>
+<h3>機密フィールド除去と疎な PATCH 応答（<code>exclude_unset</code>）</h3>
+<p>内部 DB レコードに対して <code>response_model=UserPublic</code> を指定することで機密属性の漏洩を防ぎ、部分更新の <code>PATCH</code> では <code>response_model_exclude_unset=True</code> を併用することで明示的に送信されたフィールドのみを応答に含めることができます。</p>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Literal</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastAPI</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">"Identity Profile API"</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s2">"1.0.0"</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">UserRecordDB</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">user_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">username</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">email</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">hashed_password</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">totp_secret</span><span class="p">:</span> <span class="nb">str</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">UserPublic</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">user_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">username</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">email</span><span class="p">:</span> <span class="nb">str</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">ProfilePatch</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">display_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"Anonymous"</span>
+    <span class="n">bio</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">theme</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"light"</span><span class="p">,</span> <span class="s2">"dark"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"light"</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/users/</span><span class="si">{user_id}</span><span class="s2">"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">UserPublic</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_user_profile</span><span class="p">(</span><span class="n">user_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">UserRecordDB</span><span class="p">(</span>
+        <span class="n">user_id</span><span class="o">=</span><span class="n">user_id</span><span class="p">,</span>
+        <span class="n">username</span><span class="o">=</span><span class="s2">"alice"</span><span class="p">,</span>
+        <span class="n">email</span><span class="o">=</span><span class="s2">"alice@example.com"</span><span class="p">,</span>
+        <span class="n">hashed_password</span><span class="o">=</span><span class="s2">"$argon2id$v=19$m=65536,t=3,p=4$redacted"</span><span class="p">,</span>
+        <span class="n">totp_secret</span><span class="o">=</span><span class="s2">"JBSWY3DPEHPK3PXP"</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span>
+    <span class="s2">"/users/</span><span class="si">{user_id}</span><span class="s2">/preferences"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">ProfilePatch</span><span class="p">,</span>
+    <span class="n">response_model_exclude_unset</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">patch_preferences</span><span class="p">(</span><span class="n">user_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">patch</span><span class="p">:</span> <span class="n">ProfilePatch</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ProfilePatch</span><span class="p">:</span>
+    <span class="n">_</span> <span class="o">=</span> <span class="n">user_id</span>
+    <span class="k">return</span> <span class="n">patch</span>
+</code></pre>
+<h3>注入 <code>Response</code> によるヘッダ操作と直接 <code>Response</code> バイパス</h3>
+<p><strong><code>response_model</code> による検証と高速直列化を維持したまま</strong>カスタムヘッダや堅牢な Cookie（<code>__Host-</code> 接頭辞・<code>httponly=True</code>・<code>secure=True</code>・<code>samesite=&quot;lax&quot;</code>）を付与したい場合は、引数として <code>response: Response</code> を受け取ります。一方、<code>304 Not Modified</code> などのようにシリアライズ自体を意図的にバイパスする場合に限り、<code>Response</code> サブクラスを直接返却します（複数型を返す場合は <code>response_model=None</code> を明示します）。</p>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">Header</span><span class="p">,</span> <span class="n">Response</span><span class="p">,</span> <span class="n">status</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.responses</span><span class="w"> </span><span class="kn">import</span> <span class="n">JSONResponse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">"Session &amp; Cache API"</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s2">"1.0.0"</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">SessionSummary</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">session_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">active</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">internal_signing_kid</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">exclude</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">"kid_v3"</span><span class="p">)</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/sessions"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">SessionSummary</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">issue_session</span><span class="p">(</span><span class="n">response</span><span class="p">:</span> <span class="n">Response</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+    <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">"Cache-Control"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"no-store"</span>
+    <span class="n">response</span><span class="o">.</span><span class="n">set_cookie</span><span class="p">(</span>
+        <span class="n">key</span><span class="o">=</span><span class="s2">"__Host-session"</span><span class="p">,</span>
+        <span class="n">value</span><span class="o">=</span><span class="s2">"tok_opaque_random"</span><span class="p">,</span>
+        <span class="n">httponly</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">secure</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">samesite</span><span class="o">=</span><span class="s2">"lax"</span><span class="p">,</span>
+        <span class="n">path</span><span class="o">=</span><span class="s2">"/"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"session_id"</span><span class="p">:</span> <span class="s2">"sess_9001"</span><span class="p">,</span>
+        <span class="s2">"active"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">"unlisted_debug_token"</span><span class="p">:</span> <span class="s2">"stripped-by-response-model"</span><span class="p">,</span>
+    <span class="p">}</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/health/raw"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">raw_probe</span><span class="p">(</span><span class="n">etag_match</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Header</span><span class="p">()]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Response</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">etag_match</span> <span class="o">==</span> <span class="s1">'"v1"'</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_304_NOT_MODIFIED</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">JSONResponse</span><span class="p">(</span><span class="n">content</span><span class="o">=</span><span class="p">{</span><span class="s2">"status"</span><span class="p">:</span> <span class="s2">"ok"</span><span class="p">},</span> <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">"ETag"</span><span class="p">:</span> <span class="s1">'"v1"'</span><span class="p">})</span>
+</code></pre>
+<h2>2. OpenAPI 3.1.0 遅延合成と入出力分割スキーマ</h2>
+<p>プロセス起動時間を圧迫しないよう、<code>FastAPI.openapi()</code>（<code>fastapi/applications.py</code>）は初回の <code>/openapi.json</code> リクエストまたは <code>app.openapi()</code> 呼び出し時に OpenAPI <code>3.1.0</code> 仕様を遅延生成し、<code>router._get_routes_version()</code>（<code>_openapi_routes_version</code>）と紐づけてキャッシュします。後から動的にルーターや Webhook が追加された場合はルート世代番号が更新され、キャッシュが自動的に再生成されます。</p>
+<p><code>get_openapi()</code>（<code>fastapi/openapi/utils.py</code>）の内部は以下の 3 段階で動作します。</p>
+<ol>
+<li><strong>全ルートからのフィールド収集（<code>get_fields_from_routes</code>）</strong>: 公開対象の全 <code>APIRoute</code> と Webhook を走査し、<code>body_field</code>（<code>mode=&quot;validation&quot;</code>）、<code>response_field</code>、<code>responses={...}</code> 由来のステータス別 <code>response_fields</code>、<code>stream_item_field</code>（いずれも <code>mode=&quot;serialization&quot;</code>）、コールバック、および平坦化された <code>Dependant</code> パラメータを収集します。</li>
+<li><strong>入出力分割 JSON Schema 2020-12 生成（<code>get_definitions</code>）</strong>: 既定の <code>separate_input_output_schemas=True</code> により、Pydantic の <code>GenerateJsonSchema(ref_template=&quot;#/components/schemas/{model}&quot;)</code> に対して <code>&quot;validation&quot;</code> と <code>&quot;serialization&quot;</code> の双方の <code>CoreSchema</code> が渡されます。<code>Decimal</code> フィールド（入力時は <code>number | string</code> を許容し、出力時は厳密な <code>string</code> に直列化）や <code>@computed_field</code>、<code>serialization_alias</code> など入出力で型表現が異なるモデルは、自動的に <code>&lt;Model&gt;-Input</code> と <code>&lt;Model&gt;-Output</code> へ分割して <code>#/components/schemas/</code> に出力されます。</li>
+<li><strong>オペレーション合成とエラー統合（<code>get_openapi_path</code>）</strong>: 共有依存関数間の重複パラメータを統合し、<code>operationId</code> を確定させたうえで、<code>responses={404: ..., 409: ...}</code> を <code>deep_dict_update()</code> でマージし、入力引数やボディを持つルートには <code>422</code>（<code>HTTPValidationError</code>）を自動付与します。</li>
+</ol>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/03_routing_and_models/responses_and_openapi/openapi_31_synthesis_flow.png" alt="responses_and_openapi_2" />
+  <figcaption class="drawlib-caption">OpenAPI 3.1.0 遅延合成フロー: _openapi_routes_version キャッシュ・入出力分割スキーマ・パス統合</figcaption>
+</figure>
+<details class="drawlib-code-details">
+<summary>Source Code</summary>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.canvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">setup</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.icons</span><span class="w"> </span><span class="kn">import</span> <span class="n">code</span><span class="p">,</span> <span class="n">phosphor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.lines</span><span class="w"> </span><span class="kn">import</span> <span class="n">line</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.shapes</span><span class="w"> </span><span class="kn">import</span> <span class="n">rectangle</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.smartarts</span><span class="w"> </span><span class="kn">import</span> <span class="n">CardList</span><span class="p">,</span> <span class="n">ChevronProcess</span><span class="p">,</span> <span class="n">Panel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">Styles</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.text</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span>
+
+<span class="n">setup</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">168</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">92</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
+
+<span class="c1"># Title Banner</span>
+<span class="n">code</span><span class="o">.</span><span class="n">openapi</span><span class="p">((</span><span class="mi">11</span><span class="p">,</span> <span class="mf">86.5</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">5.2</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Primary</span><span class="p">)</span>
+<span class="n">text</span><span class="p">(</span>
+    <span class="p">(</span><span class="mf">16.5</span><span class="p">,</span> <span class="mf">86.5</span><span class="p">),</span>
+    <span class="s2">"Lazy OpenAPI 3.1.0 Synthesis &amp; Split Input/Output JSON Schema 2020-12"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">12.5</span><span class="p">,</span> <span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1"># Top 4-Stage Synthesis Pipeline</span>
+<span class="n">flow</span> <span class="o">=</span> <span class="n">ChevronProcess</span><span class="p">(</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
+    <span class="n">description_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">corner_angle</span><span class="o">=</span><span class="mf">60.0</span><span class="p">,</span>
+    <span class="n">spacing</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span>
+    <span class="n">flat_left_end</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">flow</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"1. Version Cache"</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"_openapi_routes_version"</span><span class="p">)</span>
+<span class="n">flow</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"2. Field Harvest"</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"get_fields_from_routes()"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">)</span>
+<span class="n">flow</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="s2">"3. Split Schemas"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">"GenerateJsonSchema 2020-12"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
+    <span class="n">description_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">flow</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"4. Path Assembly"</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"get_openapi_path() -&gt; 3.1.0"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">)</span>
+<span class="n">flow</span><span class="o">.</span><span class="n">draw</span><span class="p">((</span><span class="mi">6</span><span class="p">,</span> <span class="mi">68</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">156</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">13</span><span class="p">)</span>
+
+<span class="c1"># Bottom-Left Panel: Split Input/Output Schema Generation</span>
+<span class="n">left_p</span> <span class="o">=</span> <span class="n">Panel</span><span class="p">(</span>
+    <span class="s2">"Split Schemas (separate_input_output_schemas)"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
+    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.8</span><span class="p">),</span>
+    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">arrows_split</span><span class="p">,</span>
+    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">,</span>
+    <span class="n">header_height</span><span class="o">=</span><span class="mf">8.5</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">left_p</span><span class="o">.</span><span class="n">draw</span><span class="p">((</span><span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">78</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">57</span><span class="p">)</span>
+
+<span class="n">rectangle</span><span class="p">((</span><span class="mi">45</span><span class="p">,</span> <span class="mf">46.5</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">68</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">10.5</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.8</span><span class="p">))</span>
+<span class="n">text</span><span class="p">((</span><span class="mi">45</span><span class="p">,</span> <span class="mf">48.7</span><span class="p">),</span> <span class="s2">"Pydantic v2 GenerateJsonSchema"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">))</span>
+<span class="n">text</span><span class="p">((</span><span class="mi">45</span><span class="p">,</span> <span class="mf">44.2</span><span class="p">),</span> <span class="s2">"Evaluates mode='validation' vs mode='serialization'"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">))</span>
+
+<span class="c1"># Arrows down from y=41.2 to y=33.0 (8.2 units gap)</span>
+<span class="n">line</span><span class="p">((</span><span class="mf">26.5</span><span class="p">,</span> <span class="mf">41.2</span><span class="p">),</span> <span class="p">(</span><span class="mf">26.5</span><span class="p">,</span> <span class="mf">33.0</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">)</span>
+<span class="n">line</span><span class="p">((</span><span class="mf">63.5</span><span class="p">,</span> <span class="mf">41.2</span><span class="p">),</span> <span class="p">(</span><span class="mf">63.5</span><span class="p">,</span> <span class="mf">33.0</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">)</span>
+
+<span class="n">rectangle</span><span class="p">((</span><span class="mf">26.5</span><span class="p">,</span> <span class="mf">21.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">23.5</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.8</span><span class="p">))</span>
+<span class="n">text</span><span class="p">((</span><span class="mf">26.5</span><span class="p">,</span> <span class="mf">28.5</span><span class="p">),</span> <span class="s2">"SkuSpec-Input"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.8</span><span class="p">))</span>
+<span class="n">text</span><span class="p">(</span>
+    <span class="p">(</span><span class="mf">26.5</span><span class="p">,</span> <span class="mf">17.5</span><span class="p">),</span>
+    <span class="s2">"• requestBody $ref</span><span class="se">\n</span><span class="s2">• Decimal: num | str</span><span class="se">\n</span><span class="s2">• Validation aliases"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">rectangle</span><span class="p">((</span><span class="mf">63.5</span><span class="p">,</span> <span class="mf">21.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">23.5</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.8</span><span class="p">))</span>
+<span class="n">text</span><span class="p">((</span><span class="mf">63.5</span><span class="p">,</span> <span class="mf">28.5</span><span class="p">),</span> <span class="s2">"SkuSpec-Output"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.8</span><span class="p">))</span>
+<span class="n">text</span><span class="p">(</span>
+    <span class="p">(</span><span class="mf">63.5</span><span class="p">,</span> <span class="mf">17.5</span><span class="p">),</span>
+    <span class="s2">"• responses[201] $ref</span><span class="se">\n</span><span class="s2">• Decimal: strict str</span><span class="se">\n</span><span class="s2">• @computed_field"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1"># Bottom-Right Panel: Operation &amp; Custom Status Code Assembly</span>
+<span class="n">right_p</span> <span class="o">=</span> <span class="n">Panel</span><span class="p">(</span>
+    <span class="s2">"Operation Assembly (get_openapi_path)"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
+    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.8</span><span class="p">),</span>
+    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">file_code</span><span class="p">,</span>
+    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">,</span>
+    <span class="n">header_height</span><span class="o">=</span><span class="mf">8.5</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">right_p</span><span class="o">.</span><span class="n">draw</span><span class="p">((</span><span class="mi">89</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">73</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">57</span><span class="p">)</span>
+<span class="n">r_xy</span><span class="p">,</span> <span class="n">r_w</span><span class="p">,</span> <span class="n">r_h</span> <span class="o">=</span> <span class="n">right_p</span><span class="o">.</span><span class="n">get_content_box</span><span class="p">((</span><span class="mi">89</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">73</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">57</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="p">(</span><span class="mf">3.0</span><span class="p">,</span> <span class="mf">2.8</span><span class="p">))</span>
+
+<span class="n">ops</span> <span class="o">=</span> <span class="n">CardList</span><span class="p">(</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
+    <span class="n">description_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">badge_shape</span><span class="o">=</span><span class="s2">"rounded_rect"</span><span class="p">,</span>
+    <span class="n">badge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
+    <span class="n">badge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">direction</span><span class="o">=</span><span class="s2">"vertical"</span><span class="p">,</span>
+    <span class="n">spacing</span><span class="o">=</span><span class="mf">2.4</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ops</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="s2">"Versioned Schema Cache"</span><span class="p">,</span>
+    <span class="s2">"O(1) hit; invalidates on</span><span class="se">\n</span><span class="s2">_get_routes_version() bump"</span><span class="p">,</span>
+    <span class="n">badge_text</span><span class="o">=</span><span class="s2">"O(1)"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ops</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="s2">"Custom Status Merging"</span><span class="p">,</span>
+    <span class="s2">"responses={404, 409} merged</span><span class="se">\n</span><span class="s2">via deep_dict_update()"</span><span class="p">,</span>
+    <span class="n">badge_text</span><span class="o">=</span><span class="s2">"4xx"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ops</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="s2">"422 &amp; Interactive Docs"</span><span class="p">,</span>
+    <span class="s2">"Adds HTTPValidationError</span><span class="se">\n</span><span class="s2">-&gt; /openapi.json &amp; /docs"</span><span class="p">,</span>
+    <span class="n">badge_text</span><span class="o">=</span><span class="s2">"3.1"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ops</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">r_xy</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">r_w</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">r_h</span><span class="p">)</span>
+
+<span class="n">save</span><span class="p">()</span>
+</code></pre>
+</details>
+<h3>エラー契約の宣言と OpenAPI 3.1 分割スキーマの検証</h3>
+<p><code>responses={404: {&quot;model&quot;: ErrorDetail}, 409: {&quot;model&quot;: ErrorDetail}}</code> を宣言することで正常系の <code>status_code=201</code> と並べて型付きエラースキーマを公開でき、さらに <code>SkuSpec</code> の <code>Decimal</code> フィールドによって <code>app.openapi()</code> 内に <code>SkuSpec-Input</code> と <code>SkuSpec-Output</code> が生成されることをプログラムから直接検証できます。</p>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">decimal</span><span class="w"> </span><span class="kn">import</span> <span class="n">Decimal</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">status</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.responses</span><span class="w"> </span><span class="kn">import</span> <span class="n">JSONResponse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">"Warehouse SKU API"</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s2">"2.0.0"</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">ErrorDetail</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">code</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">message</span><span class="p">:</span> <span class="nb">str</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">SkuSpec</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">sku</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">unit_price</span><span class="p">:</span> <span class="n">Decimal</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="s2">"19.99"</span><span class="p">)</span>
+
+
+<span class="n">store</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">SkuSpec</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"SKU-100"</span><span class="p">:</span> <span class="n">SkuSpec</span><span class="p">(</span><span class="n">sku</span><span class="o">=</span><span class="s2">"SKU-100"</span><span class="p">)}</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+    <span class="s2">"/skus"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">SkuSpec</span><span class="p">,</span>
+    <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_201_CREATED</span><span class="p">,</span>
+    <span class="n">responses</span><span class="o">=</span><span class="p">{</span>
+        <span class="mi">404</span><span class="p">:</span> <span class="p">{</span><span class="s2">"model"</span><span class="p">:</span> <span class="n">ErrorDetail</span><span class="p">,</span> <span class="s2">"description"</span><span class="p">:</span> <span class="s2">"Parent warehouse not found"</span><span class="p">},</span>
+        <span class="mi">409</span><span class="p">:</span> <span class="p">{</span><span class="s2">"model"</span><span class="p">:</span> <span class="n">ErrorDetail</span><span class="p">,</span> <span class="s2">"description"</span><span class="p">:</span> <span class="s2">"SKU already exists"</span><span class="p">},</span>
+    <span class="p">},</span>
+<span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">register_sku</span><span class="p">(</span><span class="n">spec</span><span class="p">:</span> <span class="n">SkuSpec</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SkuSpec</span> <span class="o">|</span> <span class="n">JSONResponse</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">sku</span> <span class="ow">in</span> <span class="n">store</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">JSONResponse</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_409_CONFLICT</span><span class="p">,</span>
+            <span class="n">content</span><span class="o">=</span><span class="p">{</span><span class="s2">"code"</span><span class="p">:</span> <span class="s2">"SKU_CONFLICT"</span><span class="p">,</span> <span class="s2">"message"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">spec</span><span class="o">.</span><span class="n">sku</span><span class="si">}</span><span class="s2"> already exists"</span><span class="p">},</span>
+        <span class="p">)</span>
+    <span class="n">store</span><span class="p">[</span><span class="n">spec</span><span class="o">.</span><span class="n">sku</span><span class="p">]</span> <span class="o">=</span> <span class="n">spec</span>
+    <span class="k">return</span> <span class="n">spec</span>
+
+
+<span class="n">openapi_doc</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">openapi</span><span class="p">()</span>
+<span class="k">assert</span> <span class="n">openapi_doc</span><span class="p">[</span><span class="s2">"openapi"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"3.1.0"</span>
+<span class="k">assert</span> <span class="s2">"SkuSpec-Input"</span> <span class="ow">in</span> <span class="n">openapi_doc</span><span class="p">[</span><span class="s2">"components"</span><span class="p">][</span><span class="s2">"schemas"</span><span class="p">]</span>
+<span class="k">assert</span> <span class="s2">"SkuSpec-Output"</span> <span class="ow">in</span> <span class="n">openapi_doc</span><span class="p">[</span><span class="s2">"components"</span><span class="p">][</span><span class="s2">"schemas"</span><span class="p">]</span>
+<span class="k">assert</span> <span class="nb">set</span><span class="p">(</span><span class="n">openapi_doc</span><span class="p">[</span><span class="s2">"paths"</span><span class="p">][</span><span class="s2">"/skus"</span><span class="p">][</span><span class="s2">"post"</span><span class="p">][</span><span class="s2">"responses"</span><span class="p">])</span> <span class="o">&gt;=</span> <span class="p">{</span><span class="s2">"201"</span><span class="p">,</span> <span class="s2">"404"</span><span class="p">,</span> <span class="s2">"409"</span><span class="p">,</span> <span class="s2">"422"</span><span class="p">}</span>
+</code></pre>
+<p>入力パラメータやマルチパートボディの分類規則については <a href="parameters_and_validation.html">Path・Query・Header・Cookie・Body</a> を参照してください。続いて、階層的な <code>Depends()</code> グラフの解決は <a href="../04_dependencies_and_security/dependency_injection.html">Dependant DAG・キャッシュ・yield スコープ</a>、<code>itemSchema</code> を用いたストリーミング OpenAPI 契約は <a href="../05_async_and_realtime/sse_websockets_streaming.html">ネイティブ SSE・JSONL・WebSocket</a> で詳しく解説します。</p>
+
+            </main>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Theme toggle
+            const themeBtn = document.getElementById('theme-toggle');
+            if (themeBtn) {
+                themeBtn.addEventListener('click', function() {
+                    const current = document.documentElement.getAttribute('data-theme');
+                    const next = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    localStorage.setItem('drawlib-theme', next);
+                });
+            }
+
+            // Language dropdown outside-click & Escape close
+            const langDropdowns = document.querySelectorAll('.lang-dropdown');
+            if (langDropdowns.length > 0) {
+                document.addEventListener('click', function(e) {
+                    langDropdowns.forEach(function(dd) {
+                        if (dd.hasAttribute('open') && !dd.contains(e.target)) {
+                            dd.removeAttribute('open');
+                        }
+                    });
+                });
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        langDropdowns.forEach(function(dd) {
+                            dd.removeAttribute('open');
+                        });
+                    }
+                });
+            }
+
+            // Mobile menu toggle
+            const menuBtn = document.getElementById('menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            if (menuBtn && sidebar) {
+                function setMenuOpen(open) {
+                    sidebar.classList.toggle('is-open', open);
+                    menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    document.body.classList.toggle('menu-open', open);
+                    if (open) {
+                        const menu = sidebar.querySelector('.sidebar-menu');
+                        if (menu) {
+                            menu.scrollTop = 0;
+                        }
+                    }
+                }
+
+                menuBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const willOpen = !sidebar.classList.contains('is-open');
+                    setMenuOpen(willOpen);
+                });
+
+                // Close menu when clicking outside sidebar
+                document.addEventListener('click', function(e) {
+                    if (sidebar.classList.contains('is-open') && !sidebar.contains(e.target)) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                // Close menu when a navigation link is clicked
+                const navLinks = sidebar.querySelectorAll('.nav-item a');
+                navLinks.forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        setMenuOpen(false);
+                    });
+                });
+
+                // Close on Escape key
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                // Reset menu state when resized above mobile breakpoint
+                window.addEventListener('resize', function() {
+                    if (window.innerWidth > 768 && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

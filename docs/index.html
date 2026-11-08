@@ -1,0 +1,706 @@
+<!--
+ Copyright (c) 2026 Yuichi Ito (yuichi@yuichi.com)
+
+ This software is licensed under the Apache License, Version 2.0.
+ For more information, please visit: https://github.com/yuichi110/drawlib
+
+ This software is provided "as is", without warranty of any kind,
+ express or implied, including but not limited to the warranties of
+ merchantability, fitness for a particular purpose and noninfringement.
+-->
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastAPI v0.162.2 — Visual Architecture Guide — FastAPI Visual Guide (Unofficial · Drawlib Demo)</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-S9N5BZ1VRC');
+    </script>
+    <script>
+        (function() {
+            const saved = localStorage.getItem('drawlib-theme');
+            if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    
+    
+    
+    <link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/en/">
+    
+    <link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/ja/">
+    
+    <link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/">
+    
+    
+    
+    <meta name="description" content="Unofficial illustrated architecture handbook, 100k+ LOC enterprise patterns, and verified v0.162.2 deep-dive guide for FastAPI, built as code with Drawlib.">
+    <link rel="canonical" href="https://fastapi.drawlib.com/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="FastAPI Visual Guide">
+    <meta property="og:title" content="FastAPI v0.162.2 — Visual Architecture Guide — FastAPI Visual Guide">
+    <meta property="og:description" content="Unofficial illustrated architecture handbook, 100k+ LOC enterprise patterns, and verified v0.162.2 deep-dive guide for FastAPI, built as code with Drawlib.">
+    <meta property="og:url" content="https://fastapi.drawlib.com/">
+    <meta property="og:image" content="https://fastapi.drawlib.com/_assets/ogp.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="ja_JP">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="FastAPI v0.162.2 — Visual Architecture Guide — FastAPI Visual Guide">
+    <meta name="twitter:description" content="Unofficial illustrated architecture handbook, 100k+ LOC enterprise patterns, and verified v0.162.2 deep-dive guide for FastAPI, built as code with Drawlib.">
+    <meta name="twitter:image" content="https://fastapi.drawlib.com/_assets/ogp.png">
+    
+    
+    <link rel="icon" type="image/png" href="_assets/favicon.png">
+    
+    
+    <link rel="stylesheet" href="en/style.css">
+    
+    
+</head>
+<body>
+    <div class="demo-banner" role="region" aria-label="Unofficial Showcase Notice">
+        <div class="demo-banner-inner">
+            <span class="demo-banner-badge">UNOFFICIAL DEMO</span>
+            
+            <span class="demo-banner-text">
+                Unofficial visual architecture showcase of <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a> (v0.162.2, MIT) illustrated as code with <a href="https://www.drawlib.com/" target="_blank" rel="noopener noreferrer">Drawlib</a> &amp; <a href="https://pypi.org/project/pni501/" target="_blank" rel="noopener noreferrer">PNI501</a>.
+            </span>
+            <span class="demo-banner-links">
+                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Report →</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official FastAPI Docs ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">Demo Source ↗</a>
+            </span>
+            
+        </div>
+    </div>
+    
+    <div class="doc-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="index.html" class="sidebar-brand" aria-label="FastAPI Visual Guide">
+                    
+                    FastAPI Visual Guide
+                    
+                </a>
+                <div class="sidebar-header-actions">
+                    <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">
+                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                    <button type="button" id="menu-toggle" class="menu-toggle-btn" aria-label="Toggle navigation" aria-expanded="false">
+                        <svg class="icon-hamburger" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        <svg class="icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="sidebar-menu">
+                
+                    
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item active">
+                                <a href="en/index.html" >Overview &amp; Architecture Map</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">1. Introduction &amp; Quickstart</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="en/01_getting_started/overview.html" >Why FastAPI &amp; Design Philosophy</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="en/01_getting_started/quickstart.html" >Quickstart &amp; Interactive OpenAPI</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">2. Scaling to 100k+ LOC</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="en/02_enterprise_architecture/modular_design.html" >Bounded Contexts &amp; Layering</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="en/02_enterprise_architecture/di_lifespan_testing.html" >Enterprise DI, Lifespan &amp; Testing</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">3. Routing, Validation &amp; Models</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="en/03_routing_and_models/parameters_and_validation.html" >Path, Query, Header, Cookie &amp; Body</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="en/03_routing_and_models/responses_and_openapi.html" >Response Serialization &amp; OpenAPI 3.1</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">4. Dependency Injection &amp; Security</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="en/04_dependencies_and_security/dependency_injection.html" >Dependant DAG, Caching &amp; Scopes</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="en/04_dependencies_and_security/security_and_auth.html" >Authentication &amp; OAuth2 Scopes</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">5. Async, Middleware &amp; Streaming</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="en/05_async_and_realtime/concurrency_and_middleware.html" >ASGI Middleware &amp; Threadpool</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="en/05_async_and_realtime/sse_websockets_streaming.html" >Native SSE, JSONL &amp; WebSockets</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">6. Observability, Errors &amp; Testing</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="en/06_observability_and_testing/telemetry_and_errors.html" >Native OpenTelemetry &amp; Exceptions</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="en/06_observability_and_testing/testing_and_deployment.html" >Testing Patterns &amp; Production ASGI</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">Diagnostic &amp; Upstream Links</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/reports/pni501/" target="_blank" rel="noopener noreferrer">PNI501 Diagnostic Report<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official FastAPI Docs<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">Demo Source (GitHub)<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                        </ul>
+                    
+                
+            </div>
+        </aside>
+        <div class="content-wrapper">
+            <header class="top-bar">
+                <div class="breadcrumbs">
+                    <span class="crumb">Docs</span>
+                    <span class="crumb-separator">&raquo;</span>
+                    <span class="crumb active">FastAPI v0.162.2 — Visual Architecture Guide</span>
+                </div>
+                
+                <div class="lang-switcher">
+                    <details class="lang-dropdown">
+                        <summary class="lang-dropdown-btn" aria-label="Select language">
+                            <svg class="lang-globe-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            <span class="lang-current-label">English</span>
+                            <svg class="lang-caret-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </summary>
+                        <div class="lang-dropdown-menu" role="menu">
+                            
+                            <a href="en/index.html" class="lang-option active" lang="en" hreflang="en" aria-current="page">
+                                <span>English</span>
+                                
+                                <svg class="lang-check-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                
+                            </a>
+                            
+                            <a href="ja/index.html" class="lang-option" lang="ja" hreflang="ja" >
+                                <span>日本語</span>
+                                
+                            </a>
+                            
+                        </div>
+                    </details>
+                </div>
+                
+            </header>
+            <main class="main-content">
+                <h1>FastAPI v0.162.2 — Visual Architecture Guide</h1>
+<p>FastAPI (<code>v0.162.2</code>) is a high-performance, type-driven ASGI web framework that compiles standard Python <code>&gt;=3.10</code> annotations into validated dependency graphs, Rust-backed Pydantic v2 serializers, and OpenAPI <code>3.1.0</code> specifications. This unofficial bilingual handbook illustrates FastAPI's internal architecture and <code>100,000+</code> LOC production patterns as code using <a href="https://www.drawlib.com/">Drawlib</a>.</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="images/index/fastapi_lifecycle_anim.png" alt="index_1" />
+  <figcaption class="drawlib-caption">FastAPI v0.162.2 End-to-End Lifecycle — Startup Compilation Through ASGI Request Execution</figcaption>
+</figure>
+<details class="drawlib-code-details">
+<summary>Source Code</summary>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.anim</span><span class="w"> </span><span class="kn">import</span> <span class="n">Animation</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.canvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">setup</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.icons</span><span class="w"> </span><span class="kn">import</span> <span class="n">phosphor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.shapes</span><span class="w"> </span><span class="kn">import</span> <span class="n">rectangle</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.smartarts</span><span class="w"> </span><span class="kn">import</span> <span class="n">ChevronProcess</span><span class="p">,</span> <span class="n">Panel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">Styles</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.text</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span>
+
+<span class="n">setup</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">184</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">68</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
+<span class="n">anim</span> <span class="o">=</span> <span class="n">Animation</span><span class="p">(</span><span class="n">fps</span><span class="o">=</span><span class="mf">1.6</span><span class="p">)</span>
+
+<span class="n">stages</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="s2">"1. Annotated</span><span class="se">\n</span><span class="s2">Signature"</span><span class="p">,</span> <span class="s2">"Type Hints &amp; Doc()"</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"2. Startup</span><span class="se">\n</span><span class="s2">Compile"</span><span class="p">,</span> <span class="s2">"Dependant &amp; Models"</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"3. ASGI &amp;</span><span class="se">\n</span><span class="s2">DI Solve"</span><span class="p">,</span> <span class="s2">"solve_dependencies()"</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"4. Endpoint</span><span class="se">\n</span><span class="s2">Dispatch"</span><span class="p">,</span> <span class="s2">"Async / Threadpool"</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"5. Serialize &amp;</span><span class="se">\n</span><span class="s2">Teardown"</span><span class="p">,</span> <span class="s2">"Pydantic v2 &amp; yield"</span><span class="p">),</span>
+<span class="p">]</span>
+
+<span class="n">stage_notes</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span>
+        <span class="n">phosphor</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+        <span class="s2">"Step 1/5 [Declaration] — Declare Annotated[T, Path/Query/Depends, Doc()] &amp; BaseModel types once."</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="p">(</span>
+        <span class="n">phosphor</span><span class="o">.</span><span class="n">gear</span><span class="p">,</span>
+        <span class="s2">"Step 2/5 [Startup] — get_dependant() &amp; TypeAdapter pre-compile route closures before serving traffic."</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="p">(</span>
+        <span class="n">phosphor</span><span class="o">.</span><span class="n">git_branch</span><span class="p">,</span>
+        <span class="s2">"Step 3/5 [ASGI Ingress] — Match route, parse body_field, and resolve cached Dependant DAG nodes."</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="p">(</span>
+        <span class="n">phosphor</span><span class="o">.</span><span class="n">lightning</span><span class="p">,</span>
+        <span class="s2">"Step 4/5 [Execution] — Await async def on event loop or run sync def safely in AnyIO threadpool."</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="p">(</span>
+        <span class="n">phosphor</span><span class="o">.</span><span class="n">check_circle</span><span class="p">,</span>
+        <span class="s2">"Step 5/5 [Egress] — Serialize via Rust pydantic-core and unwind AsyncExitStack yield dependencies."</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">]</span>
+
+<span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">stages</span><span class="p">)):</span>
+    <span class="n">is_last</span> <span class="o">=</span> <span class="n">step</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">stages</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="k">with</span> <span class="n">anim</span><span class="o">.</span><span class="n">frame</span><span class="p">(</span><span class="n">duration</span><span class="o">=</span><span class="mf">2.8</span> <span class="k">if</span> <span class="n">is_last</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span> <span class="n">clear</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="n">outer</span> <span class="o">=</span> <span class="n">Panel</span><span class="p">(</span>
+            <span class="s2">"FastAPI v0.162.2 — Compile-Once &amp; Zero-Reflection ASGI Pipeline"</span><span class="p">,</span>
+            <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">2.0</span><span class="p">),</span>
+            <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_line_width</span><span class="o">=</span><span class="mf">1.2</span><span class="p">),</span>
+            <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">12.0</span><span class="p">),</span>
+            <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">rocket_launch</span><span class="p">,</span>
+            <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">,</span>
+            <span class="n">header_variant</span><span class="o">=</span><span class="s2">"filled"</span><span class="p">,</span>
+            <span class="n">header_height</span><span class="o">=</span><span class="mf">8.5</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">outer</span><span class="o">.</span><span class="n">draw</span><span class="p">((</span><span class="mf">4.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">176.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">60.0</span><span class="p">)</span>
+
+        <span class="c1"># Phase baseline bands (always visible from Frame 1)</span>
+        <span class="n">s_style</span> <span class="o">=</span> <span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span> <span class="k">if</span> <span class="n">step</span> <span class="o">&lt;=</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span>
+        <span class="n">r_style</span> <span class="o">=</span> <span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span> <span class="k">if</span> <span class="n">step</span> <span class="o">&gt;=</span> <span class="mi">2</span> <span class="k">else</span> <span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span>
+        <span class="n">rectangle</span><span class="p">((</span><span class="mf">40.5</span><span class="p">,</span> <span class="mf">24.5</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">65.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">8.0</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">s_style</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.5</span><span class="p">))</span>
+        <span class="n">text</span><span class="p">(</span>
+            <span class="p">(</span><span class="mf">40.5</span><span class="p">,</span> <span class="mf">24.5</span><span class="p">),</span>
+            <span class="s2">"Import &amp; Startup Phase (Executed Once)"</span><span class="p">,</span>
+            <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">rectangle</span><span class="p">((</span><span class="mf">126.0</span><span class="p">,</span> <span class="mf">24.5</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">100.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">8.0</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">r_style</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.5</span><span class="p">))</span>
+        <span class="n">text</span><span class="p">(</span>
+            <span class="p">(</span><span class="mf">126.0</span><span class="p">,</span> <span class="mf">24.5</span><span class="p">),</span>
+            <span class="s2">"Per-Request ASGI Hot Path (Zero inspect.signature())"</span><span class="p">,</span>
+            <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Animated 5-stage ChevronProcess</span>
+        <span class="n">proc</span> <span class="o">=</span> <span class="n">ChevronProcess</span><span class="p">(</span>
+            <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
+            <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
+            <span class="n">description_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+            <span class="n">corner_angle</span><span class="o">=</span><span class="mf">62.0</span><span class="p">,</span>
+            <span class="n">spacing</span><span class="o">=</span><span class="mf">1.8</span><span class="p">,</span>
+            <span class="n">flat_left_end</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">desc</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">stages</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">step</span><span class="p">:</span>
+                <span class="n">c_style</span> <span class="o">=</span> <span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span>
+                <span class="n">t_style</span> <span class="o">=</span> <span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">)</span>
+                <span class="n">d_style</span> <span class="o">=</span> <span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">c_style</span> <span class="o">=</span> <span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span>
+                <span class="n">t_style</span> <span class="o">=</span> <span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">)</span>
+                <span class="n">d_style</span> <span class="o">=</span> <span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">c_style</span> <span class="o">=</span> <span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span>
+                <span class="n">t_style</span> <span class="o">=</span> <span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">)</span>
+                <span class="n">d_style</span> <span class="o">=</span> <span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">)</span>
+            <span class="n">proc</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                <span class="n">title</span><span class="p">,</span>
+                <span class="n">description</span><span class="o">=</span><span class="n">desc</span><span class="p">,</span>
+                <span class="n">style</span><span class="o">=</span><span class="n">c_style</span><span class="p">,</span>
+                <span class="n">text_style</span><span class="o">=</span><span class="n">t_style</span><span class="p">,</span>
+                <span class="n">description_style</span><span class="o">=</span><span class="n">d_style</span><span class="p">,</span>
+                <span class="n">show</span><span class="o">=</span><span class="p">(</span><span class="n">i</span> <span class="o">&lt;=</span> <span class="n">step</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="n">proc</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">8.0</span><span class="p">,</span> <span class="mf">32.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">168.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">19.5</span><span class="p">)</span>
+
+        <span class="c1"># Active step callout bar at bottom</span>
+        <span class="n">rectangle</span><span class="p">((</span><span class="mf">92.0</span><span class="p">,</span> <span class="mf">12.5</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">168.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">9.5</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.5</span><span class="p">))</span>
+        <span class="n">note_icon</span><span class="p">,</span> <span class="n">note_text</span> <span class="o">=</span> <span class="n">stage_notes</span><span class="p">[</span><span class="n">step</span><span class="p">]</span>
+        <span class="n">note_icon</span><span class="p">((</span><span class="mf">14.0</span><span class="p">,</span> <span class="mf">12.5</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">5.2</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">)</span>
+        <span class="n">text</span><span class="p">(</span>
+            <span class="p">(</span><span class="mf">20.0</span><span class="p">,</span> <span class="mf">12.5</span><span class="p">),</span>
+            <span class="n">note_text</span><span class="p">,</span>
+            <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">,</span> <span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">),</span>
+        <span class="p">)</span>
+
+<span class="n">save</span><span class="p">()</span>
+</code></pre>
+</details>
+<h2>FastAPI v0.162.2 Engineering Snapshot</h2>
+<p>Rather than treating routing, validation, dependency injection, and API documentation as disconnected plugins, FastAPI unifies them around standard Python type hints. Static AST and architectural analysis from the companion <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Diagnostic Report</a> highlights how compact and cohesive the upstream codebase remains at <code>v0.162.2</code>:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Dimension</th>
+<th style="text-align:left">Verified <code>v0.162.2</code> Metric</th>
+<th style="text-align:left">Architectural Significance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>Framework Footprint</strong></td>
+<td style="text-align:left"><code>52</code> Python modules · <code>19,837</code> LOC</td>
+<td style="text-align:left">Clean 5-tier downward layering from <code>FastAPI</code> facade down to <code>ModelField</code> adapters</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Automated Test Suite</strong></td>
+<td style="text-align:left"><code>273</code> test modules</td>
+<td style="text-align:left">Comprehensive verification across routing, OpenAPI <code>3.1.0</code>, DI scopes, SSE, and OTel</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Core Runtime Dependencies</strong></td>
+<td style="text-align:left"><code>6</code> direct packages (<code>pyproject.toml</code>)</td>
+<td style="text-align:left"><code>starlette</code>, <code>pydantic</code>, <code>typing-extensions</code>, <code>typing-inspection</code>, <code>annotated-doc</code>, <code>opentelemetry-api</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Supported Python Versions</strong></td>
+<td style="text-align:left">Python <code>&gt;=3.10</code> (<code>3.10</code> – <code>3.14</code>)</td>
+<td style="text-align:left">Full <code>PEP 561</code> <code>py.typed</code> static type coverage and <code>PEP 727</code> <code>Doc()</code> metadata</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>PNI501 Diagnostic Rating</strong></td>
+<td style="text-align:left"><strong><code>93 / 100</code> (<code>Grade S</code>)</strong></td>
+<td style="text-align:left">Zero committed secrets, deterministic <code>uv.lock</code>, and strong boundary modularity</td>
+</tr>
+</tbody>
+</table>
+<h3>Single Source of Truth in 20 Lines</h3>
+<p>A single endpoint signature simultaneously defines URL extraction, regex and length constraints, inline OpenAPI parameter documentation, response serialization, and static type checking:</p>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">annotated_doc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Doc</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">Path</span><span class="p">,</span> <span class="n">Query</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">"Catalog Service"</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s2">"1.0.0"</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">ProductSummary</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">sku</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">price_cents</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">currency</span><span class="p">:</span> <span class="nb">str</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/products/</span><span class="si">{sku}</span><span class="s2">"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">ProductSummary</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">read_product</span><span class="p">(</span>
+    <span class="n">sku</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="n">min_length</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">32</span><span class="p">),</span> <span class="n">Doc</span><span class="p">(</span><span class="s2">"Warehouse SKU code."</span><span class="p">)],</span>
+    <span class="n">currency</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Query</span><span class="p">(</span><span class="n">pattern</span><span class="o">=</span><span class="s2">"^[A-Z]</span><span class="si">{3}</span><span class="s2">$"</span><span class="p">),</span> <span class="n">Doc</span><span class="p">(</span><span class="s2">"ISO 4217 currency."</span><span class="p">)]</span> <span class="o">=</span> <span class="s2">"USD"</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ProductSummary</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">ProductSummary</span><span class="p">(</span><span class="n">sku</span><span class="o">=</span><span class="n">sku</span><span class="p">,</span> <span class="n">price_cents</span><span class="o">=</span><span class="mi">4900</span><span class="p">,</span> <span class="n">currency</span><span class="o">=</span><span class="n">currency</span><span class="p">)</span>
+</code></pre>
+<h2>6-Chapter Architecture Curriculum</h2>
+<p>This visual guide progresses systematically from your first validated endpoint to <code>100,000+</code> LOC modular monolith patterns, recursive <code>Dependant</code> DAG execution, native Server-Sent Events (<code>fastapi.sse</code>), and native OpenTelemetry (<code>fastapi.telemetry</code>):</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="images/index/guide_chapter_map.png" alt="index_2" />
+  <figcaption class="drawlib-caption">Visual Guide Curriculum Map — Six Chapters from Quickstart to Enterprise Production</figcaption>
+</figure>
+<details class="drawlib-code-details">
+<summary>Source Code</summary>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.canvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">setup</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.icons</span><span class="w"> </span><span class="kn">import</span> <span class="n">phosphor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.smartarts</span><span class="w"> </span><span class="kn">import</span> <span class="n">CardList</span><span class="p">,</span> <span class="n">Panel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">Styles</span>
+
+<span class="n">setup</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">196</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">68</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
+
+<span class="n">left_panel</span> <span class="o">=</span> <span class="n">Panel</span><span class="p">(</span>
+    <span class="s2">"Part I — Foundations, Scale &amp; Schemas (Ch 1–3)"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">2.0</span><span class="p">),</span>
+    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_line_width</span><span class="o">=</span><span class="mf">1.2</span><span class="p">),</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.0</span><span class="p">),</span>
+    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">compass</span><span class="p">,</span>
+    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">,</span>
+    <span class="n">header_variant</span><span class="o">=</span><span class="s2">"filled"</span><span class="p">,</span>
+    <span class="n">header_height</span><span class="o">=</span><span class="mf">8.5</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">left_panel</span><span class="o">.</span><span class="n">draw</span><span class="p">((</span><span class="mf">4.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">91.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">60.0</span><span class="p">)</span>
+<span class="n">l_xy</span><span class="p">,</span> <span class="n">l_w</span><span class="p">,</span> <span class="n">l_h</span> <span class="o">=</span> <span class="n">left_panel</span><span class="o">.</span><span class="n">get_content_box</span><span class="p">((</span><span class="mf">4.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">91.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">60.0</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="p">(</span><span class="mf">3.5</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">))</span>
+
+<span class="n">cl_left</span> <span class="o">=</span> <span class="n">CardList</span><span class="p">(</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.0</span><span class="p">),</span>
+    <span class="n">description_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">badge_shape</span><span class="o">=</span><span class="s2">"rounded_rect"</span><span class="p">,</span>
+    <span class="n">badge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
+    <span class="n">badge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">,</span>
+    <span class="n">direction</span><span class="o">=</span><span class="s2">"vertical"</span><span class="p">,</span>
+    <span class="n">spacing</span><span class="o">=</span><span class="mf">2.8</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">cl_left</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="s2">"Ch 1 · Introduction &amp; Quickstart"</span><span class="p">,</span>
+    <span class="s2">"Design pillars, startup compile &amp; OpenAPI 3.1"</span><span class="p">,</span>
+    <span class="n">badge_text</span><span class="o">=</span><span class="s2">"Ch 1"</span><span class="p">,</span>
+    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">rocket_launch</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
+    <span class="n">badge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
+    <span class="n">badge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">cl_left</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="s2">"Ch 2 · 100k+ LOC Enterprise Design"</span><span class="p">,</span>
+    <span class="s2">"Bounded contexts, DI ports &amp; lifespan tests"</span><span class="p">,</span>
+    <span class="n">badge_text</span><span class="o">=</span><span class="s2">"Ch 2"</span><span class="p">,</span>
+    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">tree_structure</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">cl_left</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="s2">"Ch 3 · Routing &amp; Schemas"</span><span class="p">,</span>
+    <span class="s2">"Path/Query/Header/Body &amp; response models"</span><span class="p">,</span>
+    <span class="n">badge_text</span><span class="o">=</span><span class="s2">"Ch 3"</span><span class="p">,</span>
+    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">brackets_curly</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">cl_left</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">xy</span><span class="o">=</span><span class="n">l_xy</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">l_w</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">l_h</span><span class="p">)</span>
+
+<span class="n">right_panel</span> <span class="o">=</span> <span class="n">Panel</span><span class="p">(</span>
+    <span class="s2">"Part II — DI Security, Streaming &amp; Ops (Ch 4–6)"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">2.0</span><span class="p">),</span>
+    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_line_width</span><span class="o">=</span><span class="mf">1.2</span><span class="p">),</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.0</span><span class="p">),</span>
+    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span>
+    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryBold</span><span class="p">,</span>
+    <span class="n">header_variant</span><span class="o">=</span><span class="s2">"filled"</span><span class="p">,</span>
+    <span class="n">header_height</span><span class="o">=</span><span class="mf">8.5</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">right_panel</span><span class="o">.</span><span class="n">draw</span><span class="p">((</span><span class="mf">101.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">91.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">60.0</span><span class="p">)</span>
+<span class="n">r_xy</span><span class="p">,</span> <span class="n">r_w</span><span class="p">,</span> <span class="n">r_h</span> <span class="o">=</span> <span class="n">right_panel</span><span class="o">.</span><span class="n">get_content_box</span><span class="p">((</span><span class="mf">101.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">91.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">60.0</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="p">(</span><span class="mf">3.5</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">))</span>
+
+<span class="n">cl_right</span> <span class="o">=</span> <span class="n">CardList</span><span class="p">(</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.0</span><span class="p">),</span>
+    <span class="n">description_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">badge_shape</span><span class="o">=</span><span class="s2">"rounded_rect"</span><span class="p">,</span>
+    <span class="n">badge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span>
+    <span class="n">badge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryBold</span><span class="p">,</span>
+    <span class="n">direction</span><span class="o">=</span><span class="s2">"vertical"</span><span class="p">,</span>
+    <span class="n">spacing</span><span class="o">=</span><span class="mf">2.8</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">cl_right</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="s2">"Ch 4 · DI &amp; Security"</span><span class="p">,</span>
+    <span class="s2">"Dependant DAG cache, yield &amp; OAuth2 scopes"</span><span class="p">,</span>
+    <span class="n">badge_text</span><span class="o">=</span><span class="s2">"Ch 4"</span><span class="p">,</span>
+    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">shield_check</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">cl_right</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="s2">"Ch 5 · Async, SSE &amp; WebSockets"</span><span class="p">,</span>
+    <span class="s2">"Pure ASGI middleware, SSE, JSONL &amp; sockets"</span><span class="p">,</span>
+    <span class="n">badge_text</span><span class="o">=</span><span class="s2">"Ch 5"</span><span class="p">,</span>
+    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">broadcast</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">cl_right</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="s2">"Ch 6 · OpenTelemetry &amp; Testing"</span><span class="p">,</span>
+    <span class="s2">"Native OTel spans, RFC errors &amp; TestClient"</span><span class="p">,</span>
+    <span class="n">badge_text</span><span class="o">=</span><span class="s2">"Ch 6"</span><span class="p">,</span>
+    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">pulse</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span>
+    <span class="n">badge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
+    <span class="n">badge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">cl_right</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">xy</span><span class="o">=</span><span class="n">r_xy</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">r_w</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">r_h</span><span class="p">)</span>
+
+<span class="n">save</span><span class="p">()</span>
+</code></pre>
+</details>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Chapter</th>
+<th style="text-align:left">Pages &amp; Core Topics</th>
+<th style="text-align:left">Key FastAPI Subsystems Covered</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>1. Introduction &amp; Quickstart</strong></td>
+<td style="text-align:left"><a href="en/01_getting_started/overview.html">Why FastAPI &amp; Design Philosophy</a> · <a href="en/01_getting_started/quickstart.html">Quickstart &amp; Interactive OpenAPI</a></td>
+<td style="text-align:left"><code>FastAPI</code>, <code>Annotated</code>, <code>Doc()</code>, <code>APIRoute</code>, Swagger UI &amp; ReDoc</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>2. Scaling to 100k+ LOC</strong></td>
+<td style="text-align:left"><a href="en/02_enterprise_architecture/modular_design.html">Bounded Contexts &amp; Layering</a> · <a href="en/02_enterprise_architecture/di_lifespan_testing.html">Enterprise DI, Lifespan &amp; Testing</a></td>
+<td style="text-align:left"><code>APIRouter</code>, <code>lifespan</code>, <code>dependency_overrides</code>, domain boundaries</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>3. Routing, Validation &amp; Models</strong></td>
+<td style="text-align:left"><a href="en/03_routing_and_models/parameters_and_validation.html">Path, Query, Header, Cookie &amp; Body</a> · <a href="en/03_routing_and_models/responses_and_openapi.html">Response Serialization &amp; OpenAPI 3.1</a></td>
+<td style="text-align:left"><code>Path</code>, <code>Query</code>, <code>Header</code>, <code>Cookie</code>, <code>Body</code>, <code>ModelField</code>, <code>get_openapi</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>4. Dependency Injection &amp; Security</strong></td>
+<td style="text-align:left"><a href="en/04_dependencies_and_security/dependency_injection.html">Dependant DAG, Caching &amp; Scopes</a> · <a href="en/04_dependencies_and_security/security_and_auth.html">Authentication &amp; OAuth2 Scopes</a></td>
+<td style="text-align:left"><code>Depends</code>, <code>Security</code>, <code>solve_dependencies</code>, <code>AsyncExitStack</code>, <code>SecurityScopes</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>5. Async, Middleware &amp; Streaming</strong></td>
+<td style="text-align:left"><a href="en/05_async_and_realtime/concurrency_and_middleware.html">ASGI Middleware &amp; Threadpool</a> · <a href="en/05_async_and_realtime/sse_websockets_streaming.html">Native SSE, JSONL &amp; WebSockets</a></td>
+<td style="text-align:left"><code>run_in_threadpool</code>, <code>EventSourceResponse</code>, <code>ServerSentEvent</code>, <code>WebSocket</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>6. Observability, Errors &amp; Testing</strong></td>
+<td style="text-align:left"><a href="en/06_observability_and_testing/telemetry_and_errors.html">Native OpenTelemetry &amp; Exceptions</a> · <a href="en/06_observability_and_testing/testing_and_deployment.html">Testing Patterns &amp; Production ASGI</a></td>
+<td style="text-align:left"><code>TelemetryConfig</code>, <code>NativeTelemetry</code>, <code>RequestValidationError</code>, <code>TestClient</code></td>
+</tr>
+</tbody>
+</table>
+<h2>Attribution &amp; Companion Diagnostic Report</h2>
+<ul>
+<li><strong>Respectful Upstream Attribution</strong>: FastAPI was created and is maintained by <strong>Sebastián Ramírez (<code>@tiangolo</code>)</strong> and the FastAPI community under the MIT License. For authoritative documentation, release notes, and community resources, always consult <strong><a href="https://fastapi.tiangolo.com/">https://fastapi.tiangolo.com/</a></strong> and <strong><a href="https://github.com/fastapi/fastapi">github.com/fastapi/fastapi</a></strong>.</li>
+<li><strong>Unofficial Drawlib &amp; PNI501 Showcase</strong>: This documentation portal is an independent architectural study authored as code with <strong><a href="https://www.drawlib.com/">Drawlib</a></strong> (<code>type = &quot;site&quot;</code>, bilingual <code>en</code> / <code>ja</code>) alongside the automated <strong><a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Engineering &amp; Architecture Diagnostic Report</a></strong>. Begin reading with <strong><a href="en/01_getting_started/overview.html">Chapter 1: Why FastAPI &amp; Design Philosophy</a></strong> or jump straight into hands-on code in <strong><a href="en/01_getting_started/quickstart.html">Quickstart &amp; Interactive OpenAPI</a></strong>.</li>
+</ul>
+
+            </main>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Theme toggle
+            const themeBtn = document.getElementById('theme-toggle');
+            if (themeBtn) {
+                themeBtn.addEventListener('click', function() {
+                    const current = document.documentElement.getAttribute('data-theme');
+                    const next = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    localStorage.setItem('drawlib-theme', next);
+                });
+            }
+
+            // Language dropdown outside-click & Escape close
+            const langDropdowns = document.querySelectorAll('.lang-dropdown');
+            if (langDropdowns.length > 0) {
+                document.addEventListener('click', function(e) {
+                    langDropdowns.forEach(function(dd) {
+                        if (dd.hasAttribute('open') && !dd.contains(e.target)) {
+                            dd.removeAttribute('open');
+                        }
+                    });
+                });
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        langDropdowns.forEach(function(dd) {
+                            dd.removeAttribute('open');
+                        });
+                    }
+                });
+            }
+
+            // Mobile menu toggle
+            const menuBtn = document.getElementById('menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            if (menuBtn && sidebar) {
+                function setMenuOpen(open) {
+                    sidebar.classList.toggle('is-open', open);
+                    menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    document.body.classList.toggle('menu-open', open);
+                    if (open) {
+                        const menu = sidebar.querySelector('.sidebar-menu');
+                        if (menu) {
+                            menu.scrollTop = 0;
+                        }
+                    }
+                }
+
+                menuBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const willOpen = !sidebar.classList.contains('is-open');
+                    setMenuOpen(willOpen);
+                });
+
+                // Close menu when clicking outside sidebar
+                document.addEventListener('click', function(e) {
+                    if (sidebar.classList.contains('is-open') && !sidebar.contains(e.target)) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                // Close menu when a navigation link is clicked
+                const navLinks = sidebar.querySelectorAll('.nav-item a');
+                navLinks.forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        setMenuOpen(false);
+                    });
+                });
+
+                // Close on Escape key
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                // Reset menu state when resized above mobile breakpoint
+                window.addEventListener('resize', function() {
+                    if (window.innerWidth > 768 && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,816 @@
+<!--
+ Copyright (c) 2026 Yuichi Ito (yuichi@yuichi.com)
+
+ This software is licensed under the Apache License, Version 2.0.
+ For more information, please visit: https://github.com/yuichi110/drawlib
+
+ This software is provided "as is", without warranty of any kind,
+ express or implied, including but not limited to the warranties of
+ merchantability, fitness for a particular purpose and noninfringement.
+-->
+<!DOCTYPE html>
+<html lang="ja" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Path・Query・Header・Cookie・Body 検証パイプライン — FastAPI Visual Guide (Unofficial · Drawlib Demo)</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-S9N5BZ1VRC');
+    </script>
+    <script>
+        (function() {
+            const saved = localStorage.getItem('drawlib-theme');
+            if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    
+    <link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/en/03_routing_and_models/parameters_and_validation.html">
+    
+    <link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/ja/03_routing_and_models/parameters_and_validation.html">
+    
+    <link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/en/03_routing_and_models/parameters_and_validation.html">
+    
+    
+    
+    <meta name="description" content="FastAPI はルート登録時に Python の型注釈・Annotated[T, ...] メタデータ・Pydantic v2 モデルを解析し、事前構築された Dependant ツリーおよび Rust 製 ModelField…">
+    <link rel="canonical" href="https://fastapi.drawlib.com/ja/03_routing_and_models/parameters_and_validation.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="FastAPI ビジュアル解説">
+    <meta property="og:title" content="Path・Query・Header・Cookie・Body 検証パイプライン — FastAPI ビジュアル解説">
+    <meta property="og:description" content="FastAPI はルート登録時に Python の型注釈・Annotated[T, ...] メタデータ・Pydantic v2 モデルを解析し、事前構築された Dependant ツリーおよび Rust 製 ModelField…">
+    <meta property="og:url" content="https://fastapi.drawlib.com/ja/03_routing_and_models/parameters_and_validation.html">
+    <meta property="og:image" content="https://fastapi.drawlib.com/_assets/ogp.png">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:locale:alternate" content="en_US">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Path・Query・Header・Cookie・Body 検証パイプライン — FastAPI ビジュアル解説">
+    <meta name="twitter:description" content="FastAPI はルート登録時に Python の型注釈・Annotated[T, ...] メタデータ・Pydantic v2 モデルを解析し、事前構築された Dependant ツリーおよび Rust 製 ModelField…">
+    <meta name="twitter:image" content="https://fastapi.drawlib.com/_assets/ogp.png">
+    
+    
+    <link rel="icon" type="image/png" href="../../_assets/favicon.png">
+    
+    
+    <link rel="stylesheet" href="../style.css">
+    
+    
+</head>
+<body>
+    <div class="demo-banner" role="region" aria-label="非公式ショーケース案内">
+        <div class="demo-banner-inner">
+            <span class="demo-banner-badge">UNOFFICIAL DEMO</span>
+            
+            <span class="demo-banner-text">
+                <a href="https://www.drawlib.com/" target="_blank" rel="noopener noreferrer">Drawlib</a> と <a href="https://pypi.org/project/pni501/" target="_blank" rel="noopener noreferrer">PNI501</a> で作成した <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a>（v0.162.2, MIT）の非公式ビジュアル解説ショーケースです。
+            </span>
+            <span class="demo-banner-links">
+                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 診断レポート →</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI 公式 Docs ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+            </span>
+            
+        </div>
+    </div>
+    
+    <div class="doc-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI ビジュアル解説">
+                    
+                    FastAPI ビジュアル解説
+                    
+                </a>
+                <div class="sidebar-header-actions">
+                    <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">
+                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                    <button type="button" id="menu-toggle" class="menu-toggle-btn" aria-label="Toggle navigation" aria-expanded="false">
+                        <svg class="icon-hamburger" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        <svg class="icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="sidebar-menu">
+                
+                    
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../index.html" >ガイド概要と全体マップ</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">1. イントロ &amp; クイックスタート</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../01_getting_started/overview.html" >FastAPI の設計思想と内部構造</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../01_getting_started/quickstart.html" >クイックスタートと自動生成 Docs</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">2. 10万行規模の設計ベストプラクティス</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../02_enterprise_architecture/modular_design.html" >境界づけられたコンテキストと階層化</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../02_enterprise_architecture/di_lifespan_testing.html" >大規模 DI・Lifespan 管理・テスト戦略</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">3. ルーティング・入力検証・スキーマ</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item active">
+                                <a href="parameters_and_validation.html" >Path・Query・Header・Cookie・Body</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="responses_and_openapi.html" >レスポンス直列化と OpenAPI 3.1</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">4. 依存性注入（DI）とセキュリティ</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../04_dependencies_and_security/dependency_injection.html" >Dependant DAG・キャッシュ・yield スコープ</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../04_dependencies_and_security/security_and_auth.html" >認証・OAuth2 スコープ認可・抽出器</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">5. 非同期並行・ミドルウェア・ストリーミング</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../05_async_and_realtime/concurrency_and_middleware.html" >ASGI ミドルウェアとスレッドプール制御</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../05_async_and_realtime/sse_websockets_streaming.html" >ネイティブ SSE・JSONL・WebSocket</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">6. 可観測性・例外設計・実践テスト</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../06_observability_and_testing/telemetry_and_errors.html" >ネイティブ OpenTelemetry と例外処理</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../06_observability_and_testing/testing_and_deployment.html" >実践テスト手法と本番 ASGI 運用</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">診断レポート &amp; 公式リンク</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/reports/pni501/" target="_blank" rel="noopener noreferrer">PNI501 診断レポート<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI 公式ドキュメント<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">デモのリポジトリ (GitHub)<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                        </ul>
+                    
+                
+            </div>
+        </aside>
+        <div class="content-wrapper">
+            <header class="top-bar">
+                <div class="breadcrumbs">
+                    <span class="crumb">Docs</span>
+                    <span class="crumb-separator">&raquo;</span>
+                    <span class="crumb active">Path・Query・Header・Cookie・Body 検証パイプライン</span>
+                </div>
+                
+                <div class="lang-switcher">
+                    <details class="lang-dropdown">
+                        <summary class="lang-dropdown-btn" aria-label="Select language">
+                            <svg class="lang-globe-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            <span class="lang-current-label">日本語</span>
+                            <svg class="lang-caret-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </summary>
+                        <div class="lang-dropdown-menu" role="menu">
+                            
+                            <a href="../../en/03_routing_and_models/parameters_and_validation.html" class="lang-option" lang="en" hreflang="en" >
+                                <span>English</span>
+                                
+                            </a>
+                            
+                            <a href="parameters_and_validation.html" class="lang-option active" lang="ja" hreflang="ja" aria-current="page">
+                                <span>日本語</span>
+                                
+                                <svg class="lang-check-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                
+                            </a>
+                            
+                        </div>
+                    </details>
+                </div>
+                
+            </header>
+            <main class="main-content">
+                <h1>Path・Query・Header・Cookie・Body 検証パイプライン</h1>
+<p>FastAPI はルート登録時に Python の型注釈・<code>Annotated[T, ...]</code> メタデータ・Pydantic v2 モデルを解析し、事前構築された <code>Dependant</code> ツリーおよび Rust 製 <code>ModelField</code> バリデータへとコンパイルすることで、リクエストごとの署名リフレクションを排除しつつ入力検証と OpenAPI 3.1 スキーマ生成を単一の定義に統合します。</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/03_routing_and_models/parameters_and_validation/param_classification_engine.png" alt="parameters_and_validation_1" />
+  <figcaption class="drawlib-caption">get_dependant() および analyze_param() によるルート登録時のパラメータ分類パイプライン</figcaption>
+</figure>
+<details class="drawlib-code-details">
+<summary>Source Code</summary>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.canvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">setup</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.icons</span><span class="w"> </span><span class="kn">import</span> <span class="n">code</span><span class="p">,</span> <span class="n">phosphor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.lines</span><span class="w"> </span><span class="kn">import</span> <span class="n">line</span><span class="p">,</span> <span class="n">lines</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.shapes</span><span class="w"> </span><span class="kn">import</span> <span class="n">rectangle</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.smartarts</span><span class="w"> </span><span class="kn">import</span> <span class="n">CardList</span><span class="p">,</span> <span class="n">Panel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">Styles</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.text</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span>
+
+<span class="n">setup</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">174</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">92</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
+
+<span class="c1"># Title Banner</span>
+<span class="n">code</span><span class="o">.</span><span class="n">fastapi</span><span class="p">((</span><span class="mi">11</span><span class="p">,</span> <span class="mf">86.5</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">5.2</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Primary</span><span class="p">)</span>
+<span class="n">text</span><span class="p">(</span>
+    <span class="p">(</span><span class="mf">16.5</span><span class="p">,</span> <span class="mf">86.5</span><span class="p">),</span>
+    <span class="s2">"Registration-Time Parameter Classification: get_dependant() -&gt; analyze_param()"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">12.5</span><span class="p">,</span> <span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1"># 1. Left Panel: Signature &amp; Annotated Unpacking</span>
+<span class="n">p1</span> <span class="o">=</span> <span class="n">Panel</span><span class="p">(</span>
+    <span class="s2">"1. Signature &amp; Annotated"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
+    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.0</span><span class="p">),</span>
+    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">magnifying_glass</span><span class="p">,</span>
+    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">,</span>
+    <span class="n">header_height</span><span class="o">=</span><span class="mf">8.5</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">p1</span><span class="o">.</span><span class="n">draw</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">54</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">74</span><span class="p">)</span>
+<span class="n">c1_xy</span><span class="p">,</span> <span class="n">c1_w</span><span class="p">,</span> <span class="n">c1_h</span> <span class="o">=</span> <span class="n">p1</span><span class="o">.</span><span class="n">get_content_box</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">54</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">74</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="p">(</span><span class="mf">3.0</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">))</span>
+
+<span class="n">cl1</span> <span class="o">=</span> <span class="n">CardList</span><span class="p">(</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
+    <span class="n">description_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">badge_shape</span><span class="o">=</span><span class="s2">"rounded_rect"</span><span class="p">,</span>
+    <span class="n">badge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
+    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">,</span>
+    <span class="n">direction</span><span class="o">=</span><span class="s2">"vertical"</span><span class="p">,</span>
+    <span class="n">spacing</span><span class="o">=</span><span class="mf">3.5</span><span class="p">,</span>
+    <span class="n">show_arrows</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">arrow_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">cl1</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="s2">"inspect.signature()"</span><span class="p">,</span>
+    <span class="s2">"PEP 695 TypeAlias unwrap</span><span class="se">\n</span><span class="s2">via typing-inspection"</span><span class="p">,</span>
+    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">cl1</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="s2">"Annotated[T, ...]"</span><span class="p">,</span>
+    <span class="s2">"Extracts Param, Body,</span><span class="se">\n</span><span class="s2">Depends &amp; PEP 727 Doc()"</span><span class="p">,</span>
+    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">code_block</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">cl1</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="s2">"Non-Field Bypass"</span><span class="p">,</span>
+    <span class="s2">"Depends -&gt; Dependant DAG</span><span class="se">\n</span><span class="s2">Request -&gt; direct slot"</span><span class="p">,</span>
+    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">git_branch</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">cl1</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">c1_xy</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">c1_w</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">c1_h</span><span class="p">)</span>
+
+<span class="c1"># Connector from Panel 1 to Panel 2 (6.0 units)</span>
+<span class="n">line</span><span class="p">((</span><span class="mi">59</span><span class="p">,</span> <span class="mi">43</span><span class="p">),</span> <span class="p">(</span><span class="mi">65</span><span class="p">,</span> <span class="mi">43</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">)</span>
+
+<span class="c1"># 2. Center Panel: 4-Stage Inference &amp; Routing</span>
+<span class="n">p2</span> <span class="o">=</span> <span class="n">Panel</span><span class="p">(</span>
+    <span class="s2">"2. Source Resolution Rules"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
+    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.0</span><span class="p">),</span>
+    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">arrows_split</span><span class="p">,</span>
+    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
+    <span class="n">header_height</span><span class="o">=</span><span class="mf">8.5</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">p2</span><span class="o">.</span><span class="n">draw</span><span class="p">((</span><span class="mi">65</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">74</span><span class="p">)</span>
+
+<span class="n">gates</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="mf">62.5</span><span class="p">,</span> <span class="s2">"Rule A: </span><span class="si">{name}</span><span class="s2"> in Path?"</span><span class="p">,</span> <span class="s2">"Matched against route template"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">),</span>
+    <span class="p">(</span><span class="mf">46.5</span><span class="p">,</span> <span class="s2">"Rule B: UploadFile / File()?"</span><span class="p">,</span> <span class="s2">"Streamed binary or file list"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">),</span>
+    <span class="p">(</span><span class="mf">30.5</span><span class="p">,</span> <span class="s2">"Rule C: Complex / Body()?"</span><span class="p">,</span> <span class="s2">"BaseModel, dict, Form() or Body()"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">),</span>
+    <span class="p">(</span><span class="mf">14.5</span><span class="p">,</span> <span class="s2">"Rule D: Scalar or Param Model?"</span><span class="p">,</span> <span class="s2">"int/str/UUID or Query(BaseModel)"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">),</span>
+<span class="p">]</span>
+<span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="p">(</span><span class="n">gy</span><span class="p">,</span> <span class="n">gtitle</span><span class="p">,</span> <span class="n">gsub</span><span class="p">,</span> <span class="n">gst</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">gates</span><span class="p">):</span>
+    <span class="n">rectangle</span><span class="p">((</span><span class="mi">90</span><span class="p">,</span> <span class="n">gy</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">43</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">11.5</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">gst</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.8</span><span class="p">))</span>
+    <span class="n">text</span><span class="p">((</span><span class="mi">90</span><span class="p">,</span> <span class="n">gy</span> <span class="o">+</span> <span class="mf">2.2</span><span class="p">),</span> <span class="n">gtitle</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">))</span>
+    <span class="n">text</span><span class="p">((</span><span class="mi">90</span><span class="p">,</span> <span class="n">gy</span> <span class="o">-</span> <span class="mf">2.6</span><span class="p">),</span> <span class="n">gsub</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">gates</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">next_gy</span> <span class="o">=</span> <span class="n">gates</span><span class="p">[</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">line</span><span class="p">((</span><span class="mi">90</span><span class="p">,</span> <span class="n">gy</span> <span class="o">-</span> <span class="mf">5.8</span><span class="p">),</span> <span class="p">(</span><span class="mi">90</span><span class="p">,</span> <span class="n">next_gy</span> <span class="o">+</span> <span class="mf">5.8</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">MutedBold</span><span class="p">)</span>
+
+<span class="c1"># 3. Right Panel: Compiled ModelField Targets</span>
+<span class="n">p3</span> <span class="o">=</span> <span class="n">Panel</span><span class="p">(</span>
+    <span class="s2">"3. Compiled ModelField Slots"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
+    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.0</span><span class="p">),</span>
+    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">cpu</span><span class="p">,</span>
+    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">,</span>
+    <span class="n">header_height</span><span class="o">=</span><span class="mf">8.5</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">p3</span><span class="o">.</span><span class="n">draw</span><span class="p">((</span><span class="mi">121</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">48</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">74</span><span class="p">)</span>
+
+<span class="n">targets</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="mf">62.5</span><span class="p">,</span> <span class="s2">"dependant.path_params"</span><span class="p">,</span> <span class="s2">"Required scalar TypeAdapter"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+    <span class="p">(</span><span class="mf">46.5</span><span class="p">,</span> <span class="s2">"SpooledTemporaryFile"</span><span class="p">,</span> <span class="s2">"Closed via AsyncExitStack"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+    <span class="p">(</span><span class="mf">30.5</span><span class="p">,</span> <span class="s2">"dependant.body_params"</span><span class="p">,</span> <span class="s2">"Body_&lt;id&gt; or Body(embed=True)"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+    <span class="p">(</span><span class="mf">14.5</span><span class="p">,</span> <span class="s2">"query / header / cookie"</span><span class="p">,</span> <span class="s2">"Flattens BaseModel; _ -&gt; -"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+<span class="p">]</span>
+<span class="k">for</span> <span class="p">(</span><span class="n">ty</span><span class="p">,</span> <span class="n">ttitle</span><span class="p">,</span> <span class="n">tsub</span><span class="p">,</span> <span class="n">tst</span><span class="p">,</span> <span class="n">is_focal</span><span class="p">)</span> <span class="ow">in</span> <span class="n">targets</span><span class="p">:</span>
+    <span class="n">rectangle</span><span class="p">((</span><span class="mi">145</span><span class="p">,</span> <span class="n">ty</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">11.5</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">tst</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.8</span><span class="p">))</span>
+    <span class="n">t_head</span> <span class="o">=</span> <span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span> <span class="k">if</span> <span class="n">is_focal</span> <span class="k">else</span> <span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span>
+    <span class="n">t_body</span> <span class="o">=</span> <span class="n">Styles</span><span class="o">.</span><span class="n">White</span> <span class="k">if</span> <span class="n">is_focal</span> <span class="k">else</span> <span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span>
+    <span class="n">text</span><span class="p">((</span><span class="mi">145</span><span class="p">,</span> <span class="n">ty</span> <span class="o">+</span> <span class="mf">2.2</span><span class="p">),</span> <span class="n">ttitle</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">t_head</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">))</span>
+    <span class="n">text</span><span class="p">((</span><span class="mi">145</span><span class="p">,</span> <span class="n">ty</span> <span class="o">-</span> <span class="mf">2.6</span><span class="p">),</span> <span class="n">tsub</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">t_body</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">))</span>
+    <span class="n">lines</span><span class="p">([(</span><span class="mf">111.5</span><span class="p">,</span> <span class="n">ty</span><span class="p">),</span> <span class="p">(</span><span class="mf">124.0</span><span class="p">,</span> <span class="n">ty</span><span class="p">)],</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span> <span class="k">if</span> <span class="n">is_focal</span> <span class="k">else</span> <span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">)</span>
+
+<span class="n">save</span><span class="p">()</span>
+</code></pre>
+</details>
+<p>FastAPI のすべての HTTP エンドポイントおよび依存関数は、ルーターへのパスオペレーション登録時に一度だけ <code>get_dependant()</code> を通過し、宣言的な型ヒントから決定論的な実行時抽出器へと変換されます。</p>
+<h2>1. ルート登録時のパラメータ分類エンジン（<code>analyze_param</code>）</h2>
+<p><code>fastapi/dependencies/utils.py</code> 内の <code>get_dependant()</code> は、<code>get_typed_signature()</code> で前方参照を解決し、<code>get_path_param_names()</code> でパス内の <code>{param}</code> プレースホルダを抽出したうえで、各引数を <code>analyze_param()</code> に委譲します。</p>
+<ol>
+<li><strong>PEP 695 型エイリアスと <code>Annotated</code> の展開</strong>: <code>typing-inspection</code> の <code>is_typealiastype(annotation)</code> を用いて Python 3.12+ の <code>type MyParam = Annotated[...]</code> 構文を展開した後、<code>Annotated[T, ...]</code> のメタデータを走査します。FastAPI 固有のマーカー（<code>Param</code>・<code>Body</code>・<code>Depends</code>・<code>Security</code>）は Pydantic の <code>Field</code> 制約や PEP 727 の <code>Doc()</code> ドキュメント文字列とともに <code>copy_field_info()</code> で複製されます。なお <code>Annotated</code> 使用時は、デフォルト値はマーカー内部ではなく通常の <code>= default</code> 構文で指定する規約が強制されます。</li>
+<li><strong>フレームワーク型と依存関数のバイパス</strong>: <code>Depends</code> / <code>Security</code> は子 <code>Dependant</code> ノードとして再帰的に構築され、<code>Request</code>・<code>Response</code>・<code>BackgroundTasks</code>・<code>WebSocket</code>・<code>HTTPConnection</code>・<code>SecurityScopes</code> などのフレームワークオブジェクトは <code>add_non_field_param_to_dependency()</code> によって検証フィールドを作らず <code>Dependant</code> の専用スロットへ直接束縛されます。</li>
+<li><strong>4 段階の決定論的デフォルト推論</strong>: 明示的な <code>Query()</code> や <code>Body()</code> マーカーが省略された場合、<code>analyze_param()</code> は引数の位置と型から以下の優先順位で抽出元を決定します。</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">優先度</th>
+<th style="text-align:left"><code>analyze_param()</code> における一致条件</th>
+<th style="text-align:left">推論されるマーカー</th>
+<th style="text-align:left">格納先の <code>Dependant</code> バケット</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>1</strong></td>
+<td style="text-align:left">引数名がルートパスの <code>{param}</code> と一致</td>
+<td style="text-align:left"><code>Path()</code></td>
+<td style="text-align:left"><code>dependant.path_params</code>（常時必須・スカラー型限定）</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>2</strong></td>
+<td style="text-align:left">型が <code>UploadFile</code> または <code>UploadFile</code> のシーケンス</td>
+<td style="text-align:left"><code>File()</code></td>
+<td style="text-align:left"><code>dependant.body_params</code>（<code>multipart/form-data</code>）</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>3</strong></td>
+<td style="text-align:left">複合型（<code>BaseModel</code>・<code>Mapping</code>・<code>dataclass</code>・<code>list[Model]</code>）</td>
+<td style="text-align:left"><code>Body()</code></td>
+<td style="text-align:left"><code>dependant.body_params</code>（<code>application/json</code>）</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>4</strong></td>
+<td style="text-align:left">スカラー型またはスカラーの配列（<code>int</code>・<code>str</code>・<code>UUID</code>・<code>list[str]</code>）</td>
+<td style="text-align:left"><code>Query()</code></td>
+<td style="text-align:left"><code>dependant.query_params</code></td>
+</tr>
+</tbody>
+</table>
+<ol start="4">
+<li><strong>ヘッダ名の自動正規化と構造化 <code>Param</code> モデル</strong>: <code>Header(convert_underscores=True)</code>（既定）は Python の <code>snake_case</code> 引数名（例: <code>x_trace_id</code>）を標準的な HTTP ハイフン区切り（<code>x-trace-id</code>）へ自動変換します。さらに Pydantic の <code>BaseModel</code> に <code>Query()</code>・<code>Header()</code>・<code>Cookie()</code> を付与（<code>Annotated[FilterModel, Query()]</code>）すると、<code>_get_param_model()</code> が OpenAPI 上では個別パラメータとして展開しつつ、実行時の <code>request_params_to_args()</code> では <code>ConfigDict(extra=&quot;forbid&quot;)</code> を含むモデル全体の検証を一括適用します。</li>
+</ol>
+<h3>マルチソース抽出と構造化 Query フィルタモデル</h3>
+<p>以下の検証済みエンドポイントは、<code>Path</code> 制約、未宣言クエリキーを拒否する Pydantic <code>Query()</code> フィルタモデル、<code>Header</code> のアンダースコア自動変換、および型付き <code>Cookie</code> デフォルト値を単一の署名で統合しています。</p>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span><span class="p">,</span> <span class="n">Literal</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">annotated_doc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Doc</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">Cookie</span><span class="p">,</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">Header</span><span class="p">,</span> <span class="n">Path</span><span class="p">,</span> <span class="n">Query</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">ConfigDict</span><span class="p">,</span> <span class="n">Field</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">"Catalog Service"</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s2">"1.0.0"</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">CatalogFilterParams</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">)</span>
+
+    <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">le</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Maximum items per page"</span><span class="p">)</span>
+    <span class="n">offset</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Zero-based pagination offset"</span><span class="p">)</span>
+    <span class="n">sort_by</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"created_at"</span><span class="p">,</span> <span class="s2">"price_cents"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"created_at"</span>
+    <span class="n">tags</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/catalog/</span><span class="si">{item_id}</span><span class="s2">"</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_catalog_item</span><span class="p">(</span>
+    <span class="n">item_id</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span>
+        <span class="nb">int</span><span class="p">,</span>
+        <span class="n">Path</span><span class="p">(</span><span class="n">ge</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Positive catalog item ID"</span><span class="p">),</span>
+        <span class="n">Doc</span><span class="p">(</span><span class="s2">"Unique numeric identifier matched from the URL path template."</span><span class="p">),</span>
+    <span class="p">],</span>
+    <span class="n">filters</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span>
+        <span class="n">CatalogFilterParams</span><span class="p">,</span>
+        <span class="n">Query</span><span class="p">(),</span>
+        <span class="n">Doc</span><span class="p">(</span><span class="s2">"Structured query filter model forbidding undeclared query keys."</span><span class="p">),</span>
+    <span class="p">],</span>
+    <span class="n">x_trace_id</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span>
+        <span class="nb">str</span><span class="p">,</span>
+        <span class="n">Header</span><span class="p">(</span><span class="n">min_length</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Distributed trace correlation header"</span><span class="p">),</span>
+        <span class="n">Doc</span><span class="p">(</span><span class="s2">"Automatically converted from x_trace_id to x-trace-id."</span><span class="p">),</span>
+    <span class="p">],</span>
+    <span class="n">preferred_currency</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span>
+        <span class="n">Literal</span><span class="p">[</span><span class="s2">"USD"</span><span class="p">,</span> <span class="s2">"EUR"</span><span class="p">,</span> <span class="s2">"JPY"</span><span class="p">],</span>
+        <span class="n">Cookie</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">"ISO-4217 display currency preference"</span><span class="p">),</span>
+    <span class="p">]</span> <span class="o">=</span> <span class="s2">"USD"</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"item_id"</span><span class="p">:</span> <span class="n">item_id</span><span class="p">,</span>
+        <span class="s2">"filters"</span><span class="p">:</span> <span class="n">filters</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(),</span>
+        <span class="s2">"trace_id"</span><span class="p">:</span> <span class="n">x_trace_id</span><span class="p">,</span>
+        <span class="s2">"currency"</span><span class="p">:</span> <span class="n">preferred_currency</span><span class="p">,</span>
+    <span class="p">}</span>
+</code></pre>
+<p>実行時には <code>solve_dependencies()</code> が Path・Query・Header・Cookie の検証結果とエラーを単一のリストへ集約します。<code>item_id=0</code> や未定義の <code>?debug=1</code> などが渡された場合でも、最初のエラーで中断せず発生箇所付きの全エラー（<code>(&quot;query&quot;, &quot;debug&quot;)</code>、<code>(&quot;path&quot;, &quot;item_id&quot;)</code>）を 1 つの <code>RequestValidationError</code>（<code>422 Unprocessable Content</code>）として返却します。</p>
+<h2>2. 複合 JSON Body・Form データ・Multipart ストリーム</h2>
+<p>ルートまたは依存関数が 1 つ以上のボディ引数を宣言すると、<code>_populate_api_route_state()</code> は <code>_should_embed_body_fields()</code> と <code>_get_body_field()</code> を評価し、HTTP ペイロードのデコード方式および OpenAPI スキーマ構造を決定します。</p>
+<ul>
+<li><strong>単一モデル直結と合成 <code>Body</code> エンベロープ</strong>: <code>embed=True</code> を指定しない単一の <code>BaseModel</code> 引数は JSON ルートオブジェクト（<code>loc=(&quot;body&quot;,)</code>）に直接対応します。一方、<strong>複数の <code>Body</code> 引数</strong>が存在する場合や単一引数に <code>Body(embed=True)</code> が指定された場合は、<code>_get_body_field()</code> が <code>create_body_model()</code> を呼び出して合成スキーマ <code>Body_&lt;route.unique_id&gt;</code> を自動生成し、引数名をトップレベル JSON キーとするエンベロープ構造を要求します。既定の <code>strict_content_type=True</code> により、<code>get_request_handler()</code> は JSON デコード前に <code>application/json</code>（または <code>application/*+json</code>）ヘッダを厳密に検証します。</li>
+<li><strong>URL エンコード <code>Form()</code> と Multipart <code>UploadFile</code> のライフサイクル</strong>: <code>Form()</code> や <code>File()</code> を使用すると起動時に <code>ensure_multipart_is_installed()</code>（<code>python-multipart &gt; 0.0.12</code>）が検証されます。リクエスト処理時は <code>body = await request.form()</code> がフォーム項目を解析し、アップロードファイルを <code>SpooledTemporaryFile</code>（1 MiB までメモリ保持、超過分をディスクへスプール）で裏打ちされた Starlette の <code>UploadFile</code> にラップします。同時に <code>AsyncExitStackMiddleware</code>（<code>scope[&quot;fastapi_middleware_astack&quot;]</code>）へ <code>file_stack.push_async_callback(body.close)</code> が登録されるため、正常応答時も例外送出時も一時ファイル記述子が確実にクローズされます。</li>
+</ul>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/03_routing_and_models/parameters_and_validation/multipart_and_composite_body.png" alt="parameters_and_validation_2" />
+  <figcaption class="drawlib-caption">ペイロード解析アーキテクチャと比較: 複合 JSON Body・URL エンコード Form・Multipart UploadFile</figcaption>
+</figure>
+<details class="drawlib-code-details">
+<summary>Source Code</summary>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.canvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">setup</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.icons</span><span class="w"> </span><span class="kn">import</span> <span class="n">code</span><span class="p">,</span> <span class="n">phosphor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.lines</span><span class="w"> </span><span class="kn">import</span> <span class="n">line</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.shapes</span><span class="w"> </span><span class="kn">import</span> <span class="n">rectangle</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.smartarts</span><span class="w"> </span><span class="kn">import</span> <span class="n">Panel</span><span class="p">,</span> <span class="n">Table</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">Colors</span><span class="p">,</span> <span class="n">Styles</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.text</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span>
+
+<span class="n">setup</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">168</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">96</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
+
+<span class="c1"># Title Banner</span>
+<span class="n">code</span><span class="o">.</span><span class="n">pydantic</span><span class="p">((</span><span class="mi">11</span><span class="p">,</span> <span class="mf">90.5</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Primary</span><span class="p">)</span>
+<span class="n">text</span><span class="p">(</span>
+    <span class="p">(</span><span class="mf">16.5</span><span class="p">,</span> <span class="mf">90.5</span><span class="p">),</span>
+    <span class="s2">"Payload Decoding Architecture: Composite JSON Body vs Form &amp; Multipart Streams"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">12.5</span><span class="p">,</span> <span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1"># Top 3 Architecture Lanes</span>
+<span class="n">lanes</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span>
+        <span class="mi">6</span><span class="p">,</span>
+        <span class="s2">"1. Composite JSON (Body)"</span><span class="p">,</span>
+        <span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
+        <span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="p">,</span>
+        <span class="n">phosphor</span><span class="o">.</span><span class="n">code_block</span><span class="p">,</span>
+        <span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
+        <span class="s2">"await request.json()"</span><span class="p">,</span>
+        <span class="s2">"strict_content_type=True"</span><span class="p">,</span>
+        <span class="s2">"Body_&lt;unique_id&gt; Envelope"</span><span class="p">,</span>
+        <span class="s2">"Multi-model or Body(embed=True)"</span><span class="p">,</span>
+        <span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="p">(</span>
+        <span class="mi">59</span><span class="p">,</span>
+        <span class="s2">"2. URL-Encoded (Form)"</span><span class="p">,</span>
+        <span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
+        <span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">,</span>
+        <span class="n">phosphor</span><span class="o">.</span><span class="n">table</span><span class="p">,</span>
+        <span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">,</span>
+        <span class="s2">"await request.form()"</span><span class="p">,</span>
+        <span class="s2">"python-multipart &gt; 0.0.12"</span><span class="p">,</span>
+        <span class="s2">"Form() Scalar &amp; BaseModel"</span><span class="p">,</span>
+        <span class="s2">"_extract_form_body() mapping"</span><span class="p">,</span>
+        <span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="p">(</span>
+        <span class="mi">112</span><span class="p">,</span>
+        <span class="s2">"3. Multipart Stream (File)"</span><span class="p">,</span>
+        <span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span>
+        <span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">,</span>
+        <span class="n">phosphor</span><span class="o">.</span><span class="n">cloud_arrow_up</span><span class="p">,</span>
+        <span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">,</span>
+        <span class="s2">"UploadFile + SpooledTemp"</span><span class="p">,</span>
+        <span class="s2">"1 MiB RAM -&gt; disk rollover"</span><span class="p">,</span>
+        <span class="s2">"AsyncExitStackMiddleware"</span><span class="p">,</span>
+        <span class="s2">"push_async_callback(body.close)"</span><span class="p">,</span>
+        <span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">]</span>
+
+<span class="k">for</span> <span class="n">lx</span><span class="p">,</span> <span class="n">ltitle</span><span class="p">,</span> <span class="n">hstyle</span><span class="p">,</span> <span class="n">htxt</span><span class="p">,</span> <span class="n">licon</span><span class="p">,</span> <span class="n">icostyle</span><span class="p">,</span> <span class="n">top1</span><span class="p">,</span> <span class="n">top2</span><span class="p">,</span> <span class="n">bot1</span><span class="p">,</span> <span class="n">bot2</span><span class="p">,</span> <span class="n">botstyle</span> <span class="ow">in</span> <span class="n">lanes</span><span class="p">:</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">Panel</span><span class="p">(</span>
+        <span class="n">ltitle</span><span class="p">,</span>
+        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
+        <span class="n">header_style</span><span class="o">=</span><span class="n">hstyle</span><span class="p">,</span>
+        <span class="n">text_style</span><span class="o">=</span><span class="n">htxt</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.8</span><span class="p">),</span>
+        <span class="n">icon</span><span class="o">=</span><span class="n">licon</span><span class="p">,</span>
+        <span class="n">icon_style</span><span class="o">=</span><span class="n">icostyle</span><span class="p">,</span>
+        <span class="n">header_height</span><span class="o">=</span><span class="mf">8.0</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">draw</span><span class="p">((</span><span class="n">lx</span><span class="p">,</span> <span class="mi">44</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">41</span><span class="p">)</span>
+    <span class="n">cx</span> <span class="o">=</span> <span class="n">lx</span> <span class="o">+</span> <span class="mi">25</span>
+    <span class="n">rectangle</span><span class="p">((</span><span class="n">cx</span><span class="p">,</span> <span class="mf">69.5</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">44</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">10.5</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.6</span><span class="p">))</span>
+    <span class="n">text</span><span class="p">((</span><span class="n">cx</span><span class="p">,</span> <span class="mf">71.5</span><span class="p">),</span> <span class="n">top1</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">))</span>
+    <span class="n">text</span><span class="p">((</span><span class="n">cx</span><span class="p">,</span> <span class="mf">67.2</span><span class="p">),</span> <span class="n">top2</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">))</span>
+
+    <span class="n">line</span><span class="p">((</span><span class="n">cx</span><span class="p">,</span> <span class="mf">64.2</span><span class="p">),</span> <span class="p">(</span><span class="n">cx</span><span class="p">,</span> <span class="mf">58.2</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">)</span>
+
+    <span class="n">rectangle</span><span class="p">((</span><span class="n">cx</span><span class="p">,</span> <span class="mf">52.5</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">44</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">11.0</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">botstyle</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.6</span><span class="p">))</span>
+    <span class="n">text</span><span class="p">((</span><span class="n">cx</span><span class="p">,</span> <span class="mf">54.7</span><span class="p">),</span> <span class="n">bot1</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">))</span>
+    <span class="n">text</span><span class="p">((</span><span class="n">cx</span><span class="p">,</span> <span class="mf">50.1</span><span class="p">),</span> <span class="n">bot2</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">))</span>
+
+<span class="c1"># Bottom Comparison Matrix Table</span>
+<span class="n">matrix</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span>
+    <span class="n">cell_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">header_cell_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
+    <span class="n">header_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
+    <span class="n">border_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">MutedThin</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">matrix</span><span class="o">.</span><span class="n">set_style_cell_evenodd</span><span class="p">(</span>
+    <span class="n">Colors</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
+    <span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="o">.</span><span class="n">shape_fill_color</span><span class="p">,</span>
+    <span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">matrix</span><span class="o">.</span><span class="n">set_style_cell_rowheader</span><span class="p">(</span>
+    <span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="o">.</span><span class="n">shape_fill_color</span><span class="p">,</span>
+    <span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.2</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">matrix</span><span class="o">.</span><span class="n">set_style_cell_header</span><span class="p">(</span>
+    <span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="o">.</span><span class="n">shape_fill_color</span><span class="p">,</span>
+    <span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">matrix</span><span class="o">.</span><span class="n">draw_flexible</span><span class="p">(</span>
+    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span>
+    <span class="n">column_widths</span><span class="o">=</span><span class="p">[</span><span class="mf">30.0</span><span class="p">,</span> <span class="mf">42.0</span><span class="p">,</span> <span class="mf">42.0</span><span class="p">,</span> <span class="mf">42.0</span><span class="p">],</span>
+    <span class="n">row_heights</span><span class="o">=</span><span class="p">[</span><span class="mf">8.2</span><span class="p">,</span> <span class="mf">8.0</span><span class="p">,</span> <span class="mf">8.0</span><span class="p">,</span> <span class="mf">8.0</span><span class="p">],</span>
+    <span class="n">data</span><span class="o">=</span><span class="p">[</span>
+        <span class="p">[</span><span class="s2">"Dimension"</span><span class="p">,</span> <span class="s2">"JSON Body()"</span><span class="p">,</span> <span class="s2">"URL-Encoded Form()"</span><span class="p">,</span> <span class="s2">"Multipart File() / UploadFile"</span><span class="p">],</span>
+        <span class="p">[</span><span class="s2">"Media Type"</span><span class="p">,</span> <span class="s2">"application/json (+json)"</span><span class="p">,</span> <span class="s2">"application/x-www-form-urlencoded"</span><span class="p">,</span> <span class="s2">"multipart/form-data"</span><span class="p">],</span>
+        <span class="p">[</span><span class="s2">"OpenAPI Schema"</span><span class="p">,</span> <span class="s2">"Direct T or Body_&lt;route_id&gt;"</span><span class="p">,</span> <span class="s2">"Body_&lt;route_id&gt; (form props)"</span><span class="p">,</span> <span class="s2">"Body_&lt;route_id&gt; (binary str)"</span><span class="p">],</span>
+        <span class="p">[</span><span class="s2">"Memory &amp; Cleanup"</span><span class="p">,</span> <span class="s2">"Buffered bytes -&gt; JSON dict"</span><span class="p">,</span> <span class="s2">"FormData ImmutableMultiDict"</span><span class="p">,</span> <span class="s2">"1 MiB RAM spool + ExitStack"</span><span class="p">],</span>
+    <span class="p">],</span>
+    <span class="n">align</span><span class="o">=</span><span class="s2">"bottom_left"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">save</span><span class="p">()</span>
+</code></pre>
+</details>
+<h3>複合 Body エンベロープ・<code>Body(embed=True)</code>・PEP 727 <code>Doc()</code></h3>
+<p>複数の Pydantic モデルとスカラー <code>Body()</code> フィールドを同一エンドポイントで宣言すると自動的にキー付き JSON エンベロープが構成され、また単一モデルであっても <code>Body(embed=True)</code> を指定することで同じキー付きラッパー構造を強制できます。</p>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">annotated_doc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Doc</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">Body</span><span class="p">,</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">"Order Fulfillment API"</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s2">"1.0.0"</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">OrderLine</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">sku</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Field</span><span class="p">(</span><span class="n">pattern</span><span class="o">=</span><span class="sa">r</span><span class="s2">"^SKU-[A-Z0-9]</span><span class="si">{4}</span><span class="s2">$"</span><span class="p">),</span> <span class="n">Doc</span><span class="p">(</span><span class="s2">"Warehouse SKU"</span><span class="p">)]</span>
+    <span class="n">quantity</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Field</span><span class="p">(</span><span class="n">ge</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">le</span><span class="o">=</span><span class="mi">500</span><span class="p">),</span> <span class="n">Doc</span><span class="p">(</span><span class="s2">"Units requested"</span><span class="p">)]</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">AuditContext</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">actor_id</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Field</span><span class="p">(</span><span class="n">min_length</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span> <span class="n">Doc</span><span class="p">(</span><span class="s2">"Authenticated operator ID"</span><span class="p">)]</span>
+    <span class="n">reason</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Field</span><span class="p">(</span><span class="n">min_length</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span> <span class="n">Doc</span><span class="p">(</span><span class="s2">"Audit trail justification"</span><span class="p">)]</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s2">"/orders/</span><span class="si">{order_id}</span><span class="s2">"</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">replace_order</span><span class="p">(</span>
+    <span class="n">order_id</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="n">pattern</span><span class="o">=</span><span class="sa">r</span><span class="s2">"^ord_[0-9]+$"</span><span class="p">)],</span>
+    <span class="n">line</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">OrderLine</span><span class="p">,</span> <span class="n">Doc</span><span class="p">(</span><span class="s2">"Primary line-item payload"</span><span class="p">)],</span>
+    <span class="n">audit</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">AuditContext</span><span class="p">,</span> <span class="n">Doc</span><span class="p">(</span><span class="s2">"Mandatory audit metadata"</span><span class="p">)],</span>
+    <span class="n">priority</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span>
+        <span class="nb">int</span><span class="p">,</span>
+        <span class="n">Body</span><span class="p">(</span><span class="n">ge</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">le</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Dispatch priority tier (1=low, 5=urgent)"</span><span class="p">),</span>
+        <span class="n">Doc</span><span class="p">(</span><span class="s2">"Scalar body attribute merged into synthetic Body model"</span><span class="p">),</span>
+    <span class="p">]</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"order_id"</span><span class="p">:</span> <span class="n">order_id</span><span class="p">,</span>
+        <span class="s2">"sku"</span><span class="p">:</span> <span class="n">line</span><span class="o">.</span><span class="n">sku</span><span class="p">,</span>
+        <span class="s2">"quantity"</span><span class="p">:</span> <span class="n">line</span><span class="o">.</span><span class="n">quantity</span><span class="p">,</span>
+        <span class="s2">"actor_id"</span><span class="p">:</span> <span class="n">audit</span><span class="o">.</span><span class="n">actor_id</span><span class="p">,</span>
+        <span class="s2">"priority"</span><span class="p">:</span> <span class="n">priority</span><span class="p">,</span>
+    <span class="p">}</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/orders/quote"</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">quote_single_embedded_body</span><span class="p">(</span>
+    <span class="n">line</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span>
+        <span class="n">OrderLine</span><span class="p">,</span>
+        <span class="n">Body</span><span class="p">(</span><span class="n">embed</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="n">Doc</span><span class="p">(</span><span class="s2">"Forces single BaseModel under top-level {'line': {...}} key"</span><span class="p">),</span>
+    <span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"sku"</span><span class="p">:</span> <span class="n">line</span><span class="o">.</span><span class="n">sku</span><span class="p">,</span> <span class="s2">"estimated_cents"</span><span class="p">:</span> <span class="n">line</span><span class="o">.</span><span class="n">quantity</span> <span class="o">*</span> <span class="mi">2500</span><span class="p">}</span>
+</code></pre>
+<h3>セキュアな Multipart Form と非同期 <code>UploadFile</code> ストリーミング</h3>
+<p><code>Form()</code> と <code>File()</code> は同一のマルチパートパーサーを共有するため、構造化フォーム項目と非同期 <code>UploadFile</code> ストリームを同時に受け取りつつ、許可 MIME リスト・最大バイト上限（<code>await file.read(MAX + 1)</code>）・マジックバイト検査・UUID によるサーバー側ストレージキー採番（クライアント由来の <code>file.filename</code> の非信頼化）を実装できます。</p>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span><span class="p">,</span> <span class="n">Literal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">uuid4</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">File</span><span class="p">,</span> <span class="n">Form</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">UploadFile</span><span class="p">,</span> <span class="n">status</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">"Document Vault API"</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s2">"1.0.0"</span><span class="p">)</span>
+
+<span class="n">ALLOWED_MEDIA_TYPES</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"application/pdf"</span><span class="p">:</span> <span class="sa">b</span><span class="s2">"%PDF-"</span><span class="p">,</span> <span class="s2">"image/png"</span><span class="p">:</span> <span class="sa">b</span><span class="s2">"</span><span class="se">\x89</span><span class="s2">PNG"</span><span class="p">}</span>
+<span class="n">MAX_UPLOAD_BYTES</span> <span class="o">=</span> <span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span>  <span class="c1"># 1 MiB ceiling</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/documents/upload"</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_201_CREATED</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">upload_document</span><span class="p">(</span>
+    <span class="n">category</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s2">"invoice"</span><span class="p">,</span> <span class="s2">"contract"</span><span class="p">],</span> <span class="n">Form</span><span class="p">()],</span>
+    <span class="n">file</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">UploadFile</span><span class="p">,</span> <span class="n">File</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">"PDF or PNG document"</span><span class="p">)],</span>
+    <span class="n">description</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Form</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">120</span><span class="p">)]</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+    <span class="n">expected_magic</span> <span class="o">=</span> <span class="n">ALLOWED_MEDIA_TYPES</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">content_type</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">expected_magic</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_415_UNSUPPORTED_MEDIA_TYPE</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Only application/pdf and image/png are permitted"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">payload</span> <span class="o">=</span> <span class="k">await</span> <span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">MAX_UPLOAD_BYTES</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">MAX_UPLOAD_BYTES</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_413_CONTENT_TOO_LARGE</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Uploaded file exceeds 1 MiB limit"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">payload</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">expected_magic</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"File header magic bytes do not match declared Content-Type"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Never trust client-controlled file.filename for filesystem or object keys</span>
+    <span class="n">storage_key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">category</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"storage_key"</span><span class="p">:</span> <span class="n">storage_key</span><span class="p">,</span>
+        <span class="s2">"content_type"</span><span class="p">:</span> <span class="n">file</span><span class="o">.</span><span class="n">content_type</span><span class="p">,</span>
+        <span class="s2">"size_bytes"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">payload</span><span class="p">),</span>
+        <span class="s2">"description"</span><span class="p">:</span> <span class="n">description</span><span class="p">,</span>
+    <span class="p">}</span>
+</code></pre>
+<p>入力パラメータとペイロードの検証が完了すると、エンドポイントの戻り値は出力シリアライズおよびスキーマ合成エンジンへと引き渡されます。続いて <a href="responses_and_openapi.html">レスポンス直列化と OpenAPI 3.1</a> で出力契約の仕組みを、さらに <a href="../04_dependencies_and_security/dependency_injection.html">Dependant DAG・キャッシュ・yield スコープ</a> で依存グラフの解決機構を解説します。</p>
+
+            </main>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Theme toggle
+            const themeBtn = document.getElementById('theme-toggle');
+            if (themeBtn) {
+                themeBtn.addEventListener('click', function() {
+                    const current = document.documentElement.getAttribute('data-theme');
+                    const next = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    localStorage.setItem('drawlib-theme', next);
+                });
+            }
+
+            // Language dropdown outside-click & Escape close
+            const langDropdowns = document.querySelectorAll('.lang-dropdown');
+            if (langDropdowns.length > 0) {
+                document.addEventListener('click', function(e) {
+                    langDropdowns.forEach(function(dd) {
+                        if (dd.hasAttribute('open') && !dd.contains(e.target)) {
+                            dd.removeAttribute('open');
+                        }
+                    });
+                });
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        langDropdowns.forEach(function(dd) {
+                            dd.removeAttribute('open');
+                        });
+                    }
+                });
+            }
+
+            // Mobile menu toggle
+            const menuBtn = document.getElementById('menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            if (menuBtn && sidebar) {
+                function setMenuOpen(open) {
+                    sidebar.classList.toggle('is-open', open);
+                    menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    document.body.classList.toggle('menu-open', open);
+                    if (open) {
+                        const menu = sidebar.querySelector('.sidebar-menu');
+                        if (menu) {
+                            menu.scrollTop = 0;
+                        }
+                    }
+                }
+
+                menuBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const willOpen = !sidebar.classList.contains('is-open');
+                    setMenuOpen(willOpen);
+                });
+
+                // Close menu when clicking outside sidebar
+                document.addEventListener('click', function(e) {
+                    if (sidebar.classList.contains('is-open') && !sidebar.contains(e.target)) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                // Close menu when a navigation link is clicked
+                const navLinks = sidebar.querySelectorAll('.nav-item a');
+                navLinks.forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        setMenuOpen(false);
+                    });
+                });
+
+                // Close on Escape key
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                // Reset menu state when resized above mobile breakpoint
+                window.addEventListener('resize', function() {
+                    if (window.innerWidth > 768 && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

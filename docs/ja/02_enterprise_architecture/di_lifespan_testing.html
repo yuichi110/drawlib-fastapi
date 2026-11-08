@@ -1,0 +1,876 @@
+<!--
+ Copyright (c) 2026 Yuichi Ito (yuichi@yuichi.com)
+
+ This software is licensed under the Apache License, Version 2.0.
+ For more information, please visit: https://github.com/yuichi110/drawlib
+
+ This software is provided "as is", without warranty of any kind,
+ express or implied, including but not limited to the warranties of
+ merchantability, fitness for a particular purpose and noninfringement.
+-->
+<!DOCTYPE html>
+<html lang="ja" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大規模 DI エイリアス・Lifespan 管理・テストピラミッド戦略 — FastAPI Visual Guide (Unofficial · Drawlib Demo)</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-S9N5BZ1VRC');
+    </script>
+    <script>
+        (function() {
+            const saved = localStorage.getItem('drawlib-theme');
+            if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    
+    <link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/en/02_enterprise_architecture/di_lifespan_testing.html">
+    
+    <link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/ja/02_enterprise_architecture/di_lifespan_testing.html">
+    
+    <link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/en/02_enterprise_architecture/di_lifespan_testing.html">
+    
+    
+    
+    <meta name="description" content="500以上のエンドポイントと10万行超（100,000+ LOC）のコードベースにおいて、サブ秒単位のテストフィードバックと確実なリソース解放を維持するには、プロセス寿命のインフラ管理（lifespan）、リクエスト寿命の Unit-of-Work 注入（Annotated[...…">
+    <link rel="canonical" href="https://fastapi.drawlib.com/ja/02_enterprise_architecture/di_lifespan_testing.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="FastAPI ビジュアル解説">
+    <meta property="og:title" content="大規模 DI エイリアス・Lifespan 管理・テストピラミッド戦略 — FastAPI ビジュアル解説">
+    <meta property="og:description" content="500以上のエンドポイントと10万行超（100,000+ LOC）のコードベースにおいて、サブ秒単位のテストフィードバックと確実なリソース解放を維持するには、プロセス寿命のインフラ管理（lifespan）、リクエスト寿命の Unit-of-Work 注入（Annotated[...…">
+    <meta property="og:url" content="https://fastapi.drawlib.com/ja/02_enterprise_architecture/di_lifespan_testing.html">
+    <meta property="og:image" content="https://fastapi.drawlib.com/_assets/ogp.png">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:locale:alternate" content="en_US">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="大規模 DI エイリアス・Lifespan 管理・テストピラミッド戦略 — FastAPI ビジュアル解説">
+    <meta name="twitter:description" content="500以上のエンドポイントと10万行超（100,000+ LOC）のコードベースにおいて、サブ秒単位のテストフィードバックと確実なリソース解放を維持するには、プロセス寿命のインフラ管理（lifespan）、リクエスト寿命の Unit-of-Work 注入（Annotated[...…">
+    <meta name="twitter:image" content="https://fastapi.drawlib.com/_assets/ogp.png">
+    
+    
+    <link rel="icon" type="image/png" href="../../_assets/favicon.png">
+    
+    
+    <link rel="stylesheet" href="../style.css">
+    
+    
+</head>
+<body>
+    <div class="demo-banner" role="region" aria-label="非公式ショーケース案内">
+        <div class="demo-banner-inner">
+            <span class="demo-banner-badge">UNOFFICIAL DEMO</span>
+            
+            <span class="demo-banner-text">
+                <a href="https://www.drawlib.com/" target="_blank" rel="noopener noreferrer">Drawlib</a> と <a href="https://pypi.org/project/pni501/" target="_blank" rel="noopener noreferrer">PNI501</a> で作成した <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a>（v0.162.2, MIT）の非公式ビジュアル解説ショーケースです。
+            </span>
+            <span class="demo-banner-links">
+                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 診断レポート →</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI 公式 Docs ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+            </span>
+            
+        </div>
+    </div>
+    
+    <div class="doc-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI ビジュアル解説">
+                    
+                    FastAPI ビジュアル解説
+                    
+                </a>
+                <div class="sidebar-header-actions">
+                    <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">
+                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                    <button type="button" id="menu-toggle" class="menu-toggle-btn" aria-label="Toggle navigation" aria-expanded="false">
+                        <svg class="icon-hamburger" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        <svg class="icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="sidebar-menu">
+                
+                    
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../index.html" >ガイド概要と全体マップ</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">1. イントロ &amp; クイックスタート</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../01_getting_started/overview.html" >FastAPI の設計思想と内部構造</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../01_getting_started/quickstart.html" >クイックスタートと自動生成 Docs</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">2. 10万行規模の設計ベストプラクティス</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="modular_design.html" >境界づけられたコンテキストと階層化</a>
+                            </li>
+                            
+                            <li class="nav-item active">
+                                <a href="di_lifespan_testing.html" >大規模 DI・Lifespan 管理・テスト戦略</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">3. ルーティング・入力検証・スキーマ</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../03_routing_and_models/parameters_and_validation.html" >Path・Query・Header・Cookie・Body</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../03_routing_and_models/responses_and_openapi.html" >レスポンス直列化と OpenAPI 3.1</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">4. 依存性注入（DI）とセキュリティ</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../04_dependencies_and_security/dependency_injection.html" >Dependant DAG・キャッシュ・yield スコープ</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../04_dependencies_and_security/security_and_auth.html" >認証・OAuth2 スコープ認可・抽出器</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">5. 非同期並行・ミドルウェア・ストリーミング</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../05_async_and_realtime/concurrency_and_middleware.html" >ASGI ミドルウェアとスレッドプール制御</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../05_async_and_realtime/sse_websockets_streaming.html" >ネイティブ SSE・JSONL・WebSocket</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">6. 可観測性・例外設計・実践テスト</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../06_observability_and_testing/telemetry_and_errors.html" >ネイティブ OpenTelemetry と例外処理</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../06_observability_and_testing/testing_and_deployment.html" >実践テスト手法と本番 ASGI 運用</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">診断レポート &amp; 公式リンク</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/reports/pni501/" target="_blank" rel="noopener noreferrer">PNI501 診断レポート<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI 公式ドキュメント<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">デモのリポジトリ (GitHub)<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                        </ul>
+                    
+                
+            </div>
+        </aside>
+        <div class="content-wrapper">
+            <header class="top-bar">
+                <div class="breadcrumbs">
+                    <span class="crumb">Docs</span>
+                    <span class="crumb-separator">&raquo;</span>
+                    <span class="crumb active">大規模 DI エイリアス・Lifespan 管理・テストピラミッド戦略</span>
+                </div>
+                
+                <div class="lang-switcher">
+                    <details class="lang-dropdown">
+                        <summary class="lang-dropdown-btn" aria-label="Select language">
+                            <svg class="lang-globe-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            <span class="lang-current-label">日本語</span>
+                            <svg class="lang-caret-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </summary>
+                        <div class="lang-dropdown-menu" role="menu">
+                            
+                            <a href="../../en/02_enterprise_architecture/di_lifespan_testing.html" class="lang-option" lang="en" hreflang="en" >
+                                <span>English</span>
+                                
+                            </a>
+                            
+                            <a href="di_lifespan_testing.html" class="lang-option active" lang="ja" hreflang="ja" aria-current="page">
+                                <span>日本語</span>
+                                
+                                <svg class="lang-check-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                
+                            </a>
+                            
+                        </div>
+                    </details>
+                </div>
+                
+            </header>
+            <main class="main-content">
+                <h1>大規模 DI エイリアス・Lifespan 管理・テストピラミッド戦略</h1>
+<p><strong>500以上のエンドポイントと10万行超（100,000+ LOC）のコードベース</strong>において、サブ秒単位のテストフィードバックと確実なリソース解放を維持するには、<strong>プロセス寿命のインフラ管理</strong>（<code>lifespan</code>）、<strong>リクエスト寿命の Unit-of-Work 注入</strong>（<code>Annotated[..., Depends]</code>）、<strong>純粋ドメイン例外の境界変換</strong>（<code>@app.exception_handler</code>）、そして <strong>密閉型（Hermetic）契約テスト</strong>（<code>app.dependency_overrides</code>）を明確に分離する必要があります。</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/02_enterprise_architecture/di_lifespan_testing/enterprise_di_lifespan_flow.png" alt="di_lifespan_testing_1" />
+  <figcaption class="drawlib-caption">Lifespan とリクエストスコープ DI の二層配線および RFC 9457 ドメイン例外変換フロー</figcaption>
+</figure>
+<details class="drawlib-code-details">
+<summary>Source Code</summary>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.canvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">setup</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.diagrams.architecture</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArchitectureDiagram</span><span class="p">,</span> <span class="n">Node</span><span class="p">,</span> <span class="n">NodeGroup</span><span class="p">,</span> <span class="n">PhosphorIcon</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">Styles</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.text</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span>
+
+<span class="n">setup</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">180</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">88</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
+
+<span class="n">text</span><span class="p">(</span>
+    <span class="p">(</span><span class="mi">90</span><span class="p">,</span> <span class="mf">82.5</span><span class="p">),</span>
+    <span class="s2">"Enterprise Lifespan, Scoped DI Wiring &amp; RFC 9457 Exception Boundary"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">13.5</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">diag</span> <span class="o">=</span> <span class="n">ArchitectureDiagram</span><span class="p">(</span>
+    <span class="n">node_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Primary</span><span class="p">,</span>
+    <span class="n">node_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.2</span><span class="p">),</span>
+    <span class="n">edge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">,</span>
+    <span class="n">edge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">node_card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Zone 1: Process Lifespan (Once per Worker)</span>
+<span class="n">life_grp</span> <span class="o">=</span> <span class="n">diag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">NodeGroup</span><span class="p">(</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">"1. Process Lifespan (app.state)"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mi">46</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mi">65</span><span class="p">,</span>
+        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">2.0</span><span class="p">),</span>
+        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span> <span class="n">text_size</span><span class="o">=</span><span class="mf">10.8</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">life_node</span> <span class="o">=</span> <span class="n">life_grp</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Node</span><span class="p">(</span>
+        <span class="s2">"Lifespan Hook</span><span class="se">\n</span><span class="s2">(Startup / Shutdown)"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mi">36</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span>
+        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">STACK</span><span class="p">,</span>
+        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="p">(</span><span class="mi">23</span><span class="p">,</span> <span class="mi">44</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">pool_node</span> <span class="o">=</span> <span class="n">life_grp</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Node</span><span class="p">(</span>
+        <span class="s2">"AppContainer</span><span class="se">\n</span><span class="s2">(DB Pool &amp; HTTPX)"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mi">36</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span>
+        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">DATABASE</span><span class="p">,</span>
+        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="p">(</span><span class="mi">23</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1"># Zone 2: Per-Request DI Graph (Annotated Aliases)</span>
+<span class="n">di_grp</span> <span class="o">=</span> <span class="n">diag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">NodeGroup</span><span class="p">(</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">"2. Per-Request DI (Depends)"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mi">52</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mi">65</span><span class="p">,</span>
+        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">2.0</span><span class="p">),</span>
+        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span> <span class="n">text_size</span><span class="o">=</span><span class="mf">10.8</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">uow_node</span> <span class="o">=</span> <span class="n">di_grp</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Node</span><span class="p">(</span>
+        <span class="s2">"DbSessionDep</span><span class="se">\n</span><span class="s2">(yield, scope='function')"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span>
+        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">ARROWS_CLOCKWISE</span><span class="p">,</span>
+        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="p">(</span><span class="mi">26</span><span class="p">,</span> <span class="mi">44</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">route_node</span> <span class="o">=</span> <span class="n">di_grp</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Node</span><span class="p">(</span>
+        <span class="s2">"3-Line APIRouter</span><span class="se">\n</span><span class="s2">+ CurrentActorDep"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span>
+        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">PLUGS_CONNECTED</span><span class="p">,</span>
+        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
+        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.2</span><span class="p">),</span>
+        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="p">(</span><span class="mi">26</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1"># Zone 3: Pure Domain &amp; RFC 9457 Edge</span>
+<span class="n">dom_grp</span> <span class="o">=</span> <span class="n">diag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">NodeGroup</span><span class="p">(</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">"3. Domain &amp; ASGI Edge"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mi">46</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mi">65</span><span class="p">,</span>
+        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">2.0</span><span class="p">),</span>
+        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span> <span class="n">text_size</span><span class="o">=</span><span class="mf">10.8</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">uc_node</span> <span class="o">=</span> <span class="n">dom_grp</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Node</span><span class="p">(</span>
+        <span class="s2">"OrderUseCase</span><span class="se">\n</span><span class="s2">(Pure Domain Logic)"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mi">36</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span>
+        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">CUBE</span><span class="p">,</span>
+        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="p">(</span><span class="mi">23</span><span class="p">,</span> <span class="mi">44</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">err_node</span> <span class="o">=</span> <span class="n">dom_grp</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Node</span><span class="p">(</span>
+        <span class="s2">"DomainError -&gt;</span><span class="se">\n</span><span class="s2">RFC 9457 JSON"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mi">36</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span>
+        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">SHIELD_WARNING</span><span class="p">,</span>
+        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DangerNeutral</span><span class="p">,</span>
+        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DangerBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.2</span><span class="p">),</span>
+        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DangerBold</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="p">(</span><span class="mi">23</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1"># Connections across lifecycle tiers</span>
+<span class="n">diag</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">life_node</span><span class="p">,</span> <span class="n">pool_node</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"owns"</span><span class="p">)</span>
+<span class="n">diag</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">pool_node</span><span class="p">,</span> <span class="n">uow_node</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"pool"</span><span class="p">,</span> <span class="n">routing</span><span class="o">=</span><span class="s2">"orthogonal"</span><span class="p">)</span>
+<span class="n">diag</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">uow_node</span><span class="p">,</span> <span class="n">route_node</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"injects"</span><span class="p">)</span>
+<span class="n">diag</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">route_node</span><span class="p">,</span> <span class="n">uc_node</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"calls"</span><span class="p">,</span> <span class="n">routing</span><span class="o">=</span><span class="s2">"orthogonal"</span><span class="p">)</span>
+<span class="n">diag</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">uc_node</span><span class="p">,</span> <span class="n">err_node</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"raises"</span><span class="p">)</span>
+
+<span class="n">diag</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+<span class="n">save</span><span class="p">()</span>
+</code></pre>
+</details>
+<hr />
+<h2>1. 決定論的なプロセス Lifespan 管理と import 時グローバル変数の排除</h2>
+<p>大規模 Python バックエンドにおける最も高コストなアンチパターンの1つが、ファイルが import された瞬間に DB エンジンや Redis クライアント、<code>httpx.AsyncClient</code> プールを <strong>モジュールレベルのグローバル変数</strong> として初期化してしまう実装（<code>engine = create_async_engine(os.environ[&quot;DB_URL&quot;])</code>）です。</p>
+<h3>ソフトウェア工学の原則：import 時の副作用（I/O）ゼロ</h3>
+<p>10万行超のシステムでは、モジュール import 時の副作用が連鎖的な運用障害を引き起こします。</p>
+<ul>
+<li><strong>テスト収集や CLI ツールの破綻</strong>: スキーマや補助関数を1つ import しただけで実環境への TCP 接続が試行されたり、<code>pytest --collect-only</code> や OpenAPI スキーマ出力スクリプト実行時に環境変数未設定で即座にクラッシュしたりします。</li>
+<li><strong>マルチワーカー <code>fork()</code> 時のソケット破損</strong>: Gunicorn + Uvicorn ワーカーなどのプロセスマネージャが <code>fork()</code> 前にアプリを import すると、親プロセス側で生成されたソケットやイベントループロックが子ワーカー間で競合・破損します。</li>
+<li><strong>ローリングアップデート時のコネクションリーク</strong>: 明示的なシャットダウン処理が存在しないと、Kubernetes の Pod 停止（<code>SIGTERM</code>）時にコネクションプールやテレメトリエクスポータが途中切断されます。</li>
+</ul>
+<h3>FastAPI での実践：<code>@asynccontextmanager lifespan</code> と型付き <code>AppContainer</code></h3>
+<p>FastAPI <code>v0.162.2</code> では、プロセスの起動・終了処理を標準ライブラリの <code>@asynccontextmanager</code> で記述し、<code>FastAPI(lifespan=lifespan)</code> に渡します。長寿命の共有プール群を型安全な <code>AppContainer</code> データクラスにまとめて <code>app.state.container</code> へ格納し、<code>yield</code> を <code>try ... finally</code> で囲むことで、異常終了時にも確実にクローズ処理を実行させます。</p>
+<pre><code class="language-python"><span class="c1"># src/shared/lifespan.py — import 時 I/O を一切発生させない決定論的起動・終了管理</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncIterator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">contextlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">asynccontextmanager</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastAPI</span>
+
+
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ConnectionPool</span><span class="p">:</span>
+    <span class="n">dsn</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">is_open</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">events</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">startup</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_open</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"pool_opened"</span><span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_open</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"pool_closed"</span><span class="p">)</span>
+
+
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">AppContainer</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""プロセス寿命で共有されるインフラ資源を保持する型安全なコンテナ。"""</span>
+
+    <span class="n">db_pool</span><span class="p">:</span> <span class="n">ConnectionPool</span>
+    <span class="n">order_repo</span><span class="p">:</span> <span class="n">InMemoryOrderRepository</span>
+    <span class="n">stock_by_sku</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">create_enterprise_app</span><span class="p">(</span><span class="n">pool</span><span class="p">:</span> <span class="n">ConnectionPool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FastAPI</span><span class="p">:</span>
+    <span class="n">managed_pool</span> <span class="o">=</span> <span class="n">pool</span> <span class="ow">or</span> <span class="n">ConnectionPool</span><span class="p">(</span>
+        <span class="n">dsn</span><span class="o">=</span><span class="s2">"postgresql+asyncpg://127.0.0.1:5432/orders"</span>
+    <span class="p">)</span>
+
+    <span class="nd">@asynccontextmanager</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">lifespan</span><span class="p">(</span><span class="n">app</span><span class="p">:</span> <span class="n">FastAPI</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="kc">None</span><span class="p">]:</span>
+        <span class="k">await</span> <span class="n">managed_pool</span><span class="o">.</span><span class="n">startup</span><span class="p">()</span>
+        <span class="n">app</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">container</span> <span class="o">=</span> <span class="n">AppContainer</span><span class="p">(</span>
+            <span class="n">db_pool</span><span class="o">=</span><span class="n">managed_pool</span><span class="p">,</span>
+            <span class="n">order_repo</span><span class="o">=</span><span class="n">InMemoryOrderRepository</span><span class="p">(),</span>
+            <span class="n">stock_by_sku</span><span class="o">=</span><span class="p">{</span><span class="s2">"SKU-PRO-10"</span><span class="p">:</span> <span class="mi">5</span><span class="p">},</span>
+        <span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">yield</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="k">await</span> <span class="n">managed_pool</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">FastAPI</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">"Enterprise Commerce Platform"</span><span class="p">,</span> <span class="n">lifespan</span><span class="o">=</span><span class="n">lifespan</span><span class="p">)</span>
+</code></pre>
+<hr />
+<h2>2. 再利用可能な <code>Annotated</code> DI 型エイリアスとスコープ付き Unit-of-Work</h2>
+<p>API が <strong>500以上のエンドポイント</strong> に拡大した際、すべてのルート関数に <code>db: AsyncSession = Depends(get_db_session)</code> や <code>actor: User = Depends(get_current_actor)</code> を毎回書き連ねると、深刻なボイラープレートとリファクタリング負荷が発生します。</p>
+<h3>ソフトウェア工学の原則：コンストラクタ注入と明示的 Unit-of-Work</h3>
+<p>エンタープライズ設計では、<strong>オブジェクトグラフの組み立て（配線）</strong> と <strong>HTTP コントローラのシグネチャ</strong> を明確に分離します。</p>
+<ul>
+<li><strong>極薄のトランスポートコントローラ</strong>: ルート関数の責務は「HTTP 入力の検証・単一 <code>UseCase</code> への委譲・結果の返却」のみに限定し、<strong>3〜5行以内</strong> に保ちます。</li>
+<li><strong>原子的な Unit-of-Work（UoW）トランザクション</strong>: 更新系リクエストではトランザクションセッションを開始し、ユースケース成功時にコミット、例外発生時に即座にロールバックしたうえで、クライアントへ <code>200</code>/<code>201</code> 応答を返す<strong>前</strong>に確定させます。</li>
+</ul>
+<h3>FastAPI での実践：<code>Annotated</code> 型エイリアスと <code>Depends(..., scope=&quot;function&quot;)</code></h3>
+<p><code>presentation/dependencies.py</code> に再利用可能な <code>Annotated</code> 型エイリアス（<code>ContainerDep</code>・<code>DbSessionDep</code>・<code>CurrentActorDep</code>・<code>OrderUseCaseDep</code>）を集約します。特に重要な機能として、FastAPI <code>v0.162.2</code> のジェネレータ（<code>yield</code>）依存は <code>Depends(get_uow_session, scope=&quot;function&quot;)</code> をサポートしており、<code>yield</code> 後の <code>commit()</code> / <code>rollback()</code> / <code>close()</code> を <strong>ルート関数完了直後かつ HTTP レスポンス送信前</strong> に実行できます（<code>scope</code> の内部動作は <a href="../04_dependencies_and_security/dependency_injection.html">Dependant DAG・キャッシュ・yield スコープ</a> で詳説します）。</p>
+<pre><code class="language-python"><span class="c1"># src/orders/presentation/dependencies.py — 合成可能な Annotated DI 型エイリアス群</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncIterator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">Header</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">Request</span><span class="p">,</span> <span class="n">status</span>
+
+
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">UnitOfWorkSession</span><span class="p">:</span>
+    <span class="n">pool</span><span class="p">:</span> <span class="n">ConnectionPool</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">commit</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"uow_committed"</span><span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">rollback</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"uow_rolled_back"</span><span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"uow_closed"</span><span class="p">)</span>
+
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">AuthenticatedActor</span><span class="p">:</span>
+    <span class="n">actor_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">tenant_id</span><span class="p">:</span> <span class="nb">str</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_container</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AppContainer</span><span class="p">:</span>
+    <span class="n">container</span><span class="p">:</span> <span class="n">AppContainer</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">container</span>
+    <span class="k">return</span> <span class="n">container</span>
+
+
+<span class="n">ContainerDep</span> <span class="o">=</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">AppContainer</span><span class="p">,</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_container</span><span class="p">)]</span>
+
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_uow_session</span><span class="p">(</span><span class="n">container</span><span class="p">:</span> <span class="n">ContainerDep</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="n">UnitOfWorkSession</span><span class="p">]:</span>
+    <span class="n">session</span> <span class="o">=</span> <span class="n">UnitOfWorkSession</span><span class="p">(</span><span class="n">pool</span><span class="o">=</span><span class="n">container</span><span class="o">.</span><span class="n">db_pool</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="n">session</span>
+        <span class="k">await</span> <span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">await</span> <span class="n">session</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+        <span class="k">raise</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="k">await</span> <span class="n">session</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+
+<span class="c1"># scope="function" により、HTTP レスポンス送信「前」に commit / rollback を確定！</span>
+<span class="n">DbSessionDep</span> <span class="o">=</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">UnitOfWorkSession</span><span class="p">,</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_uow_session</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="s2">"function"</span><span class="p">)]</span>
+
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_current_actor</span><span class="p">(</span>
+    <span class="n">x_actor_id</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Header</span><span class="p">(</span><span class="n">min_length</span><span class="o">=</span><span class="mi">3</span><span class="p">)],</span>
+    <span class="n">x_tenant_id</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Header</span><span class="p">(</span><span class="n">min_length</span><span class="o">=</span><span class="mi">3</span><span class="p">)],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AuthenticatedActor</span><span class="p">:</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">x_actor_id</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"usr_"</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_401_UNAUTHORIZED</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid actor token."</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">AuthenticatedActor</span><span class="p">(</span><span class="n">actor_id</span><span class="o">=</span><span class="n">x_actor_id</span><span class="p">,</span> <span class="n">tenant_id</span><span class="o">=</span><span class="n">x_tenant_id</span><span class="p">)</span>
+
+
+<span class="n">CurrentActorDep</span> <span class="o">=</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">AuthenticatedActor</span><span class="p">,</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_actor</span><span class="p">)]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_order_repo</span><span class="p">(</span><span class="n">container</span><span class="p">:</span> <span class="n">ContainerDep</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OrderRepositoryPort</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">container</span><span class="o">.</span><span class="n">order_repo</span>
+
+
+<span class="n">OrderRepoDep</span> <span class="o">=</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">OrderRepositoryPort</span><span class="p">,</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_order_repo</span><span class="p">)]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_order_use_case</span><span class="p">(</span>
+    <span class="n">container</span><span class="p">:</span> <span class="n">ContainerDep</span><span class="p">,</span>
+    <span class="n">repo</span><span class="p">:</span> <span class="n">OrderRepoDep</span><span class="p">,</span>
+    <span class="n">uow</span><span class="p">:</span> <span class="n">DbSessionDep</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EnterpriseOrderUseCase</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">EnterpriseOrderUseCase</span><span class="p">(</span>
+        <span class="n">repo</span><span class="o">=</span><span class="n">repo</span><span class="p">,</span> <span class="n">uow</span><span class="o">=</span><span class="n">uow</span><span class="p">,</span> <span class="n">stock_by_sku</span><span class="o">=</span><span class="n">container</span><span class="o">.</span><span class="n">stock_by_sku</span>
+    <span class="p">)</span>
+
+
+<span class="n">OrderUseCaseDep</span> <span class="o">=</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">EnterpriseOrderUseCase</span><span class="p">,</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_order_use_case</span><span class="p">)]</span>
+
+<span class="c1"># 500以上のエンドポイントでもルート定義はわずか3行の薄さを維持:</span>
+<span class="n">router</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">"/v1/orders"</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">"orders"</span><span class="p">])</span>
+
+
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">""</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">OrderReadDTO</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_201_CREATED</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">create_order</span><span class="p">(</span>
+    <span class="n">payload</span><span class="p">:</span> <span class="n">OrderCreateDTO</span><span class="p">,</span>
+    <span class="n">actor</span><span class="p">:</span> <span class="n">CurrentActorDep</span><span class="p">,</span>
+    <span class="n">use_case</span><span class="p">:</span> <span class="n">OrderUseCaseDep</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OrderEntity</span><span class="p">:</span>
+    <span class="k">return</span> <span class="k">await</span> <span class="n">use_case</span><span class="o">.</span><span class="n">place_order</span><span class="p">(</span><span class="n">actor</span><span class="p">,</span> <span class="n">payload</span><span class="p">)</span>
+</code></pre>
+<hr />
+<h2>3. 純粋ドメイン例外から RFC 9457 Problem Details への境界変換</h2>
+<p><a href="modular_design.html">境界づけられたコンテキストと階層化</a>で確認したとおり、ドメインモデルやユースケースは <code>fastapi.HTTPException</code> ではなく、純粋な Python 例外（<code>OrderNotFoundError</code>・<code>InsufficientInventoryError</code>・<code>TenantAccessDeniedError</code>）を送出します。</p>
+<h3>FastAPI での実践：<code>@app.exception_handler(DomainError)</code> による一元変換</h3>
+<p>ASGI 合成ルートに単一の <code>@app.exception_handler(DomainError)</code> を登録し、ドメイン例外を国際標準の <strong>RFC 9457 Problem Details（<code>application/problem+json</code>）</strong> 形式へ一括変換します。内部の SQL クエリやスタックトレースを外部クライアントへ漏洩させることなく、一貫した機械可読エラー契約を提供できます（トレース ID 相関との連携は <a href="../06_observability_and_testing/telemetry_and_errors.html">ネイティブ OpenTelemetry と例外処理</a> を参照してください）。</p>
+<pre><code class="language-python"><span class="c1"># src/shared/problem_details.py — DomainError を RFC 9457 へ写像する単一の ASGI 境界</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">Request</span><span class="p">,</span> <span class="n">status</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.responses</span><span class="w"> </span><span class="kn">import</span> <span class="n">JSONResponse</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">register_domain_exception_handlers</span><span class="p">(</span><span class="n">app</span><span class="p">:</span> <span class="n">FastAPI</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="nd">@app</span><span class="o">.</span><span class="n">exception_handler</span><span class="p">(</span><span class="n">DomainError</span><span class="p">)</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">handle_domain_error</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">,</span> <span class="n">exc</span><span class="p">:</span> <span class="n">DomainError</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JSONResponse</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">exc</span><span class="p">,</span> <span class="n">OrderNotFoundError</span><span class="p">):</span>
+            <span class="n">http_status</span> <span class="o">=</span> <span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span>
+            <span class="n">error_type</span> <span class="o">=</span> <span class="s2">"https://api.example.com/problems/order-not-found"</span>
+            <span class="n">title</span> <span class="o">=</span> <span class="s2">"Order Not Found"</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">exc</span><span class="p">,</span> <span class="n">InsufficientInventoryError</span><span class="p">):</span>
+            <span class="n">http_status</span> <span class="o">=</span> <span class="n">status</span><span class="o">.</span><span class="n">HTTP_409_CONFLICT</span>
+            <span class="n">error_type</span> <span class="o">=</span> <span class="s2">"https://api.example.com/problems/insufficient-inventory"</span>
+            <span class="n">title</span> <span class="o">=</span> <span class="s2">"Insufficient Inventory"</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">exc</span><span class="p">,</span> <span class="n">TenantAccessDeniedError</span><span class="p">):</span>
+            <span class="n">http_status</span> <span class="o">=</span> <span class="n">status</span><span class="o">.</span><span class="n">HTTP_403_FORBIDDEN</span>
+            <span class="n">error_type</span> <span class="o">=</span> <span class="s2">"https://api.example.com/problems/tenant-access-denied"</span>
+            <span class="n">title</span> <span class="o">=</span> <span class="s2">"Tenant Access Denied"</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">http_status</span> <span class="o">=</span> <span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span>
+            <span class="n">error_type</span> <span class="o">=</span> <span class="s2">"https://api.example.com/problems/domain-rule-violation"</span>
+            <span class="n">title</span> <span class="o">=</span> <span class="s2">"Domain Rule Violation"</span>
+
+        <span class="k">return</span> <span class="n">JSONResponse</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">http_status</span><span class="p">,</span>
+            <span class="n">media_type</span><span class="o">=</span><span class="s2">"application/problem+json"</span><span class="p">,</span>
+            <span class="n">content</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"type"</span><span class="p">:</span> <span class="n">error_type</span><span class="p">,</span>
+                <span class="s2">"title"</span><span class="p">:</span> <span class="n">title</span><span class="p">,</span>
+                <span class="s2">"status"</span><span class="p">:</span> <span class="n">http_status</span><span class="p">,</span>
+                <span class="s2">"detail"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">),</span>
+                <span class="s2">"instance"</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">url</span><span class="o">.</span><span class="n">path</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">)</span>
+</code></pre>
+<hr />
+<h2>4. 10万行規模のテストピラミッドと密閉型 <code>dependency_overrides</code></h2>
+<p>すべての業務分岐テストで毎回実 PostgreSQL コンテナを起動して <code>TestClient</code> 経由の HTTP リクエストを流していると、テスト数が 5,000 件を超えた時点で <strong>CI 実行時間が45分を超える壁</strong> に直面します。逆に <code>unittest.mock.patch(&quot;src.orders.crud.db.execute&quot;)</code> のような文字列パス指定のモンキーパッチに頼ると、内部モジュールを整理するたびにテストが壊れる脆弱なスイートになります。</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/02_enterprise_architecture/di_lifespan_testing/enterprise_test_pyramid.png" alt="di_lifespan_testing_2" />
+  <figcaption class="drawlib-caption">10万行規模システムのテストピラミッド：70% 純粋ドメイン単体・20% FastAPI 契約 DI 差替・10% コンテナ統合</figcaption>
+</figure>
+<details class="drawlib-code-details">
+<summary>Source Code</summary>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.canvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">setup</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.icons</span><span class="w"> </span><span class="kn">import</span> <span class="n">phosphor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.smartarts</span><span class="w"> </span><span class="kn">import</span> <span class="n">CardList</span><span class="p">,</span> <span class="n">Pyramid</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">Styles</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.text</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span>
+
+<span class="n">setup</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">174</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">86</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
+
+<span class="n">text</span><span class="p">(</span>
+    <span class="p">(</span><span class="mi">87</span><span class="p">,</span> <span class="mf">80.5</span><span class="p">),</span>
+    <span class="s2">"Enterprise Test Pyramid for 100k+ LOC FastAPI Systems"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">13.5</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1"># Left: 3-Tier Testing Pyramid (Base at bottom, vertex_to_base: Top=10%, Mid=20%, Base=70%)</span>
+<span class="n">pyramid</span> <span class="o">=</span> <span class="n">Pyramid</span><span class="p">(</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.0</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">pyramid</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="s2">"10%</span><span class="se">\n</span><span class="s2">E2E"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">pyramid</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="s2">"20% HTTP Contract</span><span class="se">\n</span><span class="s2">&amp; DI Overrides"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.8</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">pyramid</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="s2">"70% Pure Domain &amp; UseCase Unit Tests"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.0</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">pyramid</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span>
+    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span>
+    <span class="n">width</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+    <span class="n">height</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+    <span class="n">margin</span><span class="o">=</span><span class="mf">2.2</span><span class="p">,</span>
+    <span class="n">direction</span><span class="o">=</span><span class="s2">"bottom"</span><span class="p">,</span>
+    <span class="n">order</span><span class="o">=</span><span class="s2">"vertex_to_base"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Right: Aligned Tier Specifications via CardList</span>
+<span class="n">cards</span> <span class="o">=</span> <span class="n">CardList</span><span class="p">(</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.8</span><span class="p">),</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.0</span><span class="p">),</span>
+    <span class="n">description_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">badge_shape</span><span class="o">=</span><span class="s2">"rounded_rect"</span><span class="p">,</span>
+    <span class="n">badge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span>
+    <span class="n">badge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryBold</span><span class="p">,</span>
+    <span class="n">direction</span><span class="o">=</span><span class="s2">"vertical"</span><span class="p">,</span>
+    <span class="n">spacing</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">cards</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="s2">"Containerized Lifespan &amp; DB (~50–200 ms)"</span><span class="p">,</span>
+    <span class="s2">"Real PostgreSQL/Redis via Testcontainers,</span><span class="se">\n</span><span class="s2">SQL migrations &amp; lifespan shutdown."</span><span class="p">,</span>
+    <span class="n">badge_text</span><span class="o">=</span><span class="s2">"10%"</span><span class="p">,</span>
+    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">database</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">cards</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="s2">"FastAPI Router &amp; Contract Tests (~2–8 ms)"</span><span class="p">,</span>
+    <span class="s2">"TestClient + app.dependency_overrides:</span><span class="se">\n</span><span class="s2">DTO 422s, Auth headers &amp; RFC 9457 JSON."</span><span class="p">,</span>
+    <span class="n">badge_text</span><span class="o">=</span><span class="s2">"20%"</span><span class="p">,</span>
+    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">plugs_connected</span><span class="p">,</span>
+    <span class="n">badge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
+    <span class="n">badge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">cards</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="s2">"Pure Domain &amp; UseCase Tests (&lt; 0.5 ms)"</span><span class="p">,</span>
+    <span class="s2">"In-memory Protocol fakes, zero ASGI/HTTP,</span><span class="se">\n</span><span class="s2">1,000+ deterministic cases/sec in CI."</span><span class="p">,</span>
+    <span class="n">badge_text</span><span class="o">=</span><span class="s2">"70%"</span><span class="p">,</span>
+    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">lightning</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.8</span><span class="p">),</span>
+    <span class="n">badge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
+    <span class="n">badge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">cards</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mi">76</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">92</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">64</span><span class="p">)</span>
+
+<span class="n">save</span><span class="p">()</span>
+</code></pre>
+</details>
+<h3>FastAPI での実践：サブミリ秒単体テストと <code>app.dependency_overrides</code></h3>
+<p><code>Domain</code> 層と <code>UseCase</code> 層が <code>Protocol</code> ポートのみに依存しているため、<strong>全体の70%を占める単体テストは ASGI や HTTP を一切経由せずメモリ上で完結</strong>します。続く <strong>20%の HTTP 契約テスト層</strong> では、FastAPI の <code>app.dependency_overrides</code> を用いて関数オブジェクト参照で安全に依存を差し替え、<code>try ... finally: app.dependency_overrides.clear()</code> で確実にクリーンアップします（非同期 <code>httpx.AsyncClient</code> や負荷試験パターンは <a href="../06_observability_and_testing/testing_and_deployment.html">実践テスト手法と本番 ASGI 運用</a> を参照してください）。</p>
+<pre><code class="language-python"><span class="c1"># tests/orders/test_order_contracts.py — 純粋単体テスト層 + 密閉型 DI オーバーライド層</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pytest</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.testclient</span><span class="w"> </span><span class="kn">import</span> <span class="n">TestClient</span>
+
+
+<span class="c1"># 1. 70% 層: 純粋な UseCase 単体テスト (&lt; 0.5 ms・ASGI / HTTP オーバーヘッドゼロ)</span>
+<span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">anyio</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">test_place_order_rejects_insufficient_inventory</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">repo</span> <span class="o">=</span> <span class="n">InMemoryOrderRepository</span><span class="p">()</span>
+    <span class="n">uow</span> <span class="o">=</span> <span class="n">UnitOfWorkSession</span><span class="p">(</span><span class="n">pool</span><span class="o">=</span><span class="n">ConnectionPool</span><span class="p">(</span><span class="n">dsn</span><span class="o">=</span><span class="s2">"memory://unit"</span><span class="p">))</span>
+    <span class="n">use_case</span> <span class="o">=</span> <span class="n">EnterpriseOrderUseCase</span><span class="p">(</span>
+        <span class="n">repo</span><span class="o">=</span><span class="n">repo</span><span class="p">,</span> <span class="n">uow</span><span class="o">=</span><span class="n">uow</span><span class="p">,</span> <span class="n">stock_by_sku</span><span class="o">=</span><span class="p">{</span><span class="s2">"SKU-PRO-10"</span><span class="p">:</span> <span class="mi">3</span><span class="p">}</span>
+    <span class="p">)</span>
+    <span class="n">actor</span> <span class="o">=</span> <span class="n">AuthenticatedActor</span><span class="p">(</span><span class="n">actor_id</span><span class="o">=</span><span class="s2">"usr_alice"</span><span class="p">,</span> <span class="n">tenant_id</span><span class="o">=</span><span class="s2">"tnt_acme"</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="n">pytest</span><span class="o">.</span><span class="n">raises</span><span class="p">(</span><span class="n">InsufficientInventoryError</span><span class="p">):</span>
+        <span class="k">await</span> <span class="n">use_case</span><span class="o">.</span><span class="n">place_order</span><span class="p">(</span>
+            <span class="n">actor</span><span class="p">,</span>
+            <span class="n">OrderCreateDTO</span><span class="p">(</span>
+                <span class="n">customer_id</span><span class="o">=</span><span class="s2">"cust_100"</span><span class="p">,</span>
+                <span class="n">lines</span><span class="o">=</span><span class="p">[</span>
+                    <span class="n">OrderLineInputDTO</span><span class="p">(</span>
+                        <span class="n">sku</span><span class="o">=</span><span class="s2">"SKU-PRO-10"</span><span class="p">,</span> <span class="n">quantity</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span> <span class="n">unit_price_cents</span><span class="o">=</span><span class="mi">1500</span>
+                    <span class="p">)</span>
+                <span class="p">],</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+
+
+<span class="c1"># 2. 20% 層: dependency_overrides を確実に復元する密閉型 FastAPI 契約テスト</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_http_contract_and_dependency_override_isolation</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">pool</span> <span class="o">=</span> <span class="n">ConnectionPool</span><span class="p">(</span><span class="n">dsn</span><span class="o">=</span><span class="s2">"postgresql+asyncpg://127.0.0.1:5432/orders"</span><span class="p">)</span>
+    <span class="n">app</span> <span class="o">=</span> <span class="n">create_enterprise_app</span><span class="p">(</span><span class="n">pool</span><span class="o">=</span><span class="n">pool</span><span class="p">)</span>
+    <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"X-Actor-Id"</span><span class="p">:</span> <span class="s2">"usr_alice"</span><span class="p">,</span> <span class="s2">"X-Tenant-Id"</span><span class="p">:</span> <span class="s2">"tnt_acme"</span><span class="p">}</span>
+
+    <span class="k">with</span> <span class="n">TestClient</span><span class="p">(</span><span class="n">app</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
+        <span class="c1"># ドメイン例外 InsufficientInventoryError -&gt; 409 RFC 9457 Problem Details 変換を検証</span>
+        <span class="n">conflict</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+            <span class="s2">"/v1/orders"</span><span class="p">,</span>
+            <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
+            <span class="n">json</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"customer_id"</span><span class="p">:</span> <span class="s2">"cust_42"</span><span class="p">,</span>
+                <span class="s2">"lines"</span><span class="p">:</span> <span class="p">[</span>
+                    <span class="p">{</span><span class="s2">"sku"</span><span class="p">:</span> <span class="s2">"SKU-PRO-10"</span><span class="p">,</span> <span class="s2">"quantity"</span><span class="p">:</span> <span class="mi">99</span><span class="p">,</span> <span class="s2">"unit_price_cents"</span><span class="p">:</span> <span class="mi">4000</span><span class="p">}</span>
+                <span class="p">],</span>
+            <span class="p">},</span>
+        <span class="p">)</span>
+        <span class="k">assert</span> <span class="n">conflict</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">409</span>
+        <span class="k">assert</span> <span class="n">conflict</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">"content-type"</span><span class="p">]</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"application/problem+json"</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">conflict</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">"title"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"Insufficient Inventory"</span>
+
+        <span class="c1"># 文字列 import パッチを使わず、関数参照キーで OrderRepositoryPort を密閉差し替え</span>
+        <span class="n">isolated_repo</span> <span class="o">=</span> <span class="n">InMemoryOrderRepository</span><span class="p">()</span>
+        <span class="n">app</span><span class="o">.</span><span class="n">dependency_overrides</span><span class="p">[</span><span class="n">get_order_repo</span><span class="p">]</span> <span class="o">=</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">isolated_repo</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">missing</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/v1/orders/ord_9001"</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="n">missing</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">404</span>
+            <span class="k">assert</span> <span class="n">missing</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">"title"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"Order Not Found"</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">app</span><span class="o">.</span><span class="n">dependency_overrides</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+    <span class="c1"># TestClient コンテキスト終了時に lifespan の finally -&gt; pool.close() が自動実行される</span>
+    <span class="k">assert</span> <span class="n">pool</span><span class="o">.</span><span class="n">is_open</span> <span class="ow">is</span> <span class="kc">False</span>
+</code></pre>
+<p>続いて第3章の <a href="../03_routing_and_models/parameters_and_validation.html">Path・Query・Header・Cookie・Body</a> へ進み、FastAPI が <code>Annotated</code> パラメータメタデータをどのように解析し、高速な Pydantic v2 バリデータへとコンパイルしているのかを詳しく見ていきましょう。</p>
+
+            </main>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Theme toggle
+            const themeBtn = document.getElementById('theme-toggle');
+            if (themeBtn) {
+                themeBtn.addEventListener('click', function() {
+                    const current = document.documentElement.getAttribute('data-theme');
+                    const next = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    localStorage.setItem('drawlib-theme', next);
+                });
+            }
+
+            // Language dropdown outside-click & Escape close
+            const langDropdowns = document.querySelectorAll('.lang-dropdown');
+            if (langDropdowns.length > 0) {
+                document.addEventListener('click', function(e) {
+                    langDropdowns.forEach(function(dd) {
+                        if (dd.hasAttribute('open') && !dd.contains(e.target)) {
+                            dd.removeAttribute('open');
+                        }
+                    });
+                });
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        langDropdowns.forEach(function(dd) {
+                            dd.removeAttribute('open');
+                        });
+                    }
+                });
+            }
+
+            // Mobile menu toggle
+            const menuBtn = document.getElementById('menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            if (menuBtn && sidebar) {
+                function setMenuOpen(open) {
+                    sidebar.classList.toggle('is-open', open);
+                    menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    document.body.classList.toggle('menu-open', open);
+                    if (open) {
+                        const menu = sidebar.querySelector('.sidebar-menu');
+                        if (menu) {
+                            menu.scrollTop = 0;
+                        }
+                    }
+                }
+
+                menuBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const willOpen = !sidebar.classList.contains('is-open');
+                    setMenuOpen(willOpen);
+                });
+
+                // Close menu when clicking outside sidebar
+                document.addEventListener('click', function(e) {
+                    if (sidebar.classList.contains('is-open') && !sidebar.contains(e.target)) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                // Close menu when a navigation link is clicked
+                const navLinks = sidebar.querySelectorAll('.nav-item a');
+                navLinks.forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        setMenuOpen(false);
+                    });
+                });
+
+                // Close on Escape key
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                // Reset menu state when resized above mobile breakpoint
+                window.addEventListener('resize', function() {
+                    if (window.innerWidth > 768 && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
