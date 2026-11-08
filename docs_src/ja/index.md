@@ -161,20 +161,20 @@ async def read_product(
     return ProductSummary(sku=sku, price_cents=4900, currency=currency)
 ```
 
-## 全 6 章のカリキュラムマップ
+## 全 8 章・20 ページのカリキュラムマップ
 
-本ガイドは、最初のエンドポイント構築から、`100,000+` 行規模のモジュラーモノリス設計、再帰的 `Dependant` DAG 解決、ネイティブ Server-Sent Events（`fastapi.sse`）、ネイティブ OpenTelemetry 計装（`fastapi.telemetry`）までを全 6 章で体系的に解説します。
+本ガイドは **全 8 章・20 ページ** にわたり、最初のエンドポイント構築から、`100,000+` 行規模のモジュラーモノリス設計、カスタム `APIRoute` 拡張、`pwdlib` Argon2id + `PyJWT` + WebSocket `Security()` 認可、ネイティブ Server-Sent Events（`fastapi.sse`）、ネイティブ OpenTelemetry 計装（`fastapi.telemetry`）、SPA `frontend()` 配信と SDK 自動生成、そして `pydantic-settings`・SQL DB・AI/MCP 連携までを体系的に解説します。
 
-```drawlib align=center code=fold file=guide_chapter_map.png caption="ビジュアル解説カリキュラムマップ — クイックスタートから大規模本番運用までの全 6 章構成"
+```drawlib align=center code=fold file=guide_chapter_map.png caption="ビジュアル解説カリキュラムマップ — クイックスタートから本番エコシステムまでの全 8 章・20 ページ構成"
 from drawlib.canvas import save, setup
 from drawlib.icons import phosphor
 from drawlib.smartarts import CardList, Panel
 from drawlib.styles import Styles
 
-setup(width=196, height=68, dpi=150)
+setup(width=196, height=88, dpi=150)
 
 left_panel = Panel(
-    "Part I — Foundations, Scale & Schemas (Ch 1–3)",
+    "Part I — Foundations, Scale & Security (Ch 1–4)",
     style=Styles.Neutral.patch(shape_r=2.0),
     header_style=Styles.PrimaryNeutral.patch(shape_line_width=1.2),
     text_style=Styles.DarkBold.patch(text_size=11.0),
@@ -183,19 +183,19 @@ left_panel = Panel(
     header_variant="filled",
     header_height=8.5,
 )
-left_panel.draw((4.0, 4.0), width=91.0, height=60.0)
-l_xy, l_w, l_h = left_panel.get_content_box((4.0, 4.0), width=91.0, height=60.0, padding=(3.5, 3.0))
+left_panel.draw((4.0, 4.0), width=91.0, height=80.0)
+l_xy, l_w, l_h = left_panel.get_content_box((4.0, 4.0), width=91.0, height=80.0, padding=(3.5, 3.0))
 
 cl_left = CardList(
     style=Styles.White,
-    text_style=Styles.DarkBold.patch(text_size=11.0),
+    text_style=Styles.DarkBold.patch(text_size=10.8),
     description_style=Styles.Dark.patch(text_size=10.0),
     badge_shape="rounded_rect",
     badge_style=Styles.PrimaryNeutral,
     badge_text_style=Styles.PrimaryBold.patch(text_size=10.0),
     icon_style=Styles.PrimaryBold,
     direction="vertical",
-    spacing=2.8,
+    spacing=2.4,
 )
 cl_left.add(
     "Ch 1 · Introduction & Quickstart",
@@ -214,15 +214,21 @@ cl_left.add(
     icon=phosphor.tree_structure,
 )
 cl_left.add(
-    "Ch 3 · Routing & Schemas",
-    "Path/Query/Header/Body & response models",
+    "Ch 3 · Routing, Validation & Models",
+    "Param models, extra types & custom APIRoute",
     badge_text="Ch 3",
     icon=phosphor.brackets_curly,
+)
+cl_left.add(
+    "Ch 4 · DI, OAuth2, JWT & WS Security",
+    "Dependant DAG, Argon2 + PyJWT & WS Security()",
+    badge_text="Ch 4",
+    icon=phosphor.shield_check,
 )
 cl_left.draw(xy=l_xy, width=l_w, height=l_h)
 
 right_panel = Panel(
-    "Part II — DI Security, Streaming & Ops (Ch 4–6)",
+    "Part II — Streaming, OTel, Frontend & Ops (Ch 5–8)",
     style=Styles.Neutral.patch(shape_r=2.0),
     header_style=Styles.SecondaryNeutral.patch(shape_line_width=1.2),
     text_style=Styles.DarkBold.patch(text_size=11.0),
@@ -231,25 +237,19 @@ right_panel = Panel(
     header_variant="filled",
     header_height=8.5,
 )
-right_panel.draw((101.0, 4.0), width=91.0, height=60.0)
-r_xy, r_w, r_h = right_panel.get_content_box((101.0, 4.0), width=91.0, height=60.0, padding=(3.5, 3.0))
+right_panel.draw((101.0, 4.0), width=91.0, height=80.0)
+r_xy, r_w, r_h = right_panel.get_content_box((101.0, 4.0), width=91.0, height=80.0, padding=(3.5, 3.0))
 
 cl_right = CardList(
     style=Styles.White,
-    text_style=Styles.DarkBold.patch(text_size=11.0),
+    text_style=Styles.DarkBold.patch(text_size=10.8),
     description_style=Styles.Dark.patch(text_size=10.0),
     badge_shape="rounded_rect",
     badge_style=Styles.SecondaryNeutral,
     badge_text_style=Styles.DarkBold.patch(text_size=10.0),
     icon_style=Styles.SecondaryBold,
     direction="vertical",
-    spacing=2.8,
-)
-cl_right.add(
-    "Ch 4 · DI & Security",
-    "Dependant DAG cache, yield & OAuth2 scopes",
-    badge_text="Ch 4",
-    icon=phosphor.shield_check,
+    spacing=2.4,
 )
 cl_right.add(
     "Ch 5 · Async, SSE & WebSockets",
@@ -262,6 +262,18 @@ cl_right.add(
     "Native OTel spans, RFC errors & TestClient",
     badge_text="Ch 6",
     icon=phosphor.pulse,
+)
+cl_right.add(
+    "Ch 7 · Frontend, Sub-Apps & OpenAPI",
+    "SPA frontend(), mounts, webhooks & SDKs",
+    badge_text="Ch 7",
+    icon=phosphor.layout,
+)
+cl_right.add(
+    "Ch 8 · Settings, Databases & Ecosystem",
+    "pydantic-settings, SQL DBs, CLI & AI/MCP",
+    badge_text="Ch 8",
+    icon=phosphor.database,
     style=Styles.SecondaryNeutral,
     badge_style=Styles.PrimaryFlat,
     badge_text_style=Styles.WhiteBold.patch(text_size=10.0),
@@ -276,10 +288,12 @@ save()
 | :--- | :--- | :--- |
 | **1. イントロ & クイックスタート** | [FastAPI の設計思想と内部構造](01_getting_started/overview.md) · [クイックスタートと自動生成 Docs](01_getting_started/quickstart.md) | `FastAPI`, `Annotated`, `Doc()`, `APIRoute`, Swagger UI & ReDoc |
 | **2. 10万行規模の設計ベストプラクティス** | [境界づけられたコンテキストと階層化](02_enterprise_architecture/modular_design.md) · [大規模 DI・Lifespan 管理・テスト戦略](02_enterprise_architecture/di_lifespan_testing.md) | `APIRouter`, `lifespan`, `dependency_overrides`, ドメイン境界分離 |
-| **3. ルーティング・入力検証・スキーマ** | [Path・Query・Header・Cookie・Body](03_routing_and_models/parameters_and_validation.md) · [レスポンス直列化と OpenAPI 3.1](03_routing_and_models/responses_and_openapi.md) | `Path`, `Query`, `Header`, `Cookie`, `Body`, `ModelField`, `get_openapi` |
-| **4. 依存性注入（DI）とセキュリティ** | [Dependant DAG・キャッシュ・yield スコープ](04_dependencies_and_security/dependency_injection.md) · [認証・OAuth2 スコープ認可・抽出器](04_dependencies_and_security/security_and_auth.md) | `Depends`, `Security`, `solve_dependencies`, `AsyncExitStack`, `SecurityScopes` |
+| **3. ルーティング・入力検証・スキーマ** | [Path・Query・Header・Cookie・Body](03_routing_and_models/parameters_and_validation.md) · [レスポンス直列化と OpenAPI 3.1](03_routing_and_models/responses_and_openapi.md) · [パラメータモデル合成・特殊型・例示](03_routing_and_models/advanced_types_and_models.md) · [カスタム Request と APIRoute 拡張](03_routing_and_models/custom_request_and_route.md) | `Path`, `Query`, `Header`, `Cookie`, `Body`, `ModelField`, カスタム `APIRoute` |
+| **4. 依存性注入（DI）とセキュリティ** | [Dependant DAG・キャッシュ・yield スコープ](04_dependencies_and_security/dependency_injection.md) · [認証・OAuth2 スコープ認可・抽出器](04_dependencies_and_security/security_and_auth.md) · [JWT (PyJWT + Argon2) と WS 認可](04_dependencies_and_security/jwt_and_websocket_security.md) | `Depends`, `Security`, `SecurityScopes`, `pwdlib` Argon2id, `PyJWT`, `HTTPConnection` |
 | **5. 非同期並行・ミドルウェア・ストリーミング** | [ASGI ミドルウェアとスレッドプール制御](05_async_and_realtime/concurrency_and_middleware.md) · [ネイティブ SSE・JSONL・WebSocket](05_async_and_realtime/sse_websockets_streaming.md) | `run_in_threadpool`, `EventSourceResponse`, `ServerSentEvent`, `WebSocket` |
 | **6. 可観測性・例外設計・実践テスト** | [ネイティブ OpenTelemetry と例外処理](06_observability_and_testing/telemetry_and_errors.md) · [実践テスト手法と本番 ASGI 運用](06_observability_and_testing/testing_and_deployment.md) | `TelemetryConfig`, `NativeTelemetry`, `RequestValidationError`, `TestClient` |
+| **7. フロントエンド・マウント・OpenAPI 拡張** | [SPA frontend()・静的配信・マウント統合](07_frontend_and_openapi_ext/frontend_templates_mounts.md) · [Webhooks・Callbacks・SDK 生成・Docs UI](07_frontend_and_openapi_ext/webhooks_callbacks_sdks.md) | `frontend()`, `StaticFiles`, `Jinja2Templates`, `app.webhooks`, `callbacks` |
+| **8. 設定管理・SQL DB・CLI・エコシステム** | [pydantic-settings 設定管理と SQL DB](08_ecosystem_and_operations/settings_and_databases.md) · [FastAPI CLI・プロキシ・GraphQL・AI 連携](08_ecosystem_and_operations/cli_proxy_graphql_ai.md) | `BaseSettings`, `@lru_cache`, SQL `yield` セッション, `fastapi-cli`, `--proxy-headers` |
 
 ## 謝辞・ライセンス帰属と併設診断レポート
 

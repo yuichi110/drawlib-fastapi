@@ -1,0 +1,1011 @@
+<!--
+ Copyright (c) 2026 Yuichi Ito (yuichi@yuichi.com)
+
+ This software is licensed under the Apache License, Version 2.0.
+ For more information, please visit: https://github.com/yuichi110/drawlib
+
+ This software is provided "as is", without warranty of any kind,
+ express or implied, including but not limited to the warranties of
+ merchantability, fitness for a particular purpose and noninfringement.
+-->
+<!DOCTYPE html>
+<html lang="ja" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>パラメータモデル合成・特殊型・スキーマ例示 — FastAPI Visual Guide (Unofficial · Drawlib Demo)</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-S9N5BZ1VRC');
+    </script>
+    <script>
+        (function() {
+            const saved = localStorage.getItem('drawlib-theme');
+            if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    
+    <link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/en/03_routing_and_models/advanced_types_and_models.html">
+    
+    <link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/ja/03_routing_and_models/advanced_types_and_models.html">
+    
+    <link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/en/03_routing_and_models/advanced_types_and_models.html">
+    
+    
+    
+    <meta name="description" content="FastAPI v0.157.0〜v0.162.2 は、Pydantic パラメータモデル（Query()・Header()・Cookie()・Form()）を合成・省略可能・判別共用体対応の抽出器へと拡張するとともに、JSON null と省略キーの厳密な区別、HTML チェックボックス Form…">
+    <link rel="canonical" href="https://fastapi.drawlib.com/ja/03_routing_and_models/advanced_types_and_models.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="FastAPI ビジュアル解説">
+    <meta property="og:title" content="パラメータモデル合成・特殊型・スキーマ例示 — FastAPI ビジュアル解説">
+    <meta property="og:description" content="FastAPI v0.157.0〜v0.162.2 は、Pydantic パラメータモデル（Query()・Header()・Cookie()・Form()）を合成・省略可能・判別共用体対応の抽出器へと拡張するとともに、JSON null と省略キーの厳密な区別、HTML チェックボックス Form…">
+    <meta property="og:url" content="https://fastapi.drawlib.com/ja/03_routing_and_models/advanced_types_and_models.html">
+    <meta property="og:image" content="https://fastapi.drawlib.com/_assets/ogp.png">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:locale:alternate" content="en_US">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="パラメータモデル合成・特殊型・スキーマ例示 — FastAPI ビジュアル解説">
+    <meta name="twitter:description" content="FastAPI v0.157.0〜v0.162.2 は、Pydantic パラメータモデル（Query()・Header()・Cookie()・Form()）を合成・省略可能・判別共用体対応の抽出器へと拡張するとともに、JSON null と省略キーの厳密な区別、HTML チェックボックス Form…">
+    <meta name="twitter:image" content="https://fastapi.drawlib.com/_assets/ogp.png">
+    
+    
+    <link rel="icon" type="image/png" href="../../_assets/favicon.png">
+    
+    
+    <link rel="stylesheet" href="../style.css">
+    
+    
+</head>
+<body>
+    <div class="demo-banner" role="region" aria-label="非公式ショーケース案内">
+        <div class="demo-banner-inner">
+            <span class="demo-banner-badge">UNOFFICIAL DEMO</span>
+            
+            <span class="demo-banner-text">
+                <a href="https://www.drawlib.com/" target="_blank" rel="noopener noreferrer">Drawlib</a> と <a href="https://pypi.org/project/pni501/" target="_blank" rel="noopener noreferrer">PNI501</a> で作成した <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a>（v0.162.2, MIT）の非公式ビジュアル解説ショーケースです。
+            </span>
+            <span class="demo-banner-links">
+                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 診断レポート →</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI 公式 Docs ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+            </span>
+            
+        </div>
+    </div>
+    
+    <div class="doc-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI ビジュアル解説">
+                    
+                    FastAPI ビジュアル解説
+                    
+                </a>
+                <div class="sidebar-header-actions">
+                    <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">
+                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                    <button type="button" id="menu-toggle" class="menu-toggle-btn" aria-label="Toggle navigation" aria-expanded="false">
+                        <svg class="icon-hamburger" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        <svg class="icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="sidebar-menu">
+                
+                    
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../index.html" >ガイド概要と全体マップ</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">1. イントロ &amp; クイックスタート</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../01_getting_started/overview.html" >FastAPI の設計思想と内部構造</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../01_getting_started/quickstart.html" >クイックスタートと自動生成 Docs</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">2. 10万行規模の設計ベストプラクティス</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../02_enterprise_architecture/modular_design.html" >境界づけられたコンテキストと階層化</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../02_enterprise_architecture/di_lifespan_testing.html" >大規模 DI・Lifespan 管理・テスト戦略</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">3. ルーティング・入力検証・スキーマ</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="parameters_and_validation.html" >Path・Query・Header・Cookie・Body</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="responses_and_openapi.html" >レスポンス直列化と OpenAPI 3.1</a>
+                            </li>
+                            
+                            <li class="nav-item active">
+                                <a href="advanced_types_and_models.html" >パラメータモデル合成・特殊型・例示</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="custom_request_and_route.html" >カスタム Request と APIRoute 拡張</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">4. 依存性注入（DI）とセキュリティ</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../04_dependencies_and_security/dependency_injection.html" >Dependant DAG・キャッシュ・yield スコープ</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../04_dependencies_and_security/security_and_auth.html" >認証・OAuth2 スコープ認可・抽出器</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../04_dependencies_and_security/jwt_and_websocket_security.html" >JWT (PyJWT + Argon2) と WS 認可</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">5. 非同期並行・ミドルウェア・ストリーミング</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../05_async_and_realtime/concurrency_and_middleware.html" >ASGI ミドルウェアとスレッドプール制御</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../05_async_and_realtime/sse_websockets_streaming.html" >ネイティブ SSE・JSONL・WebSocket</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">6. 可観測性・例外設計・実践テスト</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../06_observability_and_testing/telemetry_and_errors.html" >ネイティブ OpenTelemetry と例外処理</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../06_observability_and_testing/testing_and_deployment.html" >実践テスト手法と本番 ASGI 運用</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">7. フロントエンド・マウント・OpenAPI 拡張</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../07_frontend_and_openapi_ext/frontend_templates_mounts.html" >SPA frontend()・静的配信・マウント統合</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../07_frontend_and_openapi_ext/webhooks_callbacks_sdks.html" >Webhooks・Callbacks・SDK 生成・Docs UI</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">8. 設定管理・SQL DB・CLI・エコシステム</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../08_ecosystem_and_operations/settings_and_databases.html" >pydantic-settings 設定管理と SQL DB</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../08_ecosystem_and_operations/cli_proxy_graphql_ai.html" >FastAPI CLI・プロキシ・GraphQL・AI 連携</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">診断レポート &amp; 公式リンク</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/reports/pni501/" target="_blank" rel="noopener noreferrer">PNI501 診断レポート<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI 公式ドキュメント<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">デモのリポジトリ (GitHub)<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                        </ul>
+                    
+                
+            </div>
+        </aside>
+        <div class="content-wrapper">
+            <header class="top-bar">
+                <div class="breadcrumbs">
+                    <span class="crumb">Docs</span>
+                    <span class="crumb-separator">&raquo;</span>
+                    <span class="crumb active">パラメータモデル合成・特殊型・スキーマ例示</span>
+                </div>
+                
+                <div class="lang-switcher">
+                    <details class="lang-dropdown">
+                        <summary class="lang-dropdown-btn" aria-label="Select language">
+                            <svg class="lang-globe-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            <span class="lang-current-label">日本語</span>
+                            <svg class="lang-caret-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </summary>
+                        <div class="lang-dropdown-menu" role="menu">
+                            
+                            <a href="../../en/03_routing_and_models/advanced_types_and_models.html" class="lang-option" lang="en" hreflang="en" >
+                                <span>English</span>
+                                
+                            </a>
+                            
+                            <a href="advanced_types_and_models.html" class="lang-option active" lang="ja" hreflang="ja" aria-current="page">
+                                <span>日本語</span>
+                                
+                                <svg class="lang-check-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                
+                            </a>
+                            
+                        </div>
+                    </details>
+                </div>
+                
+            </header>
+            <main class="main-content">
+                <h1>パラメータモデル合成・特殊型・スキーマ例示</h1>
+<p>FastAPI <code>v0.157.0</code>〜<code>v0.162.2</code> は、Pydantic パラメータモデル（<code>Query()</code>・<code>Header()</code>・<code>Cookie()</code>・<code>Form()</code>）を合成・省略可能・判別共用体対応の抽出器へと拡張するとともに、JSON <code>null</code> と省略キーの厳密な区別、HTML チェックボックス <code>Form</code> の既定値解決、標準ライブラリ／Pydantic の拡張データ型、および 3 階層の OpenAPI 3.1 例示機構を統合します。</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/03_routing_and_models/advanced_types_and_models/parameter_models_composition.png" alt="advanced_types_and_models_1" />
+  <figcaption class="drawlib-caption">FastAPI v0.157–v0.162 パラメータモデル合成アーキテクチャ: 複数モデル抽出・Optional/Union 解決・兄弟モデル間の extra='forbid' 規則</figcaption>
+</figure>
+<details class="drawlib-code-details">
+<summary>Source Code</summary>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.canvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">setup</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.icons</span><span class="w"> </span><span class="kn">import</span> <span class="n">code</span><span class="p">,</span> <span class="n">phosphor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.lines</span><span class="w"> </span><span class="kn">import</span> <span class="n">line</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.smartarts</span><span class="w"> </span><span class="kn">import</span> <span class="n">CardList</span><span class="p">,</span> <span class="n">Panel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">Styles</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.text</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span>
+
+<span class="n">setup</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">180</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">96</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
+
+<span class="c1"># Title Banner</span>
+<span class="n">code</span><span class="o">.</span><span class="n">fastapi</span><span class="p">((</span><span class="mf">10.5</span><span class="p">,</span> <span class="mf">90.5</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">5.2</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Primary</span><span class="p">)</span>
+<span class="n">text</span><span class="p">(</span>
+    <span class="p">(</span><span class="mf">16.0</span><span class="p">,</span> <span class="mf">90.5</span><span class="p">),</span>
+    <span class="s2">"Parameter Model Composition (v0.157–v0.162): Multi-Model, Optional/Union &amp; Extra Policy"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">12.2</span><span class="p">,</span> <span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1"># 1. Left Panel: Parameter Model Sources</span>
+<span class="n">p1</span> <span class="o">=</span> <span class="n">Panel</span><span class="p">(</span>
+    <span class="s2">"1. Parameter Model Sources"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
+    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.0</span><span class="p">),</span>
+    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">sliders_horizontal</span><span class="p">,</span>
+    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">,</span>
+    <span class="n">header_height</span><span class="o">=</span><span class="mf">8.5</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">p1</span><span class="o">.</span><span class="n">draw</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">52</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">78</span><span class="p">)</span>
+<span class="n">c1_xy</span><span class="p">,</span> <span class="n">c1_w</span><span class="p">,</span> <span class="n">c1_h</span> <span class="o">=</span> <span class="n">p1</span><span class="o">.</span><span class="n">get_content_box</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">52</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">78</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="p">(</span><span class="mf">2.8</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">))</span>
+
+<span class="n">cl1</span> <span class="o">=</span> <span class="n">CardList</span><span class="p">(</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
+    <span class="n">description_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">badge_shape</span><span class="o">=</span><span class="s2">"rounded_rect"</span><span class="p">,</span>
+    <span class="n">badge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
+    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">,</span>
+    <span class="n">direction</span><span class="o">=</span><span class="s2">"vertical"</span><span class="p">,</span>
+    <span class="n">spacing</span><span class="o">=</span><span class="mf">2.6</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">cl1</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="s2">"Query(BaseModel)"</span><span class="p">,</span>
+    <span class="s2">"Flattens OpenAPI params;</span><span class="se">\n</span><span class="s2">composes across Depends()"</span><span class="p">,</span>
+    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">magnifying_glass</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">cl1</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="s2">"Header(BaseModel)"</span><span class="p">,</span>
+    <span class="s2">"Per-model _ -&gt; - mapping;</span><span class="se">\n</span><span class="s2">preserves model_fields"</span><span class="p">,</span>
+    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">list_bullets</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">cl1</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="s2">"Cookie(BaseModel)"</span><span class="p">,</span>
+    <span class="s2">"Structured session &amp; UI</span><span class="se">\n</span><span class="s2">prefs from Cookie header"</span><span class="p">,</span>
+    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">cookie</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">cl1</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="s2">"Form(BaseModel)"</span><span class="p">,</span>
+    <span class="s2">"Synthesizes allOf schema;</span><span class="se">\n</span><span class="s2">URL-encoded &amp; multipart"</span><span class="p">,</span>
+    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">table</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">cl1</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">c1_xy</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">c1_w</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">c1_h</span><span class="p">)</span>
+
+<span class="c1"># Arrow 1 -&gt; 2 (6.0 units)</span>
+<span class="n">line</span><span class="p">((</span><span class="mi">57</span><span class="p">,</span> <span class="mi">45</span><span class="p">),</span> <span class="p">(</span><span class="mi">63</span><span class="p">,</span> <span class="mi">45</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">)</span>
+
+<span class="c1"># 2. Center Panel: Independent Slice Extraction</span>
+<span class="n">p2</span> <span class="o">=</span> <span class="n">Panel</span><span class="p">(</span>
+    <span class="s2">"2. Independent Slice Extraction"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
+    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.0</span><span class="p">),</span>
+    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">cpu</span><span class="p">,</span>
+    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
+    <span class="n">header_height</span><span class="o">=</span><span class="mf">8.5</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">p2</span><span class="o">.</span><span class="n">draw</span><span class="p">((</span><span class="mi">63</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">54</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">78</span><span class="p">)</span>
+<span class="n">c2_xy</span><span class="p">,</span> <span class="n">c2_w</span><span class="p">,</span> <span class="n">c2_h</span> <span class="o">=</span> <span class="n">p2</span><span class="o">.</span><span class="n">get_content_box</span><span class="p">((</span><span class="mi">63</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">54</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">78</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="p">(</span><span class="mf">2.8</span><span class="p">,</span> <span class="mf">3.2</span><span class="p">))</span>
+
+<span class="n">cl2</span> <span class="o">=</span> <span class="n">CardList</span><span class="p">(</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
+    <span class="n">description_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">badge_shape</span><span class="o">=</span><span class="s2">"rounded_rect"</span><span class="p">,</span>
+    <span class="n">badge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
+    <span class="n">badge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">direction</span><span class="o">=</span><span class="s2">"vertical"</span><span class="p">,</span>
+    <span class="n">spacing</span><span class="o">=</span><span class="mf">3.4</span><span class="p">,</span>
+    <span class="n">show_arrows</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">arrow_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">cl2</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="s2">"Optional Model | None"</span><span class="p">,</span>
+    <span class="s2">"Checks own_names overlap;</span><span class="se">\n</span><span class="s2">omitted: None, partial: 422"</span><span class="p">,</span>
+    <span class="n">badge_text</span><span class="o">=</span><span class="s2">"Opt"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">cl2</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="s2">"Discriminated Form Union"</span><span class="p">,</span>
+    <span class="s2">"BeforeValidator reshapes</span><span class="se">\n</span><span class="s2">repeated keys per branch"</span><span class="p">,</span>
+    <span class="n">badge_text</span><span class="o">=</span><span class="s2">"Uni"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">cl2</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="s2">"Forward Remaining Keys"</span><span class="p">,</span>
+    <span class="s2">"Forwards unclaimed keys</span><span class="se">\n</span><span class="s2">for model extra checks"</span><span class="p">,</span>
+    <span class="n">badge_text</span><span class="o">=</span><span class="s2">"Ext"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">cl2</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">c2_xy</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">c2_w</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">c2_h</span><span class="p">)</span>
+
+<span class="c1"># Arrow 2 -&gt; 3 (6.0 units)</span>
+<span class="n">line</span><span class="p">((</span><span class="mi">117</span><span class="p">,</span> <span class="mi">45</span><span class="p">),</span> <span class="p">(</span><span class="mi">123</span><span class="p">,</span> <span class="mi">45</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">)</span>
+
+<span class="c1"># 3. Right Panel: Extra Policy &amp; v0.160 Rule</span>
+<span class="n">p3</span> <span class="o">=</span> <span class="n">Panel</span><span class="p">(</span>
+    <span class="s2">"3. Extra Policy &amp; v0.160 Rule"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
+    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.0</span><span class="p">),</span>
+    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">shield_check</span><span class="p">,</span>
+    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">,</span>
+    <span class="n">header_height</span><span class="o">=</span><span class="mf">8.5</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">p3</span><span class="o">.</span><span class="n">draw</span><span class="p">((</span><span class="mi">123</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">52</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">78</span><span class="p">)</span>
+<span class="n">c3_xy</span><span class="p">,</span> <span class="n">c3_w</span><span class="p">,</span> <span class="n">c3_h</span> <span class="o">=</span> <span class="n">p3</span><span class="o">.</span><span class="n">get_content_box</span><span class="p">((</span><span class="mi">123</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">52</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">78</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="p">(</span><span class="mf">2.8</span><span class="p">,</span> <span class="mf">3.2</span><span class="p">))</span>
+
+<span class="n">cl3</span> <span class="o">=</span> <span class="n">CardList</span><span class="p">(</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
+    <span class="n">description_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">badge_shape</span><span class="o">=</span><span class="s2">"rounded_rect"</span><span class="p">,</span>
+    <span class="n">badge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
+    <span class="n">badge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">direction</span><span class="o">=</span><span class="s2">"vertical"</span><span class="p">,</span>
+    <span class="n">spacing</span><span class="o">=</span><span class="mf">3.4</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">cl3</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="s1">'extra="ignore" (Default)'</span><span class="p">,</span>
+    <span class="s2">"Safe for sibling models</span><span class="se">\n</span><span class="s2">&amp; shared Depends() slices"</span><span class="p">,</span>
+    <span class="n">badge_text</span><span class="o">=</span><span class="s2">"OK"</span><span class="p">,</span>
+    <span class="n">badge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
+    <span class="n">badge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">cl3</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="s1">'Single extra="forbid"'</span><span class="p">,</span>
+    <span class="s2">"Rejects typos (422) if one</span><span class="se">\n</span><span class="s2">model owns entire source"</span><span class="p">,</span>
+    <span class="n">badge_text</span><span class="o">=</span><span class="s2">"1x"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">cl3</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="s1">'Sibling extra="forbid"!'</span><span class="p">,</span>
+    <span class="s2">"v0.160+: Model A rejects</span><span class="se">\n</span><span class="s2">Model B keys -&gt; 422 error!"</span><span class="p">,</span>
+    <span class="n">badge_text</span><span class="o">=</span><span class="s2">"422"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span>
+    <span class="n">badge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DangerFlat</span><span class="p">,</span>
+    <span class="n">badge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">cl3</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">c3_xy</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">c3_w</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">c3_h</span><span class="p">)</span>
+
+<span class="n">save</span><span class="p">()</span>
+</code></pre>
+</details>
+<p>関連する HTTP 入力群を再利用可能な Pydantic <code>BaseModel</code> へ構造化することで、エンドポイントの関数署名を簡潔に保ちつつ、クエリ文字列・ヘッダ・Cookie・フォーム全体にわたる <code>@model_validator</code> の不変条件を一貫して適用できます。</p>
+<h2>1. パラメータモデルの合成（<code>Query</code>・<code>Header</code>・<code>Cookie</code>・<code>Form</code>）</h2>
+<p>FastAPI <code>v0.157.0</code>〜<code>v0.162.2</code> では、<code>fastapi/dependencies/utils.py</code> の抽出エンジンが単一モデルの束縛から「エンドポイント引数と <code>Depends()</code> サブグラフを横断するモジュラー合成」へと拡張されています。</p>
+<ol>
+<li><strong>複数モデルの合成と OpenAPI フラット展開</strong>:
+<ul>
+<li><code>Query()</code>・<code>Header()</code>・<code>Cookie()</code> では、<code>_get_param_model()</code> が <code>Model</code> と <code>Model | None</code> の双方を展開し、<code>get_flat_params()</code> が OpenAPI 上のフラットなパラメータ一覧を出力する一方、実行時は <code>_request_param_model_to_args()</code> が各モデルを独立して検証します。</li>
+<li><code>Form()</code> では、<code>_get_form_models()</code> がルート引数と <code>Depends()</code> にまたがる複数のフォームモデルを OpenAPI の <code>allOf</code> リクエストボディスキーマへ合成し、実行時は <code>_extract_form_model()</code> が生の <code>FormData</code> からモデル単位で独立抽出します。</li>
+</ul>
+</li>
+<li><strong>モデル単位の <code>Header(convert_underscores=...)</code> 分離</strong>:
+<ul>
+<li><code>_request_param_model_to_args()</code> は <code>Model.model_fields</code> のキャッシュを破壊的に書き換えることなく <code>Header()</code> 引数ごとに <code>convert_underscores</code> を解決するため、同一の <code>BaseModel</code> を <code>Header()</code>・<code>Header(convert_underscores=False)</code>・<code>Query()</code> で安全に再利用できます。既定の <code>loc_by_alias=True</code> により、検証エラーの <code>loc</code> には通信上のハイフン名（例: <code>[&quot;header&quot;, &quot;x-retry-attempt&quot;]</code>）が報告されます。</li>
+</ul>
+</li>
+<li><strong>省略可能な <code>Model | None = None</code> と判別共用体 <code>Form()</code> モデル</strong>:
+<ul>
+<li><code>Annotated[RangeModel | None, Query()] = None</code>（または <code>Header()</code>・<code>Cookie()</code>・<code>Form()</code>）と宣言すると、リクエスト中にそのモデルのフィールド（またはエイリアス）が 1 つでも含まれるかが判定されます（<code>own_names.intersection(received_params)</code> / <code>_is_form_model_supplied()</code>）。該当キーが完全に省略された場合は <code>Undefined</code> が渡されて <code>None</code> となり、一部だけ送信された場合（例: <code>max_cents</code> なしの <code>?min_cents=500</code>）はモデル検証が走って不足フィールドに対する <code>422</code> が返ります（※ <code>= None</code> を省略するとパラメータ自体は必須のままになります）。</li>
+<li><code>Annotated[WebhookForm | EmailForm | None, Form(discriminator=&quot;channel&quot;)] = None</code> のような共用体フォームでは、<code>_add_form_union_validators()</code> が各分岐へ <code>BeforeValidator(_normalize_form_model)</code> を注入し、同名キーの反復送信（<code>list[str]</code> と単一 <code>str</code>）を分岐ごとの型定義に合わせて正規化します。</li>
+</ul>
+</li>
+<li><strong><code>v0.160.0</code> における兄弟モデル間の <code>extra=&quot;forbid&quot;</code> 規則</strong>:
+<ul>
+<li>クエリ文字列・HTTP ヘッダ・Cookie・フラットな HTML フォームは、それぞれ通信上で単一の名前空間を共有します。そのため <code>_request_param_model_to_args()</code> および <code>_extract_form_items()</code> は、自モデル以外の残余キーを各パラメータモデルへ引き渡し、モデル自身の <code>model_config[&quot;extra&quot;]</code> ポリシーに判定を委ねます。</li>
+</ul>
+</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">パラメータモデルの構成パターン</th>
+<th style="text-align:left">推奨される <code>extra</code> 設定</th>
+<th style="text-align:left">FastAPI <code>v0.160.0</code>〜<code>v0.162.2</code> における実行時挙動</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>単一の <code>Query</code> / <code>Cookie</code> / <code>Form</code> モデルが名前空間を独占</strong></td>
+<td style="text-align:left"><code>extra=&quot;forbid&quot;</code> または <code>&quot;ignore&quot;</code></td>
+<td style="text-align:left">クライアントの未定義キーやタイポを <code>422 extra_forbidden</code> で厳格に拒否可能</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>同一箇所に複数の兄弟モデル</strong> または <strong>モデル＋スカラー引数／<code>Depends()</code> を併用</strong></td>
+<td style="text-align:left"><code>extra=&quot;ignore&quot;</code>（Pydantic 既定）</td>
+<td style="text-align:left">各モデルが自身の担当キーのみを検証。<code>extra=&quot;forbid&quot;</code> を付けると Model A が Model B の正当なキーを未定義キーとみなして <code>422</code> で拒否するため要注意</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>Header()</code> パラメータモデル</strong></td>
+<td style="text-align:left"><code>extra=&quot;ignore&quot;</code>（事実上必須）</td>
+<td style="text-align:left">クライアントが常時送信する標準ヘッダ（<code>host</code>・<code>user-agent</code>・<code>accept</code> 等）が <code>extra=&quot;forbid&quot;</code> では <code>422</code> となるため</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>[!WARNING]
+複数のモジュラーな <code>Query()</code> や <code>Form()</code> スライスに対して未知キー拒否（<code>extra=&quot;forbid&quot;</code>）を効かせたい場合は、同一ルートに複数の <code>extra=&quot;forbid&quot;</code> 引数を並べるのではなく、Pydantic の多重継承（<code>class CombinedQuery(PaginationParams, SortParams): model_config = ConfigDict(extra=&quot;forbid&quot;)</code>）で単一モデルに統合してください。また <code>from __future__ import annotations</code> 環境下でルート登録時に <code>BaseModel</code> 判定を確実に解決させるため、パラメータモデルは関数ローカルではなくモジュールスコープに定義してください。</p>
+</blockquote>
+<h3>複数 Query モデル・Optional Header/Cookie・判別共用体 Form の統合</h3>
+<p>以下の検証済みアプリケーションは、<code>Depends()</code> 経由の共通ページネーションモデルと省略可能な <code>Query()</code>・<code>Header()</code>・<code>Cookie()</code> モデルの合成、単一モデルでの <code>extra=&quot;forbid&quot;</code> カーソル検証、および判別共用体 <code>Form(discriminator=&quot;channel&quot;)</code> を統合しています。</p>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Literal</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">Cookie</span><span class="p">,</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">Form</span><span class="p">,</span> <span class="n">Header</span><span class="p">,</span> <span class="n">Query</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">ConfigDict</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">model_validator</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">"Parameter Model Composition API"</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s2">"1.0.0"</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">PaginationParams</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="c1"># Keep default extra="ignore" when composing multiple sibling models!</span>
+    <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">le</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Maximum rows per page"</span><span class="p">)</span>
+    <span class="n">offset</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Zero-based row offset"</span><span class="p">)</span>
+    <span class="n">sort</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"recent"</span><span class="p">,</span> <span class="s2">"amount"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"recent"</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">AmountRangeParams</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">min_cents</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">max_cents</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"AmountRangeParams"</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_cents</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_cents</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"min_cents must not exceed max_cents"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">TraceHeaders</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">x_correlation_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">min_length</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+    <span class="n">x_retry_attempt</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">le</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">SessionPrefsCookie</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">ui_locale</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"en"</span><span class="p">,</span> <span class="s2">"ja"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"en"</span>
+    <span class="n">compact_table</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">StrictCursorQuery</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="c1"># Safe on endpoints where this single model owns the entire query namespace</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">)</span>
+
+    <span class="n">cursor</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">min_length</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="mi">25</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">le</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">WebhookChannelForm</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">channel</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"webhook"</span><span class="p">]</span>
+    <span class="n">endpoint_url</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">headers_tag</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">EmailChannelForm</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">channel</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"email"</span><span class="p">]</span>
+    <span class="n">recipients</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">digest_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_pagination</span><span class="p">(</span>
+    <span class="n">page</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">PaginationParams</span><span class="p">,</span> <span class="n">Query</span><span class="p">()],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PaginationParams</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">page</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/ledger/entries"</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">list_ledger_entries</span><span class="p">(</span>
+    <span class="n">page</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">PaginationParams</span><span class="p">,</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_pagination</span><span class="p">)],</span>
+    <span class="n">amount_range</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">AmountRangeParams</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Query</span><span class="p">()]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">trace</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">TraceHeaders</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Header</span><span class="p">()]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">prefs</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">SessionPrefsCookie</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Cookie</span><span class="p">()]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"page"</span><span class="p">:</span> <span class="n">page</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(),</span>
+        <span class="s2">"amount_range"</span><span class="p">:</span> <span class="n">amount_range</span><span class="o">.</span><span class="n">model_dump</span><span class="p">()</span> <span class="k">if</span> <span class="n">amount_range</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"trace"</span><span class="p">:</span> <span class="n">trace</span><span class="o">.</span><span class="n">model_dump</span><span class="p">()</span> <span class="k">if</span> <span class="n">trace</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"prefs"</span><span class="p">:</span> <span class="n">prefs</span><span class="o">.</span><span class="n">model_dump</span><span class="p">()</span> <span class="k">if</span> <span class="n">prefs</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">}</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/ledger/cursor"</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">list_by_strict_cursor</span><span class="p">(</span>
+    <span class="n">params</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">StrictCursorQuery</span><span class="p">,</span> <span class="n">Query</span><span class="p">()],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="n">params</span><span class="o">.</span><span class="n">model_dump</span><span class="p">()</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/alerts/subscription"</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">upsert_subscription</span><span class="p">(</span>
+    <span class="n">target</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span>
+        <span class="n">WebhookChannelForm</span> <span class="o">|</span> <span class="n">EmailChannelForm</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">Form</span><span class="p">(</span><span class="n">discriminator</span><span class="o">=</span><span class="s2">"channel"</span><span class="p">),</span>
+    <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"target"</span><span class="p">:</span> <span class="n">target</span><span class="o">.</span><span class="n">model_dump</span><span class="p">()</span> <span class="k">if</span> <span class="n">target</span> <span class="k">else</span> <span class="kc">None</span><span class="p">}</span>
+</code></pre>
+<h2>2. 拡張 Python データ型・厳密な <code>null</code> 仕様・OpenAPI 3.1 例示</h2>
+<p>基本的な <code>int</code>・<code>str</code>・<code>bool</code> に加え、FastAPI と Pydantic v2 は標準ライブラリおよび Pydantic の豊富なドメイン型を Rust バリデータと JSON Schema 2020-12 形式へ直接コンパイルしつつ、<strong>キーの省略</strong>・<strong>明示的な JSON <code>null</code></strong>・<strong>空の HTML フォーム文字列</strong>を厳密に区別します。</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/03_routing_and_models/advanced_types_and_models/extra_types_and_null_semantics.png" alt="advanced_types_and_models_2" />
+  <figcaption class="drawlib-caption">拡張データ型マトリクス・v0.151 JSON null と v0.162 Form 真偽値仕様・3 階層 OpenAPI 3.1 例示</figcaption>
+</figure>
+<details class="drawlib-code-details">
+<summary>Source Code</summary>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.canvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">setup</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.icons</span><span class="w"> </span><span class="kn">import</span> <span class="n">code</span><span class="p">,</span> <span class="n">phosphor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.shapes</span><span class="w"> </span><span class="kn">import</span> <span class="n">rectangle</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.smartarts</span><span class="w"> </span><span class="kn">import</span> <span class="n">CardList</span><span class="p">,</span> <span class="n">Panel</span><span class="p">,</span> <span class="n">Table</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">Colors</span><span class="p">,</span> <span class="n">Styles</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.text</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span>
+
+<span class="n">setup</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">174</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">104</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
+
+<span class="c1"># Title Banner</span>
+<span class="n">code</span><span class="o">.</span><span class="n">pydantic</span><span class="p">((</span><span class="mf">10.5</span><span class="p">,</span> <span class="mf">98.5</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Primary</span><span class="p">)</span>
+<span class="n">text</span><span class="p">(</span>
+    <span class="p">(</span><span class="mf">16.0</span><span class="p">,</span> <span class="mf">98.5</span><span class="p">),</span>
+    <span class="s2">"Rich Extra Types, v0.151–v0.162 Null/Checkbox Semantics &amp; OpenAPI 3.1 Examples"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">12.2</span><span class="p">,</span> <span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1"># Top-Left Panel: Rich Stdlib, Pydantic &amp; Dataclass Types</span>
+<span class="n">p_types</span> <span class="o">=</span> <span class="n">Panel</span><span class="p">(</span>
+    <span class="s2">"1. Rich Domain Types &amp; Dataclasses"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
+    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.0</span><span class="p">),</span>
+    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">brackets_curly</span><span class="p">,</span>
+    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">,</span>
+    <span class="n">header_height</span><span class="o">=</span><span class="mf">8.0</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">p_types</span><span class="o">.</span><span class="n">draw</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span> <span class="mi">52</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">40</span><span class="p">)</span>
+
+<span class="n">type_cards</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="mf">25.5</span><span class="p">,</span> <span class="mf">78.2</span><span class="p">,</span> <span class="s2">"Enum / StrEnum"</span><span class="p">,</span> <span class="s2">"Finite OpenAPI enum"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">),</span>
+    <span class="p">(</span><span class="mf">64.5</span><span class="p">,</span> <span class="mf">78.2</span><span class="p">,</span> <span class="s2">"UUID &amp; Base64Bytes"</span><span class="p">,</span> <span class="s2">"RFC 4122 &amp; base64 bytes"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">),</span>
+    <span class="p">(</span><span class="mf">25.5</span><span class="p">,</span> <span class="mf">68.2</span><span class="p">,</span> <span class="s2">"datetime &amp; timedelta"</span><span class="p">,</span> <span class="s2">"ISO-8601 &amp; seconds"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">),</span>
+    <span class="p">(</span><span class="mf">64.5</span><span class="p">,</span> <span class="mf">68.2</span><span class="p">,</span> <span class="s2">"Decimal (Split I/O)"</span><span class="p">,</span> <span class="s2">"num|str in -&gt; str out"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">),</span>
+    <span class="p">(</span><span class="mf">25.5</span><span class="p">,</span> <span class="mf">58.2</span><span class="p">,</span> <span class="s2">"frozenset[T]"</span><span class="p">,</span> <span class="s2">"Deduplicated uniqueItems"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">),</span>
+    <span class="p">(</span><span class="mf">64.5</span><span class="p">,</span> <span class="mf">58.2</span><span class="p">,</span> <span class="s2">"@dataclass DTOs"</span><span class="p">,</span> <span class="s2">"Zero-BaseModel schemas"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">),</span>
+<span class="p">]</span>
+<span class="k">for</span> <span class="n">cx</span><span class="p">,</span> <span class="n">cy</span><span class="p">,</span> <span class="n">t_title</span><span class="p">,</span> <span class="n">t_sub</span><span class="p">,</span> <span class="n">t_style</span> <span class="ow">in</span> <span class="n">type_cards</span><span class="p">:</span>
+    <span class="n">rectangle</span><span class="p">((</span><span class="n">cx</span><span class="p">,</span> <span class="n">cy</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">36.5</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">8.2</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">t_style</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.5</span><span class="p">))</span>
+    <span class="n">text</span><span class="p">((</span><span class="n">cx</span><span class="p">,</span> <span class="n">cy</span> <span class="o">+</span> <span class="mf">1.6</span><span class="p">),</span> <span class="n">t_title</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.2</span><span class="p">))</span>
+    <span class="n">text</span><span class="p">((</span><span class="n">cx</span><span class="p">,</span> <span class="n">cy</span> <span class="o">-</span> <span class="mf">2.0</span><span class="p">),</span> <span class="n">t_sub</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">))</span>
+
+<span class="c1"># Top-Right Panel: OpenAPI 3.1 Example Precedence</span>
+<span class="n">p_ex</span> <span class="o">=</span> <span class="n">Panel</span><span class="p">(</span>
+    <span class="s2">"2. OpenAPI 3.1 Example Tiers"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
+    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.0</span><span class="p">),</span>
+    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">book_open</span><span class="p">,</span>
+    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
+    <span class="n">header_height</span><span class="o">=</span><span class="mf">8.0</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">p_ex</span><span class="o">.</span><span class="n">draw</span><span class="p">((</span><span class="mi">89</span><span class="p">,</span> <span class="mi">52</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">40</span><span class="p">)</span>
+<span class="n">ex_xy</span><span class="p">,</span> <span class="n">ex_w</span><span class="p">,</span> <span class="n">ex_h</span> <span class="o">=</span> <span class="n">p_ex</span><span class="o">.</span><span class="n">get_content_box</span><span class="p">((</span><span class="mi">89</span><span class="p">,</span> <span class="mi">52</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="p">(</span><span class="mf">3.0</span><span class="p">,</span> <span class="mf">2.4</span><span class="p">))</span>
+
+<span class="n">cl_ex</span> <span class="o">=</span> <span class="n">CardList</span><span class="p">(</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.3</span><span class="p">),</span>
+    <span class="n">description_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">badge_shape</span><span class="o">=</span><span class="s2">"rounded_rect"</span><span class="p">,</span>
+    <span class="n">badge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
+    <span class="n">badge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">direction</span><span class="o">=</span><span class="s2">"vertical"</span><span class="p">,</span>
+    <span class="n">spacing</span><span class="o">=</span><span class="mf">1.8</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">cl_ex</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="s2">"Body(openapi_examples={...})"</span><span class="p">,</span>
+    <span class="s2">"Named scenario selector in /docs UI"</span><span class="p">,</span>
+    <span class="n">badge_text</span><span class="o">=</span><span class="s2">"L1"</span><span class="p">,</span>
+    <span class="n">badge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
+    <span class="n">badge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">cl_ex</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="s2">"ConfigDict(json_schema_extra=...)"</span><span class="p">,</span>
+    <span class="s2">"Model-wide examples in components"</span><span class="p">,</span>
+    <span class="n">badge_text</span><span class="o">=</span><span class="s2">"L2"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">cl_ex</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="s2">"Field(examples=[...])"</span><span class="p">,</span>
+    <span class="s2">"Property-level JSON Schema 2020-12"</span><span class="p">,</span>
+    <span class="n">badge_text</span><span class="o">=</span><span class="s2">"L3"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">cl_ex</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">ex_xy</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">ex_w</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">ex_h</span><span class="p">)</span>
+
+<span class="c1"># Bottom Table: v0.151–v0.162 Null, Empty &amp; Default Semantics Matrix</span>
+<span class="n">tbl</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span>
+    <span class="n">cell_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">header_cell_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
+    <span class="n">header_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.3</span><span class="p">),</span>
+    <span class="n">border_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">MutedThin</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">tbl</span><span class="o">.</span><span class="n">set_style_cell_evenodd</span><span class="p">(</span>
+    <span class="n">even_color</span><span class="o">=</span><span class="n">Colors</span><span class="o">.</span><span class="n">Light</span><span class="p">,</span>
+    <span class="n">even_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">odd_color</span><span class="o">=</span><span class="n">Colors</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
+    <span class="n">odd_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">tbl</span><span class="o">.</span><span class="n">set_style_cell_header</span><span class="p">(</span>
+    <span class="n">background_color</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="o">.</span><span class="n">shape_fill_color</span><span class="p">,</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.3</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">tbl</span><span class="o">.</span><span class="n">set_style_cell</span><span class="p">(</span>
+    <span class="n">background_color</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="o">.</span><span class="n">shape_fill_color</span><span class="p">,</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">rows</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span>
+<span class="p">)</span>
+
+<span class="n">semantics_rows</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">[</span><span class="s2">"Input Scenario"</span><span class="p">,</span> <span class="s2">"Declaration"</span><span class="p">,</span> <span class="s2">"Wire Input"</span><span class="p">,</span> <span class="s2">"v0.162.2 Runtime Outcome"</span><span class="p">],</span>
+    <span class="p">[</span><span class="s2">"Omitted JSON Key"</span><span class="p">,</span> <span class="s2">"retry_limit: int = 3"</span><span class="p">,</span> <span class="s2">"</span><span class="si">{}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"200 OK -&gt; 3 (unset)"</span><span class="p">],</span>
+    <span class="p">[</span><span class="s2">"Explicit JSON null"</span><span class="p">,</span> <span class="s2">"retry_limit: int = 3"</span><span class="p">,</span> <span class="s1">'{"retry_limit": null}'</span><span class="p">,</span> <span class="s2">"422 int_type (v0.151+)"</span><span class="p">],</span>
+    <span class="p">[</span><span class="s2">"Nullable JSON Key"</span><span class="p">,</span> <span class="s2">"memo: str | None = None"</span><span class="p">,</span> <span class="s1">'{"memo": null}'</span><span class="p">,</span> <span class="s2">"200 OK -&gt; None (set)"</span><span class="p">],</span>
+    <span class="p">[</span><span class="s2">"Unchecked Checkbox"</span><span class="p">,</span> <span class="s2">"opt_in: Annotated[bool, Form()] = False"</span><span class="p">,</span> <span class="s2">"(field omitted)"</span><span class="p">,</span> <span class="s2">"200 OK -&gt; False (v0.162+)"</span><span class="p">],</span>
+    <span class="p">[</span><span class="s2">"Blank Form String"</span><span class="p">,</span> <span class="s2">"nick: Annotated[str | None, Form()] = None"</span><span class="p">,</span> <span class="s1">'nick=""'</span><span class="p">,</span> <span class="s2">"200 OK -&gt; None (Undefined)"</span><span class="p">],</span>
+<span class="p">]</span>
+<span class="n">tbl</span><span class="o">.</span><span class="n">draw_flexible</span><span class="p">(</span>
+    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mf">46.5</span><span class="p">),</span>
+    <span class="n">column_widths</span><span class="o">=</span><span class="p">[</span><span class="mi">34</span><span class="p">,</span> <span class="mi">52</span><span class="p">,</span> <span class="mi">36</span><span class="p">,</span> <span class="mi">42</span><span class="p">],</span>
+    <span class="n">row_heights</span><span class="o">=</span><span class="p">[</span><span class="mf">7.4</span><span class="p">,</span> <span class="mf">6.5</span><span class="p">,</span> <span class="mf">6.5</span><span class="p">,</span> <span class="mf">6.5</span><span class="p">,</span> <span class="mf">6.5</span><span class="p">,</span> <span class="mf">6.5</span><span class="p">],</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">semantics_rows</span><span class="p">,</span>
+    <span class="n">align</span><span class="o">=</span><span class="s2">"top_left"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">save</span><span class="p">()</span>
+</code></pre>
+</details>
+<h3><code>v0.151.0</code>〜<code>v0.162.2</code> における特殊型・デフォルト値・真偽値保証</h3>
+<ol>
+<li><strong>拡張ドメイン型と標準 <code>@dataclass</code> の直接サポート</strong>:
+<ul>
+<li><strong><code>Enum</code> / <code>StrEnum</code></strong>: パス・クエリ・ボディの許容値を有限の OpenAPI <code>enum</code> リストへ制約し、リスト外の値を <code>422</code> で拒否します（Python 3.11+ では <code>enum.StrEnum</code>、3.10 互換コードでは <code>(str, Enum)</code> を利用可能）。</li>
+<li><strong><code>UUID</code>・<code>datetime</code>・<code>timedelta</code>・<code>Decimal</code>・<code>frozenset</code>・<code>Base64Bytes</code></strong>: <code>timedelta</code> は秒数または ISO-8601 期間文字列（<code>&quot;PT15M&quot;</code>）を受理し、<code>Decimal</code> は浮動小数点誤差を防ぎつつ入力（<code>number | string</code>）と出力（<code>string</code>）で分割された OpenAPI スキーマを生成します。<code>frozenset[str]</code> は重複要素を排除した不変集合（<code>uniqueItems: true</code>）を生成し、<code>pydantic.Base64Bytes</code> は Base64 文字列を <code>bytes</code> へ復号します。また標準ライブラリの <code>@dataclass</code> も <code>BaseModel</code> 継承なしでリクエストボディや <code>response_model</code> にそのまま指定可能です。</li>
+</ul>
+</li>
+<li><strong><code>v0.151.0</code> 以降の明示的 JSON <code>null</code> 拒否と <code>strict_content_type</code></strong>:
+<ul>
+<li>JSON オブジェクトから <code>&quot;retry_limit&quot;</code> キー自体を省略した場合は <code>retry_limit: int = 3</code> のデフォルト値が適用されます（<code>model_fields_set</code> には記録されません）。一方、<code>{&quot;retry_limit&quot;: null}</code> のように明示的な <code>null</code> を送信した場合、FastAPI <code>v0.151.0</code> 以降はデフォルト値へフォールバックせず <code>422 int_type</code> で拒否します（<code>null</code> を許容するには <code>int | None = 3</code> と明記します）。同様に、モデル引数全体が必須（<code>instruction: PayoutInstruction</code>）である場合、全フィールドにデフォルト値があっても空ボディのリクエストは <code>422 missing</code> となります。</li>
+<li>既定の <code>strict_content_type=True</code>（<code>FastAPI</code>・<code>APIRouter</code>・各ルートデコレータで設定可能）により、<code>Content-Type: application/json</code>（または <code>application/*+json</code>）がない生ボディは JSON として解釈されません。</li>
+</ul>
+</li>
+<li><strong><code>v0.162.0</code> の HTML フォーム空文字列と未選択チェックボックス処理</strong>:
+<ul>
+<li>ブラウザは未入力のテキスト欄に空文字列 <code>&quot;&quot;</code> を送信し、未チェックの <code>&lt;input type=&quot;checkbox&quot;&gt;</code> はキー自体を送信しません（チェック時は <code>&quot;on&quot;</code>）。<code>_get_multidict_value()</code> は <code>FormData</code> の欠損キーおよび <code>&quot;&quot;</code> を検証前に <code>Undefined</code> へ正規化するため、任意のチェックボックス（<code>marketing_opt_in: Annotated[bool, Form()] = False</code>）は未送信時に <code>False</code>、<code>&quot;on&quot;</code> 送信時に <code>True</code> となり、必須チェックボックス（<code>accept_terms: Annotated[bool, Form()]</code>）は未送信時に確実に <code>422 missing</code> を返します。</li>
+</ul>
+</li>
+<li><strong>3 階層の OpenAPI 3.1 例示（Examples）</strong>:
+<ul>
+<li>フィールド単位の <code>Field(examples=[...])</code>、モデル単位の <code>ConfigDict(json_schema_extra={&quot;examples&quot;: [...]})</code>、およびパラメータ単位の <code>Body(openapi_examples={...})</code>（<code>summary</code>・<code>description</code>・<code>value</code>）を組み合わせることで、<code>components.schemas</code> の文書化と <code>/docs</code>（Swagger UI）上のシナリオ切り替えドロップダウンを同時に提供できます。</li>
+</ul>
+</li>
+</ol>
+<h3>特殊型・厳密な null/Form 既定値・名前付き OpenAPI 例示の実装</h3>
+<p>以下の検証済みサービスは、拡張ドメイン型・<code>@dataclass</code> レスポンス直列化・3 階層の OpenAPI 3.1 例示・<code>v0.151.0</code> の非 null JSON デフォルト仕様・<code>v0.162.0</code> の HTML チェックボックス処理を 1 つの API に統合しています。</p>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">decimal</span><span class="w"> </span><span class="kn">import</span> <span class="n">Decimal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">Enum</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span><span class="p">,</span> <span class="n">Any</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">Body</span><span class="p">,</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">Form</span><span class="p">,</span> <span class="n">status</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">Base64Bytes</span><span class="p">,</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">ConfigDict</span><span class="p">,</span> <span class="n">Field</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">"Extra Types &amp; Strict Semantics API"</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s2">"1.0.0"</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">SettlementEnvironment</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+    <span class="n">SANDBOX</span> <span class="o">=</span> <span class="s2">"sandbox"</span>
+    <span class="n">PRODUCTION</span> <span class="o">=</span> <span class="s2">"production"</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">PayoutInstruction</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span>
+        <span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">,</span>
+        <span class="n">json_schema_extra</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"examples"</span><span class="p">:</span> <span class="p">[</span>
+                <span class="p">{</span>
+                    <span class="s2">"idempotency_key"</span><span class="p">:</span> <span class="s2">"550e8400-e29b-41d4-a716-446655440000"</span><span class="p">,</span>
+                    <span class="s2">"scheduled_at"</span><span class="p">:</span> <span class="s2">"2026-11-08T15:00:00Z"</span><span class="p">,</span>
+                    <span class="s2">"settlement_window"</span><span class="p">:</span> <span class="s2">"PT30M"</span><span class="p">,</span>
+                    <span class="s2">"amount"</span><span class="p">:</span> <span class="s2">"1250.50"</span><span class="p">,</span>
+                    <span class="s2">"scopes"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"payouts:write"</span><span class="p">,</span> <span class="s2">"audit:read"</span><span class="p">],</span>
+                    <span class="s2">"signature_der"</span><span class="p">:</span> <span class="s2">"aGVsbG8td29ybGQ="</span><span class="p">,</span>
+                    <span class="s2">"retry_limit"</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+                    <span class="s2">"memo"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">]</span>
+        <span class="p">},</span>
+    <span class="p">)</span>
+
+    <span class="n">idempotency_key</span><span class="p">:</span> <span class="n">UUID</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">examples</span><span class="o">=</span><span class="p">[</span><span class="s2">"550e8400-e29b-41d4-a716-446655440000"</span><span class="p">],</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Client-generated UUIDv4 idempotency token"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">scheduled_at</span><span class="p">:</span> <span class="n">datetime</span>
+    <span class="n">settlement_window</span><span class="p">:</span> <span class="n">timedelta</span> <span class="o">=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+    <span class="n">amount</span><span class="p">:</span> <span class="n">Decimal</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">gt</span><span class="o">=</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">"0"</span><span class="p">),</span> <span class="n">decimal_places</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">scopes</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">()</span>
+    <span class="n">signature_der</span><span class="p">:</span> <span class="n">Base64Bytes</span>
+    <span class="c1"># v0.151+: Omitting uses 3, but explicit JSON {"retry_limit": null} raises 422!</span>
+    <span class="n">retry_limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">le</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="c1"># Explicit union with None allows both omission and JSON {"memo": null}</span>
+    <span class="n">memo</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">PayoutReceipt</span><span class="p">:</span>
+    <span class="n">environment</span><span class="p">:</span> <span class="n">SettlementEnvironment</span>
+    <span class="n">idempotency_key</span><span class="p">:</span> <span class="n">UUID</span>
+    <span class="n">settled_by</span><span class="p">:</span> <span class="n">datetime</span>
+    <span class="n">amount</span><span class="p">:</span> <span class="n">Decimal</span>
+    <span class="n">unique_scope_count</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">signature_byte_len</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">retry_limit</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">explicit_fields</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+    <span class="s2">"/settlements/</span><span class="si">{env}</span><span class="s2">/payouts"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">PayoutReceipt</span><span class="p">,</span>
+    <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_201_CREATED</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">create_payout</span><span class="p">(</span>
+    <span class="n">env</span><span class="p">:</span> <span class="n">SettlementEnvironment</span><span class="p">,</span>
+    <span class="n">instruction</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span>
+        <span class="n">PayoutInstruction</span><span class="p">,</span>
+        <span class="n">Body</span><span class="p">(</span>
+            <span class="n">openapi_examples</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"instant_wire"</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">"summary"</span><span class="p">:</span> <span class="s2">"Immediate high-priority payout"</span><span class="p">,</span>
+                    <span class="s2">"description"</span><span class="p">:</span> <span class="s2">"Uses explicit retry_limit and two deduplicated scopes."</span><span class="p">,</span>
+                    <span class="s2">"value"</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s2">"idempotency_key"</span><span class="p">:</span> <span class="s2">"550e8400-e29b-41d4-a716-446655440000"</span><span class="p">,</span>
+                        <span class="s2">"scheduled_at"</span><span class="p">:</span> <span class="s2">"2026-11-08T15:00:00Z"</span><span class="p">,</span>
+                        <span class="s2">"settlement_window"</span><span class="p">:</span> <span class="s2">"PT15M"</span><span class="p">,</span>
+                        <span class="s2">"amount"</span><span class="p">:</span> <span class="s2">"499.95"</span><span class="p">,</span>
+                        <span class="s2">"scopes"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"payouts:write"</span><span class="p">,</span> <span class="s2">"payouts:write"</span><span class="p">],</span>
+                        <span class="s2">"signature_der"</span><span class="p">:</span> <span class="s2">"c2lnLWJ5dGVz"</span><span class="p">,</span>
+                        <span class="s2">"retry_limit"</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+                    <span class="p">},</span>
+                <span class="p">},</span>
+                <span class="s2">"minimal_defaults"</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">"summary"</span><span class="p">:</span> <span class="s2">"Minimal payload relying on field defaults"</span><span class="p">,</span>
+                    <span class="s2">"value"</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s2">"idempotency_key"</span><span class="p">:</span> <span class="s2">"7c9e6679-7425-40de-944b-e07fc1f90ae7"</span><span class="p">,</span>
+                        <span class="s2">"scheduled_at"</span><span class="p">:</span> <span class="s2">"2026-11-08T18:00:00Z"</span><span class="p">,</span>
+                        <span class="s2">"amount"</span><span class="p">:</span> <span class="s2">"25.00"</span><span class="p">,</span>
+                        <span class="s2">"signature_der"</span><span class="p">:</span> <span class="s2">"c2lnLW1pbg=="</span><span class="p">,</span>
+                    <span class="p">},</span>
+                <span class="p">},</span>
+            <span class="p">}</span>
+        <span class="p">),</span>
+    <span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PayoutReceipt</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">PayoutReceipt</span><span class="p">(</span>
+        <span class="n">environment</span><span class="o">=</span><span class="n">env</span><span class="p">,</span>
+        <span class="n">idempotency_key</span><span class="o">=</span><span class="n">instruction</span><span class="o">.</span><span class="n">idempotency_key</span><span class="p">,</span>
+        <span class="n">settled_by</span><span class="o">=</span><span class="n">instruction</span><span class="o">.</span><span class="n">scheduled_at</span> <span class="o">+</span> <span class="n">instruction</span><span class="o">.</span><span class="n">settlement_window</span><span class="p">,</span>
+        <span class="n">amount</span><span class="o">=</span><span class="n">instruction</span><span class="o">.</span><span class="n">amount</span><span class="p">,</span>
+        <span class="n">unique_scope_count</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">instruction</span><span class="o">.</span><span class="n">scopes</span><span class="p">),</span>
+        <span class="n">signature_byte_len</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">instruction</span><span class="o">.</span><span class="n">signature_der</span><span class="p">),</span>
+        <span class="n">retry_limit</span><span class="o">=</span><span class="n">instruction</span><span class="o">.</span><span class="n">retry_limit</span><span class="p">,</span>
+        <span class="n">explicit_fields</span><span class="o">=</span><span class="nb">sorted</span><span class="p">(</span><span class="n">instruction</span><span class="o">.</span><span class="n">model_fields_set</span><span class="p">),</span>
+    <span class="p">)</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/consents/preferences"</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">submit_consent_form</span><span class="p">(</span>
+    <span class="n">accept_terms</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">Form</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">"Mandatory TOS checkbox"</span><span class="p">)],</span>
+    <span class="n">marketing_opt_in</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">Form</span><span class="p">()]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">nickname</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Form</span><span class="p">()]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"accept_terms"</span><span class="p">:</span> <span class="n">accept_terms</span><span class="p">,</span>
+        <span class="s2">"marketing_opt_in"</span><span class="p">:</span> <span class="n">marketing_opt_in</span><span class="p">,</span>
+        <span class="s2">"nickname"</span><span class="p">:</span> <span class="n">nickname</span><span class="p">,</span>
+    <span class="p">}</span>
+</code></pre>
+<p>基本的なパラメータ分類規則や出力 DTO の直列化については <a href="parameters_and_validation.html">Path・Query・Header・Cookie・Body</a> および <a href="responses_and_openapi.html">レスポンス直列化と OpenAPI 3.1</a> を参照してください。続いて、Pydantic が JSON を解析する<strong>前</strong>に <code>gzip</code> リクエストボディの解凍や Webhook の HMAC 署名検証を行う手法を <a href="custom_request_and_route.html">カスタム Request と APIRoute 拡張</a> で解説します。</p>
+
+            </main>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Theme toggle
+            const themeBtn = document.getElementById('theme-toggle');
+            if (themeBtn) {
+                themeBtn.addEventListener('click', function() {
+                    const current = document.documentElement.getAttribute('data-theme');
+                    const next = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    localStorage.setItem('drawlib-theme', next);
+                });
+            }
+
+            // Language dropdown outside-click & Escape close
+            const langDropdowns = document.querySelectorAll('.lang-dropdown');
+            if (langDropdowns.length > 0) {
+                document.addEventListener('click', function(e) {
+                    langDropdowns.forEach(function(dd) {
+                        if (dd.hasAttribute('open') && !dd.contains(e.target)) {
+                            dd.removeAttribute('open');
+                        }
+                    });
+                });
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        langDropdowns.forEach(function(dd) {
+                            dd.removeAttribute('open');
+                        });
+                    }
+                });
+            }
+
+            // Mobile menu toggle
+            const menuBtn = document.getElementById('menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            if (menuBtn && sidebar) {
+                function setMenuOpen(open) {
+                    sidebar.classList.toggle('is-open', open);
+                    menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    document.body.classList.toggle('menu-open', open);
+                    if (open) {
+                        const menu = sidebar.querySelector('.sidebar-menu');
+                        if (menu) {
+                            menu.scrollTop = 0;
+                        }
+                    }
+                }
+
+                menuBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const willOpen = !sidebar.classList.contains('is-open');
+                    setMenuOpen(willOpen);
+                });
+
+                // Close menu when clicking outside sidebar
+                document.addEventListener('click', function(e) {
+                    if (sidebar.classList.contains('is-open') && !sidebar.contains(e.target)) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                // Close menu when a navigation link is clicked
+                const navLinks = sidebar.querySelectorAll('.nav-item a');
+                navLinks.forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        setMenuOpen(false);
+                    });
+                });
+
+                // Close on Escape key
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                // Reset menu state when resized above mobile breakpoint
+                window.addEventListener('resize', function() {
+                    if (window.innerWidth > 768 && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

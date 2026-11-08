@@ -161,20 +161,20 @@ async def read_product(
     return ProductSummary(sku=sku, price_cents=4900, currency=currency)
 ```
 
-## 6-Chapter Architecture Curriculum
+## 8-Chapter · 20-Page Architecture Curriculum
 
-This visual guide progresses systematically from your first validated endpoint to `100,000+` LOC modular monolith patterns, recursive `Dependant` DAG execution, native Server-Sent Events (`fastapi.sse`), and native OpenTelemetry (`fastapi.telemetry`):
+This visual guide spans **8 chapters and 20 pages**, progressing systematically from your first validated endpoint to `100,000+` LOC modular monoliths, custom `APIRoute` wrappers, `pwdlib` Argon2id + `PyJWT` + WebSocket `Security()`, native Server-Sent Events (`fastapi.sse`), native OpenTelemetry (`fastapi.telemetry`), SPA `frontend()` mounts & SDK codegen, and `pydantic-settings` + SQL + AI/MCP operations:
 
-```drawlib align=center code=fold file=guide_chapter_map.png caption="Visual Guide Curriculum Map — Six Chapters from Quickstart to Enterprise Production"
+```drawlib align=center code=fold file=guide_chapter_map.png caption="Visual Guide Curriculum Map — 8 Chapters & 20 Pages from Quickstart to Production Ecosystem"
 from drawlib.canvas import save, setup
 from drawlib.icons import phosphor
 from drawlib.smartarts import CardList, Panel
 from drawlib.styles import Styles
 
-setup(width=196, height=68, dpi=150)
+setup(width=196, height=88, dpi=150)
 
 left_panel = Panel(
-    "Part I — Foundations, Scale & Schemas (Ch 1–3)",
+    "Part I — Foundations, Scale & Security (Ch 1–4)",
     style=Styles.Neutral.patch(shape_r=2.0),
     header_style=Styles.PrimaryNeutral.patch(shape_line_width=1.2),
     text_style=Styles.DarkBold.patch(text_size=11.0),
@@ -183,19 +183,19 @@ left_panel = Panel(
     header_variant="filled",
     header_height=8.5,
 )
-left_panel.draw((4.0, 4.0), width=91.0, height=60.0)
-l_xy, l_w, l_h = left_panel.get_content_box((4.0, 4.0), width=91.0, height=60.0, padding=(3.5, 3.0))
+left_panel.draw((4.0, 4.0), width=91.0, height=80.0)
+l_xy, l_w, l_h = left_panel.get_content_box((4.0, 4.0), width=91.0, height=80.0, padding=(3.5, 3.0))
 
 cl_left = CardList(
     style=Styles.White,
-    text_style=Styles.DarkBold.patch(text_size=11.0),
+    text_style=Styles.DarkBold.patch(text_size=10.8),
     description_style=Styles.Dark.patch(text_size=10.0),
     badge_shape="rounded_rect",
     badge_style=Styles.PrimaryNeutral,
     badge_text_style=Styles.PrimaryBold.patch(text_size=10.0),
     icon_style=Styles.PrimaryBold,
     direction="vertical",
-    spacing=2.8,
+    spacing=2.4,
 )
 cl_left.add(
     "Ch 1 · Introduction & Quickstart",
@@ -214,15 +214,21 @@ cl_left.add(
     icon=phosphor.tree_structure,
 )
 cl_left.add(
-    "Ch 3 · Routing & Schemas",
-    "Path/Query/Header/Body & response models",
+    "Ch 3 · Routing, Validation & Models",
+    "Param models, extra types & custom APIRoute",
     badge_text="Ch 3",
     icon=phosphor.brackets_curly,
+)
+cl_left.add(
+    "Ch 4 · DI, OAuth2, JWT & WS Security",
+    "Dependant DAG, Argon2 + PyJWT & WS Security()",
+    badge_text="Ch 4",
+    icon=phosphor.shield_check,
 )
 cl_left.draw(xy=l_xy, width=l_w, height=l_h)
 
 right_panel = Panel(
-    "Part II — DI Security, Streaming & Ops (Ch 4–6)",
+    "Part II — Streaming, OTel, Frontend & Ops (Ch 5–8)",
     style=Styles.Neutral.patch(shape_r=2.0),
     header_style=Styles.SecondaryNeutral.patch(shape_line_width=1.2),
     text_style=Styles.DarkBold.patch(text_size=11.0),
@@ -231,25 +237,19 @@ right_panel = Panel(
     header_variant="filled",
     header_height=8.5,
 )
-right_panel.draw((101.0, 4.0), width=91.0, height=60.0)
-r_xy, r_w, r_h = right_panel.get_content_box((101.0, 4.0), width=91.0, height=60.0, padding=(3.5, 3.0))
+right_panel.draw((101.0, 4.0), width=91.0, height=80.0)
+r_xy, r_w, r_h = right_panel.get_content_box((101.0, 4.0), width=91.0, height=80.0, padding=(3.5, 3.0))
 
 cl_right = CardList(
     style=Styles.White,
-    text_style=Styles.DarkBold.patch(text_size=11.0),
+    text_style=Styles.DarkBold.patch(text_size=10.8),
     description_style=Styles.Dark.patch(text_size=10.0),
     badge_shape="rounded_rect",
     badge_style=Styles.SecondaryNeutral,
     badge_text_style=Styles.DarkBold.patch(text_size=10.0),
     icon_style=Styles.SecondaryBold,
     direction="vertical",
-    spacing=2.8,
-)
-cl_right.add(
-    "Ch 4 · DI & Security",
-    "Dependant DAG cache, yield & OAuth2 scopes",
-    badge_text="Ch 4",
-    icon=phosphor.shield_check,
+    spacing=2.4,
 )
 cl_right.add(
     "Ch 5 · Async, SSE & WebSockets",
@@ -262,6 +262,18 @@ cl_right.add(
     "Native OTel spans, RFC errors & TestClient",
     badge_text="Ch 6",
     icon=phosphor.pulse,
+)
+cl_right.add(
+    "Ch 7 · Frontend, Sub-Apps & OpenAPI",
+    "SPA frontend(), mounts, webhooks & SDKs",
+    badge_text="Ch 7",
+    icon=phosphor.layout,
+)
+cl_right.add(
+    "Ch 8 · Settings, Databases & Ecosystem",
+    "pydantic-settings, SQL DBs, CLI & AI/MCP",
+    badge_text="Ch 8",
+    icon=phosphor.database,
     style=Styles.SecondaryNeutral,
     badge_style=Styles.PrimaryFlat,
     badge_text_style=Styles.WhiteBold.patch(text_size=10.0),
@@ -276,10 +288,12 @@ save()
 | :--- | :--- | :--- |
 | **1. Introduction & Quickstart** | [Why FastAPI & Design Philosophy](01_getting_started/overview.md) · [Quickstart & Interactive OpenAPI](01_getting_started/quickstart.md) | `FastAPI`, `Annotated`, `Doc()`, `APIRoute`, Swagger UI & ReDoc |
 | **2. Scaling to 100k+ LOC** | [Bounded Contexts & Layering](02_enterprise_architecture/modular_design.md) · [Enterprise DI, Lifespan & Testing](02_enterprise_architecture/di_lifespan_testing.md) | `APIRouter`, `lifespan`, `dependency_overrides`, domain boundaries |
-| **3. Routing, Validation & Models** | [Path, Query, Header, Cookie & Body](03_routing_and_models/parameters_and_validation.md) · [Response Serialization & OpenAPI 3.1](03_routing_and_models/responses_and_openapi.md) | `Path`, `Query`, `Header`, `Cookie`, `Body`, `ModelField`, `get_openapi` |
-| **4. Dependency Injection & Security** | [Dependant DAG, Caching & Scopes](04_dependencies_and_security/dependency_injection.md) · [Authentication & OAuth2 Scopes](04_dependencies_and_security/security_and_auth.md) | `Depends`, `Security`, `solve_dependencies`, `AsyncExitStack`, `SecurityScopes` |
+| **3. Routing, Validation & Models** | [Path, Query, Header, Cookie & Body](03_routing_and_models/parameters_and_validation.md) · [Response Serialization & OpenAPI 3.1](03_routing_and_models/responses_and_openapi.md) · [Parameter Models, Extra Types & Examples](03_routing_and_models/advanced_types_and_models.md) · [Custom Request & APIRoute Classes](03_routing_and_models/custom_request_and_route.md) | `Path`, `Query`, `Header`, `Cookie`, `Body`, `ModelField`, custom `APIRoute` |
+| **4. Dependency Injection & Security** | [Dependant DAG, Caching & Scopes](04_dependencies_and_security/dependency_injection.md) · [Authentication & OAuth2 Scopes](04_dependencies_and_security/security_and_auth.md) · [JWT (PyJWT + Argon2) & WS Security](04_dependencies_and_security/jwt_and_websocket_security.md) | `Depends`, `Security`, `SecurityScopes`, `pwdlib` Argon2id, `PyJWT`, `HTTPConnection` |
 | **5. Async, Middleware & Streaming** | [ASGI Middleware & Threadpool](05_async_and_realtime/concurrency_and_middleware.md) · [Native SSE, JSONL & WebSockets](05_async_and_realtime/sse_websockets_streaming.md) | `run_in_threadpool`, `EventSourceResponse`, `ServerSentEvent`, `WebSocket` |
 | **6. Observability, Errors & Testing** | [Native OpenTelemetry & Exceptions](06_observability_and_testing/telemetry_and_errors.md) · [Testing Patterns & Production ASGI](06_observability_and_testing/testing_and_deployment.md) | `TelemetryConfig`, `NativeTelemetry`, `RequestValidationError`, `TestClient` |
+| **7. Frontend, Sub-Apps & OpenAPI** | [SPA frontend(), StaticFiles & Mounts](07_frontend_and_openapi_ext/frontend_templates_mounts.md) · [Webhooks, Callbacks, SDKs & Docs UI](07_frontend_and_openapi_ext/webhooks_callbacks_sdks.md) | `frontend()`, `StaticFiles`, `Jinja2Templates`, `app.webhooks`, `callbacks` |
+| **8. Settings, Databases & Ecosystem** | [pydantic-settings & SQL Databases](08_ecosystem_and_operations/settings_and_databases.md) · [FastAPI CLI, Proxies, GraphQL & AI](08_ecosystem_and_operations/cli_proxy_graphql_ai.md) | `BaseSettings`, `@lru_cache`, SQL `yield` sessions, `fastapi-cli`, `--proxy-headers` |
 
 ## Attribution & Companion Diagnostic Report
 

@@ -1,0 +1,873 @@
+<!--
+ Copyright (c) 2026 Yuichi Ito (yuichi@yuichi.com)
+
+ This software is licensed under the Apache License, Version 2.0.
+ For more information, please visit: https://github.com/yuichi110/drawlib
+
+ This software is provided "as is", without warranty of any kind,
+ express or implied, including but not limited to the warranties of
+ merchantability, fitness for a particular purpose and noninfringement.
+-->
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPA frontend(), StaticFiles, Templates &amp; Sub-Apps — FastAPI Visual Guide (Unofficial · Drawlib Demo)</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-S9N5BZ1VRC');
+    </script>
+    <script>
+        (function() {
+            const saved = localStorage.getItem('drawlib-theme');
+            if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    
+    
+    
+    <link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/en/07_frontend_and_openapi_ext/frontend_templates_mounts.html">
+    
+    <link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/ja/07_frontend_and_openapi_ext/frontend_templates_mounts.html">
+    
+    <link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/en/07_frontend_and_openapi_ext/frontend_templates_mounts.html">
+    
+    
+    
+    <meta name="description" content="FastAPI v0.162.2 unifies modern Single-Page Application (SPA) delivery, server-rendered HTML templates, isolated ASGI sub-applications, and incremental WSGI…">
+    <link rel="canonical" href="https://fastapi.drawlib.com/en/07_frontend_and_openapi_ext/frontend_templates_mounts.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="FastAPI Visual Guide">
+    <meta property="og:title" content="SPA frontend(), StaticFiles, Templates &amp; Sub-Apps — FastAPI Visual Guide">
+    <meta property="og:description" content="FastAPI v0.162.2 unifies modern Single-Page Application (SPA) delivery, server-rendered HTML templates, isolated ASGI sub-applications, and incremental WSGI…">
+    <meta property="og:url" content="https://fastapi.drawlib.com/en/07_frontend_and_openapi_ext/frontend_templates_mounts.html">
+    <meta property="og:image" content="https://fastapi.drawlib.com/_assets/ogp.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="ja_JP">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="SPA frontend(), StaticFiles, Templates &amp; Sub-Apps — FastAPI Visual Guide">
+    <meta name="twitter:description" content="FastAPI v0.162.2 unifies modern Single-Page Application (SPA) delivery, server-rendered HTML templates, isolated ASGI sub-applications, and incremental WSGI…">
+    <meta name="twitter:image" content="https://fastapi.drawlib.com/_assets/ogp.png">
+    
+    
+    <link rel="icon" type="image/png" href="../../_assets/favicon.png">
+    
+    
+    <link rel="stylesheet" href="../style.css">
+    
+    
+</head>
+<body>
+    <div class="demo-banner" role="region" aria-label="Unofficial Showcase Notice">
+        <div class="demo-banner-inner">
+            <span class="demo-banner-badge">UNOFFICIAL DEMO</span>
+            
+            <span class="demo-banner-text">
+                Unofficial visual architecture showcase of <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a> (v0.162.2, MIT) illustrated as code with <a href="https://www.drawlib.com/" target="_blank" rel="noopener noreferrer">Drawlib</a> &amp; <a href="https://pypi.org/project/pni501/" target="_blank" rel="noopener noreferrer">PNI501</a>.
+            </span>
+            <span class="demo-banner-links">
+                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Report →</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official FastAPI Docs ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">Demo Source ↗</a>
+            </span>
+            
+        </div>
+    </div>
+    
+    <div class="doc-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI Visual Guide">
+                    
+                    FastAPI Visual Guide
+                    
+                </a>
+                <div class="sidebar-header-actions">
+                    <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">
+                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                    <button type="button" id="menu-toggle" class="menu-toggle-btn" aria-label="Toggle navigation" aria-expanded="false">
+                        <svg class="icon-hamburger" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        <svg class="icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="sidebar-menu">
+                
+                    
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../index.html" >Overview &amp; Architecture Map</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">1. Introduction &amp; Quickstart</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../01_getting_started/overview.html" >Why FastAPI &amp; Design Philosophy</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../01_getting_started/quickstart.html" >Quickstart &amp; Interactive OpenAPI</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">2. Scaling to 100k+ LOC</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../02_enterprise_architecture/modular_design.html" >Bounded Contexts &amp; Layering</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../02_enterprise_architecture/di_lifespan_testing.html" >Enterprise DI, Lifespan &amp; Testing</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">3. Routing, Validation &amp; Models</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../03_routing_and_models/parameters_and_validation.html" >Path, Query, Header, Cookie &amp; Body</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../03_routing_and_models/responses_and_openapi.html" >Response Serialization &amp; OpenAPI 3.1</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../03_routing_and_models/advanced_types_and_models.html" >Parameter Models, Extra Types &amp; Examples</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../03_routing_and_models/custom_request_and_route.html" >Custom Request &amp; APIRoute Classes</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">4. Dependency Injection &amp; Security</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../04_dependencies_and_security/dependency_injection.html" >Dependant DAG, Caching &amp; Scopes</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../04_dependencies_and_security/security_and_auth.html" >Authentication &amp; OAuth2 Scopes</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../04_dependencies_and_security/jwt_and_websocket_security.html" >JWT (PyJWT + Argon2) &amp; WS Security</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">5. Async, Middleware &amp; Streaming</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../05_async_and_realtime/concurrency_and_middleware.html" >ASGI Middleware &amp; Threadpool</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../05_async_and_realtime/sse_websockets_streaming.html" >Native SSE, JSONL &amp; WebSockets</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">6. Observability, Errors &amp; Testing</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../06_observability_and_testing/telemetry_and_errors.html" >Native OpenTelemetry &amp; Exceptions</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../06_observability_and_testing/testing_and_deployment.html" >Testing Patterns &amp; Production ASGI</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">7. Frontend, Sub-Apps &amp; OpenAPI</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item active">
+                                <a href="frontend_templates_mounts.html" >SPA frontend(), StaticFiles &amp; Mounts</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="webhooks_callbacks_sdks.html" >Webhooks, Callbacks, SDKs &amp; Docs UI</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">8. Settings, Databases &amp; Ecosystem</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../08_ecosystem_and_operations/settings_and_databases.html" >pydantic-settings &amp; SQL Databases</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../08_ecosystem_and_operations/cli_proxy_graphql_ai.html" >FastAPI CLI, Proxies, GraphQL &amp; AI</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">Diagnostic &amp; Upstream Links</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/reports/pni501/" target="_blank" rel="noopener noreferrer">PNI501 Diagnostic Report<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official FastAPI Docs<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">Demo Source (GitHub)<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                        </ul>
+                    
+                
+            </div>
+        </aside>
+        <div class="content-wrapper">
+            <header class="top-bar">
+                <div class="breadcrumbs">
+                    <span class="crumb">Docs</span>
+                    <span class="crumb-separator">&raquo;</span>
+                    <span class="crumb active">SPA frontend(), StaticFiles, Templates &amp; Sub-Apps</span>
+                </div>
+                
+                <div class="lang-switcher">
+                    <details class="lang-dropdown">
+                        <summary class="lang-dropdown-btn" aria-label="Select language">
+                            <svg class="lang-globe-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            <span class="lang-current-label">English</span>
+                            <svg class="lang-caret-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </summary>
+                        <div class="lang-dropdown-menu" role="menu">
+                            
+                            <a href="frontend_templates_mounts.html" class="lang-option active" lang="en" hreflang="en" aria-current="page">
+                                <span>English</span>
+                                
+                                <svg class="lang-check-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                
+                            </a>
+                            
+                            <a href="../../ja/07_frontend_and_openapi_ext/frontend_templates_mounts.html" class="lang-option" lang="ja" hreflang="ja" >
+                                <span>日本語</span>
+                                
+                            </a>
+                            
+                        </div>
+                    </details>
+                </div>
+                
+            </header>
+            <main class="main-content">
+                <h1>SPA frontend(), StaticFiles, Templates &amp; Sub-Apps</h1>
+<p>FastAPI <code>v0.162.2</code> unifies modern Single-Page Application (SPA) delivery, server-rendered HTML templates, isolated ASGI sub-applications, and incremental WSGI migrations on a single process—anchored by the native <code>app.frontend()</code> and <code>router.frontend()</code> low-priority static routing engine.</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/07_frontend_and_openapi_ext/frontend_templates_mounts/spa_frontend_routing_priority.png" alt="frontend_templates_mounts_1" />
+  <figcaption class="drawlib-caption">FastAPI v0.162.2 app.frontend() & router.frontend() Dispatch Flow — Global API Route Priority & Browser HTML Fallback</figcaption>
+</figure>
+<details class="drawlib-code-details">
+<summary>Source Code</summary>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.canvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">setup</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.icons</span><span class="w"> </span><span class="kn">import</span> <span class="n">code</span><span class="p">,</span> <span class="n">phosphor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.lines</span><span class="w"> </span><span class="kn">import</span> <span class="n">line</span><span class="p">,</span> <span class="n">lines</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.shapes</span><span class="w"> </span><span class="kn">import</span> <span class="n">rectangle</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.smartarts</span><span class="w"> </span><span class="kn">import</span> <span class="n">ChevronProcess</span><span class="p">,</span> <span class="n">Panel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">Styles</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.text</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span>
+
+<span class="n">setup</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">188</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">98</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
+
+<span class="n">outer</span> <span class="o">=</span> <span class="n">Panel</span><span class="p">(</span>
+    <span class="s2">"FastAPI v0.162.2 — app.frontend() &amp; router.frontend() Low-Priority Dispatch"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">2.0</span><span class="p">),</span>
+    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_line_width</span><span class="o">=</span><span class="mf">1.2</span><span class="p">),</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">12.0</span><span class="p">),</span>
+    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">compass</span><span class="p">,</span>
+    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">,</span>
+    <span class="n">header_variant</span><span class="o">=</span><span class="s2">"filled"</span><span class="p">,</span>
+    <span class="n">header_height</span><span class="o">=</span><span class="mf">8.5</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">outer</span><span class="o">.</span><span class="n">draw</span><span class="p">((</span><span class="mf">4.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">180.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">90.0</span><span class="p">)</span>
+
+<span class="c1"># Top 4-Stage Evaluation Order inside APIRouter.app()</span>
+<span class="n">stages</span> <span class="o">=</span> <span class="n">ChevronProcess</span><span class="p">(</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
+    <span class="n">description_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">corner_angle</span><span class="o">=</span><span class="mf">60.0</span><span class="p">,</span>
+    <span class="n">spacing</span><span class="o">=</span><span class="mf">1.6</span><span class="p">,</span>
+    <span class="n">flat_left_end</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">stages</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"1. Normal Routes"</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"APIRoute, WS &amp; Mount"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">)</span>
+<span class="n">stages</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"2. Router DI Gate"</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Depends() &amp; Longest Path"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">)</span>
+<span class="n">stages</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"3. Static Lookup"</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"dist/ File &amp; Dir Index"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">)</span>
+<span class="n">stages</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="s2">"4. Fallback Gate"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">"404.html / Accept HTML"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
+    <span class="n">description_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">stages</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">8.0</span><span class="p">,</span> <span class="mf">70.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">172.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">12.5</span><span class="p">)</span>
+
+<span class="c1"># Left Ingress Card (cx=23, cy=36.5, w=30, h=53 -&gt; x=8..38, y=10..63)</span>
+<span class="n">rectangle</span><span class="p">((</span><span class="mf">23.0</span><span class="p">,</span> <span class="mf">36.5</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">30.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">53.0</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">2.0</span><span class="p">))</span>
+<span class="n">code</span><span class="o">.</span><span class="n">fastapi</span><span class="p">((</span><span class="mf">23.0</span><span class="p">,</span> <span class="mf">55.5</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">5.6</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Primary</span><span class="p">)</span>
+<span class="n">text</span><span class="p">((</span><span class="mf">23.0</span><span class="p">,</span> <span class="mf">47.5</span><span class="p">),</span> <span class="s2">"ASGI Request"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.0</span><span class="p">))</span>
+<span class="n">text</span><span class="p">(</span>
+    <span class="p">(</span><span class="mf">10.2</span><span class="p">,</span> <span class="mf">27.5</span><span class="p">),</span>
+    <span class="s2">"• GET /api/items</span><span class="se">\n</span><span class="s2">• GET /assets/app.js</span><span class="se">\n</span><span class="s2">• GET /dashboard</span><span class="se">\n</span><span class="s2">   Accept: text/html</span><span class="se">\n</span><span class="s2">• GET /missing.js</span><span class="se">\n</span><span class="s2">   Accept: */*"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1"># 4 Outcome Tracks (y = 56.5, 43.2, 29.9, 16.6)</span>
+<span class="n">tracks</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span>
+        <span class="mf">56.5</span><span class="p">,</span>
+        <span class="p">(</span><span class="s2">"1. self.routes Match?"</span><span class="p">,</span> <span class="s2">"@app.get / WS / Mount"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"Execute API Route"</span><span class="p">,</span> <span class="s2">"Never shadowed by '/'"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"200 / API JSON 404"</span><span class="p">,</span> <span class="s2">"API 404s stay JSON"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+        <span class="kc">False</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="p">(</span>
+        <span class="mf">43.2</span><span class="p">,</span>
+        <span class="p">(</span><span class="s2">"2. File in dist/?"</span><span class="p">,</span> <span class="s2">"_lookup_static_resource"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"Direct FileResponse"</span><span class="p">,</span> <span class="s2">"Threadpool stat + ETag"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"200 OK Static Asset"</span><span class="p">,</span> <span class="s2">"dist/assets/app.js"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+        <span class="kc">False</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="p">(</span>
+        <span class="mf">29.9</span><span class="p">,</span>
+        <span class="p">(</span><span class="s2">"3. Accept: text/html?"</span><span class="p">,</span> <span class="s2">"_is_frontend_navigation"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"SPA Shell Fallback"</span><span class="p">,</span> <span class="s2">"Serves dist/index.html"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"200 OK Client Router"</span><span class="p">,</span> <span class="s2">"React / Vue / Svelte"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+        <span class="kc">True</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="p">(</span>
+        <span class="mf">16.6</span><span class="p">,</span>
+        <span class="p">(</span><span class="s2">"4. Non-HTML / Missing"</span><span class="p">,</span> <span class="s2">"Accept: */* or q=0"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"Skip index.html"</span><span class="p">,</span> <span class="s2">"Or serve dist/404.html"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"404 Not Found"</span><span class="p">,</span> <span class="s2">"Prevents '&lt;' JS syntax bug"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+        <span class="kc">False</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">]</span>
+
+<span class="c1"># Orthogonal trunk x=38 -&gt; x=44 -&gt; 4 tracks entering x=50 (6.0u arrow gap)</span>
+<span class="n">line</span><span class="p">((</span><span class="mf">38.0</span><span class="p">,</span> <span class="mf">36.5</span><span class="p">),</span> <span class="p">(</span><span class="mf">44.0</span><span class="p">,</span> <span class="mf">36.5</span><span class="p">),</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">)</span>
+<span class="n">lines</span><span class="p">([(</span><span class="mf">44.0</span><span class="p">,</span> <span class="mf">16.6</span><span class="p">),</span> <span class="p">(</span><span class="mf">44.0</span><span class="p">,</span> <span class="mf">56.5</span><span class="p">)],</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">ty</span><span class="p">,</span> <span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">,</span> <span class="n">c3</span><span class="p">,</span> <span class="n">is_focal</span> <span class="ow">in</span> <span class="n">tracks</span><span class="p">:</span>
+    <span class="n">arr_style</span> <span class="o">=</span> <span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span> <span class="k">if</span> <span class="n">is_focal</span> <span class="k">else</span> <span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span>
+    <span class="n">line</span><span class="p">((</span><span class="mf">44.0</span><span class="p">,</span> <span class="n">ty</span><span class="p">),</span> <span class="p">(</span><span class="mf">50.0</span><span class="p">,</span> <span class="n">ty</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">arr_style</span><span class="p">)</span>
+
+    <span class="c1"># Column 1: cx=68.5, w=37 -&gt; x=50..87</span>
+    <span class="n">rectangle</span><span class="p">((</span><span class="mf">68.5</span><span class="p">,</span> <span class="n">ty</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">37.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">11.0</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">c1</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.6</span><span class="p">))</span>
+    <span class="n">text</span><span class="p">((</span><span class="mf">68.5</span><span class="p">,</span> <span class="n">ty</span> <span class="o">+</span> <span class="mf">2.2</span><span class="p">),</span> <span class="n">c1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.2</span><span class="p">))</span>
+    <span class="n">text</span><span class="p">((</span><span class="mf">68.5</span><span class="p">,</span> <span class="n">ty</span> <span class="o">-</span> <span class="mf">2.4</span><span class="p">),</span> <span class="n">c1</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">))</span>
+
+    <span class="c1"># Gap 87 -&gt; 94 (7.0u)</span>
+    <span class="n">line</span><span class="p">((</span><span class="mf">87.0</span><span class="p">,</span> <span class="n">ty</span><span class="p">),</span> <span class="p">(</span><span class="mf">94.0</span><span class="p">,</span> <span class="n">ty</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">arr_style</span><span class="p">)</span>
+
+    <span class="c1"># Column 2: cx=113.5, w=39 -&gt; x=94..133</span>
+    <span class="n">rectangle</span><span class="p">((</span><span class="mf">113.5</span><span class="p">,</span> <span class="n">ty</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">39.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">11.0</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">c2</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.6</span><span class="p">))</span>
+    <span class="n">h_st</span> <span class="o">=</span> <span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span> <span class="k">if</span> <span class="n">c2</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="k">else</span> <span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span>
+    <span class="n">b_st</span> <span class="o">=</span> <span class="n">Styles</span><span class="o">.</span><span class="n">White</span> <span class="k">if</span> <span class="n">c2</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="k">else</span> <span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span>
+    <span class="n">text</span><span class="p">((</span><span class="mf">113.5</span><span class="p">,</span> <span class="n">ty</span> <span class="o">+</span> <span class="mf">2.2</span><span class="p">),</span> <span class="n">c2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">style</span><span class="o">=</span><span class="n">h_st</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.2</span><span class="p">))</span>
+    <span class="n">text</span><span class="p">((</span><span class="mf">113.5</span><span class="p">,</span> <span class="n">ty</span> <span class="o">-</span> <span class="mf">2.4</span><span class="p">),</span> <span class="n">c2</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">style</span><span class="o">=</span><span class="n">b_st</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">))</span>
+
+    <span class="c1"># Gap 133 -&gt; 140 (7.0u)</span>
+    <span class="n">line</span><span class="p">((</span><span class="mf">133.0</span><span class="p">,</span> <span class="n">ty</span><span class="p">),</span> <span class="p">(</span><span class="mf">140.0</span><span class="p">,</span> <span class="n">ty</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">arr_style</span><span class="p">)</span>
+
+    <span class="c1"># Column 3: cx=160.0, w=40 -&gt; x=140..180</span>
+    <span class="n">rectangle</span><span class="p">((</span><span class="mf">160.0</span><span class="p">,</span> <span class="n">ty</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">40.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">11.0</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">c3</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.6</span><span class="p">))</span>
+    <span class="n">text</span><span class="p">((</span><span class="mf">160.0</span><span class="p">,</span> <span class="n">ty</span> <span class="o">+</span> <span class="mf">2.2</span><span class="p">),</span> <span class="n">c3</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.2</span><span class="p">))</span>
+    <span class="n">text</span><span class="p">((</span><span class="mf">160.0</span><span class="p">,</span> <span class="n">ty</span> <span class="o">-</span> <span class="mf">2.4</span><span class="p">),</span> <span class="n">c3</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">))</span>
+
+<span class="n">save</span><span class="p">()</span>
+</code></pre>
+</details>
+<h2>1. Native SPA Serving with <code>app.frontend()</code> &amp; <code>router.frontend()</code></h2>
+<p>Historically, serving a React, Vue, or Svelte build at <code>&quot;/&quot;</code> via <code>app.mount(&quot;/&quot;, StaticFiles(directory=&quot;dist&quot;, html=True))</code> forced awkward registration ordering—mounting <code>&quot;/&quot;</code> too early shadowed <code>@app.get(&quot;/api/...&quot;)</code>, and <code>StaticFiles(html=True)</code> returned <code>404</code> whenever a user refreshed a client-side route like <code>/dashboard/analytics</code>.</p>
+<p>FastAPI <code>v0.162.2</code> solves both problems natively with <code>app.frontend()</code> and <code>router.frontend()</code>. Instead of appending a greedy ASGI <code>Mount</code> onto <code>router.routes</code>, FastAPI registers a <code>_FrontendRouteGroup</code> inside <code>router._low_priority_routes</code>, which <code>APIRouter.app()</code> evaluates <strong>only after</strong> all normal routes, WebSocket endpoints, and slash redirects across the entire router tree fail to match.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Parameter &amp; Option</th>
+<th style="text-align:left">Default</th>
+<th style="text-align:left">Runtime Behavior in <code>_FrontendStaticFiles</code> (<code>fastapi/routing.py</code>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong><code>fallback=&quot;auto&quot;</code></strong></td>
+<td style="text-align:left">Yes</td>
+<td style="text-align:left">Serves <code>404.html</code> (<code>404</code>) if present in <code>directory</code>; else serves <code>index.html</code> (<code>200</code>) on HTML navigation requests; else raises <code>404</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>fallback=&quot;index.html&quot;</code></strong></td>
+<td style="text-align:left">No</td>
+<td style="text-align:left">Serves <code>index.html</code> (<code>200</code>) on HTML navigation even if <code>404.html</code> also exists; validates <code>index.html</code> at startup when <code>check_dir</code> is enabled</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>fallback=&quot;404.html&quot;</code></strong></td>
+<td style="text-align:left">No</td>
+<td style="text-align:left">Serves <code>404.html</code> with HTTP status <code>404</code> for any missing path under the frontend prefix; validates <code>404.html</code> at startup</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>fallback=None</code></strong></td>
+<td style="text-align:left">No</td>
+<td style="text-align:left">Disables fallback completely; only exact files and subdirectory <code>index.html</code> files resolve, returning JSON <code>404</code> otherwise</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>check_dir=&quot;auto&quot;</code></strong></td>
+<td style="text-align:left">Yes</td>
+<td style="text-align:left">Skips startup directory check with a <code>UserWarning</code> when <code>FASTAPI_ENV=&quot;development&quot;</code> (set by <code>fastapi dev</code>), and enforces <code>RuntimeError</code> in production</td>
+</tr>
+</tbody>
+</table>
+<h3>Global Route Precedence, Segment Specificity &amp; Router Dependencies</h3>
+<p>Under the hood, <code>_FrontendRoute</code> and <code>_FrontendRouteGroup</code> enforce four production safeguards that hand-rolled catch-all <code>@app.get(&quot;/{full_path:path}&quot;)</code> handlers routinely get wrong:</p>
+<ol>
+<li><strong>Global API Precedence &amp; Preserved API <code>404</code>s</strong>: Normal <code>APIRoute</code> and <code>WebSocket</code> handlers win regardless of <code>include_router()</code> registration order. If <code>@app.get(&quot;/api/items/{item_id}&quot;)</code> matches the path and raises <code>HTTPException(404)</code>, FastAPI returns that JSON <code>404</code>—it never masks backend errors with <code>dist/index.html</code>.</li>
+<li><strong>Content-Negotiated Browser Navigation (<code>_is_frontend_navigation_request</code>)</strong>: When falling back to <code>index.html</code>, FastAPI parses the <code>Accept</code> header's media types and quality weights (<code>q</code>). Only <code>GET</code>/<code>HEAD</code> requests explicitly accepting <code>text/html</code> or <code>application/xhtml+xml</code> (<code>q != 0</code>) receive <code>index.html</code> (<code>200 OK</code>). Missing scripts (<code>GET /assets/missing.js</code> with <code>Accept: */*</code>) or mistyped API fetches (<code>Accept: application/json</code>) receive a clean <code>404</code>, preventing browsers from choking on <code>Uncaught SyntaxError: Unexpected token '&lt;'</code>.</li>
+<li><strong>Longest Segment-Boundary Prefix</strong>: Registering both <code>app.frontend(&quot;/&quot;, directory=&quot;site&quot;)</code> and <code>router.frontend(&quot;/admin&quot;, directory=&quot;admin_dist&quot;)</code> matches on strict path segments (<code>/admin</code> never intercepts <code>/administration</code>) and selects the highest-specificity prefix.</li>
+<li><strong>Full Dependency Injection on Protected Frontends</strong>: <code>router.frontend()</code> executes app-level, <code>include_router()</code>-level, and <code>APIRouter(dependencies=[Depends(...)])</code> dependencies in outer-to-inner order—supporting cookie session gates, custom <code>Response</code> headers, <code>BackgroundTasks</code>, and <code>app.dependency_overrides</code> in tests.</li>
+</ol>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">Request</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.testclient</span><span class="w"> </span><span class="kn">import</span> <span class="n">TestClient</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">build_spa_service</span><span class="p">(</span><span class="n">dist_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">admin_dist</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FastAPI</span><span class="p">:</span>
+    <span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">"Unified API + SPA Service"</span><span class="p">)</span>
+
+    <span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/api/items/</span><span class="si">{item_id}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">read_item</span><span class="p">(</span><span class="n">item_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">item_id</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Item not found"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">"item_id"</span><span class="p">:</span> <span class="n">item_id</span><span class="p">,</span> <span class="s2">"source"</span><span class="p">:</span> <span class="s2">"api"</span><span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">require_admin_cookie</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">cookies</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"__Host-admin_session"</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">"verified-session"</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">401</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Admin session required"</span><span class="p">)</span>
+
+    <span class="n">admin_router</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">(</span><span class="n">dependencies</span><span class="o">=</span><span class="p">[</span><span class="n">Depends</span><span class="p">(</span><span class="n">require_admin_cookie</span><span class="p">)])</span>
+    <span class="n">admin_router</span><span class="o">.</span><span class="n">frontend</span><span class="p">(</span><span class="s2">"/admin"</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="n">admin_dist</span><span class="p">,</span> <span class="n">fallback</span><span class="o">=</span><span class="s2">"index.html"</span><span class="p">)</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">admin_router</span><span class="p">)</span>
+
+    <span class="c1"># Low-priority SPA mount at "/" never shadows /api/* or /admin/*</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">frontend</span><span class="p">(</span><span class="s2">"/"</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="n">dist_dir</span><span class="p">,</span> <span class="n">fallback</span><span class="o">=</span><span class="s2">"auto"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">app</span>
+</code></pre>
+<h2>2. Choosing Between SPA <code>frontend()</code>, Templates, Mounts &amp; WSGI</h2>
+<p>A single FastAPI ASGI host can combine multiple UI delivery and service-composition strategies side by side, depending on whether rendering happens in the browser, in Jinja2 on the server, in an isolated sub-team FastAPI app, or inside a legacy synchronous WSGI codebase:</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/07_frontend_and_openapi_ext/frontend_templates_mounts/mounts_templates_wsgi_topology.png" alt="frontend_templates_mounts_2" />
+  <figcaption class="drawlib-caption">Unified ASGI Host Topology — Comparing app.frontend(), Jinja2Templates + StaticFiles, Sub-Apps & a2wsgi</figcaption>
+</figure>
+<details class="drawlib-code-details">
+<summary>Source Code</summary>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.canvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">setup</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.diagrams.architecture</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ArchitectureDiagram</span><span class="p">,</span>
+    <span class="n">CodeIcon</span><span class="p">,</span>
+    <span class="n">Node</span><span class="p">,</span>
+    <span class="n">NodeGroup</span><span class="p">,</span>
+    <span class="n">PhosphorIcon</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.icons</span><span class="w"> </span><span class="kn">import</span> <span class="n">phosphor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.lines</span><span class="w"> </span><span class="kn">import</span> <span class="n">line</span><span class="p">,</span> <span class="n">lines</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.smartarts</span><span class="w"> </span><span class="kn">import</span> <span class="n">Panel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">Styles</span>
+
+<span class="n">setup</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">188</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">98</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
+
+<span class="n">outer</span> <span class="o">=</span> <span class="n">Panel</span><span class="p">(</span>
+    <span class="s2">"Unified ASGI Host Process  (Uvicorn / Hypercorn  ·  app = FastAPI())"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">2.0</span><span class="p">),</span>
+    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_line_width</span><span class="o">=</span><span class="mf">1.2</span><span class="p">),</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">12.0</span><span class="p">),</span>
+    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">plugs</span><span class="p">,</span>
+    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">,</span>
+    <span class="n">header_variant</span><span class="o">=</span><span class="s2">"filled"</span><span class="p">,</span>
+    <span class="n">header_height</span><span class="o">=</span><span class="mf">8.5</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">outer</span><span class="o">.</span><span class="n">draw</span><span class="p">((</span><span class="mf">4.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">180.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">90.0</span><span class="p">)</span>
+
+<span class="n">diag</span> <span class="o">=</span> <span class="n">ArchitectureDiagram</span><span class="p">(</span>
+    <span class="n">node_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">,</span>
+    <span class="n">node_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.3</span><span class="p">),</span>
+    <span class="n">edge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">,</span>
+    <span class="n">edge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">node_card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.5</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1"># Top Focal Dispatcher Node (center at y=75.0 -&gt; bottom=68.0)</span>
+<span class="n">diag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Node</span><span class="p">(</span>
+        <span class="s2">"Root FastAPI Router &amp; Middleware Stack</span><span class="se">\n</span><span class="s2">self.routes  -&gt;  app.mount()  -&gt;  _low_priority_routes"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mf">86.0</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mf">14.0</span><span class="p">,</span>
+        <span class="n">icon</span><span class="o">=</span><span class="n">CodeIcon</span><span class="o">.</span><span class="n">FASTAPI</span><span class="p">,</span>
+        <span class="n">icon_size</span><span class="o">=</span><span class="mf">6.0</span><span class="p">,</span>
+        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.8</span><span class="p">),</span>
+        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.8</span><span class="p">),</span>
+        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="p">(</span><span class="mf">94.0</span><span class="p">,</span> <span class="mf">75.0</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1"># 4 Strategy Columns: x = 8, 52, 96, 140 (width=40, height=48, y=8..56, centers cx=28, 72, 116, 160)</span>
+<span class="n">g_spa</span> <span class="o">=</span> <span class="n">diag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">NodeGroup</span><span class="p">(</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">"1. SPA frontend()"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mf">40.0</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mf">48.0</span><span class="p">,</span>
+        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.8</span><span class="p">),</span>
+        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span> <span class="n">text_size</span><span class="o">=</span><span class="mf">10.8</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="p">(</span><span class="mf">8.0</span><span class="p">,</span> <span class="mf">8.0</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">g_spa</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Node</span><span class="p">(</span><span class="s2">"dist/ Static Build</span><span class="se">\n</span><span class="s2">&amp; index.html Shell"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">34.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">14.0</span><span class="p">,</span> <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">GLOBE</span><span class="p">,</span> <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.2</span><span class="p">),</span>
+    <span class="p">(</span><span class="mf">20.0</span><span class="p">,</span> <span class="mf">32.0</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">g_spa</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Node</span><span class="p">(</span><span class="s2">"Accept: text/html</span><span class="se">\n</span><span class="s2">+ Router Depends()"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">34.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">14.0</span><span class="p">,</span> <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">SHIELD_CHECK</span><span class="p">,</span> <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.2</span><span class="p">),</span>
+    <span class="p">(</span><span class="mf">20.0</span><span class="p">,</span> <span class="mf">13.0</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">g_ssr</span> <span class="o">=</span> <span class="n">diag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">NodeGroup</span><span class="p">(</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">"2. SSR + Static"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mf">40.0</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mf">48.0</span><span class="p">,</span>
+        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.8</span><span class="p">),</span>
+        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span> <span class="n">text_size</span><span class="o">=</span><span class="mf">10.8</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="p">(</span><span class="mf">52.0</span><span class="p">,</span> <span class="mf">8.0</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">g_ssr</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Node</span><span class="p">(</span><span class="s2">"Jinja2Templates</span><span class="se">\n</span><span class="s2">TemplateResponse"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">34.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">14.0</span><span class="p">,</span> <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">CODE</span><span class="p">,</span> <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.2</span><span class="p">),</span>
+    <span class="p">(</span><span class="mf">20.0</span><span class="p">,</span> <span class="mf">32.0</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">g_ssr</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Node</span><span class="p">(</span><span class="s2">"/static Mount</span><span class="se">\n</span><span class="s2">url_for('static')"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">34.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">14.0</span><span class="p">,</span> <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">FILE_DOC</span><span class="p">,</span> <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.2</span><span class="p">,</span> <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">),</span>
+    <span class="p">(</span><span class="mf">20.0</span><span class="p">,</span> <span class="mf">13.0</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">g_sub</span> <span class="o">=</span> <span class="n">diag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">NodeGroup</span><span class="p">(</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">"3. Sub-App Mount"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mf">40.0</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mf">48.0</span><span class="p">,</span>
+        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.8</span><span class="p">),</span>
+        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span> <span class="n">text_size</span><span class="o">=</span><span class="mf">10.8</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="p">(</span><span class="mf">96.0</span><span class="p">,</span> <span class="mf">8.0</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">g_sub</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Node</span><span class="p">(</span><span class="s2">"subapi = FastAPI()</span><span class="se">\n</span><span class="s2">root_path='/subapi'"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">34.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">14.0</span><span class="p">,</span> <span class="n">icon</span><span class="o">=</span><span class="n">CodeIcon</span><span class="o">.</span><span class="n">FASTAPI</span><span class="p">,</span> <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.2</span><span class="p">),</span>
+    <span class="p">(</span><span class="mf">20.0</span><span class="p">,</span> <span class="mf">32.0</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">g_sub</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Node</span><span class="p">(</span><span class="s2">"Isolated OpenAPI</span><span class="se">\n</span><span class="s2">/subapi/docs"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">34.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">14.0</span><span class="p">,</span> <span class="n">icon</span><span class="o">=</span><span class="n">CodeIcon</span><span class="o">.</span><span class="n">OPENAPI</span><span class="p">,</span> <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.2</span><span class="p">,</span> <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">),</span>
+    <span class="p">(</span><span class="mf">20.0</span><span class="p">,</span> <span class="mf">13.0</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">g_wsgi</span> <span class="o">=</span> <span class="n">diag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">NodeGroup</span><span class="p">(</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">"4. Legacy WSGI"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mf">40.0</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mf">48.0</span><span class="p">,</span>
+        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.8</span><span class="p">),</span>
+        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span> <span class="n">text_size</span><span class="o">=</span><span class="mf">10.8</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="p">(</span><span class="mf">140.0</span><span class="p">,</span> <span class="mf">8.0</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">g_wsgi</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Node</span><span class="p">(</span><span class="s2">"a2wsgi Bridge</span><span class="se">\n</span><span class="s2">WSGIMiddleware"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">34.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">14.0</span><span class="p">,</span> <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">LIGHTNING</span><span class="p">,</span> <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.2</span><span class="p">),</span>
+    <span class="p">(</span><span class="mf">20.0</span><span class="p">,</span> <span class="mf">32.0</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">g_wsgi</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Node</span><span class="p">(</span><span class="s2">"Flask / Django</span><span class="se">\n</span><span class="s2">Worker Threadpool"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">34.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">14.0</span><span class="p">,</span> <span class="n">icon</span><span class="o">=</span><span class="n">CodeIcon</span><span class="o">.</span><span class="n">PYTHON</span><span class="p">,</span> <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.2</span><span class="p">,</span> <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">),</span>
+    <span class="p">(</span><span class="mf">20.0</span><span class="p">,</span> <span class="mf">13.0</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">diag</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+
+<span class="c1"># Orthogonal fan-out bus from Root Node bottom (y=68.0) -&gt; bus (y=62.5) -&gt; group tops (y=56.0, 6.3u terminal gap)</span>
+<span class="n">line</span><span class="p">((</span><span class="mf">94.0</span><span class="p">,</span> <span class="mf">68.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">94.0</span><span class="p">,</span> <span class="mf">62.5</span><span class="p">),</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">)</span>
+<span class="n">lines</span><span class="p">([(</span><span class="mf">28.0</span><span class="p">,</span> <span class="mf">62.5</span><span class="p">),</span> <span class="p">(</span><span class="mf">160.0</span><span class="p">,</span> <span class="mf">62.5</span><span class="p">)],</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">cx</span> <span class="ow">in</span> <span class="p">(</span><span class="mf">28.0</span><span class="p">,</span> <span class="mf">72.0</span><span class="p">,</span> <span class="mf">116.0</span><span class="p">,</span> <span class="mf">160.0</span><span class="p">):</span>
+    <span class="n">line</span><span class="p">((</span><span class="n">cx</span><span class="p">,</span> <span class="mf">62.5</span><span class="p">),</span> <span class="p">(</span><span class="n">cx</span><span class="p">,</span> <span class="mf">56.2</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span> <span class="k">if</span> <span class="n">cx</span> <span class="o">==</span> <span class="mf">28.0</span> <span class="k">else</span> <span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">)</span>
+
+<span class="n">save</span><span class="p">()</span>
+</code></pre>
+</details>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Integration Mechanism</th>
+<th style="text-align:left">Registration API</th>
+<th style="text-align:left">Priority &amp; Scope Isolation</th>
+<th style="text-align:left">Best Fit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>SPA Static Build</strong></td>
+<td style="text-align:left"><code>app.frontend(&quot;/&quot;, directory=&quot;dist&quot;)</code></td>
+<td style="text-align:left">Lowest priority (<code>_low_priority_routes</code>); supports <code>Depends()</code></td>
+<td style="text-align:left">Vite, React, Vue, Svelte, Astro, or static docs co-hosted with <code>/api</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Named Asset Mount</strong></td>
+<td style="text-align:left"><code>app.mount(&quot;/static&quot;, StaticFiles(...), name=&quot;static&quot;)</code></td>
+<td style="text-align:left">Prefix <code>Mount</code> in <code>self.routes</code>; enables <code>url_for(&quot;static&quot;, ...)</code></td>
+<td style="text-align:left">Versioned CSS/JS/images referenced by Jinja2 or self-hosted Swagger UI</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Server-Side Templates</strong></td>
+<td style="text-align:left"><code>Jinja2Templates(directory=&quot;templates&quot;)</code></td>
+<td style="text-align:left">Standard <code>APIRoute</code> (<code>response_class=HTMLResponse</code>)</td>
+<td style="text-align:left">HTMX fragments, transactional emails, SEO landing pages</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Isolated Sub-App</strong></td>
+<td style="text-align:left"><code>app.mount(&quot;/subapi&quot;, subapi)</code></td>
+<td style="text-align:left">Independent <code>FastAPI</code> instance (<code>root_path=&quot;/subapi&quot;</code>, own <code>/docs</code>)</td>
+<td style="text-align:left">Multi-version public APIs (<code>/v2</code>), partner portals, admin micro-apps</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Legacy WSGI Mount</strong></td>
+<td style="text-align:left"><code>app.mount(&quot;/v1&quot;, WSGIMiddleware(flask_app))</code></td>
+<td style="text-align:left">Synchronous WSGI bridged onto worker threads via <code>a2wsgi</code></td>
+<td style="text-align:left">Incremental Strangler-Fig migration from Flask or Django to FastAPI</td>
+</tr>
+</tbody>
+</table>
+<h2>3. Server-Rendered HTML with <code>Jinja2Templates</code> &amp; <code>StaticFiles</code></h2>
+<p>When building server-rendered pages or HTMX endpoints, install <code>jinja2</code> and pair <code>fastapi.templating.Jinja2Templates</code> with a named <code>StaticFiles</code> mount:</p>
+<ul>
+<li><strong>Modern Keyword Signature (<code>TemplateResponse</code>)</strong>: Always pass <code>request=request, name=&quot;item.html&quot;, context={...}</code> as keyword arguments (Starlette deprecated the legacy positional <code>TemplateResponse(&quot;item.html&quot;, {&quot;request&quot;: request})</code> call signature).</li>
+<li><strong>Reverse Asset URLs (<code>url_for</code>)</strong>: Naming the mount (<code>name=&quot;static&quot;</code>) lets templates generate proxy-aware URLs via <code>{{ url_for('static', path='/styles.css') }}</code>, automatically respecting upstream <code>root_path</code> prefixes.</li>
+<li><strong>XSS Auto-Escaping by Default</strong>: Jinja2 enables <code>autoescape</code> automatically for <code>.html</code>, <code>.htm</code>, and <code>.xml</code> templates. Always wrap interpolated HTML attributes in double quotes (<code>data-item-id=&quot;{{ id }}&quot;</code>) and avoid <code>| safe</code> on untrusted strings.</li>
+</ul>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">Path</span> <span class="k">as</span> <span class="n">PathParam</span><span class="p">,</span> <span class="n">Request</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.responses</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTMLResponse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.staticfiles</span><span class="w"> </span><span class="kn">import</span> <span class="n">StaticFiles</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.templating</span><span class="w"> </span><span class="kn">import</span> <span class="n">Jinja2Templates</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">create_ssr_app</span><span class="p">(</span><span class="n">static_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">templates_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FastAPI</span><span class="p">:</span>
+    <span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">()</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">mount</span><span class="p">(</span><span class="s2">"/static"</span><span class="p">,</span> <span class="n">StaticFiles</span><span class="p">(</span><span class="n">directory</span><span class="o">=</span><span class="n">static_dir</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s2">"static"</span><span class="p">)</span>
+    <span class="n">templates</span> <span class="o">=</span> <span class="n">Jinja2Templates</span><span class="p">(</span><span class="n">directory</span><span class="o">=</span><span class="n">templates_dir</span><span class="p">)</span>
+
+    <span class="c1"># templates/item.html:</span>
+    <span class="c1"># &lt;link href="{{ url_for('static', path='/styles.css') }}" rel="stylesheet"&gt;</span>
+    <span class="c1"># &lt;h1 data-item-id="{{ id }}"&gt;Item: {{ title }}&lt;/h1&gt;</span>
+    <span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/items/</span><span class="si">{id}</span><span class="s2">"</span><span class="p">,</span> <span class="n">response_class</span><span class="o">=</span><span class="n">HTMLResponse</span><span class="p">)</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">read_item_page</span><span class="p">(</span>
+        <span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">,</span>
+        <span class="nb">id</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">PathParam</span><span class="p">(</span><span class="n">pattern</span><span class="o">=</span><span class="sa">r</span><span class="s2">"^[a-zA-Z0-9_-]+$"</span><span class="p">)],</span>
+        <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"Wireless Keyboard"</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HTMLResponse</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">templates</span><span class="o">.</span><span class="n">TemplateResponse</span><span class="p">(</span>
+            <span class="n">request</span><span class="o">=</span><span class="n">request</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">"item.html"</span><span class="p">,</span>
+            <span class="n">context</span><span class="o">=</span><span class="p">{</span><span class="s2">"id"</span><span class="p">:</span> <span class="nb">id</span><span class="p">,</span> <span class="s2">"title"</span><span class="p">:</span> <span class="n">title</span><span class="p">},</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">app</span>
+</code></pre>
+<h2>4. Isolated Sub-Applications &amp; Legacy WSGI Migration (<code>a2wsgi</code>)</h2>
+<h3>Independent Sub-Apps &amp; Automatic ASGI <code>root_path</code> Propagation</h3>
+<p>Unlike <code>app.include_router()</code>, which merges routes into a single OpenAPI schema and shared middleware stack, <code>app.mount(&quot;/subapi&quot;, subapi)</code> attaches a <strong>completely independent ASGI application</strong>:</p>
+<ul>
+<li><strong>Isolated OpenAPI &amp; Docs UI</strong>: The host app exposes <code>/openapi.json</code> and <code>/docs</code> containing only host routes, while <code>subapi</code> serves its own isolated <code>/subapi/openapi.json</code> and <code>/subapi/docs</code>.</li>
+<li><strong>Automatic <code>root_path</code> Injection</strong>: Starlette's <code>Mount</code> appends <code>&quot;/subapi&quot;</code> onto <code>scope[&quot;root_path&quot;]</code> before invoking <code>subapi</code>, so Swagger UI at <code>/subapi/docs</code> automatically resolves its schema and interactive &quot;Try it out&quot; requests relative to <code>/subapi</code>.</li>
+<li><strong>Lifespan Note</strong>: Mounted sub-applications do <strong>not</strong> have their <code>lifespan</code> events executed automatically by Starlette's <code>Mount</code>; initialize shared pools in the top-level host <code>lifespan</code> or compose sub-app lifespans explicitly with <code>contextlib.AsyncExitStack</code> (see <a href="../02_enterprise_architecture/di_lifespan_testing.html">Enterprise DI, Lifespan &amp; Testing</a>).</li>
+</ul>
+<h3>Strangler-Fig WSGI Migration with <code>a2wsgi.WSGIMiddleware</code></h3>
+<p>When migrating an existing Flask or Django monolith incrementally to FastAPI, mount the legacy WSGI callable under a prefix while building new async endpoints on the outer FastAPI host. Because Starlette deprecated <code>starlette.middleware.wsgi.WSGIMiddleware</code>, FastAPI recommends <strong><code>a2wsgi.WSGIMiddleware</code></strong> (<code>pip install a2wsgi</code>), which streams request/response chunks safely between the async event loop and synchronous WSGI worker threads while populating <code>SCRIPT_NAME</code> from the mount prefix:</p>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">a2wsgi</span><span class="w"> </span><span class="kn">import</span> <span class="n">WSGIMiddleware</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">Request</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flask</span><span class="w"> </span><span class="kn">import</span> <span class="n">Flask</span><span class="p">,</span> <span class="n">jsonify</span><span class="p">,</span> <span class="n">request</span> <span class="k">as</span> <span class="n">flask_request</span>
+
+<span class="c1"># 1. Independent FastAPI sub-application with isolated /subapi/docs</span>
+<span class="n">subapi</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">"Partner Sub-API"</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s2">"2.0.0"</span><span class="p">)</span>
+
+
+<span class="nd">@subapi</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/sub"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_sub</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"message"</span><span class="p">:</span> <span class="s2">"Hello from sub-application"</span><span class="p">,</span>
+        <span class="s2">"root_path"</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">scope</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"root_path"</span><span class="p">,</span> <span class="s2">""</span><span class="p">),</span>
+    <span class="p">}</span>
+
+
+<span class="c1"># 2. Legacy synchronous Flask (WSGI) application</span>
+<span class="n">flask_app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="nd">@flask_app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/orders"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">legacy_orders</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">jsonify</span><span class="p">({</span><span class="s2">"service"</span><span class="p">:</span> <span class="s2">"legacy-flask"</span><span class="p">,</span> <span class="s2">"script_name"</span><span class="p">:</span> <span class="n">flask_request</span><span class="o">.</span><span class="n">script_root</span><span class="p">})</span>
+
+
+<span class="c1"># 3. Unified FastAPI host mounting both the sub-app and WSGI bridge</span>
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">"Main Gateway API"</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s2">"1.0.0"</span><span class="p">)</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/app"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_main</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"message"</span><span class="p">:</span> <span class="s2">"Hello World from main app"</span><span class="p">}</span>
+
+
+<span class="n">app</span><span class="o">.</span><span class="n">mount</span><span class="p">(</span><span class="s2">"/subapi"</span><span class="p">,</span> <span class="n">subapi</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">mount</span><span class="p">(</span><span class="s2">"/v1"</span><span class="p">,</span> <span class="n">WSGIMiddleware</span><span class="p">(</span><span class="n">flask_app</span><span class="p">))</span>
+</code></pre>
+<p>Next, explore how FastAPI extends OpenAPI <code>3.1.0</code> for asynchronous event push, client SDK code generation, and air-gapped documentation portals in <strong><a href="webhooks_callbacks_sdks.html">Webhooks, Callbacks, SDKs &amp; Docs UI</a></strong>, or review reverse-proxy <code>--forwarded-allow-ips</code> deployment in <strong><a href="../08_ecosystem_and_operations/cli_proxy_graphql_ai.html">FastAPI CLI, Proxies, GraphQL &amp; AI</a></strong>.</p>
+
+            </main>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Theme toggle
+            const themeBtn = document.getElementById('theme-toggle');
+            if (themeBtn) {
+                themeBtn.addEventListener('click', function() {
+                    const current = document.documentElement.getAttribute('data-theme');
+                    const next = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    localStorage.setItem('drawlib-theme', next);
+                });
+            }
+
+            // Language dropdown outside-click & Escape close
+            const langDropdowns = document.querySelectorAll('.lang-dropdown');
+            if (langDropdowns.length > 0) {
+                document.addEventListener('click', function(e) {
+                    langDropdowns.forEach(function(dd) {
+                        if (dd.hasAttribute('open') && !dd.contains(e.target)) {
+                            dd.removeAttribute('open');
+                        }
+                    });
+                });
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        langDropdowns.forEach(function(dd) {
+                            dd.removeAttribute('open');
+                        });
+                    }
+                });
+            }
+
+            // Mobile menu toggle
+            const menuBtn = document.getElementById('menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            if (menuBtn && sidebar) {
+                function setMenuOpen(open) {
+                    sidebar.classList.toggle('is-open', open);
+                    menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    document.body.classList.toggle('menu-open', open);
+                    if (open) {
+                        const menu = sidebar.querySelector('.sidebar-menu');
+                        if (menu) {
+                            menu.scrollTop = 0;
+                        }
+                    }
+                }
+
+                menuBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const willOpen = !sidebar.classList.contains('is-open');
+                    setMenuOpen(willOpen);
+                });
+
+                // Close menu when clicking outside sidebar
+                document.addEventListener('click', function(e) {
+                    if (sidebar.classList.contains('is-open') && !sidebar.contains(e.target)) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                // Close menu when a navigation link is clicked
+                const navLinks = sidebar.querySelectorAll('.nav-item a');
+                navLinks.forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        setMenuOpen(false);
+                    });
+                });
+
+                // Close on Escape key
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                // Reset menu state when resized above mobile breakpoint
+                window.addEventListener('resize', function() {
+                    if (window.innerWidth > 768 && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

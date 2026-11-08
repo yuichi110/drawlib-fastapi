@@ -1,0 +1,1136 @@
+<!--
+ Copyright (c) 2026 Yuichi Ito (yuichi@yuichi.com)
+
+ This software is licensed under the Apache License, Version 2.0.
+ For more information, please visit: https://github.com/yuichi110/drawlib
+
+ This software is provided "as is", without warranty of any kind,
+ express or implied, including but not limited to the warranties of
+ merchantability, fitness for a particular purpose and noninfringement.
+-->
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JWT (PyJWT + Argon2) &amp; WebSocket Security — FastAPI Visual Guide (Unofficial · Drawlib Demo)</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-S9N5BZ1VRC');
+    </script>
+    <script>
+        (function() {
+            const saved = localStorage.getItem('drawlib-theme');
+            if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    
+    
+    
+    <link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/en/04_dependencies_and_security/jwt_and_websocket_security.html">
+    
+    <link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/ja/04_dependencies_and_security/jwt_and_websocket_security.html">
+    
+    <link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/en/04_dependencies_and_security/jwt_and_websocket_security.html">
+    
+    
+    
+    <meta name="description" content="Production FastAPI v0.162.2 services pair memory-hard pwdlib Argon2id password hashing (with DUMMY_HASH anti-enumeration) and stateless PyJWT bearer…">
+    <link rel="canonical" href="https://fastapi.drawlib.com/en/04_dependencies_and_security/jwt_and_websocket_security.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="FastAPI Visual Guide">
+    <meta property="og:title" content="JWT (PyJWT + Argon2) &amp; WebSocket Security — FastAPI Visual Guide">
+    <meta property="og:description" content="Production FastAPI v0.162.2 services pair memory-hard pwdlib Argon2id password hashing (with DUMMY_HASH anti-enumeration) and stateless PyJWT bearer…">
+    <meta property="og:url" content="https://fastapi.drawlib.com/en/04_dependencies_and_security/jwt_and_websocket_security.html">
+    <meta property="og:image" content="https://fastapi.drawlib.com/_assets/ogp.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="ja_JP">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="JWT (PyJWT + Argon2) &amp; WebSocket Security — FastAPI Visual Guide">
+    <meta name="twitter:description" content="Production FastAPI v0.162.2 services pair memory-hard pwdlib Argon2id password hashing (with DUMMY_HASH anti-enumeration) and stateless PyJWT bearer…">
+    <meta name="twitter:image" content="https://fastapi.drawlib.com/_assets/ogp.png">
+    
+    
+    <link rel="icon" type="image/png" href="../../_assets/favicon.png">
+    
+    
+    <link rel="stylesheet" href="../style.css">
+    
+    
+</head>
+<body>
+    <div class="demo-banner" role="region" aria-label="Unofficial Showcase Notice">
+        <div class="demo-banner-inner">
+            <span class="demo-banner-badge">UNOFFICIAL DEMO</span>
+            
+            <span class="demo-banner-text">
+                Unofficial visual architecture showcase of <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a> (v0.162.2, MIT) illustrated as code with <a href="https://www.drawlib.com/" target="_blank" rel="noopener noreferrer">Drawlib</a> &amp; <a href="https://pypi.org/project/pni501/" target="_blank" rel="noopener noreferrer">PNI501</a>.
+            </span>
+            <span class="demo-banner-links">
+                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Report →</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official FastAPI Docs ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">Demo Source ↗</a>
+            </span>
+            
+        </div>
+    </div>
+    
+    <div class="doc-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI Visual Guide">
+                    
+                    FastAPI Visual Guide
+                    
+                </a>
+                <div class="sidebar-header-actions">
+                    <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">
+                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                    <button type="button" id="menu-toggle" class="menu-toggle-btn" aria-label="Toggle navigation" aria-expanded="false">
+                        <svg class="icon-hamburger" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        <svg class="icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="sidebar-menu">
+                
+                    
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../index.html" >Overview &amp; Architecture Map</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">1. Introduction &amp; Quickstart</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../01_getting_started/overview.html" >Why FastAPI &amp; Design Philosophy</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../01_getting_started/quickstart.html" >Quickstart &amp; Interactive OpenAPI</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">2. Scaling to 100k+ LOC</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../02_enterprise_architecture/modular_design.html" >Bounded Contexts &amp; Layering</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../02_enterprise_architecture/di_lifespan_testing.html" >Enterprise DI, Lifespan &amp; Testing</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">3. Routing, Validation &amp; Models</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../03_routing_and_models/parameters_and_validation.html" >Path, Query, Header, Cookie &amp; Body</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../03_routing_and_models/responses_and_openapi.html" >Response Serialization &amp; OpenAPI 3.1</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../03_routing_and_models/advanced_types_and_models.html" >Parameter Models, Extra Types &amp; Examples</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../03_routing_and_models/custom_request_and_route.html" >Custom Request &amp; APIRoute Classes</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">4. Dependency Injection &amp; Security</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="dependency_injection.html" >Dependant DAG, Caching &amp; Scopes</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="security_and_auth.html" >Authentication &amp; OAuth2 Scopes</a>
+                            </li>
+                            
+                            <li class="nav-item active">
+                                <a href="jwt_and_websocket_security.html" >JWT (PyJWT + Argon2) &amp; WS Security</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">5. Async, Middleware &amp; Streaming</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../05_async_and_realtime/concurrency_and_middleware.html" >ASGI Middleware &amp; Threadpool</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../05_async_and_realtime/sse_websockets_streaming.html" >Native SSE, JSONL &amp; WebSockets</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">6. Observability, Errors &amp; Testing</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../06_observability_and_testing/telemetry_and_errors.html" >Native OpenTelemetry &amp; Exceptions</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../06_observability_and_testing/testing_and_deployment.html" >Testing Patterns &amp; Production ASGI</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">7. Frontend, Sub-Apps &amp; OpenAPI</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../07_frontend_and_openapi_ext/frontend_templates_mounts.html" >SPA frontend(), StaticFiles &amp; Mounts</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../07_frontend_and_openapi_ext/webhooks_callbacks_sdks.html" >Webhooks, Callbacks, SDKs &amp; Docs UI</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">8. Settings, Databases &amp; Ecosystem</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../08_ecosystem_and_operations/settings_and_databases.html" >pydantic-settings &amp; SQL Databases</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../08_ecosystem_and_operations/cli_proxy_graphql_ai.html" >FastAPI CLI, Proxies, GraphQL &amp; AI</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">Diagnostic &amp; Upstream Links</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/reports/pni501/" target="_blank" rel="noopener noreferrer">PNI501 Diagnostic Report<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official FastAPI Docs<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">Demo Source (GitHub)<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                        </ul>
+                    
+                
+            </div>
+        </aside>
+        <div class="content-wrapper">
+            <header class="top-bar">
+                <div class="breadcrumbs">
+                    <span class="crumb">Docs</span>
+                    <span class="crumb-separator">&raquo;</span>
+                    <span class="crumb active">JWT (PyJWT + Argon2) &amp; WebSocket Security</span>
+                </div>
+                
+                <div class="lang-switcher">
+                    <details class="lang-dropdown">
+                        <summary class="lang-dropdown-btn" aria-label="Select language">
+                            <svg class="lang-globe-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            <span class="lang-current-label">English</span>
+                            <svg class="lang-caret-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </summary>
+                        <div class="lang-dropdown-menu" role="menu">
+                            
+                            <a href="jwt_and_websocket_security.html" class="lang-option active" lang="en" hreflang="en" aria-current="page">
+                                <span>English</span>
+                                
+                                <svg class="lang-check-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                
+                            </a>
+                            
+                            <a href="../../ja/04_dependencies_and_security/jwt_and_websocket_security.html" class="lang-option" lang="ja" hreflang="ja" >
+                                <span>日本語</span>
+                                
+                            </a>
+                            
+                        </div>
+                    </details>
+                </div>
+                
+            </header>
+            <main class="main-content">
+                <h1>JWT (PyJWT + Argon2) &amp; WebSocket Security</h1>
+<p>Production FastAPI <code>v0.162.2</code> services pair memory-hard <strong><code>pwdlib</code> Argon2id</strong> password hashing (with <strong><code>DUMMY_HASH</code></strong> anti-enumeration) and stateless <strong><code>PyJWT</code></strong> bearer verification for HTTP APIs, while extending the exact same <code>Security()</code> and <code>SecurityScopes</code> dependency graph to <strong><code>WebSocket</code></strong> handshakes via Starlette's shared <code>HTTPConnection</code> abstraction (<code>v0.144.0+</code>).</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/04_dependencies_and_security/jwt_and_websocket_security/jwt_argon2_auth_pipeline.png" alt="jwt_and_websocket_security_1" />
+  <figcaption class="drawlib-caption">End-to-End OAuth2 + pwdlib Argon2id (DUMMY_HASH) + PyJWT Signing & Stateless Verification Pipeline</figcaption>
+</figure>
+<details class="drawlib-code-details">
+<summary>Source Code</summary>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.canvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">setup</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.diagrams.architecture</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArchitectureDiagram</span><span class="p">,</span> <span class="n">Node</span><span class="p">,</span> <span class="n">PhosphorIcon</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.icons</span><span class="w"> </span><span class="kn">import</span> <span class="n">phosphor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.lines</span><span class="w"> </span><span class="kn">import</span> <span class="n">line</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.shapes</span><span class="w"> </span><span class="kn">import</span> <span class="n">rectangle</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.smartarts</span><span class="w"> </span><span class="kn">import</span> <span class="n">Panel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">Styles</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.text</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span>
+
+<span class="n">setup</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">184</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">112</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
+
+<span class="c1"># Top Lane: Phase 1 — POST /token Credential Verification &amp; JWT Issuance</span>
+<span class="n">issue_panel</span> <span class="o">=</span> <span class="n">Panel</span><span class="p">(</span>
+    <span class="s2">"1. Token Issuance Pipeline — POST /token (pwdlib Argon2id + PyJWT Sign)"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">2.0</span><span class="p">),</span>
+    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_line_width</span><span class="o">=</span><span class="mf">1.2</span><span class="p">),</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.2</span><span class="p">),</span>
+    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">key</span><span class="p">,</span>
+    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryBold</span><span class="p">,</span>
+    <span class="n">header_variant</span><span class="o">=</span><span class="s2">"filled"</span><span class="p">,</span>
+    <span class="n">header_height</span><span class="o">=</span><span class="mf">9.0</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">issue_panel</span><span class="o">.</span><span class="n">draw</span><span class="p">((</span><span class="mf">4.0</span><span class="p">,</span> <span class="mf">60.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">176.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">47.0</span><span class="p">,</span> <span class="n">align</span><span class="o">=</span><span class="s2">"bottom_left"</span><span class="p">)</span>
+
+<span class="c1"># Bottom Lane: Phase 2 — Protected Route Stateless Decode &amp; Scope Check</span>
+<span class="n">verify_panel</span> <span class="o">=</span> <span class="n">Panel</span><span class="p">(</span>
+    <span class="s2">"2. Protected Endpoint Verification — Security(..., scopes) &amp; jwt.decode()"</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">2.0</span><span class="p">),</span>
+    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_line_width</span><span class="o">=</span><span class="mf">1.2</span><span class="p">),</span>
+    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.2</span><span class="p">),</span>
+    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">shield_check</span><span class="p">,</span>
+    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">,</span>
+    <span class="n">header_variant</span><span class="o">=</span><span class="s2">"filled"</span><span class="p">,</span>
+    <span class="n">header_height</span><span class="o">=</span><span class="mf">9.0</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">verify_panel</span><span class="o">.</span><span class="n">draw</span><span class="p">((</span><span class="mf">4.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">176.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">50.0</span><span class="p">,</span> <span class="n">align</span><span class="o">=</span><span class="s2">"bottom_left"</span><span class="p">)</span>
+
+<span class="n">arch</span> <span class="o">=</span> <span class="n">ArchitectureDiagram</span><span class="p">(</span>
+    <span class="n">width</span><span class="o">=</span><span class="mf">184.0</span><span class="p">,</span>
+    <span class="n">height</span><span class="o">=</span><span class="mf">112.0</span><span class="p">,</span>
+    <span class="n">node_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Primary</span><span class="p">,</span>
+    <span class="n">node_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">edge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">,</span>
+    <span class="n">edge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">node_card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Phase 1 Nodes (cy = 79.0, inside y in [62.0, 96.0])</span>
+<span class="n">n_form</span> <span class="o">=</span> <span class="n">arch</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Node</span><span class="p">(</span>
+        <span class="s2">"POST /token</span><span class="se">\n</span><span class="s2">Form Credentials"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mf">33.0</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mf">21.0</span><span class="p">,</span>
+        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">USER_CIRCLE</span><span class="p">,</span>
+        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.6</span><span class="p">,</span>
+        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">24.5</span><span class="p">,</span> <span class="mf">79.0</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">n_argon</span> <span class="o">=</span> <span class="n">arch</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Node</span><span class="p">(</span>
+        <span class="s2">"pwdlib Argon2id</span><span class="se">\n</span><span class="s2">verify() + DUMMY_HASH</span><span class="se">\n</span><span class="s2">(Anti-Enumeration)"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mf">43.0</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mf">23.0</span><span class="p">,</span>
+        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">SHIELD_CHECK</span><span class="p">,</span>
+        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.6</span><span class="p">,</span>
+        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
+        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
+        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">70.5</span><span class="p">,</span> <span class="mf">79.0</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">n_encode</span> <span class="o">=</span> <span class="n">arch</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Node</span><span class="p">(</span>
+        <span class="s1">'jwt.encode("HS256")</span><span class="se">\n</span><span class="s1">sub, scopes, iat, exp'</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mf">39.0</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mf">21.0</span><span class="p">,</span>
+        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">STAMP</span><span class="p">,</span>
+        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.6</span><span class="p">,</span>
+        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">119.5</span><span class="p">,</span> <span class="mf">79.0</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">n_jwt_out</span> <span class="o">=</span> <span class="n">arch</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Node</span><span class="p">(</span>
+        <span class="s2">"200 Bearer JWT</span><span class="se">\n</span><span class="s2">access_token"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mf">29.0</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mf">21.0</span><span class="p">,</span>
+        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">KEY</span><span class="p">,</span>
+        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.6</span><span class="p">,</span>
+        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">161.5</span><span class="p">,</span> <span class="mf">79.0</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1"># Phase 2 Nodes (cy = 24.5, inside y in [6.0, 43.0])</span>
+<span class="n">n_route</span> <span class="o">=</span> <span class="n">arch</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Node</span><span class="p">(</span>
+        <span class="s2">"Protected Route</span><span class="se">\n</span><span class="s2">Security(..., scopes)"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mf">35.0</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mf">22.0</span><span class="p">,</span>
+        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">LOCK_KEY</span><span class="p">,</span>
+        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.6</span><span class="p">,</span>
+        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">25.5</span><span class="p">,</span> <span class="mf">24.5</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">n_decode</span> <span class="o">=</span> <span class="n">arch</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Node</span><span class="p">(</span>
+        <span class="s1">'jwt.decode(["HS256"])</span><span class="se">\n</span><span class="s1">Verify exp, sub &amp; scopes'</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mf">44.0</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mf">23.0</span><span class="p">,</span>
+        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">FILE_LOCK</span><span class="p">,</span>
+        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.6</span><span class="p">,</span>
+        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
+        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
+        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">73.0</span><span class="p">,</span> <span class="mf">24.5</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">arch</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+
+<span class="c1"># Phase 1 Horizontal Connectors (all gaps = 8.0 units)</span>
+<span class="n">line</span><span class="p">((</span><span class="mf">41.5</span><span class="p">,</span> <span class="mf">79.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">48.5</span><span class="p">,</span> <span class="mf">79.0</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">)</span>
+<span class="n">line</span><span class="p">((</span><span class="mf">92.5</span><span class="p">,</span> <span class="mf">79.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">99.5</span><span class="p">,</span> <span class="mf">79.0</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">)</span>
+<span class="n">line</span><span class="p">((</span><span class="mf">139.5</span><span class="p">,</span> <span class="mf">79.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">146.5</span><span class="p">,</span> <span class="mf">79.0</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">)</span>
+
+<span class="c1"># Phase 2 Connector + 3 Outcome Cards on Right (x in [111.0, 176.0], cx = 143.5)</span>
+<span class="n">line</span><span class="p">((</span><span class="mf">43.5</span><span class="p">,</span> <span class="mf">24.5</span><span class="p">),</span> <span class="p">(</span><span class="mf">50.5</span><span class="p">,</span> <span class="mf">24.5</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">)</span>
+<span class="n">line</span><span class="p">((</span><span class="mf">95.5</span><span class="p">,</span> <span class="mf">24.5</span><span class="p">),</span> <span class="p">(</span><span class="mf">103.0</span><span class="p">,</span> <span class="mf">24.5</span><span class="p">),</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">)</span>
+<span class="n">line</span><span class="p">((</span><span class="mf">103.0</span><span class="p">,</span> <span class="mf">12.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">103.0</span><span class="p">,</span> <span class="mf">37.0</span><span class="p">),</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">)</span>
+
+<span class="n">outcomes</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span>
+        <span class="mf">37.0</span><span class="p">,</span>
+        <span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
+        <span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">,</span>
+        <span class="s2">"200 OK — Active UserPublic Injected"</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="p">(</span>
+        <span class="mf">24.5</span><span class="p">,</span>
+        <span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
+        <span class="n">Styles</span><span class="o">.</span><span class="n">DangerBold</span><span class="p">,</span>
+        <span class="s2">"401 Unauthorized — Expired / Invalid (Bearer)"</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="p">(</span>
+        <span class="mf">12.0</span><span class="p">,</span>
+        <span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span>
+        <span class="n">Styles</span><span class="o">.</span><span class="n">WarningBold</span><span class="p">,</span>
+        <span class="s1">'403 Forbidden — Missing Scope (scope="...")'</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">]</span>
+<span class="k">for</span> <span class="n">cy</span><span class="p">,</span> <span class="n">card_st</span><span class="p">,</span> <span class="n">arrow_st</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">outcomes</span><span class="p">:</span>
+    <span class="n">line</span><span class="p">((</span><span class="mf">103.0</span><span class="p">,</span> <span class="n">cy</span><span class="p">),</span> <span class="p">(</span><span class="mf">110.5</span><span class="p">,</span> <span class="n">cy</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">arrow_st</span><span class="p">)</span>
+    <span class="n">rectangle</span><span class="p">((</span><span class="mf">143.5</span><span class="p">,</span> <span class="n">cy</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">65.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">9.2</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">card_st</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.6</span><span class="p">))</span>
+    <span class="n">text</span><span class="p">((</span><span class="mf">143.5</span><span class="p">,</span> <span class="n">cy</span><span class="p">),</span> <span class="n">label</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">))</span>
+
+<span class="n">save</span><span class="p">()</span>
+</code></pre>
+</details>
+<h2>1. Password Hashing (<code>pwdlib</code> Argon2id) &amp; Stateless <code>PyJWT</code> Tokens</h2>
+<p>Modern FastAPI deployments standardize on <strong><code>pwdlib[argon2]</code></strong> (<code>PasswordHash.recommended()</code>) and <strong><code>PyJWT</code></strong> (<code>import jwt</code>) rather than legacy <code>passlib</code> or <code>python-jose</code>, avoiding <code>bcrypt</code> 72-byte truncation pitfalls and unmaintained cryptographic wrappers. Combining <code>pwdlib</code> and <code>PyJWT</code> inside the <a href="security_and_auth.html">Authentication &amp; OAuth2 Scopes</a> dependency tree requires four defensive invariants:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Security Control</th>
+<th style="text-align:left">Recommended Implementation</th>
+<th style="text-align:left">Vulnerability Prevented</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>Memory-Hard Password KDF</strong></td>
+<td style="text-align:left"><code>PasswordHash.recommended()</code> (<code>pwdlib[argon2]</code>)</td>
+<td style="text-align:left">Defeats GPU/ASIC offline cracking with Argon2id memory-hardness and unique random per-user salts</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Anti-Enumeration <code>DUMMY_HASH</code></strong></td>
+<td style="text-align:left">Precompute <code>DUMMY_HASH = password_hash.hash(...)</code> at startup; run <code>password_hash.verify(pw, DUMMY_HASH)</code> when user is missing</td>
+<td style="text-align:left">Eliminates ~<code>50ms+</code> response-time discrepancy between unknown usernames and wrong passwords</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Algorithm Pinning &amp; Required Claims</strong></td>
+<td style="text-align:left"><code>jwt.decode(token, KEY, algorithms=[&quot;HS256&quot;], options={&quot;require&quot;: [&quot;sub&quot;, &quot;iat&quot;, &quot;exp&quot;]})</code></td>
+<td style="text-align:left">Blocks <code>&quot;alg&quot;: &quot;none&quot;</code> signature bypasses, RS256/HS256 public-key confusion, and Immortal tokens</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Key Entropy &amp; Zero Hardcoding</strong></td>
+<td style="text-align:left">Load <code>256-bit+</code> keys from KMS / environment (<a href="../08_ecosystem_and_operations/settings_and_databases.html">pydantic-settings</a>); never commit fallback literals</td>
+<td style="text-align:left">Prevents offline JWT forgery from leaked repository source code</td>
+</tr>
+</tbody>
+</table>
+<h3>1.1 Production <code>/token</code> Issuance, <code>DUMMY_HASH</code> &amp; <code>get_current_active_user</code></h3>
+<p>In the implementation below, <code>authenticate_user()</code> always runs a full Argon2id verification pass even when <code>username</code> does not exist in <code>users_db</code>. Downstream, <code>get_current_user()</code> decodes the JWT with an explicit <code>algorithms=[&quot;HS256&quot;]</code> allowlist, maps <code>ExpiredSignatureError</code> and <code>InvalidTokenError</code> to RFC 6750 <code>401 Unauthorized</code> responses, and enforces accumulated <code>SecurityScopes</code> (<code>403 Forbidden</code> on missing permissions) before <code>get_current_active_user()</code> checks account suspension state:</p>
+<pre><code class="language-python"><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">secrets</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span><span class="p">,</span> <span class="n">timezone</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">jwt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">Security</span><span class="p">,</span> <span class="n">status</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.security</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">OAuth2PasswordBearer</span><span class="p">,</span>
+    <span class="n">OAuth2PasswordRequestForm</span><span class="p">,</span>
+    <span class="n">SecurityScopes</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.testclient</span><span class="w"> </span><span class="kn">import</span> <span class="n">TestClient</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">jwt.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExpiredSignatureError</span><span class="p">,</span> <span class="n">InvalidTokenError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pwdlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">PasswordHash</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span>
+
+<span class="n">SECRET_KEY</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"JWT_SECRET_KEY"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">secrets</span><span class="o">.</span><span class="n">token_hex</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span>
+<span class="n">ALGORITHM</span> <span class="o">=</span> <span class="s2">"HS256"</span>
+<span class="n">ACCESS_TOKEN_EXPIRE_MINUTES</span> <span class="o">=</span> <span class="mi">15</span>
+
+<span class="n">password_hash</span> <span class="o">=</span> <span class="n">PasswordHash</span><span class="o">.</span><span class="n">recommended</span><span class="p">()</span>
+<span class="n">DUMMY_HASH</span> <span class="o">=</span> <span class="n">password_hash</span><span class="o">.</span><span class="n">hash</span><span class="p">(</span><span class="s2">"dummypassword"</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Token</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">access_token</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">token_type</span><span class="p">:</span> <span class="nb">str</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">UserRecord</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">username</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">hashed_password</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">scopes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">disabled</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">UserPublic</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">username</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">scopes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">disabled</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+
+<span class="n">alice_password</span> <span class="o">=</span> <span class="n">secrets</span><span class="o">.</span><span class="n">token_urlsafe</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">users_db</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">UserRecord</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"alice"</span><span class="p">:</span> <span class="n">UserRecord</span><span class="p">(</span>
+        <span class="n">username</span><span class="o">=</span><span class="s2">"alice"</span><span class="p">,</span>
+        <span class="n">hashed_password</span><span class="o">=</span><span class="n">password_hash</span><span class="o">.</span><span class="n">hash</span><span class="p">(</span><span class="n">alice_password</span><span class="p">),</span>
+        <span class="n">scopes</span><span class="o">=</span><span class="p">[</span><span class="s2">"me:read"</span><span class="p">,</span> <span class="s2">"reports:export"</span><span class="p">],</span>
+    <span class="p">),</span>
+<span class="p">}</span>
+
+<span class="n">oauth2_scheme</span> <span class="o">=</span> <span class="n">OAuth2PasswordBearer</span><span class="p">(</span>
+    <span class="n">tokenUrl</span><span class="o">=</span><span class="s2">"/token"</span><span class="p">,</span>
+    <span class="n">scopes</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">"me:read"</span><span class="p">:</span> <span class="s2">"Read current user profile"</span><span class="p">,</span>
+        <span class="s2">"reports:export"</span><span class="p">:</span> <span class="s2">"Export audit reports"</span><span class="p">,</span>
+    <span class="p">},</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">authenticate_user</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">UserRecord</span><span class="p">],</span>
+    <span class="n">username</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">password</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">UserRecord</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">user</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">username</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">user</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Always run Argon2id against DUMMY_HASH to defeat timing user-enumeration</span>
+        <span class="n">password_hash</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="n">password</span><span class="p">,</span> <span class="n">DUMMY_HASH</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">password_hash</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="n">password</span><span class="p">,</span> <span class="n">user</span><span class="o">.</span><span class="n">hashed_password</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">user</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">create_access_token</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">subject</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">scopes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">expires_delta</span><span class="p">:</span> <span class="n">timedelta</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">now</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span>
+    <span class="n">payload</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"sub"</span><span class="p">:</span> <span class="n">subject</span><span class="p">,</span>
+        <span class="s2">"scopes"</span><span class="p">:</span> <span class="n">scopes</span><span class="p">,</span>
+        <span class="s2">"iat"</span><span class="p">:</span> <span class="n">now</span><span class="p">,</span>
+        <span class="s2">"exp"</span><span class="p">:</span> <span class="n">now</span> <span class="o">+</span> <span class="n">expires_delta</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">jwt</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">payload</span><span class="p">,</span> <span class="n">SECRET_KEY</span><span class="p">,</span> <span class="n">algorithm</span><span class="o">=</span><span class="n">ALGORITHM</span><span class="p">)</span>
+
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">()</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/token"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">Token</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">login_for_access_token</span><span class="p">(</span>
+    <span class="n">form_data</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">OAuth2PasswordRequestForm</span><span class="p">,</span> <span class="n">Depends</span><span class="p">()],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Token</span><span class="p">:</span>
+    <span class="n">user</span> <span class="o">=</span> <span class="n">authenticate_user</span><span class="p">(</span><span class="n">users_db</span><span class="p">,</span> <span class="n">form_data</span><span class="o">.</span><span class="n">username</span><span class="p">,</span> <span class="n">form_data</span><span class="o">.</span><span class="n">password</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">user</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_401_UNAUTHORIZED</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Incorrect username or password"</span><span class="p">,</span>
+            <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">"WWW-Authenticate"</span><span class="p">:</span> <span class="s2">"Bearer"</span><span class="p">},</span>
+        <span class="p">)</span>
+    <span class="n">granted_scopes</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">form_data</span><span class="o">.</span><span class="n">scopes</span> <span class="k">if</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">user</span><span class="o">.</span><span class="n">scopes</span><span class="p">]</span>
+    <span class="n">access_token</span> <span class="o">=</span> <span class="n">create_access_token</span><span class="p">(</span>
+        <span class="n">subject</span><span class="o">=</span><span class="n">user</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
+        <span class="n">scopes</span><span class="o">=</span><span class="n">granted_scopes</span><span class="p">,</span>
+        <span class="n">expires_delta</span><span class="o">=</span><span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="n">ACCESS_TOKEN_EXPIRE_MINUTES</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">Token</span><span class="p">(</span><span class="n">access_token</span><span class="o">=</span><span class="n">access_token</span><span class="p">,</span> <span class="n">token_type</span><span class="o">=</span><span class="s2">"bearer"</span><span class="p">)</span>
+
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_current_user</span><span class="p">(</span>
+    <span class="n">security_scopes</span><span class="p">:</span> <span class="n">SecurityScopes</span><span class="p">,</span>
+    <span class="n">token</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Depends</span><span class="p">(</span><span class="n">oauth2_scheme</span><span class="p">)],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">UserRecord</span><span class="p">:</span>
+    <span class="n">auth_header</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s1">'Bearer scope="</span><span class="si">{</span><span class="n">security_scopes</span><span class="o">.</span><span class="n">scope_str</span><span class="si">}</span><span class="s1">"'</span>
+        <span class="k">if</span> <span class="n">security_scopes</span><span class="o">.</span><span class="n">scopes</span>
+        <span class="k">else</span> <span class="s2">"Bearer"</span>
+    <span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">payload</span> <span class="o">=</span> <span class="n">jwt</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span>
+            <span class="n">token</span><span class="p">,</span>
+            <span class="n">SECRET_KEY</span><span class="p">,</span>
+            <span class="n">algorithms</span><span class="o">=</span><span class="p">[</span><span class="n">ALGORITHM</span><span class="p">],</span>
+            <span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s2">"require"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"sub"</span><span class="p">,</span> <span class="s2">"iat"</span><span class="p">,</span> <span class="s2">"exp"</span><span class="p">]},</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="n">ExpiredSignatureError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_401_UNAUTHORIZED</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Token has expired"</span><span class="p">,</span>
+            <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">"WWW-Authenticate"</span><span class="p">:</span> <span class="n">auth_header</span><span class="p">},</span>
+        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+    <span class="k">except</span> <span class="n">InvalidTokenError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_401_UNAUTHORIZED</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Could not validate credentials"</span><span class="p">,</span>
+            <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">"WWW-Authenticate"</span><span class="p">:</span> <span class="n">auth_header</span><span class="p">},</span>
+        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+
+    <span class="n">username</span> <span class="o">=</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"sub"</span><span class="p">)</span>
+    <span class="n">token_scopes</span> <span class="o">=</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"scopes"</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">token_scopes</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_401_UNAUTHORIZED</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Could not validate credentials"</span><span class="p">,</span>
+            <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">"WWW-Authenticate"</span><span class="p">:</span> <span class="n">auth_header</span><span class="p">},</span>
+        <span class="p">)</span>
+    <span class="n">user</span> <span class="o">=</span> <span class="n">users_db</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">username</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">user</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_401_UNAUTHORIZED</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Could not validate credentials"</span><span class="p">,</span>
+            <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">"WWW-Authenticate"</span><span class="p">:</span> <span class="n">auth_header</span><span class="p">},</span>
+        <span class="p">)</span>
+    <span class="k">for</span> <span class="n">required_scope</span> <span class="ow">in</span> <span class="n">security_scopes</span><span class="o">.</span><span class="n">scopes</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">required_scope</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">token_scopes</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+                <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_403_FORBIDDEN</span><span class="p">,</span>
+                <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Not enough permissions (missing </span><span class="si">{</span><span class="n">required_scope</span><span class="si">}</span><span class="s2">)"</span><span class="p">,</span>
+                <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">"WWW-Authenticate"</span><span class="p">:</span> <span class="n">auth_header</span><span class="p">},</span>
+            <span class="p">)</span>
+    <span class="k">return</span> <span class="n">user</span>
+
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_current_active_user</span><span class="p">(</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span>
+        <span class="n">UserRecord</span><span class="p">,</span>
+        <span class="n">Security</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">,</span> <span class="n">scopes</span><span class="o">=</span><span class="p">[</span><span class="s2">"me:read"</span><span class="p">]),</span>
+    <span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">UserPublic</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">current_user</span><span class="o">.</span><span class="n">disabled</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Inactive user"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">UserPublic</span><span class="p">(</span>
+        <span class="n">username</span><span class="o">=</span><span class="n">current_user</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
+        <span class="n">scopes</span><span class="o">=</span><span class="n">current_user</span><span class="o">.</span><span class="n">scopes</span><span class="p">,</span>
+        <span class="n">disabled</span><span class="o">=</span><span class="n">current_user</span><span class="o">.</span><span class="n">disabled</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/users/me"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">UserPublic</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">read_users_me</span><span class="p">(</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">UserPublic</span><span class="p">,</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_active_user</span><span class="p">)],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">UserPublic</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">current_user</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/reports/export"</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">export_audit_report</span><span class="p">(</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span>
+        <span class="n">UserPublic</span><span class="p">,</span>
+        <span class="n">Security</span><span class="p">(</span><span class="n">get_current_active_user</span><span class="p">,</span> <span class="n">scopes</span><span class="o">=</span><span class="p">[</span><span class="s2">"reports:export"</span><span class="p">]),</span>
+    <span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"exported_by"</span><span class="p">:</span> <span class="n">current_user</span><span class="o">.</span><span class="n">username</span><span class="p">,</span> <span class="s2">"status"</span><span class="p">:</span> <span class="s2">"ready"</span><span class="p">}</span>
+
+
+<span class="n">client</span> <span class="o">=</span> <span class="n">TestClient</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+<span class="n">login_res</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+    <span class="s2">"/token"</span><span class="p">,</span>
+    <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">"username"</span><span class="p">:</span> <span class="s2">"alice"</span><span class="p">,</span> <span class="s2">"password"</span><span class="p">:</span> <span class="n">alice_password</span><span class="p">,</span> <span class="s2">"scope"</span><span class="p">:</span> <span class="s2">"me:read"</span><span class="p">},</span>
+<span class="p">)</span>
+<span class="n">narrow_jwt</span> <span class="o">=</span> <span class="n">login_res</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">"access_token"</span><span class="p">]</span>
+<span class="k">assert</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/users/me"</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">"Authorization"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"Bearer </span><span class="si">{</span><span class="n">narrow_jwt</span><span class="si">}</span><span class="s2">"</span><span class="p">})</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span>
+<span class="k">assert</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/reports/export"</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">"Authorization"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"Bearer </span><span class="si">{</span><span class="n">narrow_jwt</span><span class="si">}</span><span class="s2">"</span><span class="p">})</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">403</span>
+</code></pre>
+<p>Because stateless JWTs remain valid until <code>exp</code>, keep access-token lifetimes short (<code>5</code>–<code>15</code> minutes) and validate user status (<code>disabled</code> or a <code>token_version</code> counter in your database/cache) whenever immediate session revocation is required on logout or privilege downgrade.</p>
+<h2>2. WebSocket Authentication &amp; <code>v0.144.0+</code> <code>Security()</code> Support</h2>
+<p>Prior to FastAPI <code>v0.144.0</code>, built-in <code>fastapi.security</code> extractors annotated their <code>__call__</code> parameter as <code>request: Request</code>, which prevented reusing <code>OAuth2PasswordBearer</code> or <code>APIKeyCookie</code> directly inside <code>@app.websocket(...)</code> routes. Starting in <strong><code>v0.144.0</code> through <code>v0.162.2</code></strong>, every <code>SecurityBase</code> subclass (<code>APIKeyCookie</code>, <code>APIKeyQuery</code>, <code>APIKeyHeader</code>, <code>OAuth2PasswordBearer</code>, <code>OAuth2AuthorizationCodeBearer</code>, <code>HTTPBearer</code>, <code>HTTPBasic</code>, <code>OpenIdConnect</code>) accepts Starlette's <strong><code>HTTPConnection</code></strong> base class—shared by both <code>Request</code> and <code>WebSocket</code> (<code>fastapi/dependencies/utils.py</code> injects <code>websocket</code> into <code>dependant.http_connection_param_name</code>).</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/04_dependencies_and_security/jwt_and_websocket_security/websocket_security_handshake.png" alt="jwt_and_websocket_security_2" />
+  <figcaption class="drawlib-caption">WebSocket Authentication Handshake: Browser Cookie/Ticket vs SDK Bearer via SecurityBase(HTTPConnection)</figcaption>
+</figure>
+<details class="drawlib-code-details">
+<summary>Source Code</summary>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.canvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">setup</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.diagrams.sequence</span><span class="w"> </span><span class="kn">import</span> <span class="n">Participant</span><span class="p">,</span> <span class="n">ParticipantGroup</span><span class="p">,</span> <span class="n">PhosphorIcon</span><span class="p">,</span> <span class="n">SequenceDiagram</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">Style</span><span class="p">,</span> <span class="n">Styles</span>
+
+<span class="n">setup</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">182</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">126</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
+
+<span class="n">seq</span> <span class="o">=</span> <span class="n">SequenceDiagram</span><span class="p">(</span>
+    <span class="n">node_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Primary</span><span class="p">,</span>
+    <span class="n">node_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">edge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">,</span>
+    <span class="n">edge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="n">node_card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
+    <span class="n">col_width</span><span class="o">=</span><span class="mf">43.0</span><span class="p">,</span>
+    <span class="n">step_y</span><span class="o">=</span><span class="mf">6.8</span><span class="p">,</span>
+    <span class="n">margin</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">browser</span> <span class="o">=</span> <span class="n">seq</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Participant</span><span class="p">(</span>
+        <span class="s2">"Browser SPA</span><span class="se">\n</span><span class="s2">new WebSocket(url)"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mi">33</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span>
+        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">BROWSER</span><span class="p">,</span>
+        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.6</span><span class="p">,</span>
+        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">sdk_client</span> <span class="o">=</span> <span class="n">seq</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Participant</span><span class="p">(</span>
+        <span class="s2">"SDK / CLI Client</span><span class="se">\n</span><span class="s2">Custom Headers"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mi">33</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span>
+        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">TERMINAL_WINDOW</span><span class="p">,</span>
+        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.6</span><span class="p">,</span>
+        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">ws_group</span> <span class="o">=</span> <span class="n">seq</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">ParticipantGroup</span><span class="p">(</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">"FastAPI v0.162.2 WebSocket DI (HTTPConnection)"</span><span class="p">,</span>
+        <span class="n">padding</span><span class="o">=</span><span class="mf">4.5</span><span class="p">,</span>
+        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
+        <span class="n">text_style</span><span class="o">=</span><span class="n">Style</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.8</span><span class="p">),</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">sec_dep</span> <span class="o">=</span> <span class="n">ws_group</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Participant</span><span class="p">(</span>
+        <span class="s2">"SecurityBase</span><span class="se">\n</span><span class="s2">Cookie / Query / Bearer"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mi">35</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span>
+        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">SHIELD_CHECK</span><span class="p">,</span>
+        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.6</span><span class="p">,</span>
+        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
+        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
+        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">ws_route</span> <span class="o">=</span> <span class="n">ws_group</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">Participant</span><span class="p">(</span>
+        <span class="s2">"@app.websocket</span><span class="se">\n</span><span class="s2">Room Handler"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span>
+        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">PLUGS_CONNECTED</span><span class="p">,</span>
+        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.6</span><span class="p">,</span>
+        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+<span class="k">with</span> <span class="n">seq</span><span class="o">.</span><span class="n">alt</span><span class="p">(</span><span class="s2">"Browser SPA"</span><span class="p">)</span> <span class="k">as</span> <span class="n">blk_browser</span><span class="p">:</span>
+    <span class="n">blk_browser</span><span class="o">.</span><span class="n">style</span> <span class="o">=</span> <span class="n">Styles</span><span class="o">.</span><span class="n">MutedDashed</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_line_width</span><span class="o">=</span><span class="mf">1.2</span><span class="p">)</span>
+    <span class="n">blk_browser</span><span class="o">.</span><span class="n">text_style</span> <span class="o">=</span> <span class="n">Style</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">)</span>
+    <span class="n">browser</span><span class="o">.</span><span class="n">request</span><span class="p">(</span>
+        <span class="n">sec_dep</span><span class="p">,</span>
+        <span class="s2">"1a. Upgrade (__Host-session Cookie + Origin OR ?ticket=1x)"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">sec_dep</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">ws_route</span><span class="p">,</span> <span class="s2">"2a. Verified User"</span><span class="p">)</span>
+    <span class="n">ws_route</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span>
+        <span class="n">browser</span><span class="p">,</span>
+        <span class="s2">"3a. await ws.accept() -&gt; 101 Switching Protocols"</span><span class="p">,</span>
+        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SuccessBold</span><span class="p">,</span>
+        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="p">)</span>
+
+<span class="k">with</span> <span class="n">seq</span><span class="o">.</span><span class="n">else_</span><span class="p">(</span><span class="s2">"SDK / CLI"</span><span class="p">)</span> <span class="k">as</span> <span class="n">blk_sdk</span><span class="p">:</span>
+    <span class="n">blk_sdk</span><span class="o">.</span><span class="n">style</span> <span class="o">=</span> <span class="n">Styles</span><span class="o">.</span><span class="n">MutedDashed</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_line_width</span><span class="o">=</span><span class="mf">1.2</span><span class="p">)</span>
+    <span class="n">blk_sdk</span><span class="o">.</span><span class="n">text_style</span> <span class="o">=</span> <span class="n">Style</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">)</span>
+    <span class="n">sdk_client</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">sec_dep</span><span class="p">,</span> <span class="s2">"1b. Bearer &lt;jwt&gt;"</span><span class="p">)</span>
+    <span class="n">sec_dep</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">ws_route</span><span class="p">,</span> <span class="s2">"2b. Scopes Valid"</span><span class="p">)</span>
+    <span class="n">ws_route</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span>
+        <span class="n">sdk_client</span><span class="p">,</span>
+        <span class="s2">"3b. await ws.accept() -&gt; 101 Switching Protocols"</span><span class="p">,</span>
+        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SuccessBold</span><span class="p">,</span>
+        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="p">)</span>
+
+<span class="k">with</span> <span class="n">seq</span><span class="o">.</span><span class="n">else_</span><span class="p">(</span><span class="s2">"Policy Reject"</span><span class="p">)</span> <span class="k">as</span> <span class="n">blk_deny</span><span class="p">:</span>
+    <span class="n">blk_deny</span><span class="o">.</span><span class="n">style</span> <span class="o">=</span> <span class="n">Styles</span><span class="o">.</span><span class="n">MutedDashed</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_line_width</span><span class="o">=</span><span class="mf">1.2</span><span class="p">)</span>
+    <span class="n">blk_deny</span><span class="o">.</span><span class="n">text_style</span> <span class="o">=</span> <span class="n">Style</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">)</span>
+    <span class="n">browser</span><span class="o">.</span><span class="n">request</span><span class="p">(</span>
+        <span class="n">sec_dep</span><span class="p">,</span>
+        <span class="s2">"1c. Missing / Replayed Ticket, Bad Origin or Missing Scope"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">sec_dep</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span>
+        <span class="n">browser</span><span class="p">,</span>
+        <span class="s2">"2c. WebSocketException(WS_1008_POLICY_VIOLATION)"</span><span class="p">,</span>
+        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DangerBold</span><span class="p">,</span>
+        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DangerBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+    <span class="p">)</span>
+
+<span class="n">seq</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">91.0</span><span class="p">,</span> <span class="mf">63.0</span><span class="p">),</span> <span class="n">align</span><span class="o">=</span><span class="s2">"center"</span><span class="p">)</span>
+<span class="n">save</span><span class="p">()</span>
+</code></pre>
+</details>
+<h3>2.1 Browser DOM Constraints vs <code>HTTPConnection</code> Extractors</h3>
+<p>Even though FastAPI <code>v0.162.2</code> supports <code>OAuth2PasswordBearer</code> and <code>APIKeyHeader</code> on <code>WebSocket</code> routes at the server layer, <strong>browser JavaScript clients face a WHATWG DOM constraint</strong>: <code>new WebSocket(url, protocols)</code> provides no API to attach custom <code>Authorization</code> or <code>X-API-Key</code> headers. Choose your handshake credential transport according to the client environment:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Transport Pattern</th>
+<th style="text-align:left"><code>fastapi.security</code> Extractor</th>
+<th style="text-align:left">Target Client &amp; Mandatory Hardening</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong><code>__Host-session</code> Cookie</strong></td>
+<td style="text-align:left"><code>APIKeyCookie(name=&quot;__Host-session&quot;, auto_error=False)</code></td>
+<td style="text-align:left"><strong>Same-origin browser SPAs</strong>: Set <code>HttpOnly; Secure; SameSite=Lax</code> and <strong>always validate the <code>Origin</code> header</strong> against an allowlist to block Cross-Site WebSocket Hijacking (CSWSH), since WebSockets skip CORS preflights</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Single-Use Ephemeral Ticket</strong></td>
+<td style="text-align:left"><code>APIKeyQuery(name=&quot;ticket&quot;, auto_error=False)</code></td>
+<td style="text-align:left"><strong>Cross-origin browser SPAs</strong>: Mint a <code>30s</code> random opaque ticket over <code>POST /ws/tickets</code> (<code>Bearer</code> auth) and <code>.pop()</code> it atomically on connect—never pass long-lived JWTs in <code>?token=</code> URLs</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>Authorization: Bearer</code> / Header</strong></td>
+<td style="text-align:left"><code>OAuth2PasswordBearer(..., auto_error=False)</code> / <code>APIKeyHeader</code></td>
+<td style="text-align:left"><strong>Python/Go workers, CLI tools &amp; native mobile apps</strong>: Attach standard HTTP headers directly on the WebSocket Upgrade request</td>
+</tr>
+</tbody>
+</table>
+<h3>2.2 Pre-Handshake Rejection (<code>WS_1008_POLICY_VIOLATION</code> vs <code>auto_error=True</code>)</h3>
+<p>When <code>auto_error=True</code> on a <code>SecurityBase</code> extractor and the credential is absent, FastAPI raises <code>HTTPException(status_code=401)</code> inside <code>solve_dependencies()</code>, aborting the HTTP Upgrade with a <code>401</code> denial response (<code>WebSocketDenialResponse</code> in <code>TestClient</code>). For multi-transport WebSocket endpoints, set <code>auto_error=False</code> on each extractor, evaluate <code>Origin</code> and <code>SecurityScopes</code> inside a unified dependency <em>before</em> <code>await ws.accept()</code>, and raise <code>WebSocketException(code=status.WS_1008_POLICY_VIOLATION)</code> on any policy failure:</p>
+<pre><code class="language-python"><span class="kn">import</span><span class="w"> </span><span class="nn">secrets</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">timedelta</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">pytest</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">FastAPI</span><span class="p">,</span>
+    <span class="n">Header</span><span class="p">,</span>
+    <span class="n">Security</span><span class="p">,</span>
+    <span class="n">WebSocket</span><span class="p">,</span>
+    <span class="n">WebSocketDisconnect</span><span class="p">,</span>
+    <span class="n">WebSocketException</span><span class="p">,</span>
+    <span class="n">status</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.security</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">APIKeyCookie</span><span class="p">,</span>
+    <span class="n">APIKeyQuery</span><span class="p">,</span>
+    <span class="n">OAuth2PasswordBearer</span><span class="p">,</span>
+    <span class="n">SecurityScopes</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.testclient</span><span class="w"> </span><span class="kn">import</span> <span class="n">TestClient</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span>
+
+<span class="n">ALLOWED_WS_ORIGINS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"https://app.example.com"</span><span class="p">}</span>
+
+<span class="n">ws_cookie_scheme</span> <span class="o">=</span> <span class="n">APIKeyCookie</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"__Host-session"</span><span class="p">,</span> <span class="n">auto_error</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">ws_ticket_scheme</span> <span class="o">=</span> <span class="n">APIKeyQuery</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"ticket"</span><span class="p">,</span> <span class="n">auto_error</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">ws_bearer_scheme</span> <span class="o">=</span> <span class="n">OAuth2PasswordBearer</span><span class="p">(</span><span class="n">tokenUrl</span><span class="o">=</span><span class="s2">"/token"</span><span class="p">,</span> <span class="n">auto_error</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">EphemeralTicket</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">username</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">scopes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">exp</span><span class="p">:</span> <span class="nb">float</span>
+
+
+<span class="n">session_cookies</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">EphemeralTicket</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">one_time_tickets</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">EphemeralTicket</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+<span class="n">ws_app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">()</span>
+
+
+<span class="nd">@ws_app</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/ws/tickets"</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">issue_ws_ticket</span><span class="p">(</span>
+    <span class="n">principal</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span>
+        <span class="n">UserRecord</span><span class="p">,</span>
+        <span class="n">Security</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">,</span> <span class="n">scopes</span><span class="o">=</span><span class="p">[</span><span class="s2">"rooms:stream"</span><span class="p">]),</span>
+    <span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+    <span class="n">ticket_id</span> <span class="o">=</span> <span class="n">secrets</span><span class="o">.</span><span class="n">token_urlsafe</span><span class="p">(</span><span class="mi">24</span><span class="p">)</span>
+    <span class="n">one_time_tickets</span><span class="p">[</span><span class="n">ticket_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">EphemeralTicket</span><span class="p">(</span>
+        <span class="n">username</span><span class="o">=</span><span class="n">principal</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
+        <span class="n">scopes</span><span class="o">=</span><span class="p">[</span><span class="s2">"rooms:stream"</span><span class="p">],</span>
+        <span class="n">exp</span><span class="o">=</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">+</span> <span class="mf">30.0</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"ticket"</span><span class="p">:</span> <span class="n">ticket_id</span><span class="p">}</span>
+
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">authenticate_ws_caller</span><span class="p">(</span>
+    <span class="n">security_scopes</span><span class="p">:</span> <span class="n">SecurityScopes</span><span class="p">,</span>
+    <span class="n">session_id</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Security</span><span class="p">(</span><span class="n">ws_cookie_scheme</span><span class="p">)]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">ticket</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Security</span><span class="p">(</span><span class="n">ws_ticket_scheme</span><span class="p">)]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">bearer_token</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Security</span><span class="p">(</span><span class="n">ws_bearer_scheme</span><span class="p">)]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">origin</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Header</span><span class="p">()]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">username</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">granted_scopes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">if</span> <span class="n">session_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Enforce strict Origin allowlist on cookie-authenticated browser sockets (anti-CSWSH)</span>
+        <span class="k">if</span> <span class="n">origin</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ALLOWED_WS_ORIGINS</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">WebSocketException</span><span class="p">(</span>
+                <span class="n">code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">WS_1008_POLICY_VIOLATION</span><span class="p">,</span>
+                <span class="n">reason</span><span class="o">=</span><span class="s2">"Untrusted Origin for cookie session"</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="n">record</span> <span class="o">=</span> <span class="n">session_cookies</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">session_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">record</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">record</span><span class="o">.</span><span class="n">exp</span> <span class="o">&gt;</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">():</span>
+            <span class="n">username</span><span class="p">,</span> <span class="n">granted_scopes</span> <span class="o">=</span> <span class="n">record</span><span class="o">.</span><span class="n">username</span><span class="p">,</span> <span class="n">record</span><span class="o">.</span><span class="n">scopes</span>
+    <span class="k">elif</span> <span class="n">ticket</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Consume atomically so query tickets cannot be replayed from proxy logs</span>
+        <span class="n">record</span> <span class="o">=</span> <span class="n">one_time_tickets</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">ticket</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">record</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">record</span><span class="o">.</span><span class="n">exp</span> <span class="o">&gt;</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">():</span>
+            <span class="n">username</span><span class="p">,</span> <span class="n">granted_scopes</span> <span class="o">=</span> <span class="n">record</span><span class="o">.</span><span class="n">username</span><span class="p">,</span> <span class="n">record</span><span class="o">.</span><span class="n">scopes</span>
+    <span class="k">elif</span> <span class="n">bearer_token</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">payload</span> <span class="o">=</span> <span class="n">jwt</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span>
+                <span class="n">bearer_token</span><span class="p">,</span>
+                <span class="n">SECRET_KEY</span><span class="p">,</span>
+                <span class="n">algorithms</span><span class="o">=</span><span class="p">[</span><span class="n">ALGORITHM</span><span class="p">],</span>
+                <span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s2">"require"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"sub"</span><span class="p">,</span> <span class="s2">"exp"</span><span class="p">]},</span>
+            <span class="p">)</span>
+            <span class="n">sub</span> <span class="o">=</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"sub"</span><span class="p">)</span>
+            <span class="n">scopes</span> <span class="o">=</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"scopes"</span><span class="p">,</span> <span class="p">[])</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sub</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scopes</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">username</span><span class="p">,</span> <span class="n">granted_scopes</span> <span class="o">=</span> <span class="n">sub</span><span class="p">,</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">scopes</span><span class="p">]</span>
+        <span class="k">except</span> <span class="n">InvalidTokenError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+    <span class="k">if</span> <span class="n">username</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">WebSocketException</span><span class="p">(</span>
+            <span class="n">code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">WS_1008_POLICY_VIOLATION</span><span class="p">,</span>
+            <span class="n">reason</span><span class="o">=</span><span class="s2">"Missing or invalid WebSocket credentials"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">required_scope</span> <span class="ow">in</span> <span class="n">security_scopes</span><span class="o">.</span><span class="n">scopes</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">required_scope</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">granted_scopes</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">WebSocketException</span><span class="p">(</span>
+                <span class="n">code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">WS_1008_POLICY_VIOLATION</span><span class="p">,</span>
+                <span class="n">reason</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Missing required scope: </span><span class="si">{</span><span class="n">required_scope</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="p">)</span>
+    <span class="k">return</span> <span class="n">username</span>
+
+
+<span class="nd">@ws_app</span><span class="o">.</span><span class="n">websocket</span><span class="p">(</span><span class="s2">"/ws/rooms/</span><span class="si">{room_id}</span><span class="s2">"</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">secure_room_socket</span><span class="p">(</span>
+    <span class="n">ws</span><span class="p">:</span> <span class="n">WebSocket</span><span class="p">,</span>
+    <span class="n">room_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">username</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span>
+        <span class="nb">str</span><span class="p">,</span>
+        <span class="n">Security</span><span class="p">(</span><span class="n">authenticate_ws_caller</span><span class="p">,</span> <span class="n">scopes</span><span class="o">=</span><span class="p">[</span><span class="s2">"rooms:stream"</span><span class="p">]),</span>
+    <span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">await</span> <span class="n">ws</span><span class="o">.</span><span class="n">accept</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="k">await</span> <span class="n">ws</span><span class="o">.</span><span class="n">receive_json</span><span class="p">()</span>
+            <span class="k">await</span> <span class="n">ws</span><span class="o">.</span><span class="n">send_json</span><span class="p">(</span>
+                <span class="p">{</span><span class="s2">"room"</span><span class="p">:</span> <span class="n">room_id</span><span class="p">,</span> <span class="s2">"user"</span><span class="p">:</span> <span class="n">username</span><span class="p">,</span> <span class="s2">"echo"</span><span class="p">:</span> <span class="n">msg</span><span class="p">[</span><span class="s2">"text"</span><span class="p">]}</span>
+            <span class="p">)</span>
+    <span class="k">except</span> <span class="n">WebSocketDisconnect</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+
+<span class="n">ws_client</span> <span class="o">=</span> <span class="n">TestClient</span><span class="p">(</span><span class="n">ws_app</span><span class="p">)</span>
+<span class="n">users_db</span><span class="p">[</span><span class="s2">"alice"</span><span class="p">]</span><span class="o">.</span><span class="n">scopes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"rooms:stream"</span><span class="p">)</span>
+<span class="n">stream_jwt</span> <span class="o">=</span> <span class="n">create_access_token</span><span class="p">(</span>
+    <span class="n">subject</span><span class="o">=</span><span class="s2">"alice"</span><span class="p">,</span>
+    <span class="n">scopes</span><span class="o">=</span><span class="p">[</span><span class="s2">"rooms:stream"</span><span class="p">],</span>
+    <span class="n">expires_delta</span><span class="o">=</span><span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">ticket_val</span> <span class="o">=</span> <span class="n">ws_client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+    <span class="s2">"/ws/tickets"</span><span class="p">,</span>
+    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">"Authorization"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"Bearer </span><span class="si">{</span><span class="n">stream_jwt</span><span class="si">}</span><span class="s2">"</span><span class="p">},</span>
+<span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">"ticket"</span><span class="p">]</span>
+
+<span class="k">with</span> <span class="n">ws_client</span><span class="o">.</span><span class="n">websocket_connect</span><span class="p">(</span><span class="sa">f</span><span class="s2">"/ws/rooms/ops?ticket=</span><span class="si">{</span><span class="n">ticket_val</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="k">as</span> <span class="n">socket</span><span class="p">:</span>
+    <span class="n">socket</span><span class="o">.</span><span class="n">send_json</span><span class="p">({</span><span class="s2">"text"</span><span class="p">:</span> <span class="s2">"deploy-ok"</span><span class="p">})</span>
+    <span class="k">assert</span> <span class="n">socket</span><span class="o">.</span><span class="n">receive_json</span><span class="p">()</span> <span class="o">==</span> <span class="p">{</span><span class="s2">"room"</span><span class="p">:</span> <span class="s2">"ops"</span><span class="p">,</span> <span class="s2">"user"</span><span class="p">:</span> <span class="s2">"alice"</span><span class="p">,</span> <span class="s2">"echo"</span><span class="p">:</span> <span class="s2">"deploy-ok"</span><span class="p">}</span>
+
+<span class="k">with</span> <span class="n">pytest</span><span class="o">.</span><span class="n">raises</span><span class="p">(</span><span class="n">WebSocketDisconnect</span><span class="p">)</span> <span class="k">as</span> <span class="n">replay_err</span><span class="p">:</span>
+    <span class="k">with</span> <span class="n">ws_client</span><span class="o">.</span><span class="n">websocket_connect</span><span class="p">(</span><span class="sa">f</span><span class="s2">"/ws/rooms/ops?ticket=</span><span class="si">{</span><span class="n">ticket_val</span><span class="si">}</span><span class="s2">"</span><span class="p">):</span>
+        <span class="k">pass</span>
+<span class="k">assert</span> <span class="n">replay_err</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="n">status</span><span class="o">.</span><span class="n">WS_1008_POLICY_VIOLATION</span>
+</code></pre>
+<blockquote>
+<p>[!TIP]
+For long-lived <code>WebSocket</code> connections (<code>minutes</code> to <code>hours</code>), re-check token <code>exp</code> or revocation events periodically inside the message loop and close expired sessions gracefully with <code>await ws.close(code=status.WS_1008_POLICY_VIOLATION)</code>. Next, explore full-duplex room lifecycles and Server-Sent Events in <a href="../05_async_and_realtime/sse_websockets_streaming.html">Native SSE, JSONL &amp; WebSockets</a> and ASGI origin/CORS layers in <a href="../05_async_and_realtime/concurrency_and_middleware.html">ASGI Middleware &amp; Threadpool</a>.</p>
+</blockquote>
+
+            </main>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Theme toggle
+            const themeBtn = document.getElementById('theme-toggle');
+            if (themeBtn) {
+                themeBtn.addEventListener('click', function() {
+                    const current = document.documentElement.getAttribute('data-theme');
+                    const next = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    localStorage.setItem('drawlib-theme', next);
+                });
+            }
+
+            // Language dropdown outside-click & Escape close
+            const langDropdowns = document.querySelectorAll('.lang-dropdown');
+            if (langDropdowns.length > 0) {
+                document.addEventListener('click', function(e) {
+                    langDropdowns.forEach(function(dd) {
+                        if (dd.hasAttribute('open') && !dd.contains(e.target)) {
+                            dd.removeAttribute('open');
+                        }
+                    });
+                });
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        langDropdowns.forEach(function(dd) {
+                            dd.removeAttribute('open');
+                        });
+                    }
+                });
+            }
+
+            // Mobile menu toggle
+            const menuBtn = document.getElementById('menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            if (menuBtn && sidebar) {
+                function setMenuOpen(open) {
+                    sidebar.classList.toggle('is-open', open);
+                    menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    document.body.classList.toggle('menu-open', open);
+                    if (open) {
+                        const menu = sidebar.querySelector('.sidebar-menu');
+                        if (menu) {
+                            menu.scrollTop = 0;
+                        }
+                    }
+                }
+
+                menuBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const willOpen = !sidebar.classList.contains('is-open');
+                    setMenuOpen(willOpen);
+                });
+
+                // Close menu when clicking outside sidebar
+                document.addEventListener('click', function(e) {
+                    if (sidebar.classList.contains('is-open') && !sidebar.contains(e.target)) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                // Close menu when a navigation link is clicked
+                const navLinks = sidebar.querySelectorAll('.nav-item a');
+                navLinks.forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        setMenuOpen(false);
+                    });
+                });
+
+                // Close on Escape key
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                // Reset menu state when resized above mobile breakpoint
+                window.addEventListener('resize', function() {
+                    if (window.innerWidth > 768 && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
