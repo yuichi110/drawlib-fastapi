@@ -1,0 +1,44 @@
+# PNI Project Configuration Manifest (.pni/pni.toml)
+# Precedence: CLI / Workflow step `with:` > Workflow YAML > .pni/pni.toml > Built-in defaults
+
+[project]
+name = "fastapi"
+archetypes = ["library"]
+
+[targets]
+root = "."
+source = ["fastapi"]
+tests = ["tests"]
+docs = ["README.md"]
+exclude = [
+    "reports/**",
+    "reports_src/**",
+    "docs/**",
+    "docs_src/**",
+    "tests/test_tutorial/**",
+    "tests/test_frontend.py",
+    "tests/test_prepare_release.py",
+    "tests/test_translate.py",
+    "tests/benchmarks/**",
+    "tests/memory_benchmarks/**",
+]
+
+[scan]
+respect_gitignore = true
+include_gitignored = ["uv.lock"]
+skip_files = [".env", ".env.*", "**/.env"]
+skip_dirs = ["reports", "reports_src", "docs", "docs_src"]
+
+[report]
+src_dir = "reports_src"
+output_dir = "docs/reports/pni501"
+html_output_dir = "docs/reports/pni501"
+formats = ["pdf", "html"]
+lang = "en"
+style = "google"
+
+# Declarative design waivers for framework-specific and harness patterns:
+[[opt_out]]
+id = "DS-0026"
+scope = [".pni/dockerfiles/**"]
+reason = "Hermetic batch test container exits upon pytest completion; daemon HEALTHCHECK is not applicable."

@@ -1,0 +1,2867 @@
+{
+  "project_name": "fastapi",
+  "workflow_id": "pni501",
+  "workflow_run_id": "wf-682a5ab5",
+  "evaluated_at": "2026-11-08T12:21:21.280043+00:00",
+  "language": "python",
+  "target_root": ".",
+  "facts_file": ".pni/cache/pni501/facts.json",
+  "key_files_inspected": [],
+  "overall_score": 93,
+  "grade": "S",
+  "category_scores": {
+    "architecture": 91,
+    "code_quality": 86,
+    "typing": 95,
+    "testing": 96,
+    "dependencies": 96,
+    "security": 92,
+    "documentation": 94
+  },
+  "category_rationales": {
+    "architecture": "Cohesive 5-tier downward architecture across 52 source modules (19,837 LOC) bridging Starlette ASGI and Pydantic v2, with 2 cross-tier cycles guarded under TYPE_CHECKING and only 1 localized Tier-1 runtime cycle (_compat.v2 <-> params -> datastructures).",
+    "code_quality": "High API ergonomics, zero wildcard imports, and zero global mutable state, balanced against concentrated branching complexity inside hot-path request compilation (get_request_handler cognitive=159) and OpenAPI path synthesis (get_openapi_path cognitive=109).",
+    "typing": "94.5% callable signature type coverage across 438 functions, packaged PEP 561 fastapi/py.typed marker, PEP 484 explicit `X as X` re-exports, and dual mypy strict + Astral ty verification.",
+    "testing": "96.4% measured line coverage (4,628 / 4,801 statements) and 91.0% branch coverage across 3,216 passing core unit & ASGI TestClient tests inside an air-gapped (--network=none) non-root container with warnings-as-errors.",
+    "dependencies": "Ultra-lean 6-package core PEP 621 dependency footprint with flexible `>=` SemVer lower bounds, 0 unpinned specs, isolated PEP 735 dependency-groups, and a deterministic uv.lock.",
+    "security": "Zero CVEs across all 6 core runtime dependencies, zero hardcoded or committed secrets, zero container IaC misconfigurations, and zero dangerous CWE code sinks across 19,837 LOC; 1 HIGH transitive dnspython@2.8.0 advisory exists in dev/optional uv.lock.",
+    "documentation": "Pioneering PEP 727 Annotated[..., Doc()] inline parameter documentation across all public APIs with zero docstring-to-signature mismatches and zero empty docstrings."
+  },
+  "metrics_snapshot": {
+    "language": "python",
+    "runtime_types": [
+      "library"
+    ],
+    "build_system": "uv",
+    "has_manifest": true,
+    "has_lockfile": true,
+    "has_license": true,
+    "has_security_policy": false,
+    "has_dependency_automation": false,
+    "has_type_marker": true,
+    "dependencies_count": 6,
+    "unpinned_dependencies_count": 0,
+    "source_files_count": 52,
+    "test_files_count": 273,
+    "readme_line_count": 59,
+    "ci_supply_chain_issues_count": 0,
+    "committed_secret_files_count": 0,
+    "container_hygiene_issues_count": 0,
+    "legacy_language_findings_count": 0,
+    "total_files": 52,
+    "total_loc": 19837,
+    "total_classes": 121,
+    "total_functions": 438,
+    "import_hygiene_coverage_pct": 57.7,
+    "type_safety_coverage_pct": 94.5,
+    "docstring_coverage_pct": 25.2,
+    "module_test_coverage_pct": 100.0,
+    "unsorted_imports_count": 38,
+    "wildcard_imports_count": 0,
+    "type_safety_issues_count": 29,
+    "weak_type_usages_count": 404,
+    "empty_docstrings_count": 0,
+    "doc_signature_mismatches_count": 0,
+    "complex_functions_count": 88,
+    "excessive_parameters_count": 52,
+    "global_state_usages_count": 0,
+    "bug_risk_idioms_count": 4,
+    "circular_dependencies_count": 1,
+    "type_checking_cycles_count": 2,
+    "unused_dependencies_count": 1,
+    "undeclared_dependencies_count": 16,
+    "test_functions_count": 1835,
+    "assertion_free_tests_count": 2,
+    "has_conftest_assertion_hook": false,
+    "framework_issues_count": 0,
+    "modernization_hints_count": 6,
+    "language_version_mismatches_count": 0,
+    "missing_io_timeouts_count": 0,
+    "scattered_env_access_count": 9,
+    "unstructured_logging_count": 0,
+    "hardcoded_secrets_count": 0,
+    "ast_dangerous_sinks_count": 0,
+    "api_endpoints_count": 0,
+    "runtime_status": "passed",
+    "harness_build_status": "passed",
+    "tests_status": "passed",
+    "tests_total": 3228,
+    "tests_passed": 3216,
+    "tests_failed": 0,
+    "measured_line_coverage_pct": 96.4,
+    "measured_branch_coverage_pct": 91.0,
+    "smoke_check_status": "passed",
+    "security_scan_status": "failed",
+    "app_vuln_critical": 0,
+    "app_vuln_high": 1,
+    "app_vuln_total": 7,
+    "app_vuln_unpinned_range_matches": 0,
+    "os_vuln_high_or_crit": 83,
+    "misconfig_count": 0,
+    "secret_leak_count": 0
+  },
+  "runtime_facts": {
+    "status": "passed",
+    "container_engine": "docker",
+    "engine_available": true,
+    "skip_reason": "",
+    "language": "python",
+    "selected_dockerfile_template": "custom:.pni/dockerfiles/root/Dockerfile",
+    "harness_dockerfile_path": ".pni/dockerfiles/root/Dockerfile",
+    "build_args": {
+      "PYTHON_VERSION": "3.12"
+    },
+    "artifacts_dir": ".pni/cache/pni501/runtime",
+    "project_dockerfile_build": null,
+    "harness_build": {
+      "attempted": true,
+      "status": "passed",
+      "dockerfile_used": ".pni/dockerfiles/root/Dockerfile",
+      "duration_sec": 0.79,
+      "exit_code": 0,
+      "error_tail": []
+    },
+    "test_execution": {
+      "attempted": true,
+      "status": "passed",
+      "command": "pytest -o junit_family=xunit2 --junitxml=/out/junit.xml",
+      "duration_sec": 265.57,
+      "exit_code": 0,
+      "total_tests": 3228,
+      "passed_tests": 3216,
+      "failed_tests": 0,
+      "error_tests": 0,
+      "skipped_tests": 12,
+      "failures": [],
+      "log_tail": []
+    },
+    "coverage": {
+      "measured": true,
+      "tool": "pytest-cov",
+      "line_coverage_pct": 96.4,
+      "branch_coverage_pct": 91.0,
+      "covered_lines": 4628,
+      "total_statements": 4801,
+      "lowest_covered_modules": [
+        {
+          "file_path": "fastapi/__main__.py",
+          "line_coverage_pct": 0.0,
+          "branch_coverage_pct": null,
+          "covered_lines": 0,
+          "total_statements": 2,
+          "missing_lines_preview": [
+            1,
+            3
+          ]
+        },
+        {
+          "file_path": "fastapi/middleware/cors.py",
+          "line_coverage_pct": 0.0,
+          "branch_coverage_pct": null,
+          "covered_lines": 0,
+          "total_statements": 1,
+          "missing_lines_preview": [
+            1
+          ]
+        },
+        {
+          "file_path": "fastapi/middleware/gzip.py",
+          "line_coverage_pct": 0.0,
+          "branch_coverage_pct": null,
+          "covered_lines": 0,
+          "total_statements": 1,
+          "missing_lines_preview": [
+            1
+          ]
+        },
+        {
+          "file_path": "fastapi/middleware/httpsredirect.py",
+          "line_coverage_pct": 0.0,
+          "branch_coverage_pct": null,
+          "covered_lines": 0,
+          "total_statements": 1,
+          "missing_lines_preview": [
+            1
+          ]
+        },
+        {
+          "file_path": "fastapi/middleware/trustedhost.py",
+          "line_coverage_pct": 0.0,
+          "branch_coverage_pct": null,
+          "covered_lines": 0,
+          "total_statements": 1,
+          "missing_lines_preview": [
+            1
+          ]
+        },
+        {
+          "file_path": "fastapi/templating.py",
+          "line_coverage_pct": 0.0,
+          "branch_coverage_pct": null,
+          "covered_lines": 0,
+          "total_statements": 1,
+          "missing_lines_preview": [
+            1
+          ]
+        },
+        {
+          "file_path": "fastapi/responses.py",
+          "line_coverage_pct": 86.7,
+          "branch_coverage_pct": null,
+          "covered_lines": 26,
+          "total_statements": 30,
+          "missing_lines_preview": [
+            65,
+            66,
+            95,
+            96
+          ]
+        },
+        {
+          "file_path": "fastapi/cli.py",
+          "line_coverage_pct": 87.5,
+          "branch_coverage_pct": 50.0,
+          "covered_lines": 7,
+          "total_statements": 8,
+          "missing_lines_preview": [
+            13
+          ]
+        },
+        {
+          "file_path": "fastapi/routing.py",
+          "line_coverage_pct": 90.6,
+          "branch_coverage_pct": 80.7,
+          "covered_lines": 1306,
+          "total_statements": 1441,
+          "missing_lines_preview": [
+            157,
+            495,
+            496,
+            499,
+            939,
+            953,
+            956,
+            957,
+            958,
+            1688
+          ]
+        },
+        {
+          "file_path": "fastapi/telemetry/_runtime.py",
+          "line_coverage_pct": 94.9,
+          "branch_coverage_pct": 93.8,
+          "covered_lines": 129,
+          "total_statements": 136,
+          "missing_lines_preview": [
+            111,
+            128,
+            129,
+            156,
+            174,
+            175,
+            176
+          ]
+        },
+        {
+          "file_path": "fastapi/openapi/utils.py",
+          "line_coverage_pct": 97.6,
+          "branch_coverage_pct": 86.9,
+          "covered_lines": 321,
+          "total_statements": 329,
+          "missing_lines_preview": [
+            275,
+            424,
+            596,
+            598,
+            600,
+            602,
+            604,
+            668
+          ]
+        },
+        {
+          "file_path": "fastapi/applications.py",
+          "line_coverage_pct": 97.9,
+          "branch_coverage_pct": 91.2,
+          "covered_lines": 187,
+          "total_statements": 191,
+          "missing_lines_preview": [
+            939,
+            1177,
+            1333,
+            1336
+          ]
+        },
+        {
+          "file_path": "fastapi/_compat/v2.py",
+          "line_coverage_pct": 99.0,
+          "branch_coverage_pct": 92.6,
+          "covered_lines": 208,
+          "total_statements": 210,
+          "missing_lines_preview": [
+            52,
+            68
+          ]
+        },
+        {
+          "file_path": "fastapi/encoders.py",
+          "line_coverage_pct": 99.0,
+          "branch_coverage_pct": 98.0,
+          "covered_lines": 100,
+          "total_statements": 101,
+          "missing_lines_preview": [
+            274
+          ]
+        },
+        {
+          "file_path": "fastapi/_compat/shared.py",
+          "line_coverage_pct": 99.2,
+          "branch_coverage_pct": 98.5,
+          "covered_lines": 122,
+          "total_statements": 123,
+          "missing_lines_preview": [
+            152
+          ]
+        }
+      ]
+    },
+    "smoke_check": {
+      "attempted": true,
+      "archetype": "library",
+      "status": "passed",
+      "command": "python -c import importlib, json, pathlib; importlib.import_module('fastapi'); pathlib.Path('/out/smoke.json').write_text(json.dumps({'detail': 'Imported fastapi cleanly'}))",
+      "duration_sec": 3.36,
+      "exit_code": 0,
+      "http_status": null,
+      "probed_endpoint": null,
+      "failure_kind": "none",
+      "detail": "Imported fastapi cleanly",
+      "log_tail": []
+    }
+  },
+  "security_facts": {
+    "status": "failed",
+    "scanner": "trivy",
+    "container_engine": "docker",
+    "engine_available": true,
+    "skip_reason": "",
+    "trivy_image": "ghcr.io/aquasecurity/trivy:0.69.3",
+    "scanned_filesystem": true,
+    "scanned_resolved_image": true,
+    "resolved_image_source": ".pni/dockerfiles/Dockerfile",
+    "artifacts_dir": ".pni/cache/pni501/security",
+    "vuln_counts": {
+      "critical": 9,
+      "high": 75,
+      "medium": 174,
+      "low": 140,
+      "total": 405
+    },
+    "app_vuln_counts": {
+      "critical": 0,
+      "high": 1,
+      "medium": 5,
+      "low": 1,
+      "total": 7
+    },
+    "os_vuln_counts": {
+      "critical": 9,
+      "high": 74,
+      "medium": 169,
+      "low": 139,
+      "total": 398
+    },
+    "vulnerabilities": [
+      {
+        "vuln_id": "CVE-2026-42010",
+        "pkg_name": "libgnutls30",
+        "pkg_type": "debian",
+        "installed_version": "3.7.9-2+deb12u5",
+        "fixed_version": "3.7.9-2+deb12u7",
+        "severity": "CRITICAL",
+        "title": "gnutls: gnutls: Authentication Bypass via NUL Character in Username",
+        "target": "/out/image.tar (debian 12.13)",
+        "cvss_score": 9.8,
+        "is_unpinned_specifier": false,
+        "version_resolution_note": ""
+      },
+      {
+        "vuln_id": "CVE-2026-31789",
+        "pkg_name": "libssl3",
+        "pkg_type": "debian",
+        "installed_version": "3.0.18-1~deb12u2",
+        "fixed_version": "3.0.19-1~deb12u2",
+        "severity": "CRITICAL",
+        "title": "openssl: OpenSSL: Heap buffer overflow on 32-bit systems from large X.509 certificate processing",
+        "target": "/out/image.tar (debian 12.13)",
+        "cvss_score": 9.8,
+        "is_unpinned_specifier": false,
+        "version_resolution_note": ""
+      },
+      {
+        "vuln_id": "CVE-2026-31789",
+        "pkg_name": "openssl",
+        "pkg_type": "debian",
+        "installed_version": "3.0.18-1~deb12u2",
+        "fixed_version": "3.0.19-1~deb12u2",
+        "severity": "CRITICAL",
+        "title": "openssl: OpenSSL: Heap buffer overflow on 32-bit systems from large X.509 certificate processing",
+        "target": "/out/image.tar (debian 12.13)",
+        "cvss_score": 9.8,
+        "is_unpinned_specifier": false,
+        "version_resolution_note": ""
+      },
+      {
+        "vuln_id": "CVE-2026-8376",
+        "pkg_name": "perl-base",
+        "pkg_type": "debian",
+        "installed_version": "5.36.0-7+deb12u3",
+        "fixed_version": "5.36.0-7+deb12u4",
+        "severity": "CRITICAL",
+        "title": "perl: Perl: Heap buffer overflow when compiling regular expressions on 32-bit builds",
+        "target": "/out/image.tar (debian 12.13)",
+        "cvss_score": 9.8,
+        "is_unpinned_specifier": false,
+        "version_resolution_note": ""
+      },
+      {
+        "vuln_id": "CVE-2023-45853",
+        "pkg_name": "zlib1g",
+        "pkg_type": "debian",
+        "installed_version": "1:1.2.13.dfsg-1",
+        "fixed_version": "",
+        "severity": "CRITICAL",
+        "title": "zlib: integer overflow and resultant heap-based buffer overflow in zipOpenNewFileInZip4_6",
+        "target": "/out/image.tar (debian 12.13)",
+        "cvss_score": 9.8,
+        "is_unpinned_specifier": false,
+        "version_resolution_note": ""
+      },
+      {
+        "vuln_id": "CVE-2026-33845",
+        "pkg_name": "libgnutls30",
+        "pkg_type": "debian",
+        "installed_version": "3.7.9-2+deb12u5",
+        "fixed_version": "3.7.9-2+deb12u7",
+        "severity": "CRITICAL",
+        "title": "gnutls: GnuTLS: Denial of Service via DTLS zero-length fragment",
+        "target": "/out/image.tar (debian 12.13)",
+        "cvss_score": 9.1,
+        "is_unpinned_specifier": false,
+        "version_resolution_note": ""
+      },
+      {
+        "vuln_id": "CVE-2025-7458",
+        "pkg_name": "libsqlite3-0",
+        "pkg_type": "debian",
+        "installed_version": "3.40.1-2+deb12u2",
+        "fixed_version": "",
+        "severity": "CRITICAL",
+        "title": "sqlite: SQLite integer overflow",
+        "target": "/out/image.tar (debian 12.13)",
+        "cvss_score": 9.1,
+        "is_unpinned_specifier": false,
+        "version_resolution_note": ""
+      },
+      {
+        "vuln_id": "CVE-2026-13221",
+        "pkg_name": "perl-base",
+        "pkg_type": "debian",
+        "installed_version": "5.36.0-7+deb12u3",
+        "fixed_version": "5.36.0-7+deb12u4",
+        "severity": "CRITICAL",
+        "title": "perl: Perl: Incorrect regular expression processing via large regular expressions",
+        "target": "/out/image.tar (debian 12.13)",
+        "cvss_score": 9.1,
+        "is_unpinned_specifier": false,
+        "version_resolution_note": ""
+      },
+      {
+        "vuln_id": "CVE-2026-42496",
+        "pkg_name": "perl-base",
+        "pkg_type": "debian",
+        "installed_version": "5.36.0-7+deb12u3",
+        "fixed_version": "5.36.0-7+deb12u4",
+        "severity": "CRITICAL",
+        "title": "perl-archive-tar: perl-archive-tar: Path traversal via crafted symlinks allows arbitrary file access",
+        "target": "/out/image.tar (debian 12.13)",
+        "cvss_score": 9.1,
+        "is_unpinned_specifier": false,
+        "version_resolution_note": ""
+      },
+      {
+        "vuln_id": "CVE-2026-114605",
+        "pkg_name": "dnspython",
+        "pkg_type": "uv",
+        "installed_version": "2.8.0",
+        "fixed_version": "2.9.0",
+        "severity": "HIGH",
+        "title": "dnspython: dnspython: Denial of Service via excessive DNS compression pointer traversal",
+        "target": "uv.lock",
+        "cvss_score": 7.5,
+        "is_unpinned_specifier": false,
+        "version_resolution_note": ""
+      },
+      {
+        "vuln_id": "CVE-2026-45447",
+        "pkg_name": "libssl3",
+        "pkg_type": "debian",
+        "installed_version": "3.0.18-1~deb12u2",
+        "fixed_version": "3.0.20-1~deb12u2",
+        "severity": "HIGH",
+        "title": "openssl: Heap Use-After-Free in OpenSSL PKCS7_verify()",
+        "target": "/out/image.tar (debian 12.13)",
+        "cvss_score": 8.8,
+        "is_unpinned_specifier": false,
+        "version_resolution_note": ""
+      },
+      {
+        "vuln_id": "CVE-2026-16742",
+        "pkg_name": "libsystemd0",
+        "pkg_type": "debian",
+        "installed_version": "252.39-1~deb12u1",
+        "fixed_version": "",
+        "severity": "HIGH",
+        "title": "systemd: systemd-homed: Local privilege escalation via missing home-record signature verification",
+        "target": "/out/image.tar (debian 12.13)",
+        "cvss_score": 8.8,
+        "is_unpinned_specifier": false,
+        "version_resolution_note": ""
+      },
+      {
+        "vuln_id": "CVE-2026-16742",
+        "pkg_name": "libudev1",
+        "pkg_type": "debian",
+        "installed_version": "252.39-1~deb12u1",
+        "fixed_version": "",
+        "severity": "HIGH",
+        "title": "systemd: systemd-homed: Local privilege escalation via missing home-record signature verification",
+        "target": "/out/image.tar (debian 12.13)",
+        "cvss_score": 8.8,
+        "is_unpinned_specifier": false,
+        "version_resolution_note": ""
+      },
+      {
+        "vuln_id": "CVE-2026-45447",
+        "pkg_name": "openssl",
+        "pkg_type": "debian",
+        "installed_version": "3.0.18-1~deb12u2",
+        "fixed_version": "3.0.20-1~deb12u2",
+        "severity": "HIGH",
+        "title": "openssl: Heap Use-After-Free in OpenSSL PKCS7_verify()",
+        "target": "/out/image.tar (debian 12.13)",
+        "cvss_score": 8.8,
+        "is_unpinned_specifier": false,
+        "version_resolution_note": ""
+      },
+      {
+        "vuln_id": "CVE-2026-76844",
+        "pkg_name": "zlib1g",
+        "pkg_type": "debian",
+        "installed_version": "1:1.2.13.dfsg-1",
+        "fixed_version": "",
+        "severity": "HIGH",
+        "title": "webpack-dev-middleware: webpack-dev-middleware: Information Disclosure via Path Traversal",
+        "target": "/out/image.tar (debian 12.13)",
+        "cvss_score": 8.6,
+        "is_unpinned_specifier": false,
+        "version_resolution_note": ""
+      },
+      {
+        "vuln_id": "CVE-2026-57432",
+        "pkg_name": "perl-base",
+        "pkg_type": "debian",
+        "installed_version": "5.36.0-7+deb12u3",
+        "fixed_version": "5.36.0-7+deb12u4",
+        "severity": "HIGH",
+        "title": "perl: Perl: Information disclosure via integer overflow in pack/unpack operations",
+        "target": "/out/image.tar (debian 12.13)",
+        "cvss_score": 8.4,
+        "is_unpinned_specifier": false,
+        "version_resolution_note": ""
+      },
+      {
+        "vuln_id": "CVE-2026-86145",
+        "pkg_name": "libpcre2-8-0",
+        "pkg_type": "debian",
+        "installed_version": "10.42-1",
+        "fixed_version": "10.42-1+deb12u1",
+        "severity": "HIGH",
+        "title": "pcre2: PCRE2: Out-of-bounds write allows arbitrary code execution via crafted regular expressions",
+        "target": "/out/image.tar (debian 12.13)",
+        "cvss_score": 8.2,
+        "is_unpinned_specifier": false,
+        "version_resolution_note": ""
+      },
+      {
+        "vuln_id": "CVE-2026-109518",
+        "pkg_name": "apt",
+        "pkg_type": "debian",
+        "installed_version": "2.6.1",
+        "fixed_version": "2.6.2",
+        "severity": "HIGH",
+        "title": "apt: apt: Remote code execution via hard link reuse during package download retries",
+        "target": "/out/image.tar (debian 12.13)",
+        "cvss_score": 8.1,
+        "is_unpinned_specifier": false,
+        "version_resolution_note": ""
+      },
+      {
+        "vuln_id": "CVE-2026-109518",
+        "pkg_name": "libapt-pkg6.0",
+        "pkg_type": "debian",
+        "installed_version": "2.6.1",
+        "fixed_version": "2.6.2",
+        "severity": "HIGH",
+        "title": "apt: apt: Remote code execution via hard link reuse during package download retries",
+        "target": "/out/image.tar (debian 12.13)",
+        "cvss_score": 8.1,
+        "is_unpinned_specifier": false,
+        "version_resolution_note": ""
+      },
+      {
+        "vuln_id": "CVE-2026-28387",
+        "pkg_name": "libssl3",
+        "pkg_type": "debian",
+        "installed_version": "3.0.18-1~deb12u2",
+        "fixed_version": "3.0.19-1~deb12u2",
+        "severity": "HIGH",
+        "title": "openssl: OpenSSL: Arbitrary code execution due to use-after-free in DANE TLSA authentication",
+        "target": "/out/image.tar (debian 12.13)",
+        "cvss_score": 8.1,
+        "is_unpinned_specifier": false,
+        "version_resolution_note": ""
+      },
+      {
+        "vuln_id": "CVE-2026-28387",
+        "pkg_name": "openssl",
+        "pkg_type": "debian",
+        "installed_version": "3.0.18-1~deb12u2",
+        "fixed_version": "3.0.19-1~deb12u2",
+        "severity": "HIGH",
+        "title": "openssl: OpenSSL: Arbitrary code execution due to use-after-free in DANE TLSA authentication",
+        "target": "/out/image.tar (debian 12.13)",
+        "cvss_score": 8.1,
+        "is_unpinned_specifier": false,
+        "version_resolution_note": ""
+      },
+      {
+        "vuln_id": "CVE-2026-85091",
+        "pkg_name": "zlib1g",
+        "pkg_type": "debian",
+        "installed_version": "1:1.2.13.dfsg-1",
+        "fixed_version": "",
+        "severity": "HIGH",
+        "title": "zlib: zlib: Heap buffer overflow in gz_vacate() allows arbitrary code execution",
+        "target": "/out/image.tar (debian 12.13)",
+        "cvss_score": 8.1,
+        "is_unpinned_specifier": false,
+        "version_resolution_note": ""
+      },
+      {
+        "vuln_id": "CVE-2026-53615",
+        "pkg_name": "bsdutils",
+        "pkg_type": "debian",
+        "installed_version": "1:2.38.1-5+deb12u3",
+        "fixed_version": "",
+        "severity": "HIGH",
+        "title": "util-linux: util-linux: Partition metadata compromise via integer overflow in DOS partition parser",
+        "target": "/out/image.tar (debian 12.13)",
+        "cvss_score": 8.0,
+        "is_unpinned_specifier": false,
+        "version_resolution_note": ""
+      },
+      {
+        "vuln_id": "CVE-2026-53615",
+        "pkg_name": "libblkid1",
+        "pkg_type": "debian",
+        "installed_version": "2.38.1-5+deb12u3",
+        "fixed_version": "",
+        "severity": "HIGH",
+        "title": "util-linux: util-linux: Partition metadata compromise via integer overflow in DOS partition parser",
+        "target": "/out/image.tar (debian 12.13)",
+        "cvss_score": 8.0,
+        "is_unpinned_specifier": false,
+        "version_resolution_note": ""
+      },
+      {
+        "vuln_id": "CVE-2026-53615",
+        "pkg_name": "libmount1",
+        "pkg_type": "debian",
+        "installed_version": "2.38.1-5+deb12u3",
+        "fixed_version": "",
+        "severity": "HIGH",
+        "title": "util-linux: util-linux: Partition metadata compromise via integer overflow in DOS partition parser",
+        "target": "/out/image.tar (debian 12.13)",
+        "cvss_score": 8.0,
+        "is_unpinned_specifier": false,
+        "version_resolution_note": ""
+      },
+      {
+        "vuln_id": "CVE-2026-53615",
+        "pkg_name": "libsmartcols1",
+        "pkg_type": "debian",
+        "installed_version": "2.38.1-5+deb12u3",
+        "fixed_version": "",
+        "severity": "HIGH",
+        "title": "util-linux: util-linux: Partition metadata compromise via integer overflow in DOS partition parser",
+        "target": "/out/image.tar (debian 12.13)",
+        "cvss_score": 8.0,
+        "is_unpinned_specifier": false,
+        "version_resolution_note": ""
+      },
+      {
+        "vuln_id": "CVE-2026-53615",
+        "pkg_name": "libuuid1",
+        "pkg_type": "debian",
+        "installed_version": "2.38.1-5+deb12u3",
+        "fixed_version": "",
+        "severity": "HIGH",
+        "title": "util-linux: util-linux: Partition metadata compromise via integer overflow in DOS partition parser",
+        "target": "/out/image.tar (debian 12.13)",
+        "cvss_score": 8.0,
+        "is_unpinned_specifier": false,
+        "version_resolution_note": ""
+      },
+      {
+        "vuln_id": "CVE-2026-53615",
+        "pkg_name": "mount",
+        "pkg_type": "debian",
+        "installed_version": "2.38.1-5+deb12u3",
+        "fixed_version": "",
+        "severity": "HIGH",
+        "title": "util-linux: util-linux: Partition metadata compromise via integer overflow in DOS partition parser",
+        "target": "/out/image.tar (debian 12.13)",
+        "cvss_score": 8.0,
+        "is_unpinned_specifier": false,
+        "version_resolution_note": ""
+      },
+      {
+        "vuln_id": "CVE-2026-53615",
+        "pkg_name": "util-linux",
+        "pkg_type": "debian",
+        "installed_version": "2.38.1-5+deb12u3",
+        "fixed_version": "",
+        "severity": "HIGH",
+        "title": "util-linux: util-linux: Partition metadata compromise via integer overflow in DOS partition parser",
+        "target": "/out/image.tar (debian 12.13)",
+        "cvss_score": 8.0,
+        "is_unpinned_specifier": false,
+        "version_resolution_note": ""
+      },
+      {
+        "vuln_id": "CVE-2026-53615",
+        "pkg_name": "util-linux-extra",
+        "pkg_type": "debian",
+        "installed_version": "2.38.1-5+deb12u3",
+        "fixed_version": "",
+        "severity": "HIGH",
+        "title": "util-linux: util-linux: Partition metadata compromise via integer overflow in DOS partition parser",
+        "target": "/out/image.tar (debian 12.13)",
+        "cvss_score": 8.0,
+        "is_unpinned_specifier": false,
+        "version_resolution_note": ""
+      },
+      {
+        "vuln_id": "CVE-2026-78410",
+        "pkg_name": "bsdutils",
+        "pkg_type": "debian",
+        "installed_version": "1:2.38.1-5+deb12u3",
+        "fixed_version": "",
+        "severity": "HIGH",
+        "title": "util-linux: util-linux: restricted bind mounts do not pin the source, allowing X-mount.owner/group/mode redirection",
+        "target": "/out/image.tar (debian 12.13)",
+        "cvss_score": 7.8,
+        "is_unpinned_specifier": false,
+        "version_resolution_note": ""
+      },
+      {
+        "vuln_id": "CVE-2026-78410",
+        "pkg_name": "libblkid1",
+        "pkg_type": "debian",
+        "installed_version": "2.38.1-5+deb12u3",
+        "fixed_version": "",
+        "severity": "HIGH",
+        "title": "util-linux: util-linux: restricted bind mounts do not pin the source, allowing X-mount.owner/group/mode redirection",
+        "target": "/out/image.tar (debian 12.13)",
+        "cvss_score": 7.8,
+        "is_unpinned_specifier": false,
+        "version_resolution_note": ""
+      },
+      {
+        "vuln_id": "CVE-2026-78410",
+        "pkg_name": "libmount1",
+        "pkg_type": "debian",
+        "installed_version": "2.38.1-5+deb12u3",
+        "fixed_version": "",
+        "severity": "HIGH",
+        "title": "util-linux: util-linux: restricted bind mounts do not pin the source, allowing X-mount.owner/group/mode redirection",
+        "target": "/out/image.tar (debian 12.13)",
+        "cvss_score": 7.8,
+        "is_unpinned_specifier": false,
+        "version_resolution_note": ""
+      },
+      {
+        "vuln_id": "CVE-2025-69720",
+        "pkg_name": "libncursesw6",
+        "pkg_type": "debian",
+        "installed_version": "6.4-4",
+        "fixed_version": "",
+        "severity": "HIGH",
+        "title": "ncurses: ncurses: Buffer overflow vulnerability may lead to arbitrary code execution.",
+        "target": "/out/image.tar (debian 12.13)",
+        "cvss_score": 7.8,
+        "is_unpinned_specifier": false,
+        "version_resolution_note": ""
+      },
+      {
+        "vuln_id": "CVE-2026-89161",
+        "pkg_name": "libpcre2-8-0",
+        "pkg_type": "debian",
+        "installed_version": "10.42-1",
+        "fixed_version": "10.42-1+deb12u1",
+        "severity": "HIGH",
+        "title": "pcre2: PCRE2: Memory corruption vulnerability in pcre2_jit_match",
+        "target": "/out/image.tar (debian 12.13)",
+        "cvss_score": 7.8,
+        "is_unpinned_specifier": false,
+        "version_resolution_note": ""
+      },
+      {
+        "vuln_id": "CVE-2026-78410",
+        "pkg_name": "libsmartcols1",
+        "pkg_type": "debian",
+        "installed_version": "2.38.1-5+deb12u3",
+        "fixed_version": "",
+        "severity": "HIGH",
+        "title": "util-linux: util-linux: restricted bind mounts do not pin the source, allowing X-mount.owner/group/mode redirection",
+        "target": "/out/image.tar (debian 12.13)",
+        "cvss_score": 7.8,
+        "is_unpinned_specifier": false,
+        "version_resolution_note": ""
+      },
+      {
+        "vuln_id": "CVE-2026-11822",
+        "pkg_name": "libsqlite3-0",
+        "pkg_type": "debian",
+        "installed_version": "3.40.1-2+deb12u2",
+        "fixed_version": "",
+        "severity": "HIGH",
+        "title": "sqlite: SQLite: Arbitrary code execution via crafted FTS5 full-text search data",
+        "target": "/out/image.tar (debian 12.13)",
+        "cvss_score": 7.8,
+        "is_unpinned_specifier": false,
+        "version_resolution_note": ""
+      },
+      {
+        "vuln_id": "CVE-2026-11824",
+        "pkg_name": "libsqlite3-0",
+        "pkg_type": "debian",
+        "installed_version": "3.40.1-2+deb12u2",
+        "fixed_version": "",
+        "severity": "HIGH",
+        "title": "sqlite: SQLite: Arbitrary code execution and crash via heap-based buffer overflow in FTS5",
+        "target": "/out/image.tar (debian 12.13)",
+        "cvss_score": 7.8,
+        "is_unpinned_specifier": false,
+        "version_resolution_note": ""
+      },
+      {
+        "vuln_id": "CVE-2026-119373",
+        "pkg_name": "libsqlite3-0",
+        "pkg_type": "debian",
+        "installed_version": "3.40.1-2+deb12u2",
+        "fixed_version": "",
+        "severity": "HIGH",
+        "title": "sqlite: sqlite: Denial of service via heap-based buffer overflow in FTS5",
+        "target": "/out/image.tar (debian 12.13)",
+        "cvss_score": 7.8,
+        "is_unpinned_specifier": false,
+        "version_resolution_note": ""
+      },
+      {
+        "vuln_id": "CVE-2026-119374",
+        "pkg_name": "libsqlite3-0",
+        "pkg_type": "debian",
+        "installed_version": "3.40.1-2+deb12u2",
+        "fixed_version": "",
+        "severity": "HIGH",
+        "title": "sqlite: sqlite: Arbitrary code execution via corrupted FTS5 index",
+        "target": "/out/image.tar (debian 12.13)",
+        "cvss_score": 7.8,
+        "is_unpinned_specifier": false,
+        "version_resolution_note": ""
+      }
+    ],
+    "misconfigurations": [],
+    "secrets": [],
+    "opt_out_counts": {}
+  },
+  "pentest_facts": null,
+  "module_inventory": [
+    {
+      "file": "fastapi/__init__.py",
+      "loc": 22,
+      "public_types": [],
+      "public_callables": []
+    },
+    {
+      "file": "fastapi/__main__.py",
+      "loc": 2,
+      "public_types": [],
+      "public_callables": []
+    },
+    {
+      "file": "fastapi/_compat/__init__.py",
+      "loc": 40,
+      "public_types": [],
+      "public_callables": []
+    },
+    {
+      "file": "fastapi/_compat/shared.py",
+      "loc": 172,
+      "public_types": [],
+      "public_callables": [
+        "lenient_issubclass",
+        "field_annotation_is_sequence",
+        "value_is_sequence",
+        "field_annotation_is_complex",
+        "field_annotation_is_scalar",
+        "field_annotation_is_scalar_sequence",
+        "is_bytes_or_nonable_bytes_annotation",
+        "is_uploadfile_or_nonable_uploadfile_annotation",
+        "is_bytes_sequence_annotation",
+        "is_uploadfile_sequence_annotation",
+        "is_pydantic_v1_model_instance",
+        "is_pydantic_v1_model_class",
+        "annotation_is_pydantic_v1"
+      ]
+    },
+    {
+      "file": "fastapi/_compat/v2.py",
+      "loc": 405,
+      "public_types": [
+        "GenerateJsonSchema",
+        "ModelField"
+      ],
+      "public_callables": [
+        "evaluate_forwardref",
+        "asdict",
+        "get_schema_from_model_field",
+        "get_definitions",
+        "is_scalar_field",
+        "copy_field_info",
+        "serialize_sequence_value",
+        "get_missing_field_error",
+        "create_body_model",
+        "get_model_fields",
+        "get_cached_model_fields",
+        "normalize_name",
+        "get_model_name_map",
+        "get_flat_models_from_model",
+        "get_flat_models_from_annotation",
+        "get_flat_models_from_field",
+        "get_flat_models_from_fields"
+      ]
+    },
+    {
+      "file": "fastapi/applications.py",
+      "loc": 4118,
+      "public_types": [
+        "FastAPI"
+      ],
+      "public_callables": []
+    },
+    {
+      "file": "fastapi/background.py",
+      "loc": 50,
+      "public_types": [
+        "BackgroundTasks"
+      ],
+      "public_callables": []
+    },
+    {
+      "file": "fastapi/cli.py",
+      "loc": 10,
+      "public_types": [],
+      "public_callables": [
+        "main"
+      ]
+    },
+    {
+      "file": "fastapi/concurrency.py",
+      "loc": 31,
+      "public_types": [],
+      "public_callables": [
+        "contextmanager_in_threadpool"
+      ]
+    },
+    {
+      "file": "fastapi/datastructures.py",
+      "loc": 141,
+      "public_types": [
+        "DefaultPlaceholder",
+        "UploadFile"
+      ],
+      "public_callables": [
+        "Default"
+      ]
+    },
+    {
+      "file": "fastapi/dependencies/__init__.py",
+      "loc": 0,
+      "public_types": [],
+      "public_callables": []
+    },
+    {
+      "file": "fastapi/dependencies/models.py",
+      "loc": 193,
+      "public_types": [
+        "Dependant"
+      ],
+      "public_callables": []
+    },
+    {
+      "file": "fastapi/dependencies/utils.py",
+      "loc": 1294,
+      "public_types": [
+        "ParamDetails",
+        "SolvedDependency"
+      ],
+      "public_callables": [
+        "ensure_multipart_is_installed",
+        "get_parameterless_sub_dependant",
+        "get_flat_params",
+        "get_typed_signature",
+        "get_typed_annotation",
+        "get_typed_return_annotation",
+        "get_stream_item_type",
+        "get_dependant",
+        "add_non_field_param_to_dependency",
+        "analyze_param",
+        "add_param_to_fields",
+        "solve_dependencies",
+        "request_params_to_args",
+        "request_body_to_args",
+        "get_validation_alias"
+      ]
+    },
+    {
+      "file": "fastapi/encoders.py",
+      "loc": 333,
+      "public_types": [
+        "Color",
+        "PyExtraColor"
+      ],
+      "public_callables": [
+        "isoformat",
+        "decimal_encoder",
+        "generate_encoders_by_class_tuples",
+        "jsonable_encoder"
+      ]
+    },
+    {
+      "file": "fastapi/exception_handlers.py",
+      "loc": 28,
+      "public_types": [],
+      "public_callables": [
+        "http_exception_handler",
+        "request_validation_exception_handler",
+        "websocket_request_validation_exception_handler"
+      ]
+    },
+    {
+      "file": "fastapi/exceptions.py",
+      "loc": 201,
+      "public_types": [
+        "DependencyScopeError",
+        "EndpointContext",
+        "FastAPIDeprecationWarning",
+        "FastAPIError",
+        "HTTPException",
+        "PydanticV1NotSupportedError",
+        "RequestValidationError",
+        "ResponseValidationError",
+        "ValidationException",
+        "WebSocketException",
+        "WebSocketRequestValidationError"
+      ],
+      "public_callables": []
+    },
+    {
+      "file": "fastapi/logger.py",
+      "loc": 2,
+      "public_types": [],
+      "public_callables": []
+    },
+    {
+      "file": "fastapi/middleware/__init__.py",
+      "loc": 1,
+      "public_types": [],
+      "public_callables": []
+    },
+    {
+      "file": "fastapi/middleware/asyncexitstack.py",
+      "loc": 12,
+      "public_types": [
+        "AsyncExitStackMiddleware"
+      ],
+      "public_callables": []
+    },
+    {
+      "file": "fastapi/middleware/cors.py",
+      "loc": 1,
+      "public_types": [],
+      "public_callables": []
+    },
+    {
+      "file": "fastapi/middleware/gzip.py",
+      "loc": 1,
+      "public_types": [],
+      "public_callables": []
+    },
+    {
+      "file": "fastapi/middleware/httpsredirect.py",
+      "loc": 3,
+      "public_types": [],
+      "public_callables": []
+    },
+    {
+      "file": "fastapi/middleware/trustedhost.py",
+      "loc": 3,
+      "public_types": [],
+      "public_callables": []
+    },
+    {
+      "file": "fastapi/middleware/wsgi.py",
+      "loc": 3,
+      "public_types": [],
+      "public_callables": []
+    },
+    {
+      "file": "fastapi/openapi/__init__.py",
+      "loc": 0,
+      "public_types": [],
+      "public_callables": []
+    },
+    {
+      "file": "fastapi/openapi/constants.py",
+      "loc": 3,
+      "public_types": [],
+      "public_callables": []
+    },
+    {
+      "file": "fastapi/openapi/docs.py",
+      "loc": 341,
+      "public_types": [],
+      "public_callables": [
+        "get_swagger_ui_html",
+        "get_redoc_html",
+        "get_swagger_ui_oauth2_redirect_html"
+      ]
+    },
+    {
+      "file": "fastapi/openapi/models.py",
+      "loc": 316,
+      "public_types": [
+        "APIKey",
+        "APIKeyIn",
+        "BaseModelWithConfig",
+        "Components",
+        "Contact",
+        "Discriminator",
+        "EmailStr",
+        "Encoding",
+        "Example",
+        "ExternalDocumentation",
+        "HTTPBase",
+        "HTTPBearer",
+        "Header",
+        "Info",
+        "License",
+        "Link",
+        "MediaType",
+        "OAuth2",
+        "OAuthFlow",
+        "OAuthFlowAuthorizationCode",
+        "OAuthFlowClientCredentials",
+        "OAuthFlowImplicit",
+        "OAuthFlowPassword",
+        "OAuthFlows",
+        "OpenAPI",
+        "OpenIdConnect",
+        "Operation",
+        "Parameter",
+        "ParameterBase",
+        "ParameterInType",
+        "PathItem",
+        "Reference",
+        "RequestBody",
+        "Response",
+        "Schema",
+        "SecurityBase",
+        "SecuritySchemeType",
+        "Server",
+        "ServerVariable",
+        "Tag",
+        "XML"
+      ],
+      "public_callables": []
+    },
+    {
+      "file": "fastapi/openapi/utils.py",
+      "loc": 631,
+      "public_types": [],
+      "public_callables": [
+        "get_openapi_operation_request_body",
+        "generate_operation_id",
+        "generate_operation_summary",
+        "get_openapi_operation_metadata",
+        "get_openapi_path",
+        "get_fields_from_routes",
+        "get_openapi"
+      ]
+    },
+    {
+      "file": "fastapi/param_functions.py",
+      "loc": 2430,
+      "public_types": [],
+      "public_callables": [
+        "Path",
+        "Query",
+        "Header",
+        "Cookie",
+        "Body",
+        "Form",
+        "File",
+        "Depends",
+        "Security"
+      ]
+    },
+    {
+      "file": "fastapi/params.py",
+      "loc": 763,
+      "public_types": [
+        "Body",
+        "Cookie",
+        "Depends",
+        "File",
+        "Form",
+        "Header",
+        "Param",
+        "ParamTypes",
+        "Path",
+        "Query",
+        "Security"
+      ],
+      "public_callables": []
+    },
+    {
+      "file": "fastapi/requests.py",
+      "loc": 2,
+      "public_types": [],
+      "public_callables": []
+    },
+    {
+      "file": "fastapi/responses.py",
+      "loc": 76,
+      "public_types": [
+        "ORJSONResponse",
+        "UJSONResponse"
+      ],
+      "public_callables": []
+    },
+    {
+      "file": "fastapi/routing.py",
+      "loc": 5726,
+      "public_types": [
+        "APIRoute",
+        "APIRouter",
+        "APIWebSocketRoute",
+        "RouteContext"
+      ],
+      "public_callables": [
+        "request_response",
+        "websocket_session",
+        "serialize_response",
+        "run_endpoint_function",
+        "get_request_handler",
+        "get_websocket_app",
+        "iter_route_contexts"
+      ]
+    },
+    {
+      "file": "fastapi/security/__init__.py",
+      "loc": 15,
+      "public_types": [],
+      "public_callables": []
+    },
+    {
+      "file": "fastapi/security/api_key.py",
+      "loc": 248,
+      "public_types": [
+        "APIKeyBase",
+        "APIKeyCookie",
+        "APIKeyHeader",
+        "APIKeyQuery"
+      ],
+      "public_callables": []
+    },
+    {
+      "file": "fastapi/security/base.py",
+      "loc": 4,
+      "public_types": [
+        "SecurityBase"
+      ],
+      "public_callables": []
+    },
+    {
+      "file": "fastapi/security/http.py",
+      "loc": 335,
+      "public_types": [
+        "HTTPAuthorizationCredentials",
+        "HTTPBase",
+        "HTTPBasic",
+        "HTTPBasicCredentials",
+        "HTTPBearer",
+        "HTTPDigest"
+      ],
+      "public_callables": []
+    },
+    {
+      "file": "fastapi/security/oauth2.py",
+      "loc": 603,
+      "public_types": [
+        "OAuth2",
+        "OAuth2AuthorizationCodeBearer",
+        "OAuth2PasswordBearer",
+        "OAuth2PasswordRequestForm",
+        "OAuth2PasswordRequestFormStrict",
+        "SecurityScopes"
+      ],
+      "public_callables": []
+    },
+    {
+      "file": "fastapi/security/open_id_connect_url.py",
+      "loc": 82,
+      "public_types": [
+        "OpenIdConnect"
+      ],
+      "public_callables": []
+    },
+    {
+      "file": "fastapi/security/utils.py",
+      "loc": 7,
+      "public_types": [],
+      "public_callables": [
+        "get_authorization_scheme_param"
+      ]
+    },
+    {
+      "file": "fastapi/sse.py",
+      "loc": 190,
+      "public_types": [
+        "EventSourceResponse",
+        "ServerSentEvent"
+      ],
+      "public_callables": [
+        "format_sse_event"
+      ]
+    },
+    {
+      "file": "fastapi/staticfiles.py",
+      "loc": 1,
+      "public_types": [],
+      "public_callables": []
+    },
+    {
+      "file": "fastapi/telemetry/__init__.py",
+      "loc": 3,
+      "public_types": [],
+      "public_callables": []
+    },
+    {
+      "file": "fastapi/telemetry/_api.py",
+      "loc": 240,
+      "public_types": [
+        "TelemetryConfig",
+        "TelemetryData"
+      ],
+      "public_callables": [
+        "get_telemetry_data"
+      ]
+    },
+    {
+      "file": "fastapi/telemetry/_asgi.py",
+      "loc": 420,
+      "public_types": [
+        "ExceptionTelemetryMiddleware",
+        "NativeTelemetry"
+      ],
+      "public_callables": []
+    },
+    {
+      "file": "fastapi/telemetry/_runtime.py",
+      "loc": 206,
+      "public_types": [],
+      "public_callables": [
+        "lifespan"
+      ]
+    },
+    {
+      "file": "fastapi/templating.py",
+      "loc": 1,
+      "public_types": [],
+      "public_callables": []
+    },
+    {
+      "file": "fastapi/testclient.py",
+      "loc": 1,
+      "public_types": [],
+      "public_callables": []
+    },
+    {
+      "file": "fastapi/types.py",
+      "loc": 10,
+      "public_types": [],
+      "public_callables": []
+    },
+    {
+      "file": "fastapi/utils.py",
+      "loc": 114,
+      "public_types": [],
+      "public_callables": [
+        "is_body_allowed_for_status_code",
+        "get_path_param_names",
+        "create_model_field",
+        "generate_operation_id_for_path",
+        "generate_unique_id",
+        "deep_dict_update",
+        "get_value_or_default"
+      ]
+    },
+    {
+      "file": "fastapi/websockets.py",
+      "loc": 3,
+      "public_types": [],
+      "public_callables": []
+    }
+  ],
+  "dangerous_sinks": [],
+  "api_endpoints": [],
+  "language_version_mismatches": [],
+  "architecture_overview": {
+    "pattern": "5-Tier Declarative ASGI Compiler & Type-Driven Adapter Layering (Facade -> Routing & OpenAPI Synthesis -> Recursive DI & Security -> Middleware/Telemetry/Concurrency -> Pydantic v2 & Descriptor Core)",
+    "entry_points": [
+      "fastapi/__init__.py",
+      "fastapi/applications.py:FastAPI",
+      "fastapi/routing.py:APIRouter",
+      "fastapi/cli.py:main"
+    ],
+    "modules": [
+      {
+        "path": "fastapi/applications.py",
+        "role": "Top-level FastAPI ASGI application class orchestrating middleware, OpenTelemetry lifespan, OpenAPI caching, and route decorators.",
+        "key_symbols": [
+          "FastAPI"
+        ],
+        "depends_on": [
+          "fastapi/routing.py",
+          "fastapi/openapi/utils.py",
+          "fastapi/openapi/docs.py",
+          "fastapi/middleware/asyncexitstack.py",
+          "fastapi/telemetry/_asgi.py"
+        ],
+        "health_note": "4,118 LOC; clean downward delegation (setup cognitive=12)."
+      },
+      {
+        "path": "fastapi/routing.py",
+        "role": "Core HTTP, SSE/JSONL streaming, SPA frontend, and WebSocket routing compiler.",
+        "key_symbols": [
+          "APIRouter",
+          "APIRoute",
+          "APIWebSocketRoute",
+          "get_request_handler",
+          "run_endpoint_function",
+          "serialize_response"
+        ],
+        "depends_on": [
+          "fastapi/dependencies/utils.py",
+          "fastapi/params.py",
+          "fastapi/encoders.py",
+          "fastapi/_compat/v2.py",
+          "fastapi/sse.py"
+        ],
+        "health_note": "5,726 LOC; 90.6% line / 80.7% branch coverage; primary cognitive hotspot in get_request_handler (159)."
+      },
+      {
+        "path": "fastapi/dependencies/utils.py",
+        "role": "Recursive Dependency Injection inspector (get_dependant, analyze_param) and runtime DAG executor (solve_dependencies).",
+        "key_symbols": [
+          "get_dependant",
+          "analyze_param",
+          "solve_dependencies",
+          "request_params_to_args",
+          "request_body_to_args"
+        ],
+        "depends_on": [
+          "fastapi/dependencies/models.py",
+          "fastapi/_compat/v2.py",
+          "fastapi/params.py",
+          "fastapi/concurrency.py",
+          "fastapi/security/oauth2.py"
+        ],
+        "health_note": "1,294 LOC; cycle with fastapi/routing.py guarded under TYPE_CHECKING."
+      },
+      {
+        "path": "fastapi/openapi/utils.py",
+        "role": "OpenAPI 3.1.0 specification synthesizer merging route Dependant trees and Pydantic v2 JSON Schemas.",
+        "key_symbols": [
+          "get_openapi",
+          "get_openapi_path",
+          "get_openapi_operation_metadata"
+        ],
+        "depends_on": [
+          "fastapi/openapi/models.py",
+          "fastapi/dependencies.utils.py",
+          "fastapi/routing.py",
+          "fastapi/_compat/v2.py"
+        ],
+        "health_note": "631 LOC; get_openapi_path cognitive=109."
+      },
+      {
+        "path": "fastapi/_compat/v2.py",
+        "role": "Pydantic v2 TypeAdapter and GenerateJsonSchema compatibility layer (ModelField).",
+        "key_symbols": [
+          "ModelField",
+          "GenerateJsonSchema",
+          "get_definitions",
+          "create_body_model"
+        ],
+        "depends_on": [
+          "fastapi/_compat/shared.py",
+          "fastapi/params.py",
+          "fastapi/types.py"
+        ],
+        "health_note": "405 LOC; 1 intra-tier runtime cycle with params/datastructures."
+      },
+      {
+        "path": "fastapi/telemetry/_asgi.py",
+        "role": "Native OpenTelemetry ASGI span and exception middleware.",
+        "key_symbols": [
+          "NativeTelemetry",
+          "ExceptionTelemetryMiddleware"
+        ],
+        "depends_on": [
+          "fastapi/telemetry/_api.py"
+        ],
+        "health_note": "420 LOC; NativeTelemetry.__call__ cognitive=85."
+      }
+    ],
+    "dependency_notes": "6 core PEP 621 dependencies (starlette>=0.46.0, pydantic>=2.9.0, typing-extensions>=4.8.0, typing-inspection>=0.4.2, annotated-doc>=0.0.2, opentelemetry-api>=1.44.0) with 0 unpinned specs and 0 core CVEs."
+  },
+  "architecture_record": {
+    "workflow_id": "pni501",
+    "workflow_run_id": "wf-682a5ab5",
+    "recorded_at": "2026-11-08T11:55:18.138096+00:00",
+    "target_root": ".",
+    "system_profile": {
+      "system_purpose": "High-performance, type-driven Python ASGI web API framework unifying Starlette asynchronous HTTP/WebSocket routing with Pydantic v2 validation/serialization, recursive Dependency Injection, OpenAPI 3.1.0 & JSON Schema synthesis, native Server-Sent Events (SSE), and OpenTelemetry observability.",
+      "domain_context": "Reusable Python web framework and developer SDK (v0.162.2, Python >=3.10..3.14) enabling developers to declare REST, streaming (SSE/JSONL), WebSocket, and SPA-mounted endpoints from standard Python type annotations and PEP 727 Annotated Doc() metadata.",
+      "runtime_types": [
+        "library"
+      ],
+      "tech_stack": [
+        "Python >=3.10..3.14 (PEP 561 py.typed)",
+        "Starlette >=0.46.0 (ASGI lifecycle, routing, middleware, WebSockets, BackgroundTasks)",
+        "Pydantic >=2.9.0 & pydantic-core (TypeAdapter validation, serialization, JSON Schema)",
+        "typing-inspection >=0.4.2 & typing-extensions >=4.8.0 (runtime Annotated signature introspection)",
+        "annotated-doc >=0.0.2 (PEP 727 inline parameter documentation)",
+        "opentelemetry-api >=1.44.0 (native ASGI distributed tracing & metrics)"
+      ],
+      "external_integrations": [
+        "ASGI Servers (Uvicorn, Hypercorn, Granian, Fastar) invoking FastAPI.__call__(scope, receive, send)",
+        "Starlette ASGI Subsystems (Router, Lifespan, AsyncExitStack, Middleware, TestClient)",
+        "Pydantic v2 Core Schema & TypeAdapter Engine (fastapi/_compat/v2.py)",
+        "OpenTelemetry SDK / OTLP Exporters (fastapi/telemetry/_asgi.py & _runtime.py)",
+        "Interactive API Documentation Assets (Swagger UI & ReDoc HTML bundles in fastapi/openapi/docs.py)"
+      ]
+    },
+    "structure_map": {
+      "architecture_pattern": "5-Tier Declarative ASGI Compiler & Type-Driven Adapter Layering (Facade -> Routing & OpenAPI Synthesis -> Recursive DI & Security -> Middleware/Telemetry/Concurrency -> Pydantic v2 & Descriptor Core)",
+      "layers": [
+        {
+          "name": "Tier 5: Public Application & Developer Facades",
+          "responsibility": "Top-level FastAPI ASGI application class, PEP 727 Doc()-annotated parameter factory functions (Query, Path, Body, Depends, Security), CLI stub, and Starlette re-export facades.",
+          "paths": [
+            "fastapi/__init__.py",
+            "fastapi/__main__.py",
+            "fastapi/cli.py",
+            "fastapi/applications.py",
+            "fastapi/param_functions.py",
+            "fastapi/requests.py",
+            "fastapi/responses.py",
+            "fastapi/websockets.py",
+            "fastapi/staticfiles.py",
+            "fastapi/templating.py",
+            "fastapi/testclient.py",
+            "fastapi/background.py"
+          ],
+          "allowed_dependencies": [
+            "Tier 4: Routing, Streaming & OpenAPI Synthesis",
+            "Tier 3: Dependency Injection & Security Subsystems",
+            "Tier 2: ASGI Middleware, Concurrency & Native Telemetry",
+            "Tier 1: Pydantic v2 Adapter, Descriptors & Core Types"
+          ]
+        },
+        {
+          "name": "Tier 4: Routing, Streaming & OpenAPI Synthesis",
+          "responsibility": "Compiles endpoint signatures into Starlette ASGI handlers (APIRouter, APIRoute, APIWebSocketRoute), native Server-Sent Events (SSE) & JSONL streaming, exception handlers, and OpenAPI 3.1.0 / Swagger UI / ReDoc generation.",
+          "paths": [
+            "fastapi/routing.py",
+            "fastapi/sse.py",
+            "fastapi/openapi/__init__.py",
+            "fastapi/openapi/utils.py",
+            "fastapi/openapi/docs.py",
+            "fastapi/openapi/models.py",
+            "fastapi/openapi/constants.py",
+            "fastapi/exception_handlers.py"
+          ],
+          "allowed_dependencies": [
+            "Tier 3: Dependency Injection & Security Subsystems",
+            "Tier 2: ASGI Middleware, Concurrency & Native Telemetry",
+            "Tier 1: Pydantic v2 Adapter, Descriptors & Core Types"
+          ]
+        },
+        {
+          "name": "Tier 3: Dependency Injection & Security Subsystems",
+          "responsibility": "Introspects Python callables via typing-inspection into recursive Dependant DAGs, resolves per-request dependencies with caching and AsyncExitStack yield teardown, and enforces OAuth2 / HTTP / APIKey / OpenID Connect security schemes.",
+          "paths": [
+            "fastapi/dependencies/__init__.py",
+            "fastapi/dependencies/utils.py",
+            "fastapi/dependencies/models.py",
+            "fastapi/security/__init__.py",
+            "fastapi/security/oauth2.py",
+            "fastapi/security/http.py",
+            "fastapi/security/api_key.py",
+            "fastapi/security/open_id_connect_url.py",
+            "fastapi/security/base.py",
+            "fastapi/security/utils.py"
+          ],
+          "allowed_dependencies": [
+            "Tier 2: ASGI Middleware, Concurrency & Native Telemetry",
+            "Tier 1: Pydantic v2 Adapter, Descriptors & Core Types"
+          ]
+        },
+        {
+          "name": "Tier 2: ASGI Middleware, Concurrency & Native Telemetry",
+          "responsibility": "Manages per-request AsyncExitStack lifespan cleanup, sync contextmanager threadpool offloading, Starlette ASGI middleware re-exports, and native OpenTelemetry span/metric instrumentation.",
+          "paths": [
+            "fastapi/middleware/__init__.py",
+            "fastapi/middleware/asyncexitstack.py",
+            "fastapi/middleware/cors.py",
+            "fastapi/middleware/gzip.py",
+            "fastapi/middleware/httpsredirect.py",
+            "fastapi/middleware/trustedhost.py",
+            "fastapi/middleware/wsgi.py",
+            "fastapi/concurrency.py",
+            "fastapi/telemetry/__init__.py",
+            "fastapi/telemetry/_asgi.py",
+            "fastapi/telemetry/_runtime.py",
+            "fastapi/telemetry/_api.py"
+          ],
+          "allowed_dependencies": [
+            "Tier 1: Pydantic v2 Adapter, Descriptors & Core Types"
+          ]
+        },
+        {
+          "name": "Tier 1: Pydantic v2 Adapter, Descriptors & Core Types",
+          "responsibility": "Encapsulates Pydantic v2 ModelField / TypeAdapter validation & JSON Schema hooks, FieldInfo parameter descriptors, UploadFile/DefaultPlaceholder data structures, jsonable_encoder, and core exception types.",
+          "paths": [
+            "fastapi/_compat/__init__.py",
+            "fastapi/_compat/v2.py",
+            "fastapi/_compat/shared.py",
+            "fastapi/params.py",
+            "fastapi/datastructures.py",
+            "fastapi/encoders.py",
+            "fastapi/exceptions.py",
+            "fastapi/utils.py",
+            "fastapi/types.py",
+            "fastapi/logger.py"
+          ],
+          "allowed_dependencies": []
+        }
+      ],
+      "modules": [
+        {
+          "path": "fastapi/applications.py",
+          "role": "FastAPI ASGI entrypoint subclassing Starlette; coordinates middleware stack, OpenTelemetry lifespan, OpenAPI schema caching, and route decorators.",
+          "key_symbols": [
+            "FastAPI"
+          ],
+          "depends_on": [
+            "fastapi/routing.py",
+            "fastapi/openapi/utils.py",
+            "fastapi/openapi/docs.py",
+            "fastapi/middleware/asyncexitstack.py",
+            "fastapi/telemetry/_asgi.py"
+          ],
+          "health_note": "4,118 LOC; clean downward delegation into routing, openapi, middleware, and telemetry."
+        },
+        {
+          "path": "fastapi/routing.py",
+          "role": "Route registration and ASGI request/WebSocket/SSE execution compiler (APIRouter, APIRoute, APIWebSocketRoute).",
+          "key_symbols": [
+            "APIRouter",
+            "APIRoute",
+            "APIWebSocketRoute",
+            "get_request_handler",
+            "run_endpoint_function",
+            "serialize_response"
+          ],
+          "depends_on": [
+            "fastapi/dependencies/utils.py",
+            "fastapi/params.py",
+            "fastapi/encoders.py",
+            "fastapi/_compat/v2.py",
+            "fastapi/sse.py"
+          ],
+          "health_note": "5,726 LOC; primary cognitive hotspot in get_request_handler (159) where body parsing, DI, dispatch, and serialization converge."
+        },
+        {
+          "path": "fastapi/dependencies/utils.py",
+          "role": "Static signature analyzer (get_dependant, analyze_param) and async runtime DAG executor (solve_dependencies).",
+          "key_symbols": [
+            "get_dependant",
+            "analyze_param",
+            "solve_dependencies",
+            "request_params_to_args",
+            "request_body_to_args"
+          ],
+          "depends_on": [
+            "fastapi/dependencies/models.py",
+            "fastapi/_compat/v2.py",
+            "fastapi/params.py",
+            "fastapi/concurrency.py",
+            "fastapi/security/oauth2.py"
+          ],
+          "health_note": "1,294 LOC; cycle with fastapi.routing is cleanly isolated under TYPE_CHECKING."
+        },
+        {
+          "path": "fastapi/openapi/utils.py",
+          "role": "Synthesizes OpenAPI 3.1.0 JSON documents from registered APIRoute Dependant graphs and Pydantic v2 JSON schemas.",
+          "key_symbols": [
+            "get_openapi",
+            "get_openapi_path",
+            "get_openapi_operation_metadata",
+            "get_fields_from_routes"
+          ],
+          "depends_on": [
+            "fastapi/openapi/models.py",
+            "fastapi/dependencies/utils.py",
+            "fastapi/routing.py",
+            "fastapi/_compat/v2.py"
+          ],
+          "health_note": "631 LOC; get_openapi_path has cognitive=109."
+        },
+        {
+          "path": "fastapi/_compat/v2.py",
+          "role": "Pydantic v2 TypeAdapter & GenerateJsonSchema abstraction (ModelField) decoupling core routing/DI from internal Pydantic APIs.",
+          "key_symbols": [
+            "ModelField",
+            "GenerateJsonSchema",
+            "get_definitions",
+            "create_body_model"
+          ],
+          "depends_on": [
+            "fastapi/_compat/shared.py",
+            "fastapi/params.py",
+            "fastapi/types.py"
+          ],
+          "health_note": "405 LOC; forms 1 intra-Tier-1 runtime cycle with fastapi/params.py and fastapi/datastructures.py."
+        },
+        {
+          "path": "fastapi/security/oauth2.py",
+          "role": "OAuth2 Flows, Password/AuthorizationCode Bearer extractors, and SecurityScopes enforcement integrated into Depends().",
+          "key_symbols": [
+            "OAuth2",
+            "OAuth2PasswordBearer",
+            "OAuth2AuthorizationCodeBearer",
+            "OAuth2PasswordRequestForm",
+            "SecurityScopes"
+          ],
+          "depends_on": [
+            "fastapi/security/base.py",
+            "fastapi/security/utils.py",
+            "fastapi/openapi/models.py",
+            "fastapi/exceptions.py"
+          ],
+          "health_note": "603 LOC; clean callable dependency design."
+        },
+        {
+          "path": "fastapi/sse.py",
+          "role": "Native Server-Sent Events (SSE) protocol serializer and streaming EventSourceResponse.",
+          "key_symbols": [
+            "EventSourceResponse",
+            "ServerSentEvent",
+            "format_sse_event"
+          ],
+          "depends_on": [],
+          "health_note": "190 LOC; zero internal dependencies, crisp single-responsibility module."
+        },
+        {
+          "path": "fastapi/telemetry/_asgi.py",
+          "role": "Low-overhead ASGI OpenTelemetry middleware capturing HTTP/WebSocket spans, route templates, and uncaught exception events.",
+          "key_symbols": [
+            "NativeTelemetry",
+            "ExceptionTelemetryMiddleware"
+          ],
+          "depends_on": [
+            "fastapi/telemetry/_api.py"
+          ],
+          "health_note": "420 LOC; imported directly by fastapi/applications.py across private underscore module boundary."
+        }
+      ],
+      "boundary_assessment": "Strong downward layering across 52 modules: 2 cross-tier type references (dependencies.utils <-> routing <-> utils) are properly guarded behind if TYPE_CHECKING:. Only 1 localized Tier-1 runtime import cycle exists (fastapi._compat.v2 -> fastapi.params -> fastapi.datastructures -> fastapi._compat.v2), plus 4 internal imports from applications/routing/background into private fastapi.telemetry._* submodules."
+    },
+    "execution_flow_map": {
+      "entry_points": [
+        "fastapi/__init__.py",
+        "fastapi/applications.py:FastAPI",
+        "fastapi/routing.py:APIRouter",
+        "fastapi/cli.py:main"
+      ],
+      "execution_flows": [
+        {
+          "name": "1. Startup Route Compilation & Dependant DAG Construction",
+          "trigger": "Decorator registration (`@app.get`, `@router.post`, `app.include_router`) during module import / startup",
+          "steps": [
+            "FastAPI / APIRouter creates an APIRoute (or APIWebSocketRoute) in fastapi/routing.py.",
+            "APIRoute.__init__ calls get_dependant() and analyze_param() in fastapi/dependencies/utils.py using typing-inspection to classify path, query, header, cookie, body, Depends(), and Security() parameters.",
+            "Body parameters are synthesized into composite Pydantic v2 ModelField / TypeAdapter validators via fastapi/_compat/v2.py.",
+            "APIRoute.get_route_handler() pre-builds the async ASGI request_response closure via get_request_handler()."
+          ],
+          "involved_files": [
+            "fastapi/applications.py",
+            "fastapi/routing.py",
+            "fastapi/dependencies/utils.py",
+            "fastapi/dependencies/models.py",
+            "fastapi/_compat/v2.py",
+            "fastapi/params.py"
+          ]
+        },
+        {
+          "name": "2. ASGI HTTP / SSE Request Dispatch, DI Resolution & Yield Teardown",
+          "trigger": "Incoming ASGI HTTP scope delivered to FastAPI.__call__(scope, receive, send)",
+          "steps": [
+            "NativeTelemetry (when enabled) and ServerErrorMiddleware / user ASGI middlewares / ExceptionMiddleware / AsyncExitStackMiddleware wrap the request.",
+            "Starlette Router matches APIRoute and invokes the pre-compiled get_request_handler() closure in fastapi/routing.py.",
+            "Request body (JSON, Form, or Multipart) is parsed and solve_dependencies() executes the Dependant DAG with per-request dependency_cache and AsyncExitStack registration for yield dependencies.",
+            "run_endpoint_function() dispatches async def callables directly on the event loop or offloads sync def callables via Starlette/AnyIO run_in_threadpool.",
+            "serialize_response() validates/filters return payloads via Pydantic v2 ModelField (or streams EventSourceResponse / JSONL), sends ASGI response frames, unwinds request-scoped yield dependencies in AsyncExitStackMiddleware, and runs BackgroundTasks."
+          ],
+          "involved_files": [
+            "fastapi/applications.py",
+            "fastapi/telemetry/_asgi.py",
+            "fastapi/middleware/asyncexitstack.py",
+            "fastapi/routing.py",
+            "fastapi/dependencies/utils.py",
+            "fastapi/concurrency.py",
+            "fastapi/encoders.py",
+            "fastapi/sse.py",
+            "fastapi/background.py"
+          ]
+        },
+        {
+          "name": "3. Lazy OpenAPI 3.1.0 Schema Synthesis & Interactive Docs Serving",
+          "trigger": "First GET request to /openapi.json (or explicit app.openapi() call) and /docs or /redoc",
+          "steps": [
+            "FastAPI.openapi() checks cached self.openapi_schema; on cache miss, invokes get_openapi() in fastapi/openapi/utils.py.",
+            "get_fields_from_routes() collects all ModelField instances across routes and dependencies, generating unified JSON Schema $defs via GenerateJsonSchema in fastapi/_compat/v2.py.",
+            "get_openapi_path() synthesizes paths, operationIds, security schemes, requestBody, and status-code responses into an OpenAPI 3.1.0 dictionary cached on app.openapi_schema.",
+            "fastapi/openapi/docs.py renders Swagger UI (/docs) or ReDoc (/redoc) HTML pointing to openapi_url."
+          ],
+          "involved_files": [
+            "fastapi/applications.py",
+            "fastapi/openapi/utils.py",
+            "fastapi/openapi/models.py",
+            "fastapi/openapi/docs.py",
+            "fastapi/_compat/v2.py"
+          ]
+        }
+      ],
+      "state_and_storage": [
+        "In-Memory Application Metadata: FastAPI instance holds registered APIRoute list, dependency_overrides dict, middleware definitions, and lazy-cached self.openapi_schema dict (no database or filesystem state).",
+        "Per-Request Ephemeral Scope State: scope['fastapi_inner_astack'] & scope['fastapi_function_astack'] (AsyncExitStack instances managing function-scoped vs request-scoped yield teardown) plus per-request dependency_cache dict keyed by (call, tuple(security_scopes))."
+      ],
+      "error_and_concurrency_model": "Asynchronous ASGI 3.0 event-loop concurrency backed by AnyIO: `async def` endpoints and dependencies execute directly on the active asyncio/trio loop, whereas synchronous `def` endpoints and sync contextmanager `yield` dependencies (`contextmanager_in_threadpool` in `fastapi/concurrency.py`) are automatically offloaded to AnyIO worker threads to prevent event-loop blocking. Validation failures raise `RequestValidationError` / `WebSocketRequestValidationError` / `ResponseValidationError` (`fastapi/exceptions.py`), translated into structured 422 JSON payloads by `fastapi/exception_handlers.py`."
+    }
+  },
+  "audit_dimensions": [
+    {
+      "action_id": "act-04",
+      "audit_id": "python_ast_audit",
+      "title": "Interpret Python AST Facts & Evaluate Quality/Typing/Imports/Security",
+      "score": 89,
+      "grade": "A",
+      "rules_evaluated": [
+        "common/architecture",
+        "common/maintainability",
+        "common/security",
+        "common/security_vulnerability",
+        "python/code_quality",
+        "python/typing",
+        "python/modern_stack"
+      ],
+      "pass_count": 4,
+      "warn_count": 3,
+      "fail_count": 0,
+      "summary": "Across 52 Python modules (19,837 LOC, 121 classes, 438 functions), FastAPI v0.162.2 demonstrates exceptional security and typing discipline: 94.5% callable type safety coverage, packaged PEP 561 py.typed, PEP 727 Annotated[..., Doc()] inline parameter documentation (annotated_doc), zero wildcard imports, zero empty or mismatched docstrings, zero hardcoded secrets, and zero dangerous CWE execution sinks. Structural complexity concentrates intentionally in five core runtime engines—get_request_handler (cognitive=159), get_openapi_path (cognitive=109), NativeTelemetry.__call__ (cognitive=85), analyze_param (cognitive=64), and solve_dependencies (cognitive=33)—alongside a single runtime import cycle (fastapi._compat.v2 <-> fastapi.params -> fastapi.datastructures)."
+    },
+    {
+      "action_id": "act-13",
+      "audit_id": "security_vulnerability_audit",
+      "title": "Evaluate Supply-Chain CVEs, Container Misconfigs, Secrets, Dangerous Sinks & API Boundaries",
+      "score": 91,
+      "grade": "S",
+      "rules_evaluated": [
+        "common/security_vulnerability",
+        "common/supply_chain"
+      ],
+      "pass_count": 0,
+      "warn_count": 2,
+      "fail_count": 0,
+      "summary": "FastAPI v0.162.2 core runtime dependencies (starlette, pydantic, typing-extensions, typing-inspection, annotated-doc, opentelemetry-api) contain zero CRITICAL or HIGH CVEs, zero hardcoded or committed secrets, zero container IaC misconfigurations, and zero dangerous CWE execution sinks across all 52 source modules. Trivy SCA identified 7 transitive lockfile advisories in uv.lock (0 CRITICAL, 1 HIGH: CVE-2026-114605 in optional email-validator's transitive dnspython@2.8.0 -> 2.9.0, 5 MEDIUM, 1 LOW)—none affecting downstream consumers due to flexible `>=` SemVer bounds—while the 398 OS package advisories originate solely from the ephemeral Debian 12.13 test harness base image."
+    },
+    {
+      "action_id": "act-02",
+      "audit_id": "repo_structure_audit",
+      "title": "Evaluate Repository Structure, Supply Chain & Dependencies",
+      "score": 93,
+      "grade": "S",
+      "rules_evaluated": [
+        "python/dependencies",
+        "common/supply_chain",
+        "common/documentation",
+        "common/git_workflow",
+        "common/security"
+      ],
+      "pass_count": 4,
+      "warn_count": 1,
+      "fail_count": 0,
+      "summary": "FastAPI v0.162.2 exhibits exemplary PEP 621 packaging and dependency hygiene: 6 lean runtime dependencies with explicit SemVer lower bounds, zero unpinned specs, isolated PEP 735 dependency-groups, a deterministic uv.lock lockfile, and a packaged PEP 561 py.typed marker across 52 source modules and 273 core test modules. Only repository-level OpenSSF governance files (SECURITY.md and Dependabot config) are absent in this standalone showcase snapshot."
+    },
+    {
+      "action_id": "act-08",
+      "audit_id": "library_hygiene_audit",
+      "title": "Evaluate Public API Boundaries, Import Purity, SemVer & Diátaxis Docs",
+      "score": 94,
+      "grade": "S",
+      "rules_evaluated": [
+        "common/library_guidelines",
+        "common/documentation",
+        "common/maintainability"
+      ],
+      "pass_count": 2,
+      "warn_count": 1,
+      "fail_count": 0,
+      "summary": "FastAPI v0.162.2 exemplifies gold-standard Python library hygiene: explicit PEP 484 `X as X` re-exports in `fastapi/__init__.py` across 20 canonical symbols, zero import-time I/O or network side effects, zero `sys.exit()` calls inside library code (`fastapi/cli.py` raises `RuntimeError` cleanly when `fastapi-cli` is absent), named `logging.getLogger('fastapi')` without `basicConfig` hijacking (`fastapi/logger.py`), and flexible `>=` lower-bound SemVer constraints across all 6 core dependencies."
+    },
+    {
+      "action_id": "act-09",
+      "audit_id": "python_test_audit",
+      "title": "Evaluate Test Suite Completeness & Structure",
+      "score": 95,
+      "grade": "S",
+      "rules_evaluated": [
+        "python/testing"
+      ],
+      "pass_count": 1,
+      "warn_count": 0,
+      "fail_count": 0,
+      "summary": "FastAPI's core framework test suite spans 273 test files and 1,835 test functions with 100.0% static module test coverage across all 52 source modules (5.25x test-to-source file ratio). Strict pytest configuration (`--strict-config`, `--strict-markers`, `strict_xfail=true`, `filterwarnings=['error']`, `timeout=20`) enforces high determinism and warning-free execution, with only 2 assertion-free helper/warning test functions identified."
+    },
+    {
+      "action_id": "act-11",
+      "audit_id": "container_runtime_audit",
+      "title": "Evaluate Buildability, Offline Test Results, Measured Coverage & Startup Health",
+      "score": 97,
+      "grade": "S",
+      "rules_evaluated": [
+        "common/runtime_verification",
+        "common/production_readiness"
+      ],
+      "pass_count": 2,
+      "warn_count": 0,
+      "fail_count": 0,
+      "summary": "Hermetic containerized runtime verification (--network=none, non-root UID 10001, Python 3.12) passed cleanly across all gates: clean frozen uv.lock container build (0.79s cached), 100% offline test pass across 3,228 collected items (3,216 passed, 0 failed, 0 errors, 12 skipped in 265.57s), 96.4% measured line coverage (4,628 / 4,801 statements) and 91.0% branch coverage across fastapi/, and a clean zero-side-effect library import smoke check."
+    }
+  ],
+  "rule_compliance": [
+    {
+      "rule_id": "common/architecture",
+      "status": "warn",
+      "source_action": "python_ast_audit",
+      "evidence": "1 runtime circular dependency (fastapi._compat.v2 -> fastapi.params -> fastapi.datastructures -> fastapi._compat.v2) and 4 private cross-domain imports from fastapi.applications / routing / background into fastapi.telemetry._asgi / _runtime / _api; 2 additional cycles are cleanly guarded under TYPE_CHECKING.",
+      "summary": "Clean facade-over-Starlette/Pydantic layering across 52 modules, with 1 localized _compat/params/datastructures import cycle and internal _telemetry coupling."
+    },
+    {
+      "rule_id": "common/maintainability",
+      "status": "warn",
+      "source_action": "python_ast_audit",
+      "evidence": "get_request_handler (fastapi/routing.py:397, cognitive=159, 408 LOC), get_openapi_path (fastapi/openapi/utils.py:303, cognitive=109, 230 LOC), NativeTelemetry.__call__ (fastapi/telemetry/_asgi.py:228, cognitive=85), analyze_param (fastapi/dependencies/utils.py:409, cognitive=64), and 52 wide OpenAPI decorator signatures (FastAPI.__init__ params=37, get/post/put/delete params=23).; Wide ergonomic OpenAPI configuration signatures (FastAPI.__init__=37 params, route decorators=23 params) and concentrated complexity in get_request_handler (159) and get_openapi_path (109).",
+      "summary": "Wide decorator parameter lists are an intentional ergonomic design paired with PEP 727 Doc() metadata, while core request/OpenAPI/DI dispatch closures exceed SIG cognitive complexity <= 15."
+    },
+    {
+      "rule_id": "common/security_vulnerability",
+      "status": "warn",
+      "source_action": "security_vulnerability_audit",
+      "evidence": "dangerous_sinks=[] across all 52 framework modules; built-in security primitives (OAuth2, HTTPBearer, HTTPBasic/Digest using secrets.compare_digest, APIKey, OpenIdConnect) enforce structured credential extraction.; SEC-01 app_vuln_counts={critical:0, high:1, medium:5, low:1, total:7} in transitive dev/optional uv.lock (CVE-2026-114605 dnspython@2.8.0 -> 2.9.0) with 0 CVEs in core runtime dependencies; os_vuln_counts=398 in ephemeral debian 12.13 test harness image; SEC-02 misconfigurations=[]; SEC-03 secrets=[]; SEC-04 dangerous_sinks=[]; SEC-05 library security extractors enforce OAuth2/Bearer/Digest/APIKey validation.",
+      "summary": "Zero core runtime CVEs, zero secrets, zero IaC misconfigs, and zero CWE code sinks; 1 HIGH transitive lockfile CVE (dnspython 2.8.0 -> 2.9.0) in dev/optional uv.lock."
+    },
+    {
+      "rule_id": "common/supply_chain",
+      "status": "warn",
+      "source_action": "repo_structure_audit",
+      "evidence": "lockfiles_found=['uv.lock'], has_license=true (LICENSE + LICENSE-FASTAPI), ci_supply_chain_issues=[], but has_security_policy=false and has_dependency_automation=false in this showcase snapshot.; Deterministic uv.lock committed, 0 unpinned dependencies, non-root UID 10001 container harness (0 IaC misconfigurations); standalone showcase snapshot omits SECURITY.md and Dependabot config.",
+      "summary": "Deterministic uv.lock and dual license files present; SECURITY.md and automated dependency update manifest are not included in this showcase workspace."
+    },
+    {
+      "rule_id": "python/code_quality",
+      "status": "warn",
+      "source_action": "python_ast_audit",
+      "evidence": "empty_docstrings=[], doc_signature_mismatches=[], wildcard_imports=[]; conventional AST docstring_coverage_pct=25.2% because FastAPI adopts PEP 727 Annotated[..., Doc()] inline parameter documentation rather than traditional docstring blocks; 1 mutable default (fastapi/_compat/v2.py:176) and 3 silent except-pass blocks in fastapi/routing.py:640,1880,2097.",
+      "summary": "Zero docstring drift and rich PEP 727 Annotated Doc() metadata, offset by high cognitive branching in routing.py and 1 mutable default parameter."
+    },
+    {
+      "rule_id": "common/documentation",
+      "status": "pass",
+      "source_action": "repo_structure_audit",
+      "evidence": "has_readme=true (59 lines, 6 structured sections covering Purpose, Layout, Reproducible uvx Commands, and Licensing) + packaged fastapi/py.typed marker.; PEP 727 Annotated[..., Doc()] inline documentation across all public classes/functions (FastAPI, APIRouter, Path, Query, Body, Depends, Security), zero doc_signature_mismatches, zero empty_docstrings, and structured README.md.",
+      "summary": "Clear Standard-Readme structure with explicit split-licensing attribution and uvx reproduction workflow."
+    },
+    {
+      "rule_id": "common/git_workflow",
+      "status": "pass",
+      "source_action": "repo_structure_audit",
+      "evidence": "has_gitignore=true (.venv, __pycache__, .drawlib/, .pni/cache/ excluded); clean linear main branch with zero conflict markers.",
+      "summary": "Clean trunk branch and comprehensive .gitignore hygiene."
+    },
+    {
+      "rule_id": "common/library_guidelines",
+      "status": "pass",
+      "source_action": "library_hygiene_audit",
+      "evidence": "fastapi/__init__.py uses PEP 484 explicit `from ... import X as X` re-exports (20 public symbols), fastapi/py.typed is packaged, fastapi/logger.py uses logging.getLogger('fastapi') with zero root-logger hijacking, zero sys.exit() calls exist in fastapi/, and all 6 core dependencies in pyproject.toml use flexible `>=` floors without upper-bound caps.",
+      "summary": "100% compliant library API boundary, import purity, logging discipline, and SemVer dependency flexibility."
+    },
+    {
+      "rule_id": "common/production_readiness",
+      "status": "pass",
+      "source_action": "container_runtime_audit",
+      "evidence": "missing_io_timeouts=0, native OpenTelemetry span/exception instrumentation in fastapi/telemetry/_asgi.py (94.9% line, 93.8% branch coverage), deterministic AsyncExitStack teardown, and structured validation exception handlers.",
+      "summary": "Production-grade ASGI observability, lifespan/AsyncExitStack resource safety, and zero missing I/O timeouts."
+    },
+    {
+      "rule_id": "common/runtime_verification",
+      "status": "pass",
+      "source_action": "container_runtime_audit",
+      "evidence": "RV-01 harness_build=passed (exit_code=0, .pni/dockerfiles/root/Dockerfile); RV-02 test_execution=passed under --network=none (3,216 passed, 0 failed, 0 errors, 12 skipped); RV-03 measured line_coverage_pct=96.4% (4,628/4,801) and branch_coverage_pct=91.0%; RV-04 library smoke_check=passed ('Imported fastapi cleanly').",
+      "summary": "All 4 runtime verification gates (RV-01..RV-04) passed with 96.4% line and 91.0% branch coverage under --network=none."
+    },
+    {
+      "rule_id": "common/security",
+      "status": "pass",
+      "source_action": "repo_structure_audit",
+      "evidence": "committed_secret_files=[], container_hygiene_issues=[], non-root UID 10001 configured in .pni/dockerfiles/root/Dockerfile.; hardcoded_secrets=[], dangerous_sinks=[], missing_io_timeouts=[], global_state_usages=0; 1 minor mutable default dict values={} in fastapi/_compat/v2.py:176 (ModelField.validate, never mutated in-place).",
+      "summary": "Zero committed secrets or credential artifacts in version control."
+    },
+    {
+      "rule_id": "python/dependencies",
+      "status": "pass",
+      "source_action": "repo_structure_audit",
+      "evidence": "pyproject.toml declares 6 explicit SemVer-floored runtime dependencies (starlette>=0.46.0, pydantic>=2.9.0, typing-extensions>=4.8.0, typing-inspection>=0.4.2, annotated-doc>=0.0.2, opentelemetry-api>=1.44.0), unpinned_dependencies=[], isolated [dependency-groups] (dev, tests, docs), and committed uv.lock.",
+      "summary": "100% PEP 621 & PEP 735 compliant dependency manifest with deterministic uv.lock."
+    },
+    {
+      "rule_id": "python/modern_stack",
+      "status": "pass",
+      "source_action": "python_ast_audit",
+      "evidence": "Modern Python >=3.10..3.14 stack using Pydantic v2 TypeAdapter, typing-inspection, annotated-doc (PEP 727), OpenTelemetry API, and uv.lock. The 38 isort group notices stem from FastAPI's explicit [tool.ruff.lint.isort] known-third-party=['fastapi','pydantic','starlette'] convention; 6 os.path calls remain in fastapi/routing.py static SPA path resolution.",
+      "summary": "Exemplary modern Python stack (Pydantic v2, typing-inspection, PEP 727 annotated-doc, OpenTelemetry, ty, uv)."
+    },
+    {
+      "rule_id": "python/testing",
+      "status": "pass",
+      "source_action": "python_test_audit",
+      "evidence": "273 core test files, 1,835 test functions, module_test_coverage_pct=100.0%, strict pytest settings (strict_xfail=true, filterwarnings=['error'], timeout='20'), and inline_snapshot OpenAPI 3.1 schema verification; only 2 assertion-free test functions (tests/test_multipart_installation.py:141 and tests/test_webhooks_security.py:34).",
+      "summary": "100% static module coverage across 1,835 tests with warnings-as-errors and snapshot schema verification."
+    },
+    {
+      "rule_id": "python/typing",
+      "status": "pass",
+      "source_action": "python_ast_audit",
+      "evidence": "type_safety_coverage_pct=94.5%, has_type_marker=true (fastapi/py.typed), strict mypy + ty configuration in pyproject.toml; 29 missing annotations are almost exclusively __init__ -> None return omissions in fastapi/params.py and datastructures.py, plus 5 unscoped # type: ignore comments.",
+      "summary": "94.5% callable type coverage backed by PEP 561 py.typed, mypy strict mode, and Astral ty."
+    }
+  ],
+  "module_hotspots": [
+    {
+      "file_path": "fastapi/routing.py",
+      "loc": 5726,
+      "risk_score": 0.27,
+      "finding_counts": {
+        "medium": 1
+      },
+      "top_rules": [
+        "common/maintainability"
+      ]
+    },
+    {
+      "file_path": "fastapi/openapi/utils.py",
+      "loc": 631,
+      "risk_score": 0.27,
+      "finding_counts": {
+        "medium": 1
+      },
+      "top_rules": [
+        "common/maintainability"
+      ]
+    },
+    {
+      "file_path": "fastapi/_compat/v2.py",
+      "loc": 405,
+      "risk_score": 0.24,
+      "finding_counts": {
+        "low": 2
+      },
+      "top_rules": [
+        "common/architecture",
+        "python/code_quality"
+      ]
+    },
+    {
+      "file_path": "fastapi/params.py",
+      "loc": 763,
+      "risk_score": 0.18,
+      "finding_counts": {
+        "low": 1
+      },
+      "top_rules": [
+        "python/typing"
+      ]
+    },
+    {
+      "file_path": "uv.lock",
+      "loc": 0,
+      "risk_score": 0.15,
+      "finding_counts": {
+        "medium": 1
+      },
+      "top_rules": [
+        "common/security_vulnerability"
+      ]
+    },
+    {
+      "file_path": "fastapi/applications.py",
+      "loc": 4118,
+      "risk_score": 0.12,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/param_functions.py",
+      "loc": 2430,
+      "risk_score": 0.12,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/dependencies/utils.py",
+      "loc": 1294,
+      "risk_score": 0.12,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/security/oauth2.py",
+      "loc": 603,
+      "risk_score": 0.12,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/telemetry/_asgi.py",
+      "loc": 420,
+      "risk_score": 0.12,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/openapi/docs.py",
+      "loc": 341,
+      "risk_score": 0.12,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/security/http.py",
+      "loc": 335,
+      "risk_score": 0.12,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/encoders.py",
+      "loc": 333,
+      "risk_score": 0.12,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/security/api_key.py",
+      "loc": 248,
+      "risk_score": 0.12,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/telemetry/_runtime.py",
+      "loc": 206,
+      "risk_score": 0.12,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/sse.py",
+      "loc": 190,
+      "risk_score": 0.12,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/security/open_id_connect_url.py",
+      "loc": 82,
+      "risk_score": 0.12,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/openapi/models.py",
+      "loc": 316,
+      "risk_score": 0.06,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/telemetry/_api.py",
+      "loc": 240,
+      "risk_score": 0.06,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/exceptions.py",
+      "loc": 201,
+      "risk_score": 0.06,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/dependencies/models.py",
+      "loc": 193,
+      "risk_score": 0.06,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/_compat/shared.py",
+      "loc": 172,
+      "risk_score": 0.06,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/datastructures.py",
+      "loc": 141,
+      "risk_score": 0.06,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/utils.py",
+      "loc": 114,
+      "risk_score": 0.06,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/responses.py",
+      "loc": 76,
+      "risk_score": 0.06,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/background.py",
+      "loc": 50,
+      "risk_score": 0.06,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/_compat/__init__.py",
+      "loc": 40,
+      "risk_score": 0.06,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/concurrency.py",
+      "loc": 31,
+      "risk_score": 0.06,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/exception_handlers.py",
+      "loc": 28,
+      "risk_score": 0.06,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/__init__.py",
+      "loc": 22,
+      "risk_score": 0.06,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/security/__init__.py",
+      "loc": 15,
+      "risk_score": 0.06,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/middleware/asyncexitstack.py",
+      "loc": 12,
+      "risk_score": 0.06,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/cli.py",
+      "loc": 10,
+      "risk_score": 0.06,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/types.py",
+      "loc": 10,
+      "risk_score": 0.06,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/security/utils.py",
+      "loc": 7,
+      "risk_score": 0.06,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/security/base.py",
+      "loc": 4,
+      "risk_score": 0.06,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/middleware/httpsredirect.py",
+      "loc": 3,
+      "risk_score": 0.06,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/middleware/trustedhost.py",
+      "loc": 3,
+      "risk_score": 0.06,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/middleware/wsgi.py",
+      "loc": 3,
+      "risk_score": 0.06,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/openapi/constants.py",
+      "loc": 3,
+      "risk_score": 0.06,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/telemetry/__init__.py",
+      "loc": 3,
+      "risk_score": 0.06,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/websockets.py",
+      "loc": 3,
+      "risk_score": 0.06,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/__main__.py",
+      "loc": 2,
+      "risk_score": 0.06,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/logger.py",
+      "loc": 2,
+      "risk_score": 0.06,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/requests.py",
+      "loc": 2,
+      "risk_score": 0.06,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/middleware/__init__.py",
+      "loc": 1,
+      "risk_score": 0.06,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/middleware/cors.py",
+      "loc": 1,
+      "risk_score": 0.06,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/middleware/gzip.py",
+      "loc": 1,
+      "risk_score": 0.06,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/staticfiles.py",
+      "loc": 1,
+      "risk_score": 0.06,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/templating.py",
+      "loc": 1,
+      "risk_score": 0.06,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/testclient.py",
+      "loc": 1,
+      "risk_score": 0.06,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/dependencies/__init__.py",
+      "loc": 0,
+      "risk_score": 0.06,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "fastapi/openapi/__init__.py",
+      "loc": 0,
+      "risk_score": 0.06,
+      "finding_counts": {},
+      "top_rules": []
+    },
+    {
+      "file_path": "pyproject.toml",
+      "loc": 0,
+      "risk_score": 0.06,
+      "finding_counts": {
+        "low": 1
+      },
+      "top_rules": [
+        "common/supply_chain"
+      ]
+    },
+    {
+      "file_path": "tests/test_multipart_installation.py",
+      "loc": 0,
+      "risk_score": 0.06,
+      "finding_counts": {
+        "low": 1
+      },
+      "top_rules": [
+        "python/testing"
+      ]
+    }
+  ],
+  "strengths": [
+    "Ultra-lean 6-package core dependency footprint (starlette, pydantic, typing-extensions, typing-inspection, annotated-doc, opentelemetry-api) keeping downstream install surfaces minimal.",
+    "Clean separation of optional extras ([standard], [all]) and PEP 735 [dependency-groups] (tests, docs, dev) paired with a reproducible uv.lock.",
+    "Packaged PEP 561 fastapi/py.typed marker enabling strict downstream mypy/pyright/ty static verification.",
+    "Pioneering PEP 727 Annotated[..., Doc()] inline documentation across FastAPI, APIRouter, Path, Query, Body, Header, Cookie, Depends, and Security, keeping IDE tooltips co-located with parameter types.",
+    "Zero dangerous CWE execution sinks, zero hardcoded secrets, zero wildcard imports, and zero docstring-to-signature mismatches across 19,837 LOC.",
+    "Clean separation of Pydantic v2 schema/validation adapters (fastapi/_compat/v2.py), DI graph resolution (fastapi/dependencies/), OpenAPI 3.1 synthesis (fastapi/openapi/), SSE streaming (fastapi/sse.py), and native OpenTelemetry instrumentation (fastapi/telemetry/).",
+    "PEP 484 `from .module import Symbol as Symbol` re-exports in `fastapi/__init__.py` guarantee static type-checker visibility (mypy `--no-implicit-reexport`, Pyright, ty) without maintaining duplicate `__all__` lists.",
+    "Flexible `>=` SemVer lower bounds on all 6 runtime dependencies (`starlette>=0.46.0`, `pydantic>=2.9.0`, etc.) maximize ecosystem compatibility.",
+    "Named `logging.getLogger('fastapi')` in `fastapi/logger.py` and typed exceptions (`FastAPIError`, `RequestValidationError`, `DependencyScopeError`) avoid global side effects.",
+    "100.0% static module-to-test coverage across 1,835 core framework unit and ASGI TestClient integration tests.",
+    "`filterwarnings = ['error']` and `strict_xfail = true` in `pyproject.toml` ensure zero silent deprecation regressions across Python 3.10–3.14 and Pydantic v2.",
+    "Extensive `inline_snapshot` assertions validate exact OpenAPI 3.1.0 JSON schemas, OAuth2 security definitions, SSE streams, and OpenTelemetry spans.",
+    "96.4% measured line coverage (4,628 / 4,801 statements) and 91.0% branch coverage achieved purely from core framework unit tests under --network=none.",
+    "3,216 passing tests with zero failures and zero network dependencies confirm complete deterministic hermeticity.",
+    "Uncovered 1-line Starlette re-export shims (fastapi/middleware/cors.py, gzip.py, httpsredirect.py, trustedhost.py, templating.py) are exercised in tutorial integration tests rather than core unit tests.",
+    "Zero CVEs across all 6 core FastAPI runtime dependencies and zero CWE-classified dangerous execution sinks across 19,837 LOC.",
+    "Zero secrets detected by Trivy secret scanner and AST literal inspection across all source and test files.",
+    "Zero Dockerfile/IaC misconfigurations on the non-root UID 10001 test harness container.",
+    "96.4% measured line coverage (4,628 / 4,801 statements) and 91.0% branch coverage across 3,216 passing tests executed offline (--network=none) with warnings-as-errors.",
+    "Ultra-lean 6-package core dependency footprint using flexible `>=` SemVer floors, PEP 561 `fastapi/py.typed`, and PEP 484 `X as X` explicit re-exports.",
+    "Pioneering PEP 727 `Annotated[..., Doc()]` inline documentation keeping IDE tooltips and OpenAPI metadata synchronized with zero signature drift.",
+    "Zero CWE dangerous execution sinks, zero hardcoded secrets, zero core dependency CVEs, and native OpenTelemetry + Server-Sent Events (SSE) subsystems."
+  ],
+  "findings": [
+    {
+      "severity": "medium",
+      "category": "code_quality",
+      "rule_id": "common/maintainability",
+      "file_path": "fastapi/openapi/utils.py",
+      "line": 303,
+      "symbol": "get_openapi_path",
+      "evidence": "length=230 lines, branches=29, cognitive=109",
+      "description": "get_openapi_path merges operation parameters, request bodies, security scopes, callbacks, and multi-status response schemas in one monolithic routine.",
+      "recommendation": "Factor response-schema assembly and callback operation generation into composable helper functions."
+    },
+    {
+      "severity": "medium",
+      "category": "code_quality",
+      "rule_id": "common/maintainability",
+      "file_path": "fastapi/routing.py",
+      "line": 397,
+      "symbol": "get_request_handler",
+      "evidence": "length=408 lines, branches=49, cognitive=159 (inner app closure at line 428: cognitive=157)",
+      "description": "get_request_handler embeds body parsing (JSON, multipart, form, raw), solve_dependencies execution, endpoint dispatch, streaming/SSE branching, and response validation inside a single nested closure.",
+      "recommendation": "Extract dedicated helper stages (_parse_request_body, _execute_solved_endpoint, _build_validated_response) while preserving closure pre-computation for hot-path performance."
+    },
+    {
+      "severity": "medium",
+      "category": "security",
+      "rule_id": "common/security_vulnerability",
+      "file_path": "uv.lock",
+      "line": 1,
+      "symbol": "dnspython@2.8.0",
+      "evidence": "CVE-2026-114605 (HIGH, CVSS 7.5): dnspython 2.8.0 in uv.lock (fixed in 2.9.0; transitive dependency of optional email-validator)",
+      "description": "Transitive optional/dev lockfile entry dnspython@2.8.0 in uv.lock is affected by CVE-2026-114605 (DNS compression pointer DoS). Core fastapi wheel installations are unaffected because pyproject.toml does not pin dnspython.",
+      "recommendation": "Run `uv lock --upgrade-package dnspython` in upstream maintenance cycles to bump locked dnspython from 2.8.0 to >=2.9.0."
+    },
+    {
+      "severity": "low",
+      "category": "architecture",
+      "rule_id": "common/architecture",
+      "file_path": "fastapi/_compat/v2.py",
+      "line": 1,
+      "symbol": "fastapi._compat.v2",
+      "evidence": "circular_dependencies=[['fastapi._compat.v2', 'fastapi.params', 'fastapi.datastructures', 'fastapi._compat.v2']]",
+      "description": "Runtime circular import loop between fastapi._compat.v2, fastapi.params, and fastapi.datastructures mitigated via deferred import ordering.",
+      "recommendation": "Guard type-only UploadFile / FieldInfo cross-references under TYPE_CHECKING or extract shared sentinel types into fastapi.types."
+    },
+    {
+      "severity": "low",
+      "category": "code_quality",
+      "rule_id": "python/code_quality",
+      "file_path": "fastapi/_compat/v2.py",
+      "line": 176,
+      "symbol": "ModelField.validate",
+      "evidence": "Mutable default argument 'values={}' (B006)",
+      "description": "ModelField.validate declares a mutable dict literal default (values: dict[str, Any] = {}) rather than None.",
+      "recommendation": "Default values to None and normalize to {} or MappingProxyType inside the method body to prevent accidental shared-dict mutation."
+    },
+    {
+      "severity": "low",
+      "category": "security",
+      "rule_id": "common/supply_chain",
+      "file_path": "pyproject.toml",
+      "line": 1,
+      "symbol": null,
+      "evidence": "has_security_policy=false, has_dependency_automation=false",
+      "description": "Standalone showcase repository snapshot omits upstream GitHub governance files (SECURITY.md and .github/dependabot.yml).",
+      "recommendation": "If operating this showcase repository continuously, add a SECURITY.md pointing upstream FastAPI security reports to github.com/fastapi/fastapi/security and configure Dependabot for GitHub Actions."
+    },
+    {
+      "severity": "low",
+      "category": "testing",
+      "rule_id": "python/testing",
+      "file_path": "tests/test_multipart_installation.py",
+      "line": 141,
+      "symbol": "test_old_multipart_installed",
+      "evidence": "with warnings.catch_warnings(record=True): ... contains no assert on captured warnings",
+      "description": "test_old_multipart_installed records warnings with catch_warnings(record=True) when python_multipart=='0.0.12' is monkeypatched, but omits asserting on the captured warning list.",
+      "recommendation": "Bind `with warnings.catch_warnings(record=True) as recorded:` and assert the expected warning or clean registration behavior explicitly."
+    },
+    {
+      "severity": "low",
+      "category": "typing",
+      "rule_id": "python/typing",
+      "file_path": "fastapi/params.py",
+      "line": 30,
+      "symbol": "Param.__init__",
+      "evidence": "29 missing annotations (primarily __init__ -> None return annotations in fastapi/params.py and fastapi/datastructures.py) and 5 unscoped # type: ignore comments",
+      "description": "Several parameter descriptor __init__ methods omit explicit -> None return annotations, and 5 # type: ignore comments omit specific error codes.",
+      "recommendation": "Add explicit -> None return annotations on descriptor __init__ methods and scope remaining # type: ignore[code] directives."
+    }
+  ],
+  "consolidated_findings": [
+    {
+      "severity": "medium",
+      "file_path": "fastapi/openapi/utils.py",
+      "line": 303,
+      "symbol": "get_openapi_path",
+      "rule_ids": [
+        "common/maintainability"
+      ],
+      "categories": [
+        "code_quality"
+      ],
+      "primary_description": "get_openapi_path merges operation parameters, request bodies, security scopes, callbacks, and multi-status response schemas in one monolithic routine.",
+      "combined_evidence": "length=230 lines, branches=29, cognitive=109",
+      "merged_recommendation": "Factor response-schema assembly and callback operation generation into composable helper functions."
+    },
+    {
+      "severity": "medium",
+      "file_path": "fastapi/routing.py",
+      "line": 397,
+      "symbol": "get_request_handler",
+      "rule_ids": [
+        "common/maintainability"
+      ],
+      "categories": [
+        "code_quality"
+      ],
+      "primary_description": "get_request_handler embeds body parsing (JSON, multipart, form, raw), solve_dependencies execution, endpoint dispatch, streaming/SSE branching, and response validation inside a single nested closure.",
+      "combined_evidence": "length=408 lines, branches=49, cognitive=159 (inner app closure at line 428: cognitive=157)",
+      "merged_recommendation": "Extract dedicated helper stages (_parse_request_body, _execute_solved_endpoint, _build_validated_response) while preserving closure pre-computation for hot-path performance."
+    },
+    {
+      "severity": "medium",
+      "file_path": "uv.lock",
+      "line": 1,
+      "symbol": "dnspython@2.8.0",
+      "rule_ids": [
+        "common/security_vulnerability"
+      ],
+      "categories": [
+        "security"
+      ],
+      "primary_description": "Transitive optional/dev lockfile entry dnspython@2.8.0 in uv.lock is affected by CVE-2026-114605 (DNS compression pointer DoS). Core fastapi wheel installations are unaffected because pyproject.toml does not pin dnspython.",
+      "combined_evidence": "CVE-2026-114605 (HIGH, CVSS 7.5): dnspython 2.8.0 in uv.lock (fixed in 2.9.0; transitive dependency of optional email-validator)",
+      "merged_recommendation": "Run `uv lock --upgrade-package dnspython` in upstream maintenance cycles to bump locked dnspython from 2.8.0 to >=2.9.0."
+    },
+    {
+      "severity": "low",
+      "file_path": "fastapi/_compat/v2.py",
+      "line": 1,
+      "symbol": "fastapi._compat.v2",
+      "rule_ids": [
+        "common/architecture"
+      ],
+      "categories": [
+        "architecture"
+      ],
+      "primary_description": "Runtime circular import loop between fastapi._compat.v2, fastapi.params, and fastapi.datastructures mitigated via deferred import ordering.",
+      "combined_evidence": "circular_dependencies=[['fastapi._compat.v2', 'fastapi.params', 'fastapi.datastructures', 'fastapi._compat.v2']]",
+      "merged_recommendation": "Guard type-only UploadFile / FieldInfo cross-references under TYPE_CHECKING or extract shared sentinel types into fastapi.types."
+    },
+    {
+      "severity": "low",
+      "file_path": "fastapi/_compat/v2.py",
+      "line": 176,
+      "symbol": "ModelField.validate",
+      "rule_ids": [
+        "python/code_quality"
+      ],
+      "categories": [
+        "code_quality"
+      ],
+      "primary_description": "ModelField.validate declares a mutable dict literal default (values: dict[str, Any] = {}) rather than None.",
+      "combined_evidence": "Mutable default argument 'values={}' (B006)",
+      "merged_recommendation": "Default values to None and normalize to {} or MappingProxyType inside the method body to prevent accidental shared-dict mutation."
+    },
+    {
+      "severity": "low",
+      "file_path": "fastapi/params.py",
+      "line": 30,
+      "symbol": "Param.__init__",
+      "rule_ids": [
+        "python/typing"
+      ],
+      "categories": [
+        "typing"
+      ],
+      "primary_description": "Several parameter descriptor __init__ methods omit explicit -> None return annotations, and 5 # type: ignore comments omit specific error codes.",
+      "combined_evidence": "29 missing annotations (primarily __init__ -> None return annotations in fastapi/params.py and fastapi/datastructures.py) and 5 unscoped # type: ignore comments",
+      "merged_recommendation": "Add explicit -> None return annotations on descriptor __init__ methods and scope remaining # type: ignore[code] directives."
+    },
+    {
+      "severity": "low",
+      "file_path": "pyproject.toml",
+      "line": 1,
+      "symbol": null,
+      "rule_ids": [
+        "common/supply_chain"
+      ],
+      "categories": [
+        "security"
+      ],
+      "primary_description": "Standalone showcase repository snapshot omits upstream GitHub governance files (SECURITY.md and .github/dependabot.yml).",
+      "combined_evidence": "has_security_policy=false, has_dependency_automation=false",
+      "merged_recommendation": "If operating this showcase repository continuously, add a SECURITY.md pointing upstream FastAPI security reports to github.com/fastapi/fastapi/security and configure Dependabot for GitHub Actions."
+    },
+    {
+      "severity": "low",
+      "file_path": "tests/test_multipart_installation.py",
+      "line": 141,
+      "symbol": "test_old_multipart_installed",
+      "rule_ids": [
+        "python/testing"
+      ],
+      "categories": [
+        "testing"
+      ],
+      "primary_description": "test_old_multipart_installed records warnings with catch_warnings(record=True) when python_multipart=='0.0.12' is monkeypatched, but omits asserting on the captured warning list.",
+      "combined_evidence": "with warnings.catch_warnings(record=True): ... contains no assert on captured warnings",
+      "merged_recommendation": "Bind `with warnings.catch_warnings(record=True) as recorded:` and assert the expected warning or clean registration behavior explicitly."
+    }
+  ],
+  "action_plan": [
+    {
+      "priority": "P1",
+      "title": "Decompose high-complexity request handler and OpenAPI path synthesis routines",
+      "category": "code_quality",
+      "target_files": [
+        "fastapi/routing.py",
+        "fastapi/openapi/utils.py",
+        "fastapi/telemetry/_asgi.py"
+      ],
+      "related_rules": [
+        "common/maintainability",
+        "python/code_quality"
+      ],
+      "action": "Factor body extraction, dependency execution, and response serialization helpers out of get_request_handler (cognitive=159) in fastapi/routing.py and split response/callback schema builders out of get_openapi_path (cognitive=109) in fastapi/openapi/utils.py.",
+      "expected_impact": "Reduces cognitive complexity hotspots toward <= 25 while preserving FastAPI's route-registration pre-computation speed."
+    },
+    {
+      "priority": "P1",
+      "title": "Bump transitive dnspython>=2.9.0 in uv.lock and refresh test harness base image",
+      "category": "security",
+      "target_files": [
+        "uv.lock",
+        ".pni/dockerfiles/root/Dockerfile"
+      ],
+      "related_rules": [
+        "common/security_vulnerability",
+        "CVE-2026-114605"
+      ],
+      "action": "Upgrade locked transitive `dnspython` from `2.8.0` to `>=2.9.0` via `uv lock --upgrade-package dnspython` (closing `CVE-2026-114605`) and run `apt-get update && apt-get upgrade -y` or switch to `trixie-slim` in `.pni/dockerfiles/root/Dockerfile` for hermetic CI runs.",
+      "expected_impact": "Eliminates the single HIGH transitive uv.lock advisory and reduces test-harness OS base-image CVE noise."
+    },
+    {
+      "priority": "P2",
+      "title": "Break runtime import cycle across _compat.v2, params, and datastructures and re-export telemetry facade",
+      "category": "architecture",
+      "target_files": [
+        "fastapi/_compat/v2.py",
+        "fastapi/params.py",
+        "fastapi/datastructures.py",
+        "fastapi/telemetry/__init__.py"
+      ],
+      "related_rules": [
+        "common/architecture"
+      ],
+      "action": "Move runtime UploadFile/sentinel checks or guard under TYPE_CHECKING to eliminate the _compat.v2 <-> params -> datastructures cycle, and expose internal telemetry entrypoints via fastapi/telemetry/__init__.py.",
+      "expected_impact": "Achieves zero runtime circular dependencies across all 52 modules and clean subpackage boundary encapsulation."
+    },
+    {
+      "priority": "P2",
+      "title": "Add showcase SECURITY.md and GitHub Actions Dependabot configuration",
+      "category": "security",
+      "target_files": [
+        "README.md",
+        "pyproject.toml"
+      ],
+      "related_rules": [
+        "common/supply_chain"
+      ],
+      "action": "Add a concise SECURITY.md redirecting FastAPI vulnerability disclosures to the official upstream FastAPI Security Advisories page, and add .github/dependabot.yml for CI workflow maintenance.",
+      "expected_impact": "Satisfies OpenSSF Scorecard repository governance checks while clearly routing framework security disclosures upstream."
+    },
+    {
+      "priority": "P2",
+      "title": "Add explicit warning assertion in test_old_multipart_installed",
+      "category": "testing",
+      "target_files": [
+        "tests/test_multipart_installation.py"
+      ],
+      "related_rules": [
+        "python/testing"
+      ],
+      "action": "Capture `as w` on `warnings.catch_warnings(record=True)` in `tests/test_multipart_installation.py:141` and assert expected warning count/message.",
+      "expected_impact": "Eliminates silent assertion-free test pass if multipart version warning behavior regresses."
+    },
+    {
+      "priority": "P2",
+      "title": "Replace mutable dict default in ModelField.validate and scope remaining type: ignore comments",
+      "category": "typing",
+      "target_files": [
+        "fastapi/_compat/v2.py",
+        "fastapi/params.py",
+        "fastapi/dependencies/utils.py"
+      ],
+      "related_rules": [
+        "python/code_quality",
+        "python/typing"
+      ],
+      "action": "Replace values: dict[str, Any] = {} with values: Mapping[str, Any] | None = None in fastapi/_compat/v2.py:176, add -> None on Param.__init__ subclasses, and attach explicit [error-code] brackets to the 5 unscoped # type: ignore comments.",
+      "expected_impact": "Eliminates B006 mutable-default hazard and raises callable annotation completeness above 99%."
+    }
+  ],
+  "opt_outs": [
+    {
+      "id": "DS-0026",
+      "scope": [
+        ".pni/dockerfiles/**"
+      ],
+      "reason": "Hermetic batch test container exits upon pytest completion; daemon HEALTHCHECK is not applicable.",
+      "matched_count": 0
+    }
+  ],
+  "report_hints": [
+    "Render 7-axis RadarChart (Testing 96, Dependencies 96, Typing 95, Documentation 94, Security 92, Architecture 91, Code Quality 86) paired with Grade S (93/100) KpiCards.",
+    "Visualize the 5-tier FastAPI architecture DAG with HeatmapOverlay highlighting complexity concentration in routing.py (get_request_handler=159) and openapi/utils.py (get_openapi_path=109).",
+    "Contrast 0 core runtime CVEs vs 7 transitive dev/optional uv.lock advisories (dnspython 2.8.0 -> 2.9.0) and test-harness OS base packages in Chapter 6."
+  ],
+  "summary": "FastAPI v0.162.2 achieves an overall PNI501 engineering health score of 93/100 (Grade S) with 10/15 rules passed (5 WARN, 0 FAIL) across 52 Python source modules (19,837 LOC, 121 classes, 438 functions). Hermetic --network=none container testing confirms 3,216 passing tests (0 failures), 96.4% line coverage, and 91.0% branch coverage, while AST and Trivy scans confirm 94.5% type coverage, zero dangerous CWE sinks, zero hardcoded secrets, and zero CVEs in core runtime dependencies."
+}

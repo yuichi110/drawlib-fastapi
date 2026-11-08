@@ -1,0 +1,75 @@
+id: pni501
+category: audit
+name: FastAPI v0.162.2 Engineering & Architecture Diagnostic (PNI501)
+description: Deterministic Python AST, module dependency DAG, library hygiene, hermetic container runtime, and supply-chain diagnostic of FastAPI v0.162.2, compiled into HTML and A4 PDF under docs/reports/pni501/.
+
+targets:
+  root: "."
+  source:
+    - "fastapi"
+  tests:
+    - "tests"
+  docs:
+    - "README.md"
+  exclude:
+    - "reports/**"
+    - "reports_src/**"
+    - "docs/**"
+    - "docs_src/**"
+    - "tests/test_tutorial/**"
+    - "tests/test_frontend.py"
+    - "tests/test_prepare_release.py"
+    - "tests/test_translate.py"
+    - "tests/benchmarks/**"
+    - "tests/memory_benchmarks/**"
+
+steps:
+  - id: repo_and_deps
+    uses: repo_structure_audit
+
+  - id: ast_and_quality
+    uses: python_ast_audit
+
+  - id: arch_recording
+    uses: architecture_analysis
+
+  - id: library_hygiene
+    uses: library_hygiene_audit
+
+  - id: test_health
+    uses: python_test_audit
+
+  - id: runtime_verification
+    uses: container_runtime_audit
+    with:
+      dockerfile: ".pni/dockerfiles/root/Dockerfile"
+      test_timeout_sec: 300
+      pytest_extra_args:
+        - "--cov-config=/dev/null"
+        - "--ignore=tests/test_tutorial"
+        - "--ignore=tests/test_frontend.py"
+        - "--ignore=tests/test_prepare_release.py"
+        - "--ignore=tests/test_translate.py"
+        - "--ignore=tests/benchmarks"
+        - "--ignore=tests/memory_benchmarks"
+
+  - id: security_audit
+    uses: security_vulnerability_audit
+
+  - id: output_score
+    uses: emit_score
+    with:
+      target: "pni501"
+      save_file: false
+
+  - id: create_report
+    uses: write_drawlib_report
+    with:
+      target: "pni501"
+      src_dir: "reports_src"
+      output_dir: "docs/reports/pni501"
+      formats:
+        - "pdf"
+        - "html"
+      lang: "en"
+      style: "google"
