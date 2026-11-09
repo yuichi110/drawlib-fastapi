@@ -2,7 +2,7 @@
 
 Python バックエンドを **10万行（100,000+ LOC）規模**・数十人以上の開発体制へとスケールさせるには、`routers/`・`models/`・`schemas/` といった技術レイヤ単位の水平分割から脱却し、厳格な内向き依存ルールに統治された **境界づけられたコンテキスト（Bounded Context）** へと移行する必要があります。FastAPI `v0.162.2` は、階層的に合成可能な `APIRouter` ツリー、`Protocol` 親和性の高い依存性注入（DI）、そして Pydantic v2 による厳格な境界契約によって、このモジュラーモノリス設計をネイティブに実現します。
 
-```drawlib align=center code=fold file=enterprise_bounded_contexts.png caption="水平レイヤ分割のアンチパターンと境界づけられたコンテキストによる10万行規模モジュラーモノリスの対比"
+```drawlib align=center code=hide file=enterprise_bounded_contexts.png caption="水平レイヤ分割のアンチパターンと境界づけられたコンテキストによる10万行規模モジュラーモノリスの対比"
 from drawlib.canvas import save, setup
 from drawlib.icons import phosphor
 from drawlib.lines import line
@@ -146,7 +146,7 @@ src/
 
 ドメイン単位でディレクトリを分割しただけでは不十分です。各コンテキスト（`src/orders/`）の内部では、すべてのソースコード依存が HTTP 通信層や DB ドライバから **ビジネスルール（Domain Core）へ向かって厳密に内向き** に向かう必要があります。
 
-```drawlib align=center code=fold file=clean_layering_fastapi_mapping.png caption="クリーン／ヘキサゴナルな内向き依存ルールと FastAPI v0.162.2 コンポーネントの対応関係"
+```drawlib align=center code=hide file=clean_layering_fastapi_mapping.png caption="クリーン／ヘキサゴナルな内向き依存ルールと FastAPI v0.162.2 コンポーネントの対応関係"
 from drawlib.canvas import save, setup
 from drawlib.diagrams.architecture import ArchitectureDiagram, Node, NodeGroup, PhosphorIcon
 from drawlib.shapes import rectangle
@@ -395,7 +395,7 @@ class PlaceOrderUseCase:
 
 小規模なプロトタイプでは、HTTP リクエスト JSON・ドメイン状態・DB テーブル行・HTTP レスポンス JSON をたった1つの共有モデルクラスで兼用してしまうケースが見られます。エンタープライズ開発においてこの4つの境界を融合させると、深刻なセキュリティ脆弱性とスキーマ変更の硬直化を招きます。
 
-```drawlib align=center code=fold file=schema_separation_matrix.png caption="Mass-Assignment（CWE-915）と内部 DB カラム漏洩を構造的に防ぐ4段階モデル分離マトリクス"
+```drawlib align=center code=hide file=schema_separation_matrix.png caption="Mass-Assignment（CWE-915）と内部 DB カラム漏洩を構造的に防ぐ4段階モデル分離マトリクス"
 from drawlib.canvas import save, setup
 from drawlib.smartarts import ChevronProcess, Table
 from drawlib.styles import Colors, Styles

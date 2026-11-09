@@ -13,7 +13,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>カスタム Request と APIRoute クラスの拡張 — FastAPI Visual Guide (Unofficial · Drawlib Demo)</title>
+    <title>カスタム Request と APIRoute クラスの拡張 — FastAPI User Guide (Unofficial)</title>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
     <script>
@@ -49,15 +49,15 @@
     <meta name="description" content="APIRoute.get_route_handler() と Starlette の Request をサブクラス化すると、ルーターのパス照合が成功した直後かつ FastAPI が JSON デコードや Pydantic 検証を実行する直前に処理を挟み込むことができ、ルーター単位での透過的 gzip…">
     <link rel="canonical" href="https://fastapi.drawlib.com/ja/03_routing_and_models/custom_request_and_route.html">
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="FastAPI ビジュアル解説">
-    <meta property="og:title" content="カスタム Request と APIRoute クラスの拡張 — FastAPI ビジュアル解説">
+    <meta property="og:site_name" content="FastAPI ユーザーガイド">
+    <meta property="og:title" content="カスタム Request と APIRoute クラスの拡張 — FastAPI ユーザーガイド">
     <meta property="og:description" content="APIRoute.get_route_handler() と Starlette の Request をサブクラス化すると、ルーターのパス照合が成功した直後かつ FastAPI が JSON デコードや Pydantic 検証を実行する直前に処理を挟み込むことができ、ルーター単位での透過的 gzip…">
     <meta property="og:url" content="https://fastapi.drawlib.com/ja/03_routing_and_models/custom_request_and_route.html">
     <meta property="og:image" content="https://fastapi.drawlib.com/_assets/ogp.png">
     <meta property="og:locale" content="ja_JP">
     <meta property="og:locale:alternate" content="en_US">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="カスタム Request と APIRoute クラスの拡張 — FastAPI ビジュアル解説">
+    <meta name="twitter:title" content="カスタム Request と APIRoute クラスの拡張 — FastAPI ユーザーガイド">
     <meta name="twitter:description" content="APIRoute.get_route_handler() と Starlette の Request をサブクラス化すると、ルーターのパス照合が成功した直後かつ FastAPI が JSON デコードや Pydantic 検証を実行する直前に処理を挟み込むことができ、ルーター単位での透過的 gzip…">
     <meta name="twitter:image" content="https://fastapi.drawlib.com/_assets/ogp.png">
     
@@ -70,17 +70,21 @@
     
 </head>
 <body>
-    <div class="demo-banner" role="region" aria-label="非公式ショーケース案内">
+    <div class="demo-banner" role="region" aria-label="ポータルナビゲーション">
         <div class="demo-banner-inner">
-            <span class="demo-banner-badge">UNOFFICIAL DEMO</span>
+            <span class="demo-banner-badge">UNOFFICIAL GUIDE</span>
             
             <span class="demo-banner-text">
-                <a href="https://www.drawlib.com/" target="_blank" rel="noopener noreferrer">Drawlib</a> と <a href="https://pypi.org/project/pni501/" target="_blank" rel="noopener noreferrer">PNI501</a> で作成した <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a>（v0.162.2, MIT）の非公式ビジュアル解説ショーケースです。
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a>（v0.162.2）非公式ユーザーガイド
             </span>
             <span class="demo-banner-links">
-                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 診断レポート →</a>
+                <strong style="color:#ffffff;">User Guide</strong>
                 <span class="demo-banner-sep">·</span>
-                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI 公式 Docs ↗</a>
+                <a href="https://fastapi.drawlib.com/architecture/">Architecture</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Audit</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official Docs ↗</a>
                 <span class="demo-banner-sep">·</span>
                 <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
             </span>
@@ -91,9 +95,9 @@
     <div class="doc-layout">
         <aside class="sidebar">
             <div class="sidebar-header">
-                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI ビジュアル解説">
+                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI ユーザーガイド">
                     
-                    FastAPI ビジュアル解説
+                    FastAPI ユーザーガイド
                     
                 </a>
                 <div class="sidebar-header-actions">
@@ -114,7 +118,7 @@
                         <ul class="nav-list">
                             
                             <li class="nav-item ">
-                                <a href="../index.html" >ガイド概要と全体マップ</a>
+                                <a href="../index.html" >ガイド概要</a>
                             </li>
                             
                         </ul>
@@ -125,7 +129,7 @@
                         <ul class="nav-list">
                             
                             <li class="nav-item ">
-                                <a href="../01_getting_started/overview.html" >FastAPI の設計思想と内部構造</a>
+                                <a href="../01_getting_started/overview.html" >FastAPI の設計思想と基本概念</a>
                             </li>
                             
                             <li class="nav-item ">
@@ -178,7 +182,7 @@
                         <ul class="nav-list">
                             
                             <li class="nav-item ">
-                                <a href="../04_dependencies_and_security/dependency_injection.html" >Dependant DAG・キャッシュ・yield スコープ</a>
+                                <a href="../04_dependencies_and_security/dependency_injection.html" >依存グラフ・キャッシュ・yield スコープ</a>
                             </li>
                             
                             <li class="nav-item ">
@@ -252,12 +256,12 @@
                         </ul>
                     
                         
-                        <div class="sidebar-heading">診断レポート &amp; 公式リンク</div>
+                        <div class="sidebar-heading">関連ガイド &amp; 公式リンク</div>
                         
                         <ul class="nav-list">
                             
                             <li class="nav-item ">
-                                <a href="https://fastapi.drawlib.com/reports/pni501/" target="_blank" rel="noopener noreferrer">PNI501 診断レポート<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                                <a href="https://fastapi.drawlib.com/architecture/" target="_blank" rel="noopener noreferrer">FastAPI 内部アーキテクチャ解説<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
                             </li>
                             
                             <li class="nav-item ">
@@ -265,7 +269,7 @@
                             </li>
                             
                             <li class="nav-item ">
-                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">デモのリポジトリ (GitHub)<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub リポジトリ<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
                             </li>
                             
                         </ul>
@@ -314,89 +318,13 @@
   <img src="../../images/03_routing_and_models/custom_request_and_route/custom_apiroute_interception.png" alt="custom_request_and_route_1" />
   <figcaption class="drawlib-caption">インターセプト境界の比較: グローバル ASGI ミドルウェアとルーター単位の APIRoute.get_route_handler()</figcaption>
 </figure>
-<details class="drawlib-code-details">
-<summary>Source Code</summary>
-<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.canvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">setup</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.icons</span><span class="w"> </span><span class="kn">import</span> <span class="n">code</span><span class="p">,</span> <span class="n">phosphor</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.lines</span><span class="w"> </span><span class="kn">import</span> <span class="n">line</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.shapes</span><span class="w"> </span><span class="kn">import</span> <span class="n">rectangle</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.smartarts</span><span class="w"> </span><span class="kn">import</span> <span class="n">Panel</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">Styles</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.text</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span>
-
-<span class="n">setup</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">174</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">96</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
-
-<span class="c1"># Title Banner</span>
-<span class="n">code</span><span class="o">.</span><span class="n">fastapi</span><span class="p">((</span><span class="mf">10.5</span><span class="p">,</span> <span class="mf">90.5</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">5.2</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Primary</span><span class="p">)</span>
-<span class="n">text</span><span class="p">(</span>
-    <span class="p">(</span><span class="mf">16.0</span><span class="p">,</span> <span class="mf">90.5</span><span class="p">),</span>
-    <span class="s2">"Interception Architecture: Global ASGI Middleware vs Router-Scoped Custom APIRoute"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">12.2</span><span class="p">,</span> <span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="c1"># Lane A: Global ASGI Middleware (Pre-Routing)</span>
-<span class="n">p_asgi</span> <span class="o">=</span> <span class="n">Panel</span><span class="p">(</span>
-    <span class="s2">"A. Global ASGI Middleware — Pre-Routing Transport Layer"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
-    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.0</span><span class="p">),</span>
-    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">globe</span><span class="p">,</span>
-    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">,</span>
-    <span class="n">header_height</span><span class="o">=</span><span class="mf">8.0</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">p_asgi</span><span class="o">.</span><span class="n">draw</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span> <span class="mi">49</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">164</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">35</span><span class="p">)</span>
-
-<span class="n">asgi_steps</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="p">(</span><span class="mf">24.5</span><span class="p">,</span> <span class="s2">"1. Every Request"</span><span class="p">,</span> <span class="s2">"Static files, /healthz</span><span class="se">\n</span><span class="s2">&amp; unmatched 404 scans"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
-    <span class="p">(</span><span class="mf">64.5</span><span class="p">,</span> <span class="s2">"2. ASGI Middleware"</span><span class="p">,</span> <span class="s2">"Raw (scope, receive)</span><span class="se">\n</span><span class="s2">No matched route yet"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
-    <span class="p">(</span><span class="mf">104.5</span><span class="p">,</span> <span class="s2">"3. Router Scan"</span><span class="p">,</span> <span class="s2">"Starlette iterates all</span><span class="se">\n</span><span class="s2">Mount &amp; APIRoute rules"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
-    <span class="p">(</span><span class="mf">144.5</span><span class="p">,</span> <span class="s2">"4. Scope Tradeoff"</span><span class="p">,</span> <span class="s2">"Global cost; cannot wrap</span><span class="se">\n</span><span class="s2">one router's 422 errors"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
-<span class="p">]</span>
-<span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="p">(</span><span class="n">cx</span><span class="p">,</span> <span class="n">st_title</span><span class="p">,</span> <span class="n">st_sub</span><span class="p">,</span> <span class="n">st_fill</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">asgi_steps</span><span class="p">):</span>
-    <span class="n">rectangle</span><span class="p">((</span><span class="n">cx</span><span class="p">,</span> <span class="mf">62.5</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">33</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">16.0</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">st_fill</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.8</span><span class="p">))</span>
-    <span class="n">text</span><span class="p">((</span><span class="n">cx</span><span class="p">,</span> <span class="mf">65.5</span><span class="p">),</span> <span class="n">st_title</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.4</span><span class="p">))</span>
-    <span class="n">text</span><span class="p">((</span><span class="n">cx</span><span class="p">,</span> <span class="mf">60.0</span><span class="p">),</span> <span class="n">st_sub</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">))</span>
-    <span class="k">if</span> <span class="n">idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">asgi_steps</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="n">line</span><span class="p">((</span><span class="n">cx</span> <span class="o">+</span> <span class="mf">16.5</span><span class="p">,</span> <span class="mf">62.5</span><span class="p">),</span> <span class="p">(</span><span class="n">asgi_steps</span><span class="p">[</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mf">16.5</span><span class="p">,</span> <span class="mf">62.5</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">)</span>
-
-<span class="c1"># Lane B: APIRouter(route_class=CustomRoute) (Post-Match, Pre-Validation)</span>
-<span class="n">p_route</span> <span class="o">=</span> <span class="n">Panel</span><span class="p">(</span>
-    <span class="s2">"B. APIRouter(route_class=CustomRoute) — Post-Match, Pre-Validation Hook"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
-    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.0</span><span class="p">),</span>
-    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">git_branch</span><span class="p">,</span>
-    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
-    <span class="n">header_height</span><span class="o">=</span><span class="mf">8.0</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">p_route</span><span class="o">.</span><span class="n">draw</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">164</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">38</span><span class="p">)</span>
-
-<span class="n">route_steps</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="p">(</span><span class="mf">24.5</span><span class="p">,</span> <span class="s2">"1. Matched Route"</span><span class="p">,</span> <span class="s2">"Fires ONLY on target</span><span class="se">\n</span><span class="s2">APIRouter endpoints"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
-    <span class="p">(</span><span class="mf">64.5</span><span class="p">,</span> <span class="s2">"2. Custom Handler"</span><span class="p">,</span> <span class="s2">"Swaps GzipRequest &amp;</span><span class="se">\n</span><span class="s2">verifies raw body HMAC"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
-    <span class="p">(</span><span class="mf">104.5</span><span class="p">,</span> <span class="s2">"3. original_handler"</span><span class="p">,</span> <span class="s2">"get_request_handler()</span><span class="se">\n</span><span class="s2">JSON + Depends + Model"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
-    <span class="p">(</span><span class="mf">144.5</span><span class="p">,</span> <span class="s2">"4. 422 &amp; Latency"</span><span class="p">,</span> <span class="s2">"Catches ValidationError</span><span class="se">\n</span><span class="s2">&amp; sets X-Response-Time"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
-<span class="p">]</span>
-<span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="p">(</span><span class="n">cx</span><span class="p">,</span> <span class="n">rt_title</span><span class="p">,</span> <span class="n">rt_sub</span><span class="p">,</span> <span class="n">rt_fill</span><span class="p">,</span> <span class="n">is_focal</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">route_steps</span><span class="p">):</span>
-    <span class="n">rectangle</span><span class="p">((</span><span class="n">cx</span><span class="p">,</span> <span class="mf">21.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">33</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">18.5</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">rt_fill</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.8</span><span class="p">))</span>
-    <span class="n">t_h</span> <span class="o">=</span> <span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span> <span class="k">if</span> <span class="n">is_focal</span> <span class="k">else</span> <span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span>
-    <span class="n">t_b</span> <span class="o">=</span> <span class="n">Styles</span><span class="o">.</span><span class="n">White</span> <span class="k">if</span> <span class="n">is_focal</span> <span class="k">else</span> <span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span>
-    <span class="n">text</span><span class="p">((</span><span class="n">cx</span><span class="p">,</span> <span class="mf">24.4</span><span class="p">),</span> <span class="n">rt_title</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">t_h</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.4</span><span class="p">))</span>
-    <span class="n">text</span><span class="p">((</span><span class="n">cx</span><span class="p">,</span> <span class="mf">18.2</span><span class="p">),</span> <span class="n">rt_sub</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">t_b</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">))</span>
-    <span class="k">if</span> <span class="n">idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">route_steps</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="n">arr_st</span> <span class="o">=</span> <span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span> <span class="k">if</span> <span class="n">idx</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="k">else</span> <span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span>
-        <span class="n">line</span><span class="p">((</span><span class="n">cx</span> <span class="o">+</span> <span class="mf">16.5</span><span class="p">,</span> <span class="mf">21.0</span><span class="p">),</span> <span class="p">(</span><span class="n">route_steps</span><span class="p">[</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mf">16.5</span><span class="p">,</span> <span class="mf">21.0</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">arr_st</span><span class="p">)</span>
-
-<span class="n">save</span><span class="p">()</span>
-</code></pre>
-</details>
 <p>FastAPI で横断的関心事を実装する際は、ASGI ライフサイクルの<strong>どの時点</strong>で介入する必要があるか、そして<strong>どの範囲のルーター</strong>に適用すべきかに応じて拡張フックを選択します。</p>
 <h2>1. ASGI ミドルウェアと <code>APIRoute.get_route_handler()</code> のライフサイクル</h2>
-<p><code>fastapi/routing.py</code> では、<code>APIRouter</code> に登録される各パスオペレーションが <code>APIRoute</code>（または <code>APIRouter(route_class=...)</code> に指定したカスタムサブクラス）を生成し、<code>self.app = request_response(self.get_route_handler())</code> を構築します。さらに子ルーターを <code>app.include_router()</code> で統合する際も、<code>_EffectiveRouteContext.from_api_route()</code> が <code>_effective_route_context_var</code> を設定したうえで統合コンテキストごとに一度だけ <code>original_route.get_route_handler()</code> を再呼び出しするため、親ルーターから継承したプレフィックスや依存関係を含むハンドラを確実にラップでき、他の兄弟ルーターには一切影響を与えません。</p>
-<p>特に重要なのが、<code>get_request_handler()</code>（<code>fastapi/routing.py</code>）内部の実行順序です。</p>
+<p><code>APIRouter</code> に登録される各パスオペレーションは <code>APIRoute</code> インスタンス（または <code>APIRouter(route_class=...)</code> に指定したカスタムサブクラス）を生成し、<code>self.get_route_handler()</code> を呼び出してリクエストハンドラを構築します。さらに子ルーターを <code>app.include_router()</code> で統合する際も、<strong>ルーターのプレフィックスおよび依存関係の継承</strong>が自動適用されたうえで統合先ごとに <code>get_route_handler()</code> が構築されるため、親ルーターから引き継いだ設定を含むハンドラを確実にラップでき、他の兄弟ルーターには一切影響を与えません。</p>
+<p>FastAPI 標準のルートハンドラ内部における実行順序を理解すると、<code>Depends()</code> ではなくカスタム <code>APIRoute</code> が必要となる場面が明確になります。</p>
 <ol>
 <li><strong>ボディ読み取りと JSON デコード（<code>await request.body()</code> / <code>await request.json()</code>）<strong>が</strong>最初</strong>に実行され、JSON 構文が不正な場合は即座に <code>RequestValidationError(type=&quot;json_invalid&quot;)</code> が送出されます。</li>
-<li><strong>依存関係の解決（<code>await solve_dependencies(...)</code>）<strong>はその</strong>後</strong>に実行されます。したがって、<code>Depends()</code> 関数では <code>request.json()</code> が失敗する前に <code>gzip</code> 圧縮ストリームを解凍することはできず、ボディやパラメータ検証が送出する <code>RequestValidationError</code> を捕捉することもできません。</li>
+<li><strong>依存関係の解決とパラメータ検証</strong>はその<strong>後</strong>に実行されます。したがって、<code>Depends()</code> 関数では <code>request.json()</code> が失敗する前に <code>gzip</code> 圧縮ストリームを解凍することはできず、ボディやパラメータ検証が送出する <code>RequestValidationError</code> を捕捉することもできません。</li>
 </ol>
 <table>
 <thead>
@@ -411,8 +339,8 @@
 <tr>
 <td style="text-align:left"><strong>実行タイミング</strong></td>
 <td style="text-align:left">ルーティング前（<code>404</code>・<code>/static</code>・全ルーターで常時実行）</td>
-<td style="text-align:left"><code>APIRoute.matches()</code> 成功後、<strong>JSON 解析および <code>Depends()</code> の直前</strong></td>
-<td style="text-align:left"><code>get_request_handler()</code> による JSON／Form 解析の<strong>後</strong></td>
+<td style="text-align:left">ルート照合成功後、<strong>JSON 解析および <code>Depends()</code> の直前</strong></td>
+<td style="text-align:left">FastAPI による JSON／Form 解析の<strong>後</strong></td>
 </tr>
 <tr>
 <td style="text-align:left"><strong>適用スコープの粒度</strong></td>
@@ -428,139 +356,26 @@
 </tr>
 <tr>
 <td style="text-align:left"><strong><code>RequestValidationError</code> の捕捉</strong></td>
-<td style="text-align:left">不可（外側の <code>ExceptionMiddleware</code> 等で一括処理）</td>
+<td style="text-align:left">不可（アプリ全体の <code>@app.exception_handler</code> で処理）</td>
 <td style="text-align:left"><strong>可能</strong>（<code>try: await original_route_handler(request)</code> で捕捉）</td>
-<td style="text-align:left">不可（<code>solve_dependencies()</code> 完了後に送出されるため）</td>
+<td style="text-align:left">不可（エンドポイント実行前の検証段階で送出されるため）</td>
 </tr>
 <tr>
 <td style="text-align:left"><strong>ルートメタデータへの参照</strong></td>
 <td style="text-align:left">ルーティング前のため <code>scope[&quot;route&quot;]</code> 未確定</td>
-<td style="text-align:left"><code>self.operation_id</code>・<code>self.path</code>・<code>self.tags</code>・<code>self.dependant</code> を直接参照</td>
+<td style="text-align:left"><code>self.operation_id</code>・<code>self.path</code>・<code>self.tags</code>・<code>self.name</code> を直接参照</td>
 <td style="text-align:left"><code>request.scope[&quot;route&quot;]</code> 経由のみ</td>
 </tr>
 </tbody>
 </table>
 <h2>2. 透過的 <code>GzipRequest</code>・<code>422</code> エラー拡張・Webhook HMAC 検証ルート</h2>
-<p>カスタム <code>Request</code> サブクラスとカスタム <code>APIRoute</code> を組み合わせることで、各エンドポイントの関数署名を一切汚さずにストリーム変換や暗号学的署名検証を組み込めます。</p>
+<p>カスタム <code>Request</code> サブクラスとカスタム <code>APIRoute</code> を組み合わせることで、各エンドポイントの関数シグネチャを一切汚さずにストリーム変換や暗号学的署名検証を組み込めます。</p>
 <figure class="drawlib-image" style="text-align: center;">
   <img src="../../images/03_routing_and_models/custom_request_and_route/gzip_and_hmac_route_pipeline.png" alt="custom_request_and_route_2" />
   <figcaption class="drawlib-caption">カスタム APIRoute の実行シーケンス: 上限付き GzipRequest 解凍・定数時間 HMAC-SHA256 検証・422 エラー拡張</figcaption>
 </figure>
-<details class="drawlib-code-details">
-<summary>Source Code</summary>
-<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.canvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">setup</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.diagrams.sequence</span><span class="w"> </span><span class="kn">import</span> <span class="n">Participant</span><span class="p">,</span> <span class="n">ParticipantGroup</span><span class="p">,</span> <span class="n">PhosphorIcon</span><span class="p">,</span> <span class="n">SequenceDiagram</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.icons</span><span class="w"> </span><span class="kn">import</span> <span class="n">code</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">Styles</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.text</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span>
-
-<span class="n">setup</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">184</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">124</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
-
-<span class="c1"># Title Banner</span>
-<span class="n">code</span><span class="o">.</span><span class="n">fastapi</span><span class="p">((</span><span class="mf">10.5</span><span class="p">,</span> <span class="mf">118.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">5.2</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Primary</span><span class="p">)</span>
-<span class="n">text</span><span class="p">(</span>
-    <span class="p">(</span><span class="mf">16.0</span><span class="p">,</span> <span class="mf">118.0</span><span class="p">),</span>
-    <span class="s2">"Custom APIRoute Runtime Sequence: Bounded GzipRequest + HMAC-SHA256 + 422 Wrapping"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">12.2</span><span class="p">,</span> <span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="n">d</span> <span class="o">=</span> <span class="n">SequenceDiagram</span><span class="p">(</span>
-    <span class="n">node_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Primary</span><span class="p">,</span>
-    <span class="n">node_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.3</span><span class="p">),</span>
-    <span class="n">edge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">,</span>
-    <span class="n">edge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">node_card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
-    <span class="n">autonumber</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">col_width</span><span class="o">=</span><span class="mf">44.5</span><span class="p">,</span>
-    <span class="n">step_y</span><span class="o">=</span><span class="mf">6.5</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="n">client</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Participant</span><span class="p">(</span>
-        <span class="s2">"Webhook Client"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">26</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">CLOUD_ARROW_UP</span><span class="p">,</span>
-        <span class="n">icon_size</span><span class="o">=</span><span class="mf">6.0</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
-    <span class="p">)</span>
-<span class="p">)</span>
-
-<span class="n">router_grp</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">ParticipantGroup</span><span class="p">(</span>
-        <span class="n">title</span><span class="o">=</span><span class="s2">"APIRouter(route_class=CustomRoute)"</span><span class="p">,</span>
-        <span class="n">padding</span><span class="o">=</span><span class="mf">4.0</span><span class="p">,</span>
-        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
-        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">,</span> <span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">),</span>
-    <span class="p">)</span>
-<span class="p">)</span>
-<span class="n">custom_route</span> <span class="o">=</span> <span class="n">router_grp</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Participant</span><span class="p">(</span>
-        <span class="s2">"Custom APIRoute"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">27</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">SHIELD_CHECK</span><span class="p">,</span>
-        <span class="n">icon_size</span><span class="o">=</span><span class="mf">6.0</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
-    <span class="p">)</span>
-<span class="p">)</span>
-<span class="n">gzip_req</span> <span class="o">=</span> <span class="n">router_grp</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Participant</span><span class="p">(</span>
-        <span class="s2">"GzipRequest"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">FILE_ARCHIVE</span><span class="p">,</span>
-        <span class="n">icon_size</span><span class="o">=</span><span class="mf">6.0</span><span class="p">,</span>
-    <span class="p">)</span>
-<span class="p">)</span>
-<span class="n">inner_handler</span> <span class="o">=</span> <span class="n">router_grp</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Participant</span><span class="p">(</span>
-        <span class="s2">"get_request_handler()"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">CPU</span><span class="p">,</span>
-        <span class="n">icon_size</span><span class="o">=</span><span class="mf">6.0</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span>
-    <span class="p">)</span>
-<span class="p">)</span>
-
-<span class="n">client</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">custom_route</span><span class="p">,</span> <span class="s2">"POST Content-Encoding: gzip + X-Hub-Signature"</span><span class="p">)</span>
-<span class="n">custom_route</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">gzip_req</span><span class="p">,</span> <span class="s2">"Wrap scope &amp; await request.body()"</span><span class="p">)</span>
-<span class="n">gzip_req</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span><span class="n">custom_route</span><span class="p">,</span> <span class="s2">"Gunzip (&lt;=1 MiB cap) &amp; cache self._body"</span><span class="p">)</span>
-<span class="n">d</span><span class="o">.</span><span class="n">note</span><span class="p">(</span>
-    <span class="s2">"hmac.compare_digest() &amp; perf_counter()"</span><span class="p">,</span>
-    <span class="n">over</span><span class="o">=</span><span class="p">[</span><span class="n">custom_route</span><span class="p">,</span> <span class="n">gzip_req</span><span class="p">],</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="k">with</span> <span class="n">d</span><span class="o">.</span><span class="n">opt</span><span class="p">(</span><span class="s2">"Valid HMAC &amp; &lt;=1 MiB"</span><span class="p">)</span> <span class="k">as</span> <span class="n">ok_blk</span><span class="p">:</span>
-    <span class="n">ok_blk</span><span class="o">.</span><span class="n">text_style</span> <span class="o">=</span> <span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">)</span>
-    <span class="n">custom_route</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">inner_handler</span><span class="p">,</span> <span class="s2">"await original_route_handler(request)"</span><span class="p">)</span>
-    <span class="n">inner_handler</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">gzip_req</span><span class="p">,</span> <span class="s2">"await request.json() [reuses _body]"</span><span class="p">)</span>
-    <span class="n">gzip_req</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span><span class="n">inner_handler</span><span class="p">,</span> <span class="s2">"Decompressed UTF-8 JSON"</span><span class="p">)</span>
-    <span class="n">inner_handler</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span><span class="n">custom_route</span><span class="p">,</span> <span class="s2">"200 Response or RequestValidationError"</span><span class="p">)</span>
-    <span class="n">custom_route</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span>
-        <span class="n">client</span><span class="p">,</span>
-        <span class="s2">"200 / 422 JSON + X-Response-Time-Ms"</span><span class="p">,</span>
-        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">,</span>
-        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="p">)</span>
-
-<span class="k">with</span> <span class="n">d</span><span class="o">.</span><span class="n">opt</span><span class="p">(</span><span class="s2">"Invalid HMAC or &gt;1 MiB"</span><span class="p">)</span> <span class="k">as</span> <span class="n">err_blk</span><span class="p">:</span>
-    <span class="n">err_blk</span><span class="o">.</span><span class="n">text_style</span> <span class="o">=</span> <span class="n">Styles</span><span class="o">.</span><span class="n">Danger</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">)</span>
-    <span class="n">custom_route</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span>
-        <span class="n">client</span><span class="p">,</span>
-        <span class="s2">"401 Bad HMAC / 413 Cap Exceeded"</span><span class="p">,</span>
-        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Danger</span><span class="p">,</span>
-        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Danger</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="p">)</span>
-
-<span class="n">d</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">92.0</span><span class="p">,</span> <span class="mf">55.0</span><span class="p">),</span> <span class="n">align</span><span class="o">=</span><span class="s2">"center"</span><span class="p">)</span>
-<span class="n">save</span><span class="p">()</span>
-</code></pre>
-</details>
 <h3>上限付き <code>GzipRequest</code> と <code>GzipRoute</code> による透過解凍</h3>
-<p>Starlette の <code>Request.json()</code> は内部で <code>await self.body()</code> を呼び出し、結果を <code>self._body</code> にキャッシュします。<code>GzipRequest</code> で <code>async def body(self) -&gt; bytes</code> をオーバーライドし、無制限な <code>gzip.decompress()</code> ではなく <code>gzip.GzipFile.read(MAX_DECOMPRESSED_BYTES + 1)</code> で展開バイト数に上限を設けることで、gzip 圧縮爆弾（DoS）を <code>413 Content Too Large</code> で遮断しつつ、解凍済み UTF-8 JSON を <code>get_request_handler()</code> へ透過的に引き渡せます。</p>
+<p>Starlette の <code>Request.json()</code> は内部で <code>await self.body()</code> を呼び出し、読み取ったバイト列をリクエスト期間中メモリ上にキャッシュします。<code>GzipRequest</code> で <code>async def body(self) -&gt; bytes</code> をオーバーライドし、無制限な <code>gzip.decompress()</code> ではなく <code>gzip.GzipFile.read(MAX_DECOMPRESSED_BYTES + 1)</code> で展開バイト数に上限を設けることで、gzip 圧縮爆弾（DoS）を <code>413 Content Too Large</code> で遮断しつつ、解凍済み UTF-8 JSON を <code>original_route_handler</code> へ透過的に引き渡せます。</p>
 <pre><code class="language-python"><span class="kn">import</span><span class="w"> </span><span class="nn">gzip</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Coroutine</span>
@@ -732,11 +547,16 @@
 </code></pre>
 <blockquote>
 <p>[!TIP]
-<code>await request.body()</code> は読み取ったバイト列を <code>request._body</code> にキャッシュするため、<code>HmacTimedRoute</code> 内で先に <code>await request.body()</code> を呼び出しても後続の <code>original_route_handler(request)</code> でストリームが枯渇することはなく、<code>get_request_handler()</code> はキャッシュ済みのバイト列を即座に再利用します。ただし数メガバイト規模のマルチパートファイルアップロード（<code>request.stream()</code> から <code>SpooledTemporaryFile</code> へ逐次書き出すルート）では、メモリ一括展開を避けるため <code>Request.body()</code> の事前読み取りを行わないルーターへ分離してください。</p>
+<code>await request.body()</code> は読み取った生バイト列を <code>Request</code> インスタンス上のメモリにキャッシュするため、<code>HmacTimedRoute</code> 内で先に <code>await request.body()</code> を呼び出しても後続の <code>original_route_handler(request)</code> で ASGI ストリームが枯渇することはなく、標準ルートハンドラはキャッシュ済みのバイト列を即座に再利用します。ただし数メガバイト規模のマルチパートファイルアップロード（<code>request.stream()</code> から <code>SpooledTemporaryFile</code> へ逐次書き出すルート）では、メモリ一括展開を避けるため <code>Request.body()</code> の事前読み取りを行わないルーターへ分離してください。</p>
 </blockquote>
-<p>以上で第 3 章（<a href="parameters_and_validation.html">Path・Query・Header・Cookie・Body</a>、<a href="responses_and_openapi.html">レスポンス直列化と OpenAPI 3.1</a>、<a href="advanced_types_and_models.html">パラメータモデル合成・特殊型・例示</a>、および本ページ）のルーティング・モデル基盤が完結します。続いて第 4 章の <a href="../04_dependencies_and_security/dependency_injection.html">Dependant DAG・キャッシュ・yield スコープ</a>、トランスポート層ミドルウェアを扱う <a href="../05_async_and_realtime/concurrency_and_middleware.html">ASGI ミドルウェアとスレッドプール制御</a>、アプリ全体の例外ハンドラを扱う <a href="../06_observability_and_testing/telemetry_and_errors.html">ネイティブ OpenTelemetry と例外処理</a>、および <code>@app.webhooks</code> スキーマ文書化を扱う <a href="../07_frontend_and_openapi_ext/webhooks_callbacks_sdks.html">Webhooks・Callbacks・SDK 生成・Docs UI</a> へ進んでください。</p>
+<p>以上で第 3 章（<a href="parameters_and_validation.html">Path・Query・Header・Cookie・Body</a>、<a href="responses_and_openapi.html">レスポンス直列化と OpenAPI 3.1</a>、<a href="advanced_types_and_models.html">パラメータモデル合成・特殊型・例示</a>、および本ページ）のルーティング・モデル基盤が完結します。続いて第 4 章の <a href="../04_dependencies_and_security/dependency_injection.html">依存グラフ・キャッシュ・yield スコープ</a>、トランスポート層ミドルウェアを扱う <a href="../05_async_and_realtime/concurrency_and_middleware.html">ASGI ミドルウェアとスレッドプール制御</a>、アプリ全体の例外ハンドラを扱う <a href="../06_observability_and_testing/telemetry_and_errors.html">ネイティブ OpenTelemetry と例外処理</a>、および <code>@app.webhooks</code> スキーマ文書化を扱う <a href="../07_frontend_and_openapi_ext/webhooks_callbacks_sdks.html">Webhooks・Callbacks・SDK 生成・Docs UI</a> へ進んでください。</p>
 
             </main>
+            <footer class="footer">
+                
+                FastAPI® は Sebastián Ramírez（<a href="https://github.com/tiangolo" target="_blank" rel="noopener noreferrer">@tiangolo</a>）の登録商標です。本サイトは非公式ガイドであり、公式プロジェクトとは提携していません。公式ドキュメントは <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">fastapi.tiangolo.com</a> をご参照ください。
+                
+            </footer>
         </div>
     </div>
     

@@ -1,8 +1,8 @@
 [project]
 name = "docs"
 type = "site"
-title = "FastAPI Visual Architecture Guide (Unofficial · Drawlib Demo)"
-description = "Unofficial illustrated architecture handbook, 100k+ LOC enterprise patterns, and verified v0.162.2 deep-dive guide for FastAPI, built as code with Drawlib."
+title = "FastAPI User Guide (Unofficial)"
+description = "Practical user guide, 100k+ LOC application architecture patterns, and feature reference for FastAPI v0.162.2."
 style = "default"
 
 [i18n]
@@ -14,8 +14,8 @@ en = "English"
 ja = "日本語"
 
 [i18n.descriptions]
-en = "Unofficial illustrated architecture handbook, 100k+ LOC enterprise patterns, and verified v0.162.2 deep-dive guide for FastAPI, built as code with Drawlib."
-ja = "Drawlib（Python 図解 as Code）で構築した FastAPI v0.162.2 非公式ビジュアルアーキテクチャ解説・10万行規模の設計ベストプラクティス・機能別リファレンス。"
+en = "Practical user guide, 100k+ LOC application architecture patterns, and feature reference for FastAPI v0.162.2."
+ja = "FastAPI v0.162.2 の実践ユーザーガイド・10万行規模のアプリケーション設計ベストプラクティス・機能別リファレンス（非公式）。"
 
 [seo]
 site_url = "https://fastapi.drawlib.com"

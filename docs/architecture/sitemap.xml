@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://fastapi.drawlib.com/architecture/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/architecture/en/" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/architecture/ja/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/architecture/" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/architecture/en/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/architecture/en/" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/architecture/ja/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/architecture/" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/architecture/en/01_package_and_layers/module_hierarchy.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/architecture/en/01_package_and_layers/module_hierarchy.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/architecture/ja/01_package_and_layers/module_hierarchy.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/architecture/en/01_package_and_layers/module_hierarchy.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/architecture/en/02_routing_compiler/apiroute_and_closures.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/architecture/en/02_routing_compiler/apiroute_and_closures.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/architecture/ja/02_routing_compiler/apiroute_and_closures.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/architecture/en/02_routing_compiler/apiroute_and_closures.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/architecture/en/02_routing_compiler/streaming_and_spa_internals.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/architecture/en/02_routing_compiler/streaming_and_spa_internals.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/architecture/ja/02_routing_compiler/streaming_and_spa_internals.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/architecture/en/02_routing_compiler/streaming_and_spa_internals.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/architecture/en/03_di_and_security_engine/dependant_and_solver.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/architecture/en/03_di_and_security_engine/dependant_and_solver.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/architecture/ja/03_di_and_security_engine/dependant_and_solver.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/architecture/en/03_di_and_security_engine/dependant_and_solver.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/architecture/en/03_di_and_security_engine/security_internals.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/architecture/en/03_di_and_security_engine/security_internals.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/architecture/ja/03_di_and_security_engine/security_internals.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/architecture/en/03_di_and_security_engine/security_internals.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/architecture/en/04_pydantic_bridge/compat_and_serialization.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/architecture/en/04_pydantic_bridge/compat_and_serialization.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/architecture/ja/04_pydantic_bridge/compat_and_serialization.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/architecture/en/04_pydantic_bridge/compat_and_serialization.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/architecture/en/05_asgi_and_telemetry/middleware_and_concurrency.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/architecture/en/05_asgi_and_telemetry/middleware_and_concurrency.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/architecture/ja/05_asgi_and_telemetry/middleware_and_concurrency.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/architecture/en/05_asgi_and_telemetry/middleware_and_concurrency.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/architecture/en/05_asgi_and_telemetry/native_telemetry_internals.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/architecture/en/05_asgi_and_telemetry/native_telemetry_internals.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/architecture/ja/05_asgi_and_telemetry/native_telemetry_internals.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/architecture/en/05_asgi_and_telemetry/native_telemetry_internals.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/architecture/en/06_openapi_and_docs/openapi_synthesis_engine.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/architecture/en/06_openapi_and_docs/openapi_synthesis_engine.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/architecture/ja/06_openapi_and_docs/openapi_synthesis_engine.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/architecture/en/06_openapi_and_docs/openapi_synthesis_engine.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/architecture/ja/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/architecture/en/" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/architecture/ja/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/architecture/" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/architecture/ja/01_package_and_layers/module_hierarchy.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/architecture/en/01_package_and_layers/module_hierarchy.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/architecture/ja/01_package_and_layers/module_hierarchy.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/architecture/en/01_package_and_layers/module_hierarchy.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/architecture/ja/02_routing_compiler/apiroute_and_closures.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/architecture/en/02_routing_compiler/apiroute_and_closures.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/architecture/ja/02_routing_compiler/apiroute_and_closures.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/architecture/en/02_routing_compiler/apiroute_and_closures.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/architecture/ja/02_routing_compiler/streaming_and_spa_internals.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/architecture/en/02_routing_compiler/streaming_and_spa_internals.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/architecture/ja/02_routing_compiler/streaming_and_spa_internals.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/architecture/en/02_routing_compiler/streaming_and_spa_internals.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/architecture/ja/03_di_and_security_engine/dependant_and_solver.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/architecture/en/03_di_and_security_engine/dependant_and_solver.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/architecture/ja/03_di_and_security_engine/dependant_and_solver.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/architecture/en/03_di_and_security_engine/dependant_and_solver.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/architecture/ja/03_di_and_security_engine/security_internals.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/architecture/en/03_di_and_security_engine/security_internals.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/architecture/ja/03_di_and_security_engine/security_internals.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/architecture/en/03_di_and_security_engine/security_internals.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/architecture/ja/04_pydantic_bridge/compat_and_serialization.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/architecture/en/04_pydantic_bridge/compat_and_serialization.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/architecture/ja/04_pydantic_bridge/compat_and_serialization.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/architecture/en/04_pydantic_bridge/compat_and_serialization.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/architecture/ja/05_asgi_and_telemetry/middleware_and_concurrency.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/architecture/en/05_asgi_and_telemetry/middleware_and_concurrency.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/architecture/ja/05_asgi_and_telemetry/middleware_and_concurrency.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/architecture/en/05_asgi_and_telemetry/middleware_and_concurrency.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/architecture/ja/05_asgi_and_telemetry/native_telemetry_internals.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/architecture/en/05_asgi_and_telemetry/native_telemetry_internals.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/architecture/ja/05_asgi_and_telemetry/native_telemetry_internals.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/architecture/en/05_asgi_and_telemetry/native_telemetry_internals.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/architecture/ja/06_openapi_and_docs/openapi_synthesis_engine.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/architecture/en/06_openapi_and_docs/openapi_synthesis_engine.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/architecture/ja/06_openapi_and_docs/openapi_synthesis_engine.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/architecture/en/06_openapi_and_docs/openapi_synthesis_engine.html" />
+  </url>
+</urlset>

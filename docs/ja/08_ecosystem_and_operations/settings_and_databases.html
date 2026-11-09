@@ -13,7 +13,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>pydantic-settings 設定管理と SQL データベース — FastAPI Visual Guide (Unofficial · Drawlib Demo)</title>
+    <title>pydantic-settings 設定管理と SQL データベース — FastAPI User Guide (Unofficial)</title>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
     <script>
@@ -49,15 +49,15 @@
     <meta name="description" content="FastAPI v0.162.2 は、pydantic-settings と @lru_cache による型安全な 12-Factor 環境変数管理と、SQLModel およびリクエスト単位の yield セッションによる RDB 永続化を組み合わせることで、app.dependency_overrides…">
     <link rel="canonical" href="https://fastapi.drawlib.com/ja/08_ecosystem_and_operations/settings_and_databases.html">
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="FastAPI ビジュアル解説">
-    <meta property="og:title" content="pydantic-settings 設定管理と SQL データベース — FastAPI ビジュアル解説">
+    <meta property="og:site_name" content="FastAPI ユーザーガイド">
+    <meta property="og:title" content="pydantic-settings 設定管理と SQL データベース — FastAPI ユーザーガイド">
     <meta property="og:description" content="FastAPI v0.162.2 は、pydantic-settings と @lru_cache による型安全な 12-Factor 環境変数管理と、SQLModel およびリクエスト単位の yield セッションによる RDB 永続化を組み合わせることで、app.dependency_overrides…">
     <meta property="og:url" content="https://fastapi.drawlib.com/ja/08_ecosystem_and_operations/settings_and_databases.html">
     <meta property="og:image" content="https://fastapi.drawlib.com/_assets/ogp.png">
     <meta property="og:locale" content="ja_JP">
     <meta property="og:locale:alternate" content="en_US">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="pydantic-settings 設定管理と SQL データベース — FastAPI ビジュアル解説">
+    <meta name="twitter:title" content="pydantic-settings 設定管理と SQL データベース — FastAPI ユーザーガイド">
     <meta name="twitter:description" content="FastAPI v0.162.2 は、pydantic-settings と @lru_cache による型安全な 12-Factor 環境変数管理と、SQLModel およびリクエスト単位の yield セッションによる RDB 永続化を組み合わせることで、app.dependency_overrides…">
     <meta name="twitter:image" content="https://fastapi.drawlib.com/_assets/ogp.png">
     
@@ -70,17 +70,21 @@
     
 </head>
 <body>
-    <div class="demo-banner" role="region" aria-label="非公式ショーケース案内">
+    <div class="demo-banner" role="region" aria-label="ポータルナビゲーション">
         <div class="demo-banner-inner">
-            <span class="demo-banner-badge">UNOFFICIAL DEMO</span>
+            <span class="demo-banner-badge">UNOFFICIAL GUIDE</span>
             
             <span class="demo-banner-text">
-                <a href="https://www.drawlib.com/" target="_blank" rel="noopener noreferrer">Drawlib</a> と <a href="https://pypi.org/project/pni501/" target="_blank" rel="noopener noreferrer">PNI501</a> で作成した <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a>（v0.162.2, MIT）の非公式ビジュアル解説ショーケースです。
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a>（v0.162.2）非公式ユーザーガイド
             </span>
             <span class="demo-banner-links">
-                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 診断レポート →</a>
+                <strong style="color:#ffffff;">User Guide</strong>
                 <span class="demo-banner-sep">·</span>
-                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI 公式 Docs ↗</a>
+                <a href="https://fastapi.drawlib.com/architecture/">Architecture</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Audit</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official Docs ↗</a>
                 <span class="demo-banner-sep">·</span>
                 <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
             </span>
@@ -91,9 +95,9 @@
     <div class="doc-layout">
         <aside class="sidebar">
             <div class="sidebar-header">
-                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI ビジュアル解説">
+                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI ユーザーガイド">
                     
-                    FastAPI ビジュアル解説
+                    FastAPI ユーザーガイド
                     
                 </a>
                 <div class="sidebar-header-actions">
@@ -114,7 +118,7 @@
                         <ul class="nav-list">
                             
                             <li class="nav-item ">
-                                <a href="../index.html" >ガイド概要と全体マップ</a>
+                                <a href="../index.html" >ガイド概要</a>
                             </li>
                             
                         </ul>
@@ -125,7 +129,7 @@
                         <ul class="nav-list">
                             
                             <li class="nav-item ">
-                                <a href="../01_getting_started/overview.html" >FastAPI の設計思想と内部構造</a>
+                                <a href="../01_getting_started/overview.html" >FastAPI の設計思想と基本概念</a>
                             </li>
                             
                             <li class="nav-item ">
@@ -178,7 +182,7 @@
                         <ul class="nav-list">
                             
                             <li class="nav-item ">
-                                <a href="../04_dependencies_and_security/dependency_injection.html" >Dependant DAG・キャッシュ・yield スコープ</a>
+                                <a href="../04_dependencies_and_security/dependency_injection.html" >依存グラフ・キャッシュ・yield スコープ</a>
                             </li>
                             
                             <li class="nav-item ">
@@ -252,12 +256,12 @@
                         </ul>
                     
                         
-                        <div class="sidebar-heading">診断レポート &amp; 公式リンク</div>
+                        <div class="sidebar-heading">関連ガイド &amp; 公式リンク</div>
                         
                         <ul class="nav-list">
                             
                             <li class="nav-item ">
-                                <a href="https://fastapi.drawlib.com/reports/pni501/" target="_blank" rel="noopener noreferrer">PNI501 診断レポート<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                                <a href="https://fastapi.drawlib.com/architecture/" target="_blank" rel="noopener noreferrer">FastAPI 内部アーキテクチャ解説<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
                             </li>
                             
                             <li class="nav-item ">
@@ -265,7 +269,7 @@
                             </li>
                             
                             <li class="nav-item ">
-                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">デモのリポジトリ (GitHub)<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub リポジトリ<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
                             </li>
                             
                         </ul>
@@ -314,98 +318,6 @@
   <img src="../../images/08_ecosystem_and_operations/settings_and_databases/pydantic_settings_di_flow.png" alt="settings_and_databases_1" />
   <figcaption class="drawlib-caption">型安全な 12-Factor 設定パイプライン：環境変数ソース -> BaseSettings -> @lru_cache DI -> 環境変数を汚さないテスト分離</figcaption>
 </figure>
-<details class="drawlib-code-details">
-<summary>Source Code</summary>
-<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.canvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">setup</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.icons</span><span class="w"> </span><span class="kn">import</span> <span class="n">phosphor</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.lines</span><span class="w"> </span><span class="kn">import</span> <span class="n">line</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.shapes</span><span class="w"> </span><span class="kn">import</span> <span class="n">rectangle</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.smartarts</span><span class="w"> </span><span class="kn">import</span> <span class="n">ChevronProcess</span><span class="p">,</span> <span class="n">Panel</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">Styles</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.text</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span>
-
-<span class="n">setup</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">194</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">86</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
-
-<span class="n">text</span><span class="p">(</span>
-    <span class="p">(</span><span class="mf">97.0</span><span class="p">,</span> <span class="mf">81.0</span><span class="p">),</span>
-    <span class="s2">"Typed 12-Factor Configuration Pipeline &amp; Zero-Mutation Test Isolation"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">13.0</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="c1"># Upper Production Pipeline Panel</span>
-<span class="n">prod_panel</span> <span class="o">=</span> <span class="n">Panel</span><span class="p">(</span>
-    <span class="s2">"Production Runtime — Parse Once &amp; Inject via Annotated Dependency"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">2.0</span><span class="p">),</span>
-    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_line_width</span><span class="o">=</span><span class="mf">1.2</span><span class="p">),</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.0</span><span class="p">),</span>
-    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">gear</span><span class="p">,</span>
-    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">,</span>
-    <span class="n">header_variant</span><span class="o">=</span><span class="s2">"filled"</span><span class="p">,</span>
-    <span class="n">header_height</span><span class="o">=</span><span class="mf">8.5</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">prod_panel</span><span class="o">.</span><span class="n">draw</span><span class="p">((</span><span class="mf">4.0</span><span class="p">,</span> <span class="mf">33.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">186.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">43.0</span><span class="p">)</span>
-
-<span class="n">pipeline</span> <span class="o">=</span> <span class="n">ChevronProcess</span><span class="p">(</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
-    <span class="n">description_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">corner_angle</span><span class="o">=</span><span class="mf">64.0</span><span class="p">,</span>
-    <span class="n">spacing</span><span class="o">=</span><span class="mf">1.8</span><span class="p">,</span>
-    <span class="n">flat_left_end</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">pipeline</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"1. Config Sources"</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"OS Env • .env • Secrets"</span><span class="p">)</span>
-<span class="n">pipeline</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="s2">"2. BaseSettings"</span><span class="p">,</span>
-    <span class="n">description</span><span class="o">=</span><span class="s2">"ConfigDict • SecretStr"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
-    <span class="n">description_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">pipeline</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="s2">"3. @lru_cache"</span><span class="p">,</span>
-    <span class="n">description</span><span class="o">=</span><span class="s2">"get_settings() Read Once"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">pipeline</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="s2">"4. SettingsDep"</span><span class="p">,</span>
-    <span class="n">description</span><span class="o">=</span><span class="s2">"Annotated[..., Depends()]"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">pipeline</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">8.0</span><span class="p">,</span> <span class="mf">39.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">178.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">22.0</span><span class="p">)</span>
-
-<span class="c1"># Lower Guardrail &amp; Test Override Band</span>
-<span class="n">rectangle</span><span class="p">((</span><span class="mf">49.5</span><span class="p">,</span> <span class="mf">15.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">91.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">20.0</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">2.0</span><span class="p">))</span>
-<span class="n">phosphor</span><span class="o">.</span><span class="n">lock_key</span><span class="p">((</span><span class="mf">10.5</span><span class="p">,</span> <span class="mf">18.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">5.2</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryBold</span><span class="p">)</span>
-<span class="n">text</span><span class="p">(</span>
-    <span class="p">(</span><span class="mf">16.0</span><span class="p">,</span> <span class="mf">18.5</span><span class="p">),</span>
-    <span class="s2">"Precedence &amp; SecretStr Masking"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.8</span><span class="p">,</span> <span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">text</span><span class="p">(</span>
-    <span class="p">(</span><span class="mf">16.0</span><span class="p">,</span> <span class="mf">11.5</span><span class="p">),</span>
-    <span class="s2">"kwargs &gt; OS env &gt; .env &gt; defaults  •  repr() -&gt; '**********'"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="n">rectangle</span><span class="p">((</span><span class="mf">144.5</span><span class="p">,</span> <span class="mf">15.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">91.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">20.0</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">2.0</span><span class="p">))</span>
-<span class="n">phosphor</span><span class="o">.</span><span class="n">flask</span><span class="p">((</span><span class="mf">105.5</span><span class="p">,</span> <span class="mf">18.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">5.2</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">)</span>
-<span class="n">text</span><span class="p">(</span>
-    <span class="p">(</span><span class="mf">111.0</span><span class="p">,</span> <span class="mf">18.5</span><span class="p">),</span>
-    <span class="s2">"Hermetic pytest Override"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.8</span><span class="p">,</span> <span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">text</span><span class="p">(</span>
-    <span class="p">(</span><span class="mf">111.0</span><span class="p">,</span> <span class="mf">11.5</span><span class="p">),</span>
-    <span class="s2">"dependency_overrides[get_settings] • Zero env edit"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="c1"># Override injection connector into SettingsDep stage</span>
-<span class="n">line</span><span class="p">((</span><span class="mf">162.0</span><span class="p">,</span> <span class="mf">25.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">162.0</span><span class="p">,</span> <span class="mf">38.0</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">line_width</span><span class="o">=</span><span class="mf">1.8</span><span class="p">))</span>
-
-<span class="n">save</span><span class="p">()</span>
-</code></pre>
-</details>
 <h2>1. <code>pydantic-settings</code> による型安全な 12-Factor 設定管理</h2>
 <p>接続先 URL のハードコードや型のない <code>os.getenv()</code> 呼び出しを各モジュールに散在させると、必須環境変数の欠落が本番の特定経路を踏むまで発覚しません。<code>fastapi[standard]</code> に同梱される <code>pydantic-settings &gt;=2.0.0</code> を用いれば、環境変数・<code>.env</code> ファイル・シークレットマウントを HTTP リクエスト検証と同一の Rust 製 Pydantic v2 エンジンで厳密に型検証できます。</p>
 <h3>設定ソースの優先順位・<code>SettingsConfigDict</code>・<code>SecretStr</code></h3>
@@ -531,125 +443,6 @@
   <img src="../../images/08_ecosystem_and_operations/settings_and_databases/sqlmodel_session_and_testing.png" alt="settings_and_databases_2" />
   <figcaption class="drawlib-caption">FastAPI + SQLModel マルチモデル階層・リクエスト単位の Session yield ライフサイクル・StaticPool SQLite テスト分離</figcaption>
 </figure>
-<details class="drawlib-code-details">
-<summary>Source Code</summary>
-<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.canvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">setup</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.icons</span><span class="w"> </span><span class="kn">import</span> <span class="n">phosphor</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.lines</span><span class="w"> </span><span class="kn">import</span> <span class="n">lines</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.shapes</span><span class="w"> </span><span class="kn">import</span> <span class="n">rectangle</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.smartarts</span><span class="w"> </span><span class="kn">import</span> <span class="n">CardList</span><span class="p">,</span> <span class="n">Panel</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">Styles</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.text</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span>
-
-<span class="n">setup</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">190</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">92</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
-
-<span class="n">text</span><span class="p">(</span>
-    <span class="p">(</span><span class="mf">95.0</span><span class="p">,</span> <span class="mf">87.0</span><span class="p">),</span>
-    <span class="s2">"FastAPI + SQLModel Multi-Model Hierarchy &amp; Hermetic StaticPool Testing"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">13.0</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="c1"># Left Panel: Multi-Model Schema Inheritance</span>
-<span class="n">left_panel</span> <span class="o">=</span> <span class="n">Panel</span><span class="p">(</span>
-    <span class="s2">"1. SQLModel Multi-Model Schema Design"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">2.0</span><span class="p">),</span>
-    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_line_width</span><span class="o">=</span><span class="mf">1.2</span><span class="p">),</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.0</span><span class="p">),</span>
-    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">database</span><span class="p">,</span>
-    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">,</span>
-    <span class="n">header_variant</span><span class="o">=</span><span class="s2">"filled"</span><span class="p">,</span>
-    <span class="n">header_height</span><span class="o">=</span><span class="mf">8.5</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">left_panel</span><span class="o">.</span><span class="n">draw</span><span class="p">((</span><span class="mf">4.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">90.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">76.0</span><span class="p">)</span>
-
-<span class="c1"># Shared HeroBase card</span>
-<span class="n">rectangle</span><span class="p">((</span><span class="mf">49.0</span><span class="p">,</span> <span class="mf">63.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">80.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">13.0</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.8</span><span class="p">))</span>
-<span class="n">text</span><span class="p">((</span><span class="mf">49.0</span><span class="p">,</span> <span class="mf">65.5</span><span class="p">),</span> <span class="s2">"HeroBase(SQLModel)  [Shared Fields]"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">))</span>
-<span class="n">text</span><span class="p">((</span><span class="mf">49.0</span><span class="p">,</span> <span class="mf">60.0</span><span class="p">),</span> <span class="s2">"name: str (index)  •  age: int | None"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">))</span>
-
-<span class="c1"># Orthogonal fork from HeroBase to Table vs API Schemas</span>
-<span class="n">lines</span><span class="p">([(</span><span class="mf">49.0</span><span class="p">,</span> <span class="mf">56.5</span><span class="p">),</span> <span class="p">(</span><span class="mf">49.0</span><span class="p">,</span> <span class="mf">51.5</span><span class="p">),</span> <span class="p">(</span><span class="mf">27.5</span><span class="p">,</span> <span class="mf">51.5</span><span class="p">),</span> <span class="p">(</span><span class="mf">27.5</span><span class="p">,</span> <span class="mf">45.5</span><span class="p">)],</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">)</span>
-<span class="n">lines</span><span class="p">([(</span><span class="mf">49.0</span><span class="p">,</span> <span class="mf">56.5</span><span class="p">),</span> <span class="p">(</span><span class="mf">49.0</span><span class="p">,</span> <span class="mf">51.5</span><span class="p">),</span> <span class="p">(</span><span class="mf">70.5</span><span class="p">,</span> <span class="mf">51.5</span><span class="p">),</span> <span class="p">(</span><span class="mf">70.5</span><span class="p">,</span> <span class="mf">45.5</span><span class="p">)],</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">)</span>
-
-<span class="c1"># Physical DB Table Model (Focal)</span>
-<span class="n">rectangle</span><span class="p">((</span><span class="mf">27.5</span><span class="p">,</span> <span class="mf">36.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">39.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">18.5</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.8</span><span class="p">))</span>
-<span class="n">text</span><span class="p">((</span><span class="mf">27.5</span><span class="p">,</span> <span class="mf">41.2</span><span class="p">),</span> <span class="s2">"Hero (table=True)"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">))</span>
-<span class="n">text</span><span class="p">((</span><span class="mf">27.5</span><span class="p">,</span> <span class="mf">35.5</span><span class="p">),</span> <span class="s2">"id: int | None (PK)"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">))</span>
-<span class="n">text</span><span class="p">((</span><span class="mf">27.5</span><span class="p">,</span> <span class="mf">30.2</span><span class="p">),</span> <span class="s2">"secret_name: str"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">))</span>
-
-<span class="c1"># Create &amp; Public API Schemas</span>
-<span class="n">rectangle</span><span class="p">((</span><span class="mf">70.5</span><span class="p">,</span> <span class="mf">36.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">39.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">18.5</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.8</span><span class="p">))</span>
-<span class="n">text</span><span class="p">((</span><span class="mf">70.5</span><span class="p">,</span> <span class="mf">41.2</span><span class="p">),</span> <span class="s2">"Create / Public"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">))</span>
-<span class="n">text</span><span class="p">((</span><span class="mf">70.5</span><span class="p">,</span> <span class="mf">35.5</span><span class="p">),</span> <span class="s2">"Create: +secret_name"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">))</span>
-<span class="n">text</span><span class="p">((</span><span class="mf">70.5</span><span class="p">,</span> <span class="mf">30.2</span><span class="p">),</span> <span class="s2">"Public: id: int (Safe!)"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">))</span>
-
-<span class="c1"># Sparse PATCH Schema at bottom</span>
-<span class="n">rectangle</span><span class="p">((</span><span class="mf">49.0</span><span class="p">,</span> <span class="mf">15.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">80.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">14.0</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.8</span><span class="p">))</span>
-<span class="n">text</span><span class="p">((</span><span class="mf">49.0</span><span class="p">,</span> <span class="mf">18.0</span><span class="p">),</span> <span class="s2">"HeroUpdate(SQLModel)  [Sparse PATCH]"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">))</span>
-<span class="n">text</span><span class="p">((</span><span class="mf">49.0</span><span class="p">,</span> <span class="mf">12.2</span><span class="p">),</span> <span class="s2">"model_dump(exclude_unset=True) -&gt; sqlmodel_update()"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">))</span>
-
-<span class="c1"># Right Panel: Session Yield DI &amp; StaticPool Pytest Isolation</span>
-<span class="n">right_panel</span> <span class="o">=</span> <span class="n">Panel</span><span class="p">(</span>
-    <span class="s2">"2. Session Lifecycle &amp; StaticPool Tests"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">2.0</span><span class="p">),</span>
-    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_line_width</span><span class="o">=</span><span class="mf">1.2</span><span class="p">),</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.0</span><span class="p">),</span>
-    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">arrows_split</span><span class="p">,</span>
-    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryBold</span><span class="p">,</span>
-    <span class="n">header_variant</span><span class="o">=</span><span class="s2">"filled"</span><span class="p">,</span>
-    <span class="n">header_height</span><span class="o">=</span><span class="mf">8.5</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">right_panel</span><span class="o">.</span><span class="n">draw</span><span class="p">((</span><span class="mf">98.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">88.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">76.0</span><span class="p">)</span>
-<span class="n">r_xy</span><span class="p">,</span> <span class="n">r_w</span><span class="p">,</span> <span class="n">r_h</span> <span class="o">=</span> <span class="n">right_panel</span><span class="o">.</span><span class="n">get_content_box</span><span class="p">((</span><span class="mf">98.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">88.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">76.0</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="p">(</span><span class="mf">3.5</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">))</span>
-
-<span class="n">cl_right</span> <span class="o">=</span> <span class="n">CardList</span><span class="p">(</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
-    <span class="n">description_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">badge_shape</span><span class="o">=</span><span class="s2">"rounded_rect"</span><span class="p">,</span>
-    <span class="n">badge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span>
-    <span class="n">badge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">,</span>
-    <span class="n">direction</span><span class="o">=</span><span class="s2">"vertical"</span><span class="p">,</span>
-    <span class="n">spacing</span><span class="o">=</span><span class="mf">2.6</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">cl_right</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="s2">"get_session() Yield DI"</span><span class="p">,</span>
-    <span class="s2">"with Session(engine) as s: yield s"</span><span class="p">,</span>
-    <span class="n">badge_text</span><span class="o">=</span><span class="s2">"1"</span><span class="p">,</span>
-    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">plugs</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">cl_right</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="s2">"SessionDep CRUD Route"</span><span class="p">,</span>
-    <span class="s2">"Sync def in threadpool + commit/refresh"</span><span class="p">,</span>
-    <span class="n">badge_text</span><span class="o">=</span><span class="s2">"2"</span><span class="p">,</span>
-    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">cpu</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">cl_right</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="s2">"SQLite StaticPool Engine"</span><span class="p">,</span>
-    <span class="s2">"sqlite:// + check_same_thread=False"</span><span class="p">,</span>
-    <span class="n">badge_text</span><span class="o">=</span><span class="s2">"3"</span><span class="p">,</span>
-    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">flask</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">cl_right</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="s2">"dependency_overrides"</span><span class="p">,</span>
-    <span class="s2">"Swap get_session -&gt; isolated memory DB"</span><span class="p">,</span>
-    <span class="n">badge_text</span><span class="o">=</span><span class="s2">"4"</span><span class="p">,</span>
-    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">check_circle</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
-    <span class="n">description_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">badge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
-    <span class="n">badge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">cl_right</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">xy</span><span class="o">=</span><span class="n">r_xy</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">r_w</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">r_h</span><span class="p">)</span>
-
-<span class="n">save</span><span class="p">()</span>
-</code></pre>
-</details>
 <h3>4 分割 <code>SQLModel</code> パターン（機密カラム漏洩と Nullable ID の防止）</h3>
 <p>単一の <code>table=True</code> ORM クラスをリクエストやレスポンスの型にそのまま流用すると、<code>POST</code> 時の主キー偽装、内部カラム（<code>secret_name</code> やパスワードハッシュ）の JSON 漏洩、さらに自動生成 SDK 側で永続化済みレコードの <code>id</code> まで <code>int | null</code> になってしまうという 3 つの設計上の欠陥が生じます。</p>
 <p>責務を 4 つの軽量な <code>SQLModel</code> クラスに分割することで、<a href="../03_routing_and_models/responses_and_openapi.html">レスポンス直列化と OpenAPI 3.1</a> の精度を完全に保ちながらこれらすべてを解消できます。</p>
@@ -804,6 +597,11 @@
 <p>続いて <a href="cli_proxy_graphql_ai.html">FastAPI CLI・プロキシ・GraphQL・AI 連携</a> へ進み、<code>fastapi dev</code> / <code>fastapi run</code>、リバースプロキシ配下の <code>--root-path</code> 運用、Strawberry GraphQL ルーター、および <code>library-skills</code> を用いた AI 駆動開発を確認してください。</p>
 
             </main>
+            <footer class="footer">
+                
+                FastAPI® は Sebastián Ramírez（<a href="https://github.com/tiangolo" target="_blank" rel="noopener noreferrer">@tiangolo</a>）の登録商標です。本サイトは非公式ガイドであり、公式プロジェクトとは提携していません。公式ドキュメントは <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">fastapi.tiangolo.com</a> をご参照ください。
+                
+            </footer>
         </div>
     </div>
     

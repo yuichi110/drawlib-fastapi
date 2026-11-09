@@ -1,0 +1,550 @@
+<!--
+ Copyright (c) 2026 Yuichi Ito (yuichi@yuichi.com)
+
+ This software is licensed under the Apache License, Version 2.0.
+ For more information, please visit: https://github.com/yuichi110/drawlib
+
+ This software is provided "as is", without warranty of any kind,
+ express or implied, including but not limited to the warranties of
+ merchantability, fitness for a particular purpose and noninfringement.
+-->
+<!DOCTYPE html>
+<html lang="ja" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5層モジュール構造・Starlette 再公開と PEP 727 Doc() — FastAPI Architecture Guide (Unofficial)</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-S9N5BZ1VRC');
+    </script>
+    <script>
+        (function() {
+            const saved = localStorage.getItem('drawlib-theme');
+            if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    
+    <link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/architecture/en/01_package_and_layers/module_hierarchy.html">
+    
+    <link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/architecture/ja/01_package_and_layers/module_hierarchy.html">
+    
+    <link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/architecture/en/01_package_and_layers/module_hierarchy.html">
+    
+    
+    
+    <meta name="description" content="FastAPI v0.162.2 は、ルーティングコンパイラ、再帰的 DI ソルバ、Pydantic v2 検証ブリッジ、ネイティブ Server-Sent Events、OpenTelemetry 計装、OpenAPI 3.1.0 スキーマ合成という多彩な機能を、わずか 52 個の Python…">
+    <link rel="canonical" href="https://fastapi.drawlib.com/architecture/ja/01_package_and_layers/module_hierarchy.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="FastAPI 内部構造">
+    <meta property="og:title" content="5層モジュール構造・Starlette 再公開と PEP 727 Doc() — FastAPI 内部構造">
+    <meta property="og:description" content="FastAPI v0.162.2 は、ルーティングコンパイラ、再帰的 DI ソルバ、Pydantic v2 検証ブリッジ、ネイティブ Server-Sent Events、OpenTelemetry 計装、OpenAPI 3.1.0 スキーマ合成という多彩な機能を、わずか 52 個の Python…">
+    <meta property="og:url" content="https://fastapi.drawlib.com/architecture/ja/01_package_and_layers/module_hierarchy.html">
+    <meta property="og:image" content="https://fastapi.drawlib.com/architecture/_assets/ogp.png">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:locale:alternate" content="en_US">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="5層モジュール構造・Starlette 再公開と PEP 727 Doc() — FastAPI 内部構造">
+    <meta name="twitter:description" content="FastAPI v0.162.2 は、ルーティングコンパイラ、再帰的 DI ソルバ、Pydantic v2 検証ブリッジ、ネイティブ Server-Sent Events、OpenTelemetry 計装、OpenAPI 3.1.0 スキーマ合成という多彩な機能を、わずか 52 個の Python…">
+    <meta name="twitter:image" content="https://fastapi.drawlib.com/architecture/_assets/ogp.png">
+    
+    
+    <link rel="icon" type="image/png" href="../../_assets/favicon.png">
+    
+    
+    <link rel="stylesheet" href="../style.css">
+    
+    
+</head>
+<body>
+    <div class="demo-banner" role="region" aria-label="ポータルナビゲーション">
+        <div class="demo-banner-inner">
+            <span class="demo-banner-badge">INTERNAL ARCHITECTURE</span>
+            
+            <span class="demo-banner-text">
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a>（v0.162.2）内部アーキテクチャ解説（非公式）
+            </span>
+            <span class="demo-banner-links">
+                <a href="https://fastapi.drawlib.com/">User Guide</a>
+                <span class="demo-banner-sep">·</span>
+                <strong style="color:#ffffff;">Architecture</strong>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Audit</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official Docs ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+            </span>
+            
+        </div>
+    </div>
+    
+    <div class="doc-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI 内部構造">
+                    
+                    FastAPI 内部構造
+                    
+                </a>
+                <div class="sidebar-header-actions">
+                    <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">
+                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                    <button type="button" id="menu-toggle" class="menu-toggle-btn" aria-label="Toggle navigation" aria-expanded="false">
+                        <svg class="icon-hamburger" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        <svg class="icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="sidebar-menu">
+                
+                    
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../index.html" >アーキテクチャ全体像</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">1. パッケージ階層と境界設計</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item active">
+                                <a href="module_hierarchy.html" >5層モジュール構造と Starlette 再公開</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">2. ルーティングコンパイラとクロージャ</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../02_routing_compiler/apiroute_and_closures.html" >APIRouter・APIRoute とクロージャ合成</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../02_routing_compiler/streaming_and_spa_internals.html" >ジェネレータ配信と SPA ルータ内部実装</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">3. DI 解決エンジンと認証機構</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../03_di_and_security_engine/dependant_and_solver.html" >Dependant グラフと solve_dependencies</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../03_di_and_security_engine/security_internals.html" >SecurityBase 階層と HTTPConnection</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">4. Pydantic v2 ブリッジ層</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../04_pydantic_bridge/compat_and_serialization.html" >_compat/v2.py・ModelField・直列化</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">5. ASGI スタックとテレメトリ</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../05_asgi_and_telemetry/middleware_and_concurrency.html" >ミドルウェア7層構造とスレッドプール</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../05_asgi_and_telemetry/native_telemetry_internals.html" >NativeTelemetry と例外スパン記録</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">6. OpenAPI 3.1 合成エンジン</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../06_openapi_and_docs/openapi_synthesis_engine.html" >get_openapi()・$defs 集約・Docs UI</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">関連ガイド &amp; 公式リンク</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/" target="_blank" rel="noopener noreferrer">FastAPI ユーザーガイド<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/reports/pni501/" target="_blank" rel="noopener noreferrer">PNI501 診断レポート<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI 公式ドキュメント<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub リポジトリ<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                        </ul>
+                    
+                
+            </div>
+        </aside>
+        <div class="content-wrapper">
+            <header class="top-bar">
+                <div class="breadcrumbs">
+                    <span class="crumb">Architecture</span>
+                    <span class="crumb-separator">&raquo;</span>
+                    <span class="crumb active">5層モジュール構造・Starlette 再公開と PEP 727 Doc()</span>
+                </div>
+                
+                <div class="lang-switcher">
+                    <details class="lang-dropdown">
+                        <summary class="lang-dropdown-btn" aria-label="Select language">
+                            <svg class="lang-globe-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            <span class="lang-current-label">日本語</span>
+                            <svg class="lang-caret-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </summary>
+                        <div class="lang-dropdown-menu" role="menu">
+                            
+                            <a href="../../en/01_package_and_layers/module_hierarchy.html" class="lang-option" lang="en" hreflang="en" >
+                                <span>English</span>
+                                
+                            </a>
+                            
+                            <a href="module_hierarchy.html" class="lang-option active" lang="ja" hreflang="ja" aria-current="page">
+                                <span>日本語</span>
+                                
+                                <svg class="lang-check-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                
+                            </a>
+                            
+                        </div>
+                    </details>
+                </div>
+                
+            </header>
+            <main class="main-content">
+                <h1>5層モジュール構造・Starlette 再公開と PEP 727 Doc()</h1>
+<p>FastAPI <code>v0.162.2</code> は、ルーティングコンパイラ、再帰的 DI ソルバ、Pydantic v2 検証ブリッジ、ネイティブ Server-Sent Events、OpenTelemetry 計装、OpenAPI <code>3.1.0</code> スキーマ合成という多彩な機能を、わずか <strong><code>52</code> 個の Python ファイル（<code>19,837</code> LOC）・循環 import <code>0</code> 件</strong> という凝縮されたパッケージに収めています。内部ではすべてのトップレベル import が 5 つの階層に沿って厳密に上位から下位への単方向に制御されており、外部に対しては Starlette・Pydantic v2・<code>annotated-doc</code>（<code>PEP 727</code>）を統合した型安全なファサードを提供します。</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/01_package_and_layers/module_hierarchy/five_tier_package_dag.png" alt="module_hierarchy_1" />
+  <figcaption class="drawlib-caption">FastAPI v0.162.2 厳密な5層非巡回パッケージ構造（全52モジュール・循環importゼロ）</figcaption>
+</figure>
+<h2>厳密な5層非巡回パッケージトポロジ（DAG）</h2>
+<p><code>./fastapi/</code> に対する静的 AST 解析により、モジュールトップレベルの <code>import</code> / <code>from ... import</code> 文は 5 層の有向非巡回グラフ（DAG）を構成していることが確認できます。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">階層</th>
+<th style="text-align:left">アーキテクチャ上の責務</th>
+<th style="text-align:left">構成モジュール（<code>v0.162.2</code>）</th>
+<th style="text-align:left">許可される内部参照先</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>Tier 4</strong></td>
+<td style="text-align:left"><strong>アプリケーション統合と公開エントリポイント</strong></td>
+<td style="text-align:left"><code>applications.py</code>（<code>FastAPI</code>）, <code>__init__.py</code>（公開シンボル <code>21</code> 個 + <code>__version__</code>）, <code>cli.py</code>, <code>__main__.py</code></td>
+<td style="text-align:left">Tier <code>0</code>〜<code>3</code>（<code>routing</code>, <code>openapi.utils</code>, <code>openapi.docs</code>, <code>telemetry</code>, <code>exception_handlers</code>, <code>middleware.asyncexitstack</code>）。</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Tier 3</strong></td>
+<td style="text-align:left"><strong>ルーティングコンパイラと OpenAPI 合成</strong></td>
+<td style="text-align:left"><code>routing.py</code>（<code>APIRouter</code>, <code>APIRoute</code>, <code>APIWebSocketRoute</code>）, <code>openapi/utils.py</code>（<code>get_openapi</code>）, <code>openapi/docs.py</code></td>
+<td style="text-align:left">Tier <code>0</code>〜<code>2</code>（<code>dependencies.*</code>, <code>sse</code>, <code>telemetry._api</code>, <code>encoders</code>, <code>_compat</code>, <code>params</code>, <code>responses</code>）。<code>openapi/utils.py</code> は <code>APIRoute</code> 走査のため <code>routing</code> を参照。</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Tier 2</strong></td>
+<td style="text-align:left"><strong>DI 解決・認証・テレメトリ・ストリーム</strong></td>
+<td style="text-align:left"><code>dependencies/{models,utils}.py</code>, <code>security/{base,api_key,http,oauth2,open_id_connect_url,utils}.py</code>, <code>telemetry/{_api,_asgi,_runtime,__init__}.py</code>, <code>sse.py</code>, <code>responses.py</code>, <code>background.py</code>, <code>exception_handlers.py</code></td>
+<td style="text-align:left">Tier <code>0</code>〜<code>1</code>（<code>_compat</code>, <code>params</code>, <code>param_functions</code>, <code>openapi.models</code>, <code>encoders</code>, <code>concurrency</code>, <code>exceptions</code>）。</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Tier 1</strong></td>
+<td style="text-align:left"><strong>Pydantic v2 ブリッジ・変換器・記述子</strong></td>
+<td style="text-align:left"><code>_compat/{__init__,shared,v2}.py</code>, <code>encoders.py</code>, <code>params.py</code>, <code>param_functions.py</code>, <code>openapi/models.py</code>, <code>utils.py</code></td>
+<td style="text-align:left">Tier <code>0</code>（<code>types</code>, <code>exceptions</code>, <code>datastructures</code>, <code>openapi.constants</code>, <code>logger</code>）および外部ライブラリ（<code>pydantic</code>, <code>pydantic_core</code>, <code>annotated_doc</code>）。</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Tier 0</strong></td>
+<td style="text-align:left"><strong>内部依存ゼロのリーフモジュール群</strong></td>
+<td style="text-align:left"><code>types.py</code>, <code>exceptions.py</code>, <code>datastructures.py</code>, <code>openapi/constants.py</code>, <code>logger.py</code>, <code>concurrency.py</code>, <code>requests.py</code>, <code>websockets.py</code>, <code>staticfiles.py</code>, <code>templating.py</code>, <code>testclient.py</code>, <code>middleware/{__init__,asyncexitstack,cors,gzip,httpsredirect,trustedhost,wsgi}.py</code></td>
+<td style="text-align:left"><strong>トップレベルの <code>fastapi.*</code> import ゼロ</strong> — Python 標準ライブラリ、<code>starlette</code>、<code>pydantic</code>、<code>anyio</code>、<code>annotated_doc</code> のみに依存。</td>
+</tr>
+</tbody>
+</table>
+<h3>循環 import ゼロを維持する3つの実装技法</h3>
+<p><code>v0.162.2</code> では、下位層から上位層への逆方向依存（バックエッジ）を以下の 3 つの明示的な手法で遮断しています。</p>
+<ol>
+<li><strong><code>if TYPE_CHECKING:</code> ガードと前方参照文字列</strong>: Tier 1 の <code>fastapi/utils.py</code> は <code>generate_unique_id(route: &quot;APIRoute&quot;) -&gt; str</code> を定義しており、Tier 3 の <code>routing.py</code> や Tier 4 の <code>applications.py</code> からデフォルト引数ファクトリとして import されます。無条件に <code>APIRoute</code> を import すると <code>routing -&gt; utils -&gt; routing</code> の循環が生じるため、<code>if TYPE_CHECKING: from .routing import APIRoute</code> と文字列アノテーション <code>&quot;APIRoute&quot;</code> を組み合わせて実行時ロードを単方向に保っています。</li>
+<li><strong>関数・メソッド先頭での遅延 import（Call-Site Deferred Import）</strong>: 実行時の特定パスでのみ隣接・上位モジュールの補助関数が必要な箇所では、関数スコープ内で遅延 import を行います。
+<ul>
+<li><code>datastructures.py</code>（<code>UploadFile.__get_pydantic_core_schema__</code>）: <code>from ._compat.v2 import with_info_plain_validator_function</code> をメソッド内に遅延配置し、モジュール import 時は純粋な Tier 0 リーフを維持。</li>
+<li><code>_compat/v2.py</code>（<code>is_scalar_field</code>）: <code>from fastapi import params</code> を関数内に閉じ込め、<code>_compat</code> から <code>Undefined</code> を import する <code>params.py</code> との相互参照を回避。</li>
+<li><code>applications.py</code>（<code>FastAPI.__call__</code>）: ASGI <code>&quot;lifespan&quot;</code> スコープ受信時にのみ <code>from fastapi.telemetry._runtime import lifespan</code> をロード。</li>
+</ul>
+</li>
+<li><strong>定数・モデル専用リーフへの細分化（<code>openapi/constants.py</code> と <code>openapi/models.py</code>）</strong>: <code>REF_TEMPLATE = &quot;#/components/schemas/{model}&quot;</code> や OpenAPI の Pydantic モデル（<code>Example</code>, <code>SecurityScheme</code>）を Tier 3 の <code>openapi/utils.py</code> に同居させず、Tier 0 の <code>openapi/constants.py</code> と Tier 1 の <code>openapi/models.py</code> に分離しています。これにより <code>_compat/v2.py</code>・<code>params.py</code>・<code>security/*</code> は <code>openapi/utils.py</code>（およびその先の <code>routing.py</code>）を引き込まずに OpenAPI 定数やモデルを参照できます。</li>
+</ol>
+<h2>Starlette ファサードパターンと明示的 <code>X as X</code> 再公開</h2>
+<p>FastAPI は Starlette（<code>starlette&gt;=0.46.0</code>）を基盤とし、<code>FastAPI</code> は <code>starlette.applications.Starlette</code> を、<code>APIRoute</code> は <code>starlette.routing.Route</code> を直接継承しています。開発者がアプリケーションコード内で <code>from fastapi import ...</code> と <code>from starlette... import ...</code> を使い分けずに済むよう、FastAPI は <code>requests.py</code>, <code>responses.py</code>, <code>websockets.py</code>, <code>background.py</code>, <code>concurrency.py</code>, <code>staticfiles.py</code>, <code>templating.py</code>, <code>testclient.py</code>, <code>middleware/*</code> という専用のファサードモジュール群を提供しています。</p>
+<p>これらのシムモジュールでは、<code>from starlette.requests import Request as Request</code> や <code>from starlette.middleware.cors import CORSMiddleware as CORSMiddleware</code> のように <strong>冗長な <code>X as X</code> エイリアス構文</strong> が徹底されています。これは <strong>PEP 484 / PEP 561（<code>py.typed</code>）および <code>mypy</code>・<code>pyright</code>・<code>ty</code> の <code>--no-implicit-reexport</code> 規約</strong> において、単なる <code>from pkg import Symbol</code> はモジュール内部向けの非公開 import とみなされるのに対し、<code>from pkg import Symbol as Symbol</code> は手動の <code>__all__</code> リストを保守することなく「公開 API としての明示的な再エクスポート」を型チェッカへ宣言する標準イディオムであるためです。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">ファサード分類</th>
+<th style="text-align:left">FastAPI 側のモジュールと主要シンボル</th>
+<th style="text-align:left">Starlette に対するアーキテクチャ上の関係（<code>v0.162.2</code>）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>純粋な <code>X as X</code> 同一参照シム</strong></td>
+<td style="text-align:left"><code>requests.py</code>（<code>Request</code>, <code>HTTPConnection</code>）, <code>websockets.py</code>（<code>WebSocket</code>, <code>WebSocketDisconnect</code>, <code>WebSocketState</code>）, <code>staticfiles.py</code>（<code>StaticFiles</code>）, <code>templating.py</code>（<code>Jinja2Templates</code>）, <code>testclient.py</code>（<code>TestClient</code>）, <code>middleware/{cors,gzip,httpsredirect,trustedhost,wsgi}.py</code></td>
+<td style="text-align:left">実行時クラス同一性（<code>fastapi.Request is starlette.requests.Request</code>）を保ちつつ PEP 484 公開型シンボルとして再公開。</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>レスポンス群 + ネイティブ SSE・旧 JSON シム</strong></td>
+<td style="text-align:left"><code>responses.py</code>（<code>Response</code>, <code>JSONResponse</code>, <code>HTMLResponse</code>, <code>PlainTextResponse</code>, <code>RedirectResponse</code>, <code>StreamingResponse</code>, <code>FileResponse</code>, <code>EventSourceResponse</code>, <code>ORJSONResponse</code>, <code>UJSONResponse</code>）</td>
+<td style="text-align:left">Starlette 標準レスポンスに加え <code>fastapi.sse.EventSourceResponse</code> を再公開。<code>ORJSONResponse</code> と <code>UJSONResponse</code> は <code>JSONResponse</code> サブクラスとして残るが、Rust 製 <code>ModelField.serialize_json()</code> による直接バイト直列化の方が高速なため <code>@deprecated(..., category=FastAPIDeprecationWarning)</code> が付与されている。</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>テレメトリ計装付き <code>BackgroundTasks</code></strong></td>
+<td style="text-align:left"><code>background.py</code>（<code>BackgroundTasks(StarletteBackgroundTasks)</code>）</td>
+<td style="text-align:left"><code>add_task()</code> に <code>ParamSpec</code> と <code>Doc()</code> 型注釈を追加し、<code>__call__()</code> をオーバーライドして各タスク実行を <code>with _operation(name=&quot;background_task&quot;, function=task.func):</code> スパンで計測。</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Pydantic v2 統合 <code>UploadFile</code></strong></td>
+<td style="text-align:left"><code>datastructures.py</code>（<code>UploadFile(StarletteUploadFile)</code>）</td>
+<td style="text-align:left"><code>__get_pydantic_core_schema__()</code> と <code>__get_pydantic_json_schema__()</code>（<code>type: &quot;string&quot;, contentMediaType: &quot;application/octet-stream&quot;</code>）および <code>Doc()</code> 属性注釈を実装。</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>デッドロック回避スレッドプール制御</strong></td>
+<td style="text-align:left"><code>concurrency.py</code>（<code>contextmanager_in_threadpool</code> + Starlette の <code>run_in_threadpool</code>, <code>iterate_in_threadpool</code>）</td>
+<td style="text-align:left">同期 <code>yield</code> 依存関数の <code>__exit__</code> に専用の <code>anyio.CapacityLimiter(1)</code>（<code>exit_limiter</code>）を割り当て、ワーカスレッド枯渇時のクリーンアップ待ちデッドロックを防止。</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>ファイル自動クローズ用内側スタック</strong></td>
+<td style="text-align:left"><code>middleware/asyncexitstack.py</code>（<code>AsyncExitStackMiddleware</code>）</td>
+<td style="text-align:left">ユーザーミドルウェアの内側で <code>scope[&quot;fastapi_middleware_astack&quot;]</code> を注入し、レスポンス完了後にマルチパート <code>FormData</code> / <code>UploadFile</code> を確実にクローズする FastAPI 独自ミドルウェア。</td>
+</tr>
+</tbody>
+</table>
+<h2>パラメータ記述子（<code>params.py</code>）・公開ファクトリと PEP 727 <code>Doc()</code></h2>
+<p>FastAPI はパラメータ宣言と DI マーカを、Tier 1 の 2 つのモジュール――実行時クラス群を定義する <strong><code>fastapi/params.py</code></strong>（<code>800</code> 行）と、<code>fastapi/__init__.py</code> から再公開される公開ファクトリ関数群 <strong><code>fastapi/param_functions.py</code></strong>（<code>2,569</code> 行）――に分離しています。</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/01_package_and_layers/module_hierarchy/starlette_pydantic_facade.png" alt="module_hierarchy_2" />
+  <figcaption class="drawlib-caption">Starlette ファサード継承構造と Pydantic FieldInfo / Depends 記述子・PEP 727 Doc() ファクトリ階層</figcaption>
+</figure>
+<ol>
+<li><strong>2系統の <code>FieldInfo</code> 継承ツリーと不変 DI データクラス（<code>fastapi/params.py</code>）</strong>:
+<ul>
+<li><strong>スカラ HTTP パラメータ（<code>Param(FieldInfo)</code>）</strong>: <code>Path</code>, <code>Query</code>, <code>Header</code>, <code>Cookie</code> は <code>Param(FieldInfo)</code> を継承し、パラメータ抽出位置を表す <code>ParamTypes</code> 列挙体（<code>ParamTypes.path</code>, <code>ParamTypes.query</code>, <code>ParamTypes.header</code>, <code>ParamTypes.cookie</code>）をクラス属性 <code>in_</code> に保持します。URL パスパラメータは常に必須であるため <code>Path.__init__</code> は <code>assert default is ...</code> を検証し、<code>Header.__init__</code> は <code>convert_underscores: bool = True</code> を追加します。</li>
+<li><strong>リクエストボディ記述子（<code>Body(FieldInfo)</code>）</strong>: <code>Body</code> は <code>Param</code> ではなく <code>pydantic.fields.FieldInfo</code> を <strong>直接継承</strong> し、<code>embed: bool | None</code> と <code>media_type = &quot;application/json&quot;</code> を保持します。さらに <code>Form(Body)</code> が <code>&quot;application/x-www-form-urlencoded&quot;</code> に、<code>File(Form)</code> が <code>&quot;multipart/form-data&quot;</code> にそれぞれ特化します。</li>
+<li><strong>依存関係マーカ（<code>Depends</code> と <code>Security</code>）</strong>: これらは Pydantic 検証対象ではないため <code>FieldInfo</code> を継承せず、<code>@dataclass(frozen=True) class Depends</code> が <code>(dependency, use_cache=True, scope=None)</code> を保持し、<code>@dataclass(frozen=True) class Security(Depends)</code> が OAuth2 用の <code>scopes: Sequence[str] | None = None</code> を拡張します。</li>
+</ul>
+</li>
+<li><strong><code>param_functions.py</code> が戻り値 <code>-&gt; Any</code> と PEP 727 <code>Doc()</code> を併用する理由</strong>:
+<ul>
+<li><strong>静的型チェッカとの後方互換性</strong>: もし <code>fastapi.Query</code> がクラス <code>params.Query</code> そのものだった場合、従来のデフォルト引数構文 <code>q: str = Query(&quot;all&quot;)</code> で「<code>Query</code> 型は <code>str</code> 型に代入できない」という PEP 484 型エラーが発生します。<code>param_functions.py</code> で戻り値型 <code>-&gt; Any</code> のファクトリ関数を公開（<code>from .param_functions import Query as Query</code>）することで、推奨構文 <code>Annotated[str, Query()]</code> と従来構文 <code>q: str = Query(&quot;all&quot;)</code> の双方で型検査を通過させつつ、実行時には本物の <code>fastapi.params.Query</code> インスタンスを生成します。</li>
+<li><strong>PEP 727 <code>annotated_doc.Doc</code> によるインライン API ドキュメント</strong>: <code>param_functions.py</code> をはじめ、<code>applications.py</code>, <code>routing.py</code>, <code>exceptions.py</code>, <code>background.py</code>, <code>datastructures.py</code>, <code>sse.py</code>, <code>telemetry/_api.py</code>, <code>security/*</code> の計 14 モジュールでは、公開関数の各引数が <code>Annotated[T, Doc(&quot;&quot;&quot;...&quot;&quot;&quot;)]</code> で記述されています。これにより言語サーバ（LSP）や <code>griffe-typingdoc</code> が型シグネチャから直接引数ごとのホバードキュメントを抽出でき、またユーザーコード側で <code>Annotated[int, Path(ge=1), Doc(&quot;...&quot;)]</code> のように付与された <code>Doc(...)</code> オブジェクトも <code>field_info.metadata</code> 内にそのまま保持されます。</li>
+</ul>
+</li>
+</ol>
+<h3>記述子継承関係・ファサード同一性・PEP 727 メタデータの検証</h3>
+<p>以下の自己完結した検証コードでは、<code>fastapi.params</code> のクラス階層、Starlette シムの同一参照（<code>is</code>）と継承（<code>issubclass</code>）の使い分け、および <code>typing.get_type_hints(..., include_extras=True)</code> による PEP 727 <code>Doc()</code> メタデータ抽出を確認できます。</p>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_args</span><span class="p">,</span> <span class="n">get_type_hints</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">annotated_doc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Doc</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">BackgroundTasks</span><span class="p">,</span>
+    <span class="n">Depends</span><span class="p">,</span>
+    <span class="n">FastAPI</span><span class="p">,</span>
+    <span class="n">File</span><span class="p">,</span>
+    <span class="n">Form</span><span class="p">,</span>
+    <span class="n">HTTPException</span><span class="p">,</span>
+    <span class="n">Query</span><span class="p">,</span>
+    <span class="n">Request</span><span class="p">,</span>
+    <span class="n">Response</span><span class="p">,</span>
+    <span class="n">Security</span><span class="p">,</span>
+    <span class="n">UploadFile</span><span class="p">,</span>
+    <span class="n">WebSocket</span><span class="p">,</span>
+    <span class="n">params</span> <span class="k">as</span> <span class="n">fastapi_params</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.params</span><span class="w"> </span><span class="kn">import</span> <span class="n">Param</span><span class="p">,</span> <span class="n">ParamTypes</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic.fields</span><span class="w"> </span><span class="kn">import</span> <span class="n">FieldInfo</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">starlette.applications</span><span class="w"> </span><span class="kn">import</span> <span class="n">Starlette</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">starlette.background</span><span class="w"> </span><span class="kn">import</span> <span class="n">BackgroundTasks</span> <span class="k">as</span> <span class="n">StarletteBackgroundTasks</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">starlette.datastructures</span><span class="w"> </span><span class="kn">import</span> <span class="n">UploadFile</span> <span class="k">as</span> <span class="n">StarletteUploadFile</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">starlette.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTTPException</span> <span class="k">as</span> <span class="n">StarletteHTTPException</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">starlette.requests</span><span class="w"> </span><span class="kn">import</span> <span class="n">Request</span> <span class="k">as</span> <span class="n">StarletteRequest</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">starlette.responses</span><span class="w"> </span><span class="kn">import</span> <span class="n">Response</span> <span class="k">as</span> <span class="n">StarletteResponse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">starlette.websockets</span><span class="w"> </span><span class="kn">import</span> <span class="n">WebSocket</span> <span class="k">as</span> <span class="n">StarletteWebSocket</span>
+
+<span class="c1"># 1. Two FieldInfo subtrees (Param vs Body) and frozen Depends -&gt; Security dataclasses</span>
+<span class="k">assert</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">ParamTypes</span><span class="p">]</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"query"</span><span class="p">,</span> <span class="s2">"header"</span><span class="p">,</span> <span class="s2">"path"</span><span class="p">,</span> <span class="s2">"cookie"</span><span class="p">]</span>
+<span class="k">assert</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">Param</span><span class="p">,</span> <span class="n">FieldInfo</span><span class="p">)</span>
+<span class="k">assert</span> <span class="nb">all</span><span class="p">(</span>
+    <span class="nb">issubclass</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">Param</span><span class="p">)</span>
+    <span class="k">for</span> <span class="bp">cls</span> <span class="ow">in</span> <span class="p">(</span>
+        <span class="n">fastapi_params</span><span class="o">.</span><span class="n">Path</span><span class="p">,</span>
+        <span class="n">fastapi_params</span><span class="o">.</span><span class="n">Query</span><span class="p">,</span>
+        <span class="n">fastapi_params</span><span class="o">.</span><span class="n">Header</span><span class="p">,</span>
+        <span class="n">fastapi_params</span><span class="o">.</span><span class="n">Cookie</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+<span class="k">assert</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">fastapi_params</span><span class="o">.</span><span class="n">File</span><span class="p">,</span> <span class="n">fastapi_params</span><span class="o">.</span><span class="n">Form</span><span class="p">)</span>
+<span class="k">assert</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">fastapi_params</span><span class="o">.</span><span class="n">Form</span><span class="p">,</span> <span class="n">fastapi_params</span><span class="o">.</span><span class="n">Body</span><span class="p">)</span>
+<span class="k">assert</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">fastapi_params</span><span class="o">.</span><span class="n">Body</span><span class="p">,</span> <span class="n">FieldInfo</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">fastapi_params</span><span class="o">.</span><span class="n">Body</span><span class="p">,</span> <span class="n">Param</span><span class="p">)</span>
+
+<span class="c1"># 2. Public factories (param_functions.py -&gt; Any) construct params.* instances</span>
+<span class="n">q_meta</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">"active"</span><span class="p">,</span> <span class="n">min_length</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">q_meta</span><span class="p">)</span> <span class="ow">is</span> <span class="n">fastapi_params</span><span class="o">.</span><span class="n">Query</span> <span class="ow">and</span> <span class="n">q_meta</span><span class="o">.</span><span class="n">in_</span> <span class="ow">is</span> <span class="n">ParamTypes</span><span class="o">.</span><span class="n">query</span>
+<span class="n">sec_meta</span> <span class="o">=</span> <span class="n">Security</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="s2">"svc"</span><span class="p">,</span> <span class="n">scopes</span><span class="o">=</span><span class="p">[</span><span class="s2">"orders:write"</span><span class="p">])</span>
+<span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sec_meta</span><span class="p">,</span> <span class="n">fastapi_params</span><span class="o">.</span><span class="n">Security</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sec_meta</span><span class="p">,</span> <span class="n">fastapi_params</span><span class="o">.</span><span class="n">Depends</span><span class="p">)</span>
+<span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">Depends</span><span class="p">(),</span> <span class="n">fastapi_params</span><span class="o">.</span><span class="n">Depends</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">File</span><span class="p">(),</span> <span class="n">fastapi_params</span><span class="o">.</span><span class="n">Form</span><span class="p">)</span>
+<span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">Form</span><span class="p">(),</span> <span class="n">fastapi_params</span><span class="o">.</span><span class="n">Body</span><span class="p">)</span>
+
+<span class="c1"># 3. Starlette X as X identity shims vs FastAPI value-add subclasses</span>
+<span class="k">assert</span> <span class="n">Request</span> <span class="ow">is</span> <span class="n">StarletteRequest</span> <span class="ow">and</span> <span class="n">Response</span> <span class="ow">is</span> <span class="n">StarletteResponse</span> <span class="ow">and</span> <span class="n">WebSocket</span> <span class="ow">is</span> <span class="n">StarletteWebSocket</span>
+<span class="k">assert</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">FastAPI</span><span class="p">,</span> <span class="n">Starlette</span><span class="p">)</span> <span class="ow">and</span> <span class="n">FastAPI</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">Starlette</span>
+<span class="k">assert</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">BackgroundTasks</span><span class="p">,</span> <span class="n">StarletteBackgroundTasks</span><span class="p">)</span>
+<span class="k">assert</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">UploadFile</span><span class="p">,</span> <span class="n">StarletteUploadFile</span><span class="p">)</span>
+<span class="k">assert</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">HTTPException</span><span class="p">,</span> <span class="n">StarletteHTTPException</span><span class="p">)</span>
+
+<span class="c1"># 4. PEP 727 annotated_doc.Doc() metadata attached to public factory parameters</span>
+<span class="n">ge_annotation</span> <span class="o">=</span> <span class="n">get_type_hints</span><span class="p">(</span><span class="n">Query</span><span class="p">,</span> <span class="n">include_extras</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="s2">"ge"</span><span class="p">]</span>
+<span class="n">doc_entries</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">get_args</span><span class="p">(</span><span class="n">ge_annotation</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">Doc</span><span class="p">)]</span>
+<span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">doc_entries</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="s2">"Greater than or equal"</span> <span class="ow">in</span> <span class="n">doc_entries</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">documentation</span>
+</code></pre>
+<hr />
+<p>次章 <strong><a href="../02_routing_compiler/apiroute_and_closures.html">第2章：APIRouter・APIRoute とクロージャ合成</a></strong> では、これらの記述子が <code>_populate_api_route_state()</code> と <code>get_request_handler()</code> によって実行可能な ASGI ルートクロージャへと変換される過程を追跡します。Pydantic v2 <code>TypeAdapter</code> ブリッジの詳細は <strong><a href="../04_pydantic_bridge/compat_and_serialization.html">第4章：_compat/v2.py・ModelField・直列化</a></strong>、全体構成は <strong><a href="../index.html">アーキテクチャ全体像</a></strong> を参照してください。</p>
+
+            </main>
+            <footer class="footer">
+                
+                FastAPI® は Sebastián Ramírez（<a href="https://github.com/tiangolo" target="_blank" rel="noopener noreferrer">@tiangolo</a>）の登録商標です。本サイトは非公式の内部アーキテクチャ解説であり、公式プロジェクトとは提携していません。公式ドキュメントは <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">fastapi.tiangolo.com</a> をご参照ください。
+                
+            </footer>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeBtn = document.getElementById('theme-toggle');
+            if (themeBtn) {
+                themeBtn.addEventListener('click', function() {
+                    const current = document.documentElement.getAttribute('data-theme');
+                    const next = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    localStorage.setItem('drawlib-theme', next);
+                });
+            }
+
+            const langDropdowns = document.querySelectorAll('.lang-dropdown');
+            if (langDropdowns.length > 0) {
+                document.addEventListener('click', function(e) {
+                    langDropdowns.forEach(function(dd) {
+                        if (dd.hasAttribute('open') && !dd.contains(e.target)) {
+                            dd.removeAttribute('open');
+                        }
+                    });
+                });
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        langDropdowns.forEach(function(dd) {
+                            dd.removeAttribute('open');
+                        });
+                    }
+                });
+            }
+
+            const menuBtn = document.getElementById('menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            if (menuBtn && sidebar) {
+                function setMenuOpen(open) {
+                    sidebar.classList.toggle('is-open', open);
+                    menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    document.body.classList.toggle('menu-open', open);
+                    if (open) {
+                        const menu = sidebar.querySelector('.sidebar-menu');
+                        if (menu) {
+                            menu.scrollTop = 0;
+                        }
+                    }
+                }
+
+                menuBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const willOpen = !sidebar.classList.contains('is-open');
+                    setMenuOpen(willOpen);
+                });
+
+                document.addEventListener('click', function(e) {
+                    if (sidebar.classList.contains('is-open') && !sidebar.contains(e.target)) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                const navLinks = sidebar.querySelectorAll('.nav-item a');
+                navLinks.forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        setMenuOpen(false);
+                    });
+                });
+
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                window.addEventListener('resize', function() {
+                    if (window.innerWidth > 768 && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

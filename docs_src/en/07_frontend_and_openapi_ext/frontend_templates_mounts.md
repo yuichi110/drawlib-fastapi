@@ -2,7 +2,7 @@
 
 FastAPI `v0.162.2` unifies modern Single-Page Application (SPA) delivery, server-rendered HTML templates, isolated ASGI sub-applications, and incremental WSGI migrations on a single process—anchored by the native `app.frontend()` and `router.frontend()` low-priority static routing engine.
 
-```drawlib align=center code=fold file=spa_frontend_routing_priority.png caption="FastAPI v0.162.2 app.frontend() & router.frontend() Dispatch Flow — Global API Route Priority & Browser HTML Fallback"
+```drawlib align=center code=hide file=spa_frontend_routing_priority.png caption="FastAPI v0.162.2 app.frontend() & router.frontend() Dispatch Flow — Global API Route Priority & Browser HTML Fallback"
 from drawlib.canvas import save, setup
 from drawlib.icons import code, phosphor
 from drawlib.lines import line, lines
@@ -25,7 +25,7 @@ outer = Panel(
 )
 outer.draw((4.0, 4.0), width=180.0, height=90.0)
 
-# Top 4-Stage Evaluation Order inside APIRouter.app()
+# Top 4-Stage SPA Dispatch Evaluation Order
 stages = ChevronProcess(
     style=Styles.Neutral,
     text_style=Styles.DarkBold.patch(text_size=10.5),
@@ -34,7 +34,7 @@ stages = ChevronProcess(
     spacing=1.6,
     flat_left_end=True,
 )
-stages.add("1. Normal Routes", description="APIRoute, WS & Mount", style=Styles.SecondaryNeutral)
+stages.add("1. Normal Routes", description="API Routes, WS & Mount", style=Styles.SecondaryNeutral)
 stages.add("2. Router DI Gate", description="Depends() & Longest Path", style=Styles.PrimaryNeutral)
 stages.add("3. Static Lookup", description="dist/ File & Dir Index", style=Styles.Neutral)
 stages.add(
@@ -60,21 +60,21 @@ text(
 tracks = [
     (
         56.5,
-        ("1. self.routes Match?", "@app.get / WS / Mount", Styles.SecondaryNeutral, False),
+        ("1. API or Mount Match?", "@app.get / WS / Mount", Styles.SecondaryNeutral, False),
         ("Execute API Route", "Never shadowed by '/'", Styles.White, False),
         ("200 / API JSON 404", "API 404s stay JSON", Styles.SecondaryNeutral, False),
         False,
     ),
     (
         43.2,
-        ("2. File in dist/?", "_lookup_static_resource", Styles.Neutral, False),
+        ("2. File in dist/?", "Static Asset Lookup", Styles.Neutral, False),
         ("Direct FileResponse", "Threadpool stat + ETag", Styles.White, False),
         ("200 OK Static Asset", "dist/assets/app.js", Styles.PrimaryNeutral, False),
         False,
     ),
     (
         29.9,
-        ("3. Accept: text/html?", "_is_frontend_navigation", Styles.PrimaryNeutral, False),
+        ("3. Accept: text/html?", "HTML Navigation Check", Styles.PrimaryNeutral, False),
         ("SPA Shell Fallback", "Serves dist/index.html", Styles.PrimaryFlat, True),
         ("200 OK Client Router", "React / Vue / Svelte", Styles.PrimaryNeutral, False),
         True,
@@ -126,9 +126,9 @@ save()
 
 Historically, serving a React, Vue, or Svelte build at `"/"` via `app.mount("/", StaticFiles(directory="dist", html=True))` forced awkward registration ordering—mounting `"/"` too early shadowed `@app.get("/api/...")`, and `StaticFiles(html=True)` returned `404` whenever a user refreshed a client-side route like `/dashboard/analytics`.
 
-FastAPI `v0.162.2` solves both problems natively with `app.frontend()` and `router.frontend()`. Instead of appending a greedy ASGI `Mount` onto `router.routes`, FastAPI registers a `_FrontendRouteGroup` inside `router._low_priority_routes`, which `APIRouter.app()` evaluates **only after** all normal routes, WebSocket endpoints, and slash redirects across the entire router tree fail to match.
+FastAPI `v0.162.2` solves both problems natively with `app.frontend()` (and `app.router.frontend()` / `router.frontend()`). Instead of appending a greedy ASGI `Mount` at `"/"`, FastAPI registers a dedicated **low-priority SPA frontend router** that evaluates **only after** all API routes, WebSocket endpoints, mounts, and trailing-slash redirects across the entire router tree fail to match.
 
-| Parameter & Option | Default | Runtime Behavior in `_FrontendStaticFiles` (`fastapi/routing.py`) |
+| Parameter & Option | Default | Runtime Behavior in `app.frontend()` / `router.frontend()` |
 | :--- | :--- | :--- |
 | **`fallback="auto"`** | Yes | Serves `404.html` (`404`) if present in `directory`; else serves `index.html` (`200`) on HTML navigation requests; else raises `404` |
 | **`fallback="index.html"`** | No | Serves `index.html` (`200`) on HTML navigation even if `404.html` also exists; validates `index.html` at startup when `check_dir` is enabled |
@@ -138,10 +138,10 @@ FastAPI `v0.162.2` solves both problems natively with `app.frontend()` and `rout
 
 ### Global Route Precedence, Segment Specificity & Router Dependencies
 
-Under the hood, `_FrontendRoute` and `_FrontendRouteGroup` enforce four production safeguards that hand-rolled catch-all `@app.get("/{full_path:path}")` handlers routinely get wrong:
+The built-in SPA frontend router enforces four production safeguards that hand-rolled catch-all `@app.get("/{full_path:path}")` handlers routinely get wrong:
 
-1. **Global API Precedence & Preserved API `404`s**: Normal `APIRoute` and `WebSocket` handlers win regardless of `include_router()` registration order. If `@app.get("/api/items/{item_id}")` matches the path and raises `HTTPException(404)`, FastAPI returns that JSON `404`—it never masks backend errors with `dist/index.html`.
-2. **Content-Negotiated Browser Navigation (`_is_frontend_navigation_request`)**: When falling back to `index.html`, FastAPI parses the `Accept` header's media types and quality weights (`q`). Only `GET`/`HEAD` requests explicitly accepting `text/html` or `application/xhtml+xml` (`q != 0`) receive `index.html` (`200 OK`). Missing scripts (`GET /assets/missing.js` with `Accept: */*`) or mistyped API fetches (`Accept: application/json`) receive a clean `404`, preventing browsers from choking on `Uncaught SyntaxError: Unexpected token '<'`.
+1. **Global API Precedence & Preserved API `404`s**: Standard API routes (`@app.get`, `@app.post`, etc.) and `WebSocket` handlers always win regardless of `include_router()` registration order. If `@app.get("/api/items/{item_id}")` matches the path and raises `HTTPException(404)`, FastAPI returns that JSON `404`—it never masks backend errors with `dist/index.html`.
+2. **Browser HTML Navigation Check (`Accept` Header Negotiation)**: When falling back to `index.html`, FastAPI parses the `Accept` header's media types and quality weights (`q`). Only `GET`/`HEAD` requests explicitly accepting `text/html` or `application/xhtml+xml` (`q != 0`) receive `index.html` (`200 OK`). Missing scripts (`GET /assets/missing.js` with `Accept: */*`) or mistyped API fetches (`Accept: application/json`) receive a clean `404`, preventing browsers from choking on `Uncaught SyntaxError: Unexpected token '<'`.
 3. **Longest Segment-Boundary Prefix**: Registering both `app.frontend("/", directory="site")` and `router.frontend("/admin", directory="admin_dist")` matches on strict path segments (`/admin` never intercepts `/administration`) and selects the highest-specificity prefix.
 4. **Full Dependency Injection on Protected Frontends**: `router.frontend()` executes app-level, `include_router()`-level, and `APIRouter(dependencies=[Depends(...)])` dependencies in outer-to-inner order—supporting cookie session gates, custom `Response` headers, `BackgroundTasks`, and `app.dependency_overrides` in tests.
 
@@ -177,7 +177,7 @@ def build_spa_service(dist_dir: Path, admin_dist: Path) -> FastAPI:
 
 A single FastAPI ASGI host can combine multiple UI delivery and service-composition strategies side by side, depending on whether rendering happens in the browser, in Jinja2 on the server, in an isolated sub-team FastAPI app, or inside a legacy synchronous WSGI codebase:
 
-```drawlib align=center code=fold file=mounts_templates_wsgi_topology.png caption="Unified ASGI Host Topology — Comparing app.frontend(), Jinja2Templates + StaticFiles, Sub-Apps & a2wsgi"
+```drawlib align=center code=hide file=mounts_templates_wsgi_topology.png caption="Unified ASGI Host Topology — Comparing app.frontend(), Jinja2Templates + StaticFiles, Sub-Apps & a2wsgi"
 from drawlib.canvas import save, setup
 from drawlib.diagrams.architecture import (
     ArchitectureDiagram,
@@ -216,7 +216,7 @@ diag = ArchitectureDiagram(
 # Top Focal Dispatcher Node (center at y=75.0 -> bottom=68.0)
 diag.add(
     Node(
-        "Root FastAPI Router & Middleware Stack\nself.routes  ->  app.mount()  ->  _low_priority_routes",
+        "Root FastAPI Router & Middleware Stack\nAPI Routes  ->  app.mount()  ->  SPA frontend()",
         width=86.0,
         height=14.0,
         icon=CodeIcon.FASTAPI,
@@ -318,9 +318,9 @@ save()
 
 | Integration Mechanism | Registration API | Priority & Scope Isolation | Best Fit |
 | :--- | :--- | :--- | :--- |
-| **SPA Static Build** | `app.frontend("/", directory="dist")` | Lowest priority (`_low_priority_routes`); supports `Depends()` | Vite, React, Vue, Svelte, Astro, or static docs co-hosted with `/api` |
-| **Named Asset Mount** | `app.mount("/static", StaticFiles(...), name="static")` | Prefix `Mount` in `self.routes`; enables `url_for("static", ...)` | Versioned CSS/JS/images referenced by Jinja2 or self-hosted Swagger UI |
-| **Server-Side Templates** | `Jinja2Templates(directory="templates")` | Standard `APIRoute` (`response_class=HTMLResponse`) | HTMX fragments, transactional emails, SEO landing pages |
+| **SPA Static Build** | `app.frontend("/", directory="dist")` | Lowest priority (evaluated after all API routes); supports `Depends()` | Vite, React, Vue, Svelte, Astro, or static docs co-hosted with `/api` |
+| **Named Asset Mount** | `app.mount("/static", StaticFiles(...), name="static")` | Prefix `Mount` at `/static`; enables `url_for("static", ...)` | Versioned CSS/JS/images referenced by Jinja2 or self-hosted Swagger UI |
+| **Server-Side Templates** | `Jinja2Templates(directory="templates")` | Standard HTTP route (`response_class=HTMLResponse`) | HTMX fragments, transactional emails, SEO landing pages |
 | **Isolated Sub-App** | `app.mount("/subapi", subapi)` | Independent `FastAPI` instance (`root_path="/subapi"`, own `/docs`) | Multi-version public APIs (`/v2`), partner portals, admin micro-apps |
 | **Legacy WSGI Mount** | `app.mount("/v1", WSGIMiddleware(flask_app))` | Synchronous WSGI bridged onto worker threads via `a2wsgi` | Incremental Strangler-Fig migration from Flask or Django to FastAPI |
 

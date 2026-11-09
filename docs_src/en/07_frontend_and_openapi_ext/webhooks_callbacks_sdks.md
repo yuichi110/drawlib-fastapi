@@ -2,7 +2,7 @@
 
 Because FastAPI `v0.162.2` compiles route metadata directly into **OpenAPI `3.1.0`** and JSON Schema `2020-12`, the same type-annotated models power outbound event contracts (`app.webhooks` and `callbacks`), ergonomic TypeScript/Python SDK code generation (`generate_unique_id_function`), and air-gapped Swagger UI / ReDoc portals.
 
-```drawlib align=center code=fold file=webhooks_and_callbacks_flow.png caption="OpenAPI 3.1 Out-of-Band Webhooks (@app.webhooks.post) vs Request-Scoped Callbacks (callbacks=router.routes)"
+```drawlib align=center code=hide file=webhooks_and_callbacks_flow.png caption="OpenAPI 3.1 Out-of-Band Webhooks (@app.webhooks.post) vs Request-Scoped Callbacks (callbacks=router.routes)"
 from drawlib.canvas import save, setup
 from drawlib.icons import code, phosphor
 from drawlib.lines import line
@@ -202,7 +202,7 @@ When your FastAPI service acts as the **receiver** of third-party webhooks (an o
 
 Client code generators—such as `@hey-api/openapi-ts` for TypeScript/React frontends and `openapi-python-client` for internal Python microservices—derive generated method names directly from each operation's OpenAPI **`operationId`**.
 
-```drawlib align=center code=fold file=sdk_generation_and_docs_ui.png caption="OpenAPI 3.1 SDK Generation Pipeline (generate_unique_id_function) & Three Docs UI Deployment Modes"
+```drawlib align=center code=hide file=sdk_generation_and_docs_ui.png caption="OpenAPI 3.1 SDK Generation Pipeline (generate_unique_id_function) & Three Docs UI Deployment Modes"
 from drawlib.canvas import save, setup
 from drawlib.icons import phosphor
 from drawlib.lines import line

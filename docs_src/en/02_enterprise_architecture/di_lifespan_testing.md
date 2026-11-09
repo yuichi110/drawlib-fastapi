@@ -2,7 +2,7 @@
 
 Maintaining sub-second test feedback and deterministic resource cleanup across **500+ endpoints and 100,000+ LOC** requires separating **process-scoped infrastructure** (`lifespan`), **request-scoped Unit-of-Work wiring** (`Annotated[..., Depends]`), **pure domain exceptions** (`@app.exception_handler`), and **hermetic contract tests** (`app.dependency_overrides`).
 
-```drawlib align=center code=fold file=enterprise_di_lifespan_flow.png caption="Two-Tier Lifespan & Request-Scoped Dependency Injection Flow with RFC 9457 Domain Error Translation"
+```drawlib align=center code=hide file=enterprise_di_lifespan_flow.png caption="Two-Tier Lifespan & Request-Scoped Dependency Injection Flow with RFC 9457 Domain Error Translation"
 from drawlib.canvas import save, setup
 from drawlib.diagrams.architecture import ArchitectureDiagram, Node, NodeGroup, PhosphorIcon
 from drawlib.styles import Styles
@@ -379,7 +379,7 @@ def register_domain_exception_handlers(app: FastAPI) -> None:
 
 Teams that test every single business branch by booting a real PostgreSQL container and sending HTTP requests through `TestClient` quickly hit a **45-minute CI wall** once the test suite reaches 5,000 cases. Conversely, teams that rely heavily on `unittest.mock.patch("src.orders.crud.db.execute")` suffer brittle tests that break whenever an internal module is renamed.
 
-```drawlib align=center code=fold file=enterprise_test_pyramid.png caption="100k+ LOC Enterprise Test Pyramid: 70% Pure Domain Unit, 20% FastAPI Contract Overrides, 10% Containerized Integration"
+```drawlib align=center code=hide file=enterprise_test_pyramid.png caption="100k+ LOC Enterprise Test Pyramid: 70% Pure Domain Unit, 20% FastAPI Contract Overrides, 10% Containerized Integration"
 from drawlib.canvas import save, setup
 from drawlib.icons import phosphor
 from drawlib.smartarts import CardList, Pyramid

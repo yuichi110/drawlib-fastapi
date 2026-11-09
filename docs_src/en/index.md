@@ -1,8 +1,8 @@
-# FastAPI v0.162.2 — Visual Architecture Guide
+# FastAPI v0.162.2 — Practical User Guide
 
-FastAPI (`v0.162.2`) is a high-performance, type-driven ASGI web framework that compiles standard Python `>=3.10` annotations into validated dependency graphs, Rust-backed Pydantic v2 serializers, and OpenAPI `3.1.0` specifications. This unofficial bilingual handbook illustrates FastAPI's internal architecture and `100,000+` LOC production patterns as code using [Drawlib](https://www.drawlib.com/).
+FastAPI (`v0.162.2`) is a high-performance, type-driven ASGI web framework that turns standard Python `>=3.10` type annotations into boundary input validation, hierarchical dependency injection, Rust-backed Pydantic v2 serialization, and interactive OpenAPI `3.1.0` documentation. This unofficial bilingual developer guide walks systematically from your first endpoint to `100,000+` LOC production architectures.
 
-```drawlib align=center code=fold file=fastapi_lifecycle_anim.png caption="FastAPI v0.162.2 End-to-End Lifecycle — Startup Compilation Through ASGI Request Execution"
+```drawlib align=center code=hide file=fastapi_lifecycle_anim.png caption="FastAPI v0.162.2 Request Lifecycle — One-Time Route Registration Through Per-Request ASGI Execution"
 from drawlib.anim import Animation
 from drawlib.canvas import save, setup
 from drawlib.icons import phosphor
@@ -15,33 +15,33 @@ setup(width=184, height=68, dpi=150)
 anim = Animation(fps=1.6)
 
 stages = [
-    ("1. Annotated\nSignature", "Type Hints & Doc()"),
-    ("2. Startup\nCompile", "Dependant & Models"),
-    ("3. ASGI &\nDI Solve", "solve_dependencies()"),
-    ("4. Endpoint\nDispatch", "Async / Threadpool"),
-    ("5. Serialize &\nTeardown", "Pydantic v2 & yield"),
+    ("1. Route\nRegistration", "Type Hints & Doc()"),
+    ("2. Schema &\nOpenAPI Prep", "Pydantic v2 & 3.1"),
+    ("3. Validation &\nDependencies", "Inputs & Depends()"),
+    ("4. Endpoint\nExecution", "async / threadpool"),
+    ("5. Response &\nCleanup", "JSON & yield Exit"),
 ]
 
 stage_notes = [
     (
         phosphor.code,
-        "Step 1/5 [Declaration] — Declare Annotated[T, Path/Query/Depends, Doc()] & BaseModel types once.",
+        "Step 1/5 [Route Registration] — Declare Annotated inputs, Depends(), Doc() & BaseModel types.",
     ),
     (
         phosphor.gear,
-        "Step 2/5 [Startup] — get_dependant() & TypeAdapter pre-compile route closures before serving traffic.",
+        "Step 2/5 [Startup] — Inspect signatures once and build Pydantic v2 validators & OpenAPI 3.1.",
     ),
     (
         phosphor.git_branch,
-        "Step 3/5 [ASGI Ingress] — Match route, parse body_field, and resolve cached Dependant DAG nodes.",
+        "Step 3/5 [Request Ingress] — Validate HTTP parameters/body and resolve Depends() graphs.",
     ),
     (
         phosphor.lightning,
-        "Step 4/5 [Execution] — Await async def on event loop or run sync def safely in AnyIO threadpool.",
+        "Step 4/5 [Endpoint Execution] — Await async def on event loop or run def in a threadpool.",
     ),
     (
         phosphor.check_circle,
-        "Step 5/5 [Egress] — Serialize via Rust pydantic-core and unwind AsyncExitStack yield dependencies.",
+        "Step 5/5 [Response & Cleanup] — Validate & serialize JSON via Pydantic v2 and exit yield.",
     ),
 ]
 
@@ -49,7 +49,7 @@ for step in range(len(stages)):
     is_last = step == len(stages) - 1
     with anim.frame(duration=2.8 if is_last else None, clear=True):
         outer = Panel(
-            "FastAPI v0.162.2 — Compile-Once & Zero-Reflection ASGI Pipeline",
+            "FastAPI v0.162.2 — One-Time Startup Setup & Per-Request Execution",
             style=Styles.Neutral.patch(shape_r=2.0),
             header_style=Styles.PrimaryNeutral.patch(shape_line_width=1.2),
             text_style=Styles.DarkBold.patch(text_size=12.0),
@@ -72,7 +72,7 @@ for step in range(len(stages)):
         rectangle((126.0, 24.5), width=100.0, height=8.0, style=r_style.patch(shape_r=1.5))
         text(
             (126.0, 24.5),
-            "Per-Request ASGI Hot Path (Zero inspect.signature())",
+            "Per-Request ASGI Execution (Zero Signature Inspection)",
             style=Styles.DarkBold.patch(text_size=10.5),
         )
 
@@ -121,21 +121,22 @@ for step in range(len(stages)):
 save()
 ```
 
-## FastAPI v0.162.2 Engineering Snapshot
+## FastAPI v0.162.2 at a Glance
 
-Rather than treating routing, validation, dependency injection, and API documentation as disconnected plugins, FastAPI unifies them around standard Python type hints. Static AST and architectural analysis from the companion [PNI501 Diagnostic Report](https://fastapi.drawlib.com/reports/pni501/) highlights how compact and cohesive the upstream codebase remains at `v0.162.2`:
+Rather than bolting routing, input validation, dependency injection, and API documentation together as separate plugins, FastAPI unifies them around standard Python type hints so your runtime behavior and external contracts never drift apart:
 
-| Dimension | Verified `v0.162.2` Metric | Architectural Significance |
+| Capability Area | `v0.162.2` Standard & Tooling | Practical Benefit for Application Teams |
 | :--- | :--- | :--- |
-| **Framework Footprint** | `52` Python modules · `19,837` LOC | Clean 5-tier downward layering from `FastAPI` facade down to `ModelField` adapters |
-| **Automated Test Suite** | `273` test modules | Comprehensive verification across routing, OpenAPI `3.1.0`, DI scopes, SSE, and OTel |
+| **Supported Python Versions** | Python `>=3.10` (`3.10` – `3.14`) | Full `PEP 561` `py.typed` static type checking and `PEP 727` `Doc()` inline metadata |
+| **Validation & Serialization** | Pydantic v2 (`>=2.9`, Rust `pydantic-core`) | High-throughput boundary validation, parameter models, and typed JSON serialization |
+| **API Contracts & Docs UI** | OpenAPI `3.1.0` & JSON Schema `2020-12` | Automatic `/openapi.json`, interactive Swagger UI (`/docs`), ReDoc (`/redoc`), and SDK codegen |
+| **Dependency Injection & Auth** | `Depends()`, `Security()`, `yield` lifecycles | Per-request result caching, deterministic resource cleanup, OAuth2 scopes, and WebSocket auth |
+| **Streaming, SPA & Tracing** | `fastapi.sse`, `frontend()`, `fastapi.telemetry` | Built-in Server-Sent Events, single-page app serving, and zero-patch OpenTelemetry tracing |
 | **Core Runtime Dependencies** | `6` direct packages (`pyproject.toml`) | `starlette`, `pydantic`, `typing-extensions`, `typing-inspection`, `annotated-doc`, `opentelemetry-api` |
-| **Supported Python Versions** | Python `>=3.10` (`3.10` – `3.14`) | Full `PEP 561` `py.typed` static type coverage and `PEP 727` `Doc()` metadata |
-| **PNI501 Diagnostic Rating** | **`93 / 100` (`Grade S`)** | Zero committed secrets, deterministic `uv.lock`, and strong boundary modularity |
 
 ### Single Source of Truth in 20 Lines
 
-A single endpoint signature simultaneously defines URL extraction, regex and length constraints, inline OpenAPI parameter documentation, response serialization, and static type checking:
+A single endpoint signature simultaneously defines URL extraction, regex and length constraints, inline OpenAPI parameter documentation, response validation, and static type checking:
 
 ```python
 from typing import Annotated
@@ -161,11 +162,11 @@ async def read_product(
     return ProductSummary(sku=sku, price_cents=4900, currency=currency)
 ```
 
-## 8-Chapter · 20-Page Architecture Curriculum
+## 8-Chapter · 20-Page Developer Curriculum
 
-This visual guide spans **8 chapters and 20 pages**, progressing systematically from your first validated endpoint to `100,000+` LOC modular monoliths, custom `APIRoute` wrappers, `pwdlib` Argon2id + `PyJWT` + WebSocket `Security()`, native Server-Sent Events (`fastapi.sse`), native OpenTelemetry (`fastapi.telemetry`), SPA `frontend()` mounts & SDK codegen, and `pydantic-settings` + SQL + AI/MCP operations:
+This guide spans **8 chapters and 20 pages**, progressing systematically from your first validated endpoint to `100,000+` LOC modular monoliths, custom `APIRoute` wrappers, `pwdlib` Argon2id + `PyJWT` + WebSocket `Security()`, native Server-Sent Events (`fastapi.sse`), built-in OpenTelemetry tracing (`fastapi.telemetry`), SPA `frontend()` mounts & SDK codegen, and `pydantic-settings` + SQL + AI/MCP operations:
 
-```drawlib align=center code=fold file=guide_chapter_map.png caption="Visual Guide Curriculum Map — 8 Chapters & 20 Pages from Quickstart to Production Ecosystem"
+```drawlib align=center code=hide file=guide_chapter_map.png caption="User Guide Curriculum Map — 8 Chapters & 20 Pages from Quickstart to Production Ecosystem"
 from drawlib.canvas import save, setup
 from drawlib.icons import phosphor
 from drawlib.smartarts import CardList, Panel
@@ -199,7 +200,7 @@ cl_left = CardList(
 )
 cl_left.add(
     "Ch 1 · Introduction & Quickstart",
-    "Design pillars, startup compile & OpenAPI 3.1",
+    "Design pillars, request flow & OpenAPI 3.1",
     badge_text="Ch 1",
     icon=phosphor.rocket_launch,
     style=Styles.PrimaryNeutral,
@@ -221,7 +222,7 @@ cl_left.add(
 )
 cl_left.add(
     "Ch 4 · DI, OAuth2, JWT & WS Security",
-    "Dependant DAG, Argon2 + PyJWT & WS Security()",
+    "Depends() graph, Argon2 + PyJWT & WS Security()",
     badge_text="Ch 4",
     icon=phosphor.shield_check,
 )
@@ -284,18 +285,20 @@ cl_right.draw(xy=r_xy, width=r_w, height=r_h)
 save()
 ```
 
-| Chapter | Pages & Core Topics | Key FastAPI Subsystems Covered |
+| Chapter | Pages & Core Topics | Key FastAPI APIs Covered |
 | :--- | :--- | :--- |
 | **1. Introduction & Quickstart** | [Why FastAPI & Design Philosophy](01_getting_started/overview.md) · [Quickstart & Interactive OpenAPI](01_getting_started/quickstart.md) | `FastAPI`, `Annotated`, `Doc()`, `APIRoute`, Swagger UI & ReDoc |
 | **2. Scaling to 100k+ LOC** | [Bounded Contexts & Layering](02_enterprise_architecture/modular_design.md) · [Enterprise DI, Lifespan & Testing](02_enterprise_architecture/di_lifespan_testing.md) | `APIRouter`, `lifespan`, `dependency_overrides`, domain boundaries |
-| **3. Routing, Validation & Models** | [Path, Query, Header, Cookie & Body](03_routing_and_models/parameters_and_validation.md) · [Response Serialization & OpenAPI 3.1](03_routing_and_models/responses_and_openapi.md) · [Parameter Models, Extra Types & Examples](03_routing_and_models/advanced_types_and_models.md) · [Custom Request & APIRoute Classes](03_routing_and_models/custom_request_and_route.md) | `Path`, `Query`, `Header`, `Cookie`, `Body`, `ModelField`, custom `APIRoute` |
-| **4. Dependency Injection & Security** | [Dependant DAG, Caching & Scopes](04_dependencies_and_security/dependency_injection.md) · [Authentication & OAuth2 Scopes](04_dependencies_and_security/security_and_auth.md) · [JWT (PyJWT + Argon2) & WS Security](04_dependencies_and_security/jwt_and_websocket_security.md) | `Depends`, `Security`, `SecurityScopes`, `pwdlib` Argon2id, `PyJWT`, `HTTPConnection` |
+| **3. Routing, Validation & Models** | [Path, Query, Header, Cookie & Body](03_routing_and_models/parameters_and_validation.md) · [Response Serialization & OpenAPI 3.1](03_routing_and_models/responses_and_openapi.md) · [Parameter Models, Extra Types & Examples](03_routing_and_models/advanced_types_and_models.md) · [Custom Request & APIRoute Classes](03_routing_and_models/custom_request_and_route.md) | `Path`, `Query`, `Header`, `Cookie`, `Body`, `BaseModel`, custom `APIRoute` |
+| **4. Dependency Injection & Security** | [Dependency Graph, Caching & Scopes](04_dependencies_and_security/dependency_injection.md) · [Authentication & OAuth2 Scopes](04_dependencies_and_security/security_and_auth.md) · [JWT (PyJWT + Argon2) & WS Security](04_dependencies_and_security/jwt_and_websocket_security.md) | `Depends`, `Security`, `SecurityScopes`, `pwdlib` Argon2id, `PyJWT`, `HTTPConnection` |
 | **5. Async, Middleware & Streaming** | [ASGI Middleware & Threadpool](05_async_and_realtime/concurrency_and_middleware.md) · [Native SSE, JSONL & WebSockets](05_async_and_realtime/sse_websockets_streaming.md) | `run_in_threadpool`, `EventSourceResponse`, `ServerSentEvent`, `WebSocket` |
-| **6. Observability, Errors & Testing** | [Native OpenTelemetry & Exceptions](06_observability_and_testing/telemetry_and_errors.md) · [Testing Patterns & Production ASGI](06_observability_and_testing/testing_and_deployment.md) | `TelemetryConfig`, `NativeTelemetry`, `RequestValidationError`, `TestClient` |
+| **6. Observability, Errors & Testing** | [Native OpenTelemetry & Exceptions](06_observability_and_testing/telemetry_and_errors.md) · [Testing Patterns & Production ASGI](06_observability_and_testing/testing_and_deployment.md) | `TelemetryConfig`, `get_telemetry_data()`, `HTTPException`, `RequestValidationError`, `TestClient` |
 | **7. Frontend, Sub-Apps & OpenAPI** | [SPA frontend(), StaticFiles & Mounts](07_frontend_and_openapi_ext/frontend_templates_mounts.md) · [Webhooks, Callbacks, SDKs & Docs UI](07_frontend_and_openapi_ext/webhooks_callbacks_sdks.md) | `frontend()`, `StaticFiles`, `Jinja2Templates`, `app.webhooks`, `callbacks` |
 | **8. Settings, Databases & Ecosystem** | [pydantic-settings & SQL Databases](08_ecosystem_and_operations/settings_and_databases.md) · [FastAPI CLI, Proxies, GraphQL & AI](08_ecosystem_and_operations/cli_proxy_graphql_ai.md) | `BaseSettings`, `@lru_cache`, SQL `yield` sessions, `fastapi-cli`, `--proxy-headers` |
 
-## Attribution & Companion Diagnostic Report
+## Official Resources & Companion Guides
 
-- **Respectful Upstream Attribution**: FastAPI was created and is maintained by **Sebastián Ramírez (`@tiangolo`)** and the FastAPI community under the MIT License. For authoritative documentation, release notes, and community resources, always consult **[https://fastapi.tiangolo.com/](https://fastapi.tiangolo.com/)** and **[github.com/fastapi/fastapi](https://github.com/fastapi/fastapi)**.
-- **Unofficial Drawlib & PNI501 Showcase**: This documentation portal is an independent architectural study authored as code with **[Drawlib](https://www.drawlib.com/)** (`type = "site"`, bilingual `en` / `ja`) alongside the automated **[PNI501 Engineering & Architecture Diagnostic Report](https://fastapi.drawlib.com/reports/pni501/)**. Begin reading with **[Chapter 1: Why FastAPI & Design Philosophy](01_getting_started/overview.md)** or jump straight into hands-on code in **[Quickstart & Interactive OpenAPI](01_getting_started/quickstart.md)**.
+- **Upstream Attribution & Official Documentation**: FastAPI was created and is maintained by **Sebastián Ramírez (`@tiangolo`)** and the FastAPI community under the MIT License. For authoritative documentation, release notes, and community resources, consult **[https://fastapi.tiangolo.com/](https://fastapi.tiangolo.com/)** and **[github.com/fastapi/fastapi](https://github.com/fastapi/fastapi)**.
+- **Where to Start**: Begin with **[Chapter 1: Why FastAPI & Design Philosophy](01_getting_started/overview.md)** to build a clear mental model of FastAPI's request lifecycle, or jump straight into hands-on code in **[Quickstart & Interactive OpenAPI](01_getting_started/quickstart.md)**.
+
+> **Studying FastAPI's Own Source Code?** If you want to explore how FastAPI itself is implemented under the hood—including its internal module layering, route compiler internals, and Pydantic v2 adapter mechanics—visit the companion **[FastAPI Internal Architecture Guide](https://fastapi.drawlib.com/architecture/)**.

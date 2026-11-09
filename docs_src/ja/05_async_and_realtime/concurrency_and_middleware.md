@@ -2,7 +2,7 @@
 
 FastAPI `v0.162.2` は、すべての HTTP リクエストおよび WebSocket 接続を決定論的な 7 層の ASGI ミドルウェアオニオン構造で処理しつつ、`async def` コルーチンはシングルスレッドの AnyIO イベントループ上で直接実行し、通常の `def` 関数は上限付きワーカースレッドプールへ安全にオフロードします。
 
-```drawlib align=center code=fold file=asgi_middleware_onion.png caption="FastAPI v0.162.2 の 7 層 ASGI ミドルウェアオニオン構造（NativeTelemetry から APIRoute まで）"
+```drawlib align=center code=hide file=asgi_middleware_onion.png caption="FastAPI v0.162.2 の 7 層 ASGI ミドルウェアオニオン構造（OpenTelemetry 外殻スパンからエンドポイント実行まで）"
 from drawlib.canvas import save, setup
 from drawlib.icons import phosphor
 from drawlib.lines import line
@@ -14,36 +14,36 @@ setup(width=176, height=98)
 
 text(
     (88.0, 93.0),
-    "FastAPI v0.162.2 ASGI Middleware Onion (FastAPI.__call__ + build_middleware_stack)",
+    "FastAPI v0.162.2 Seven-Layer ASGI Middleware Onion (Outer to Inner)",
     style=Styles.DarkBold.patch(text_size=13.0),
 )
 
 # 7 Concentric ASGI Layers (outermost L1 -> innermost L7 core)
 layers = [
     (88.0, 45.0, 132.0, 80.0, Styles.Neutral.patch(line_style="dashed", shape_r=2.5),
-     81.0, "1. NativeTelemetry (FastAPI.__call__)  •  W3C Context, Root Span & Metrics", Styles.DarkBold),
+     81.0, "1. OpenTelemetry Outer Span  •  W3C Context, Root Span & Metrics", Styles.DarkBold),
     (88.0, 42.2, 122.0, 69.0, Styles.White.patch(shape_r=2.2, shape_line_color=Colors.Gray5),
-     72.5, "2. ServerErrorMiddleware  •  Catches Unhandled Exception / 500 Fallback", Styles.DarkBold),
+     72.5, "2. Unhandled 500 Boundary  •  @app.exception_handler(500) Fallback", Styles.DarkBold),
     (88.0, 39.4, 112.0, 58.0, Styles.PrimaryNeutral.patch(shape_r=2.0),
-     64.0, "3. ExceptionTelemetryMiddleware  •  Emits OTel Error Logs Before 500", Styles.PrimaryBold),
+     64.0, "3. Inner Exception Span Recorder  •  OTel Error Log Before 500", Styles.PrimaryBold),
     (88.0, 36.6, 102.0, 47.0, Styles.SecondaryNeutral.patch(shape_r=2.0),
      55.5, "4. User Middleware (LIFO)  •  TrustedHost, CORS & Pure ASGI Wrappers", Styles.SecondaryBold),
     (88.0, 33.8, 92.0, 36.0, Styles.White.patch(shape_r=1.8, shape_line_color=Colors.Gray5),
-     47.0, "5. ExceptionMiddleware  •  HTTPException, 422 Validation & Custom", Styles.DarkBold),
+     47.0, "5. Handled Error Boundary  •  HTTPException, 422 & Custom", Styles.DarkBold),
     (88.0, 31.0, 82.0, 25.0, Styles.PrimaryNeutral.patch(shape_r=1.8),
-     38.5, "6. AsyncExitStackMiddleware  •  Closes Form & UploadFile Handles", Styles.PrimaryBold),
+     38.5, "6. Request Resource Cleanup  •  Closes Form & UploadFile", Styles.PrimaryBold),
 ]
 
 for cx, cy, w, h, box_style, label_y, label, txt_style in layers:
     rectangle((cx, cy), width=w, height=h, style=box_style)
     text((cx, label_y), label, style=txt_style.patch(text_size=10.2))
 
-# Core Layer 7: APIRouter & APIRoute
+# Core Layer 7: Routing & Endpoint Execution
 rectangle((88.0, 26.5), width=66.0, height=13.0, style=Styles.PrimaryFlat.patch(shape_r=1.8))
 phosphor.cpu((60.0, 26.5), width=5.2, style=Styles.WhiteBold)
 text(
     (91.0, 26.5),
-    "7. Router / APIRoute\nDI DAG • Endpoint • Serialization",
+    "7. Router & Endpoint\nDepends() • Endpoint • Validation",
     style=Styles.WhiteBold.patch(text_size=10.5),
 )
 
@@ -61,17 +61,17 @@ save()
 
 ## 1. 7 層から成る ASGI ミドルウェアオニオン
 
-Uvicorn などの ASGI サーバーが `await app(scope, receive, send)` を呼び出すと、FastAPI は最外殻の `FastAPI.__call__` から遅延構築された `build_middleware_stack()` パイプラインへと順番に処理を渡します。この正確なネスト順序を把握しておくことで、`500` エラー時の CORS ヘッダー欠落、OpenTelemetry の例外ログ相関、`contextvars` の伝播境界にまつわるバグを未然に防げます。
+Uvicorn などの ASGI サーバーが受信した HTTP リクエストや WebSocket ハンドシェイクを処理する際、FastAPI は決定論的な 7 層の ASGI ミドルウェアパイプラインへ順番に処理を渡します。この正確なネスト順序を把握しておくことで、`500` エラー時の CORS ヘッダー欠落、OpenTelemetry の例外ログ相関、`contextvars` の伝播境界にまつわるバグを未然に防げます。
 
-| レイヤー（外側から内側） | クラス / ステージ | `v0.162.2` における主な責務 |
+| レイヤー（外側から内側） | 公開 API / 機構 | `v0.162.2` における主な責務 |
 | :--- | :--- | :--- |
-| **1. テレメトリ入口** | `NativeTelemetry` (`FastAPI.__call__`) | W3C `traceparent`/`baggage` の抽出、ルート HTTP/WebSocket スパンの開始、アクティブ接続数の計測、および `_RequestTelemetry` のコンテキスト登録を行います。 |
-| **2. 最終 500 防衛線** | `ServerErrorMiddleware` | `@app.exception_handler(500)` や `@app.exception_handler(Exception)` を実行し、内側の層から漏れた未処理例外に対して安全な `500 Internal Server Error` 応答を保証します。 |
-| **3. 未処理例外の観測** | `ExceptionTelemetryMiddleware` | `ServerErrorMiddleware` が `500` 応答へ変換する**直前**に未処理例外を観測し、構造化された OTel `ERROR` ログイベントを送出して再送出します。 |
-| **4. ユーザーミドルウェア群** | `self.user_middleware` | `app.add_middleware(...)` で登録されたミドルウェアを **LIFO（後入れ先出し）順** で実行します（最後に追加したミドルウェアが最も外側を包みます）。 |
-| **5. 制御された例外処理** | `ExceptionMiddleware` | `HTTPException`、`RequestValidationError`（`422`）、`WebSocketRequestValidationError`（`1008`）、およびカスタムドメイン例外ハンドラーを捕捉します。 |
-| **6. 一時ファイル解放** | `AsyncExitStackMiddleware` | すべてのユーザーミドルウェアの**内側**で `fastapi_middleware_astack` を保持し、同一の `contextvars` スコープ内で `Form` や `UploadFile` の一時ファイルハンドルを確実にクローズします。 |
-| **7. ルーティング & DI 実行** | `APIRouter` / `APIRoute` | ボディ読取、`fastapi_inner_astack` 上での [Dependant DAG 解決](../04_dependencies_and_security/dependency_injection.md)、エンドポイント実行、レスポンス直列化、および `BackgroundTasks` の紐付けを行います。 |
+| **1. OpenTelemetry 外殻スパン** | `FastAPI(telemetry=...)` | W3C `traceparent`/`baggage` の抽出、ルート HTTP/WebSocket スパンの開始、アクティブ接続数の計測、およびリクエストテレメトリコンテキスト（`get_telemetry_data()`）の保持を行います。 |
+| **2. 未処理 500 防衛境界** | `@app.exception_handler(500)` / `Exception` | カスタム `500` ハンドラーを実行し、内側の層から漏れた予期せぬ例外に対して安全な `500 Internal Server Error` 応答を保証します。 |
+| **3. 内側例外スパン記録** | `TelemetryConfig`（`logs=True`） | 外側の `500` 境界が HTTP 応答へ変換する**直前**に未処理例外をアクティブスパンへ記録し、構造化された OTel `ERROR` ログイベントを送出します。 |
+| **4. ユーザーミドルウェア群** | `app.add_middleware(...)` / `@app.middleware("http")` | `CORSMiddleware`、`TrustedHostMiddleware`、`GZipMiddleware`、純粋 ASGI クラスなどを **LIFO（後入れ先出し）順** で実行します（最後に追加したミドルウェアが最も外側を包みます）。 |
+| **5. 制御されたエラー境界** | `@app.exception_handler(...)` | `HTTPException`、`RequestValidationError`（`422`）、`WebSocketRequestValidationError`（`1008`）、およびカスタムドメイン例外ハンドラーを捕捉します。 |
+| **6. リクエストリソース解放** | `Form` / `UploadFile` ライフサイクル | すべてのユーザーミドルウェアの**内側**かつ同一の `contextvars` スコープ内で、`Form` や `UploadFile` の一時ファイルハンドルを確実にクローズします。 |
+| **7. ルーター & エンドポイント実行** | `APIRouter` / `Depends()` | ボディ読取、[依存性注入（DI）](../04_dependencies_and_security/dependency_injection.md)の解決（ストリーム終了後のリクエストスコープ解放を含む）、エンドポイント実行、レスポンス検証、および `BackgroundTasks` の予約を行います。 |
 
 ### 純粋な ASGI ミドルウェア vs `BaseHTTPMiddleware`
 
@@ -140,15 +140,15 @@ assert res.status_code == 200
 assert "x-process-time-ms" in res.headers
 ```
 
-> **未処理 500 エラー時の CORS ヘッダー**: `ServerErrorMiddleware`（第 2 層）は `self.user_middleware`（第 4 層）の**外側**に位置するため、第 2 層で生成されるデフォルトの `500` レスポンスは `CORSMiddleware` を通過しません。ブラウザ向けに一貫したオリジン制御が必要な場合は、`@app.exception_handler(Exception)` を定義するかリバースプロキシ側で許可オリジンを明示し、認証付き API で `allow_origins=["*"]` を絶対に使用しないでください。
+> **未処理 500 エラー時の CORS ヘッダー**: 未処理 `500` 防衛境界（第 2 層）は `app.add_middleware(...)` で追加したユーザーミドルウェア群（第 4 層）の**外側**に位置するため、第 2 層で生成されるデフォルトの `500` レスポンスは `CORSMiddleware` を通過しません。ブラウザ向けに一貫したオリジン制御が必要な場合は、`@app.exception_handler(Exception)` を定義するかリバースプロキシ側で許可オリジンを明示し、認証付き API で `allow_origins=["*"]` を絶対に使用しないでください。
 
 ---
 
 ## 2. イベントループ vs ワーカースレッドプールと `BackgroundTasks`
 
-FastAPI はルート登録時に関数シグネチャ（`_is_coroutine_callable`）を検査し、イベントループ上での直接実行と AnyIO ワーカースレッドプールへの委譲を自動的に振り分けます。
+FastAPI はルート登録時に関数シグネチャを検査し、イベントループ上での直接実行（`async def`）と AnyIO ワーカースレッドプールへの委譲（`def`）を自動的に振り分けます。
 
-```drawlib align=center code=fold file=event_loop_vs_threadpool.png caption="実行経路の分岐：シングルスレッド イベントループ vs AnyIO ワーカースレッドプールと BackgroundTasks"
+```drawlib align=center code=hide file=event_loop_vs_threadpool.png caption="実行経路の分岐：シングルスレッド イベントループ vs AnyIO ワーカースレッドプールと BackgroundTasks"
 from drawlib.canvas import save, setup
 from drawlib.diagrams.flow import Decision, End, FlowDiagram, Process, Start
 from drawlib.styles import Styles
@@ -212,7 +212,7 @@ async_exec = flow.add(
     xy=(27, 30.5),
 )
 pool_enter = flow.add(
-    Process("run_in_threadpool /\ncontextmanager_in_threadpool", width=43, height=11.5, style=Styles.SecondaryNeutral, text_style=node_txt),
+    Process("Worker Threadpool Execution\n(Sync def & yield Deps)", width=43, height=11.5, style=Styles.SecondaryNeutral, text_style=node_txt),
     xy=(81, 49),
 )
 sync_exec = flow.add(
@@ -221,7 +221,7 @@ sync_exec = flow.add(
 )
 merge = flow.junction((27, 19.5))
 send_resp = flow.add(
-    Process("Serialize & Send Response\n(http.response.body Done)", width=44, height=11.0, style=Styles.PrimaryNeutral, text_style=node_txt),
+    Process("Validate & Send Response\n(HTTP Response Complete)", width=44, height=11.0, style=Styles.PrimaryNeutral, text_style=node_txt),
     xy=(27, 9.5),
 )
 bg_tasks = flow.add(
@@ -250,7 +250,7 @@ save()
 ### FastAPI 並行実行の 3 原則
 
 1. **`async def` はイベントループ上で直接動作する**: 非同期ネイティブドライバ（`httpx.AsyncClient`、`asyncpg`、`redis.asyncio`、`anyio` など）を `await` する場合は `async def` を使用します。**`async def` の内部で同期ブロッキング関数（`time.sleep()`、`requests.get()`、同期 ORM クエリ、重い CPU ループ）を直接呼び出してはなりません**。呼び出すとワーカープロセス全体のイベントループが停止し、他の同時接続リクエストがすべてフリーズします。
-2. **通常の `def` と同期 `yield` 依存関係はスレッドプールで実行される**: 通常の `def` エンドポイントや依存関数は、AnyIO のデフォルト `40` トークン（`CapacityLimiter`）で制御されたワーカースレッドプール上で `run_in_threadpool`（同期 `yield` 依存関係では `contextmanager_in_threadpool`）を通じて安全に実行されます。`async def` エンドポイント内から一部の同期ヘルパーだけを呼びたい場合は、`await run_in_threadpool(fn, *args)` で明示的にオフロードします。
+2. **通常の `def` と同期 `yield` 依存関係はスレッドプールで実行される**: 通常の `def` エンドポイントや同期 `yield` 依存関数は、AnyIO のデフォルト `40` トークン（`CapacityLimiter`）で制御されたワーカースレッドプール上で前処理・後処理ともに安全に実行されます。`async def` エンドポイント内から一部の同期ヘルパーだけを呼びたい場合は、`await run_in_threadpool(fn, *args)` で明示的にオフロードします。
 3. **`BackgroundTasks` はレスポンス送信完了後に順次実行される**: `BackgroundTasks` に登録された処理は、クライアントへ HTTP レスポンスを返し終えた後に `fastapi.background_task` の [OpenTelemetry スパン](../06_observability_and_testing/telemetry_and_errors.md) 付きで順次実行されます。監査ログ記録やキャッシュ更新などの軽量なベストエフォート処理に限定し、再試行保証や長時間ジョブには外部の永続ジョブキューを併用してください。
 
 ```python
@@ -271,7 +271,7 @@ def compute_digest_sync(payload: str) -> str:
 
 
 def get_sync_session() -> Iterator[str]:
-    # Entered & exited safely via contextmanager_in_threadpool
+    # Entered & exited safely on the worker threadpool
     audit_log.append("session:open")
     try:
         yield "tx-101"

@@ -1,8 +1,8 @@
-# Dependant DAG・リクエスト単位キャッシュ・yield スコープ
+# 依存関係グラフ・リクエスト単位キャッシュ・yield スコープ
 
-FastAPI `v0.162.2` はすべてのパスオペレーションとサブ依存関数を再帰的な `Dependant` 有向非巡回グラフ（DAG）として構築し、リクエスト単位のメモ化キャッシュと二重 `AsyncExitStack` による `yield` の解放タイミングを厳密に制御します。
+FastAPI `v0.162.2` はすべてのパスオペレーションとサブ依存関数を有向非巡回グラフ（DAG）として構成し、リクエスト単位の依存結果キャッシュと関数スコープ／リクエストスコープの 2 段階による `yield` クリーンアップタイミングを厳密に制御します。
 
-```drawlib align=center code=fold file=dependant_dag_cache.png caption="再帰的な Dependant DAG の解決とリクエスト単位 dependency_cache のメモ化構造"
+```drawlib align=center code=hide file=dependant_dag_cache.png caption="依存関係グラフ（DAG）の解決とリクエスト単位キャッシュ（use_cache=True と use_cache=False）の共有構造"
 from drawlib.canvas import save, setup
 from drawlib.diagrams.architecture import ArchitectureDiagram, Node, PhosphorIcon
 from drawlib.icons import phosphor
@@ -12,9 +12,9 @@ from drawlib.styles import Styles
 
 setup(width=166, height=98, dpi=150)
 
-# Left Zone: Outer Panel framing the Multi-Level Dependant DAG
+# Left Zone: Outer Panel framing the Multi-Level Dependency Graph
 dag_panel = Panel(
-    "solve_dependencies() Recursive Dependant DAG",
+    "Per-Request Dependency Graph (DAG)",
     style=Styles.Neutral,
     header_style=Styles.SecondaryNeutral.patch(shape_line_width=1.2),
     text_style=Styles.DarkBold.patch(text_size=11.5),
@@ -37,7 +37,7 @@ dag = ArchitectureDiagram(
 
 endpoint = dag.add(
     Node(
-        "POST /billing/invoices\n(Root Dependant)",
+        "POST /billing/invoices\n(Path Operation)",
         width=40,
         height=13,
         icon=PhosphorIcon.GLOBE,
@@ -129,7 +129,7 @@ line((82.0, 41.0), (90.0, 23.0), arrow_head="->", style=Styles.WarningBold)
 
 # Right Zone: Per-Request Cache Mechanics Panel
 cache_panel = Panel(
-    "dependency_cache Dict",
+    "Per-Request Cache",
     style=Styles.Neutral,
     header_style=Styles.PrimaryNeutral.patch(shape_line_width=1.2),
     text_style=Styles.DarkBold.patch(text_size=11.5),
@@ -156,8 +156,8 @@ cards = CardList(
     spacing=2.5,
 )
 cards.add(
-    "Cache Key Tuple",
-    "(call, tuple(scopes), scope)\nin _get_cache_key()",
+    "Callable + Scopes Key",
+    "Keyed by (callable,\noauth_scopes, scope)",
     badge_text="1",
 )
 cards.add(
@@ -186,27 +186,27 @@ cards.draw(c_xy, width=c_w, height=c_h)
 save()
 ```
 
-## 1. Dependant DAG の構築と解決アルゴリズム
+## 1. 依存関係グラフ（DAG）の構築と解決の仕組み
 
-FastAPI はルート登録時に `get_dependant()` を呼び出し、すべてのエンドポイント引数・`Annotated[..., Depends()]` マーカー・`Security()` 宣言を解析して不変の `Dependant` データクラス木（`fastapi/dependencies/models.py`）へとコンパイルします。リクエスト処理時のホットパスでは型リフレクションを行わず、`solve_dependencies()`（`fastapi/dependencies/utils.py`）が構築済みの DAG を深さ優先で走査します。
+FastAPI はルート登録時に一度だけエンドポイントのシグネチャ・`Annotated[..., Depends()]` マーカー・`Security()` 宣言を解析し、不変の依存関係グラフを構築します。リクエスト処理時のホットパスでは型リフレクションを行わず、事前構築済みの DAG を深さ優先で走査して各依存を解決します。
 
-| `Dependant` / 解決機構 | 内部モジュール位置 | リクエスト実行時の責務 |
+| 依存関係システムの機能 | 宣言パターン | リクエスト実行時の動作 |
 | :--- | :--- | :--- |
-| **`Dependant` データクラス** | `fastapi/dependencies/models.py` | 抽出対象の `path_params`・`query_params`・`header_params`・`cookie_params`・`body_params`、子の `dependencies`、OAuth2 スコープ、`use_cache`、`scope` を保持します。 |
-| **`_get_cache_key()`** | `fastapi/dependencies/models.py` | `(dependant.call, scopes_for_cache, computed_scope)` のタプルを算出し、累積 OAuth2 スコープが一致する場合にのみセキュリティ依存のキャッシュを共有します。 |
-| **`solve_dependencies()`** | `fastapi/dependencies/utils.py` | 子 `Dependant` ノードを再帰的に解決し、`app.dependency_overrides` の適用・`dependency_cache` への格納・検証エラーの集約を行ったうえで親 Callable を呼び出します。 |
-| **実行ディスパッチ** | `fastapi/dependencies/utils.py` | `async def` コルーチンはイベントループ上で直接 `await` し、同期 `def` は `run_in_threadpool()` へ委譲し、ジェネレータは `AsyncExitStack` に登録します。 |
+| **サブ依存グラフ（DAG）** | `Annotated[T, Depends(fn)]` / `Depends()` | 末端のパラメータ（`Path`・`Query`・`Header`・`Cookie`・`Body`）および子依存を先に検証・解決してから親 Callable を呼び出します。 |
+| **リクエスト単位キャッシュ** | `Depends(fn, use_cache=True)` *（既定）* | `(callable, oauth_scopes, scope)` をキーとしてリクエストごとに戻り値を保持し、ダイヤモンド依存の分岐間で結果を共有します。 |
+| **グラフ全体の一括差し替え** | `app.dependency_overrides[orig] = mock` | ルーター・認可ガード・入れ子のクラス依存にまたがる任意の依存ノードをテストやステージング環境で一括置換します。 |
+| **実行ディスパッチ** | `async def` / `def` / `yield` | `async def` はイベントループ上で直接 `await` し、同期 `def` はワーカースレッドプールで実行し、`yield` は自動解放を予約します。 |
 
-### 1.1 リクエスト単位メモ化（`use_cache=True` と `use_cache=False`）
+### 1.1 リクエスト単位キャッシュ（`use_cache=True` と `use_cache=False`）
 
-実践的なレイヤード設計では、エンドポイントが `BillingService` と `AuditLogger` の両方を注入し、その双方が `get_db_session` と `get_settings` に依存するような「ひし形（ダイヤモンド）依存」が頻出します。FastAPI はデフォルトで `Depends(..., use_cache=True)` を有効にしており、`solve_dependencies()` 内でリクエスト固有の辞書 `dependency_cache: dict[DependencyCacheKey, Any]` を管理します。
+実践的なレイヤード設計では、エンドポイントが `BillingService` と `AuditLogger` の両方を注入し、その双方が `get_db_session` と `get_settings` に依存するような「ひし形（ダイヤモンド）依存」が頻出します。FastAPI はデフォルトで `Depends(..., use_cache=True)` を有効にしており、各 HTTP リクエストまたは WebSocket セッションの生存期間にわたってリクエスト単位の依存キャッシュ（Callable とスコープの組で管理）を保持します。
 
-- **リクエスト内シングルトン共有（`use_cache=True`）**: 先に解決される `BillingService` が `get_db_session()` を 1 回だけ実行し、戻り値を `(get_db_session, (), "")` キーで保存します。直後に同一リクエスト内で `AuditLogger` が `get_db_session` を要求すると、FastAPI はキャッシュから同一の Python オブジェクト（`billing.db is billing.audit.db`）を返し、複数サービス間のトランザクション整合性を保証します。
+- **リクエスト内シングルトン共有（`use_cache=True`）**: 先に解決される `BillingService` が `get_db_session()` を 1 回だけ実行し、そのセッションを当該リクエスト用にキャッシュします。直後に同一リクエスト内で `AuditLogger` が `get_db_session` を要求すると、FastAPI はキャッシュから同一の Python オブジェクト（`billing.db is billing.audit.db`）を返し、複数サービス間のトランザクション整合性を保証します。
 - **毎回新規実行（`use_cache=False`）**: `Depends(generate_trace_nonce, use_cache=False)` を指定するとキャッシュ参照をスキップし、注入箇所ごとに毎回新しく関数を呼び出します。
-- **OAuth2 スコープを考慮したキャッシュ分離**: サブ依存が `SecurityScopes` を受け取る場合（詳細は [認証・OAuth2 スコープ認可・抽出器](security_and_auth.md) を参照）、`_uses_scopes()` によって `tuple(sorted(set(oauth_scopes)))` がキャッシュキーへ組み込まれ、要求スコープの異なる呼び出し同士の衝突を防ぎます。
+- **OAuth2 スコープを考慮したキャッシュ分離**: サブ依存が `SecurityScopes` を受け取る場合（詳細は [認証・OAuth2 スコープ認可・抽出器](security_and_auth.md) を参照）、累積された OAuth2 スコープもキャッシュキーへ組み込まれるため、要求スコープの異なる呼び出し同士が誤って共有されることはありません。
 
 > [!IMPORTANT]
-> FastAPI の依存関数や Pydantic モデルをネストしたスコープ内で定義するモジュールでは、`from __future__ import annotations` の使用を避けてください。FastAPI はルート登録時に `Annotated[T, Depends(...)]` の型メタデータを評価するため、解決不能なローカルシンボルを参照する文字列化アノテーションは依存として認識されず、必須クエリパラメータ（`422 Unprocessable Entity`）として扱われます。
+> FastAPI の依存関数や Pydantic モデルをネストしたローカルスコープ内で定義するモジュールでは、`from __future__ import annotations` の使用を避けてください。FastAPI はルート登録時に `Annotated[T, Depends(...)]` の型メタデータを評価するため、解決不能なローカルシンボルを参照する文字列化アノテーションは依存として認識されず、必須クエリパラメータ（`422 Unprocessable Content`）として扱われます。
 
 ### 1.2 多階層サブ依存・クラス依存・パラメータ化 Callable
 
@@ -222,7 +222,6 @@ from dataclasses import dataclass
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, FastAPI, Header, HTTPException, status
-from fastapi.testclient import TestClient
 
 
 @dataclass(frozen=True)
@@ -326,16 +325,16 @@ app = FastAPI()
 app.include_router(billing_router)
 ```
 
-上の構成では `get_settings()` が 3 箇所（`verify_tenant_header`・`AuditLogger`・`BillingService`）で宣言されていますが、`dependency_cache` によってリクエストあたり 1 回しか実行されず、`billing.db is billing.audit.db` も常に `True` となります。また結合テスト時には `app.dependency_overrides[get_db_session] = override_db` を設定するだけで、DAG 全体の末端ノードを一括差し替えできます（[大規模 DI・Lifespan 管理・テスト戦略](../02_enterprise_architecture/di_lifespan_testing.md) および [実践テスト手法と本番 ASGI 運用](../06_observability_and_testing/testing_and_deployment.md) を参照）。
+上の構成では `get_settings()` が 3 箇所（`verify_tenant_header`・`AuditLogger`・`BillingService`）で宣言されていますが、リクエスト単位キャッシュによってリクエストあたり 1 回しか実行されず、`billing.db is billing.audit.db` も常に `True` となります。また結合テスト時には `app.dependency_overrides[get_db_session] = override_db` を設定するだけで、DAG 全体の末端ノードを一括差し替えできます（[大規模 DI・Lifespan 管理・テスト戦略](../02_enterprise_architecture/di_lifespan_testing.md) および [実践テスト手法と本番 ASGI 運用](../06_observability_and_testing/testing_and_deployment.md) を参照）。
 
-## 2. `yield` によるリソース管理と二重 `AsyncExitStack`
+## 2. `yield` によるリソース管理とクリーンアップスコープ
 
-`async def` または同期 `def` 内で `yield` を使うジェネレータ依存は、処理を **`yield` 前のセットアップフェーズ** と **`yield` 後のティアダウンフェーズ** に分割します。FastAPI `v0.162.2` では、`fastapi/routing.py` の `request_response()` がすべての HTTP リクエストを ASGI `scope` 上の **入れ子になった 2 つの `AsyncExitStack`** で包んでいます。
+`async def` または同期 `def` 内で `yield` を使うジェネレータ依存は、処理を **`yield` 前のセットアップフェーズ** と **`yield` 後のティアダウンフェーズ** に分割します。FastAPI `v0.162.2` では、入れ子になった 2 種類のクリーンアップスコープによって解放タイミングを正確に制御できます。
 
-- **`scope["fastapi_function_astack"]`（`scope="function"`）**: パスオペレーション関数が `Response` オブジェクトを返した **直後**、すなわち `await response(scope, receive, send)` がネットワークへバイト列を送信したりストリーミングを開始する **前** にクリーンアップを実行します。
-- **`scope["fastapi_inner_astack"]`（`scope="request"`、デフォルト）**: パスオペレーションと `await response(scope, receive, send)` の双方を外側から包み、HTTP レスポンス送信・ストリーミングチャンク送出・バックグラウンドタスクが **すべて完了した後** にクリーンアップを実行します。
+- **関数スコープのクリーンアップ（`Depends(..., scope="function")`）**: パスオペレーション関数が戻り値を返した **直後**、すなわちレスポンスバイト列のネットワーク送信や `StreamingResponse` のイテレーションが開始される **前** にクリーンアップを実行します。
+- **リクエストスコープのクリーンアップ（`Depends(..., scope="request")`、デフォルト）**: パスオペレーションとレスポンス送信の双方を外側から包み、HTTP レスポンス送信・ストリーミングチャンク送出・バックグラウンドタスクが **すべて完了した後** にクリーンアップを実行します。
 
-```drawlib align=center code=fold file=yield_scope_exit_stacks.png caption="FastAPI v0.162.2 の二重 AsyncExitStack ライフサイクル：scope='function' と scope='request' および例外発生時の解放順序"
+```drawlib align=center code=hide file=yield_scope_exit_stacks.png caption="FastAPI v0.162.2 のジェネレータ依存クリーンアップライフサイクル：Depends(scope='function') と Depends(scope='request')"
 from drawlib.canvas import save, setup
 from drawlib.diagrams.sequence import Participant, ParticipantGroup, PhosphorIcon, SequenceDiagram
 from drawlib.styles import Style, Styles
@@ -365,7 +364,7 @@ client = seq.add(
 
 runtime = seq.add(
     ParticipantGroup(
-        title="FastAPI request_response() Dual AsyncExitStack",
+        title="FastAPI Generator Dependency Scopes",
         padding=4.5,
         style=Styles.Neutral,
         text_style=Style(text_size=11.0),
@@ -374,7 +373,7 @@ runtime = seq.add(
 
 req_stack = runtime.add(
     Participant(
-        'scope="request"\n(inner_astack)',
+        'scope="request"\n(After Streaming)',
         width=26,
         height=14,
         icon=PhosphorIcon.STACK,
@@ -385,7 +384,7 @@ req_stack = runtime.add(
 
 fn_stack = runtime.add(
     Participant(
-        'scope="function"\n(function_astack)',
+        'scope="function"\n(Before Response)',
         width=26,
         height=14,
         icon=PhosphorIcon.DATABASE,
@@ -396,7 +395,7 @@ fn_stack = runtime.add(
 
 endpoint = runtime.add(
     Participant(
-        "Endpoint &\nASGI Response",
+        "Endpoint &\nStreaming Body",
         width=26,
         height=14,
         icon=PhosphorIcon.FILE_CODE,
@@ -407,8 +406,8 @@ endpoint = runtime.add(
     )
 )
 
-client.request(req_stack, "1. Enter outer AsyncExitStack")
-req_stack.request(fn_stack, "2. yield conn -> enter function_astack")
+client.request(req_stack, "1. Enter request-scope setup")
+req_stack.request(fn_stack, "2. yield conn -> enter function-scope")
 fn_stack.request(endpoint, "3. yield tx -> await endpoint()")
 
 with seq.alt("200 OK") as alt_blk:
@@ -416,17 +415,17 @@ with seq.alt("200 OK") as alt_blk:
     alt_blk.text_style = Style(text_size=10.0, halign="left")
     endpoint.reply(fn_stack, "4. Return StreamingResponse")
     seq.note(
-        "function_astack exits BEFORE send():\ncommit tx & release DB lock early!",
+        "Function scope exits BEFORE stream:\ncommit tx & release DB lock early!",
         over=[fn_stack, endpoint],
         style=Styles.PrimaryNeutral.patch(text_size=10.0),
     )
     endpoint.reply(
         client,
-        "5. await response(scope, receive, send) [Stream CSV]",
+        "5. Stream CSV chunks to client",
         style=Styles.SuccessBold,
         text_style=Styles.DarkBold.patch(text_size=10.0),
     )
-    endpoint.reply(req_stack, "6. Stream done -> inner_astack.__aexit__()")
+    endpoint.reply(req_stack, "6. Stream complete -> request-scope exit")
 
 with seq.else_("HTTPException") as else_blk:
     else_blk.style = Styles.MutedDashed.patch(shape_line_width=1.2)
@@ -456,21 +455,21 @@ save()
 
 ### 2.1 `scope="function"` と `scope="request"` の使い分け
 
-`scope` を省略（`scope=None`）した場合、`_get_computed_scope()` はストリーミング応答のジェネレータ内からも安全にリソースを参照できるようデフォルトで `"request"` を選択します。低速なクライアント回線下で DB コネクションプールの枯渇を防ぐには、用途に応じて `scope="function"` と `scope="request"` を明示的に使い分けます。
+`scope` を省略した場合、ストリーミング応答のジェネレータ内からも安全にリソースを参照できるようデフォルトで `scope="request"` が選択されます。低速なクライアント回線下で DB コネクションプールの枯渇を防ぐには、用途に応じて `scope="function"` と `scope="request"` を明示的に使い分けます。
 
 | 比較項目 | `Depends(dep, scope="function")` | `Depends(dep, scope="request")` *（`yield` のデフォルト）* |
 | :--- | :--- | :--- |
-| **登録先スタック** | `request.scope["fastapi_function_astack"]` | `request.scope["fastapi_inner_astack"]` |
-| **解放タイミング** | `await response(scope, receive, send)` の **実行前** | レスポンス送信・ストリーミング・背景タスクの **完了後** |
+| **クリーンアップ段階** | 関数スコープ（エンドポイント関数が返った直後） | リクエストスコープ（応答送信・ストリーミング完了後） |
+| **解放タイミング** | レスポンスバイト列およびストリーミング送信の **開始前** | レスポンス送信・ストリーミング・背景タスクの **完了後** |
 | **主な適用場面** | 書き込みトランザクション、行ロック、ハンドラ固有の RPC スパン | `StreamingResponse` や SSE 内で読み取るカーソル、リクエスト全体の監査文脈 |
 | **サブ依存の制約** | `"request"` と `"function"` の両方に依存可能 | より寿命の短い `"function"` スコープ依存を子に持つことは不可 |
 
 ### 2.2 必須の `try...finally` クリーンアップと例外再送出
 
-あなたの `yield` 依存が開始された **後** に、兄弟となる別の依存関数やエンドポイント本体が例外（`HTTPException` やドメイン例外など）を送出すると、Python の `AsyncExitStack` は待機中の `yield` 行へ `athrow()` / `throw()` でその例外を再注入します。本番コードでは次の 2 原則が絶対条件となります。
+あなたの `yield` 依存が開始された **後** に、兄弟となる別の依存関数やエンドポイント本体が例外（`HTTPException` やドメイン例外など）を送出すると、FastAPI は待機中の `yield` 行へ逆順（LIFO）でその例外を伝播させます。本番コードでは次の 2 原則が絶対条件となります。
 
 1. **必ず `try ... finally:` で `yield` を囲む**: `finally:` を使わず `yield` の後ろにそのまま後処理を記述すると、未捕捉例外でリクエストが中断された際にクリーンアップがスキップされ、DB セッションやセマフォがリークします。
-2. **`yield` 後に例外を握りつぶさない**: ロールバック処理のために `except Exception:` で捕捉する場合（`except Exception: await tx.rollback(); raise`）も、**必ず例外を再送出（`raise`）** してください。レスポンス送信前に `scope="request"` の依存が例外を握りつぶすと、FastAPI `v0.162.2` は `FastAPIError: Response not awaited` を送出して停止します。
+2. **`yield` 後に例外を握りつぶさない**: ロールバック処理のために `except Exception:` で捕捉する場合（`except Exception: await tx.rollback(); raise`）も、**必ず例外を再送出（`raise`）** してください。`yield` 後に例外を握りつぶして再送出しないと、FastAPI の例外ハンドラが動作せずレスポンス未生成となり、`500 Internal Server Error` の原因となります。
 
 ```python
 from collections.abc import AsyncIterator
@@ -478,7 +477,6 @@ from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.responses import StreamingResponse
-from fastapi.testclient import TestClient
 
 events: list[str] = []
 app = FastAPI()
@@ -527,4 +525,4 @@ async def export_report(
 
 `GET /reports/export` を実行すると、`events` には `["req_conn:enter", "fn_tx:enter(conn_pool_1)", "endpoint:body(tx_active)", "fn_tx:commit", "fn_tx:exit", "stream:chunk_1", "req_conn:exit"]` の順序が記録されます。`"function"` スコープのトランザクションは `stream_rows()` が最初のチャンクを送出する **前** にコミット・解放され、一方で `"request"` スコープのコネクションはストリーミング完了後まで維持されます。また `?fail=true` で `409 Conflict` が発生した場合も、`except` での再送出と `finally:` によって `["req_conn:enter", "fn_tx:enter(conn_pool_1)", "endpoint:body(tx_active)", "fn_tx:rollback", "fn_tx:exit", "req_conn:exit"]` と LIFO 順で確実に解放されます。
 
-続いて次節 [認証・OAuth2 スコープ認可・抽出器](security_and_auth.md) では、`fastapi.security` がこの `Dependant` DAG の上に資格情報抽出・階層的 `SecurityScopes`・OpenAPI 3.1 `securitySchemes` をどのように統合しているかを解説し、ストリーミングとの組み合わせについては [ネイティブ SSE・JSONL・WebSocket](../05_async_and_realtime/sse_websockets_streaming.md) で掘り下げます。
+続いて次節 [認証・OAuth2 スコープ認可・抽出器](security_and_auth.md) では、`fastapi.security` がこの依存関係グラフの上に資格情報抽出・階層的 `SecurityScopes`・OpenAPI 3.1 `securitySchemes` をどのように統合しているかを解説し、ストリーミングとの組み合わせについては [ネイティブ SSE・JSONL・WebSocket](../05_async_and_realtime/sse_websockets_streaming.md) で掘り下げます。

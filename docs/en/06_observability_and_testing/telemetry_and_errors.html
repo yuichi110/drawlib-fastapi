@@ -13,7 +13,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Native OpenTelemetry &amp; Exceptions — FastAPI Visual Guide (Unofficial · Drawlib Demo)</title>
+    <title>Native OpenTelemetry &amp; Exceptions — FastAPI User Guide (Unofficial)</title>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
     <script>
@@ -47,15 +47,15 @@
     <meta name="description" content="FastAPI v0.162.2 embeds zero-patch OpenTelemetry instrumentation directly inside fastapi.telemetry (TelemetryConfig and get_telemetry_data()) and pairs it…">
     <link rel="canonical" href="https://fastapi.drawlib.com/en/06_observability_and_testing/telemetry_and_errors.html">
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="FastAPI Visual Guide">
-    <meta property="og:title" content="Native OpenTelemetry &amp; Exceptions — FastAPI Visual Guide">
+    <meta property="og:site_name" content="FastAPI User Guide">
+    <meta property="og:title" content="Native OpenTelemetry &amp; Exceptions — FastAPI User Guide">
     <meta property="og:description" content="FastAPI v0.162.2 embeds zero-patch OpenTelemetry instrumentation directly inside fastapi.telemetry (TelemetryConfig and get_telemetry_data()) and pairs it…">
     <meta property="og:url" content="https://fastapi.drawlib.com/en/06_observability_and_testing/telemetry_and_errors.html">
     <meta property="og:image" content="https://fastapi.drawlib.com/_assets/ogp.png">
     <meta property="og:locale" content="en_US">
     <meta property="og:locale:alternate" content="ja_JP">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Native OpenTelemetry &amp; Exceptions — FastAPI Visual Guide">
+    <meta name="twitter:title" content="Native OpenTelemetry &amp; Exceptions — FastAPI User Guide">
     <meta name="twitter:description" content="FastAPI v0.162.2 embeds zero-patch OpenTelemetry instrumentation directly inside fastapi.telemetry (TelemetryConfig and get_telemetry_data()) and pairs it…">
     <meta name="twitter:image" content="https://fastapi.drawlib.com/_assets/ogp.png">
     
@@ -68,19 +68,23 @@
     
 </head>
 <body>
-    <div class="demo-banner" role="region" aria-label="Unofficial Showcase Notice">
+    <div class="demo-banner" role="region" aria-label="Portal Navigation">
         <div class="demo-banner-inner">
-            <span class="demo-banner-badge">UNOFFICIAL DEMO</span>
+            <span class="demo-banner-badge">UNOFFICIAL GUIDE</span>
             
             <span class="demo-banner-text">
-                Unofficial visual architecture showcase of <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a> (v0.162.2, MIT) illustrated as code with <a href="https://www.drawlib.com/" target="_blank" rel="noopener noreferrer">Drawlib</a> &amp; <a href="https://pypi.org/project/pni501/" target="_blank" rel="noopener noreferrer">PNI501</a>.
+                Unofficial Community User Guide for <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a> (v0.162.2)
             </span>
             <span class="demo-banner-links">
-                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Report →</a>
+                <strong style="color:#ffffff;">User Guide</strong>
                 <span class="demo-banner-sep">·</span>
-                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official FastAPI Docs ↗</a>
+                <a href="https://fastapi.drawlib.com/architecture/">Architecture</a>
                 <span class="demo-banner-sep">·</span>
-                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">Demo Source ↗</a>
+                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Audit</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official Docs ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
             </span>
             
         </div>
@@ -89,9 +93,9 @@
     <div class="doc-layout">
         <aside class="sidebar">
             <div class="sidebar-header">
-                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI Visual Guide">
+                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI User Guide">
                     
-                    FastAPI Visual Guide
+                    FastAPI User Guide
                     
                 </a>
                 <div class="sidebar-header-actions">
@@ -112,7 +116,7 @@
                         <ul class="nav-list">
                             
                             <li class="nav-item ">
-                                <a href="../index.html" >Overview &amp; Architecture Map</a>
+                                <a href="../index.html" >Guide Overview</a>
                             </li>
                             
                         </ul>
@@ -176,7 +180,7 @@
                         <ul class="nav-list">
                             
                             <li class="nav-item ">
-                                <a href="../04_dependencies_and_security/dependency_injection.html" >Dependant DAG, Caching &amp; Scopes</a>
+                                <a href="../04_dependencies_and_security/dependency_injection.html" >Dependency Graph, Caching &amp; Scopes</a>
                             </li>
                             
                             <li class="nav-item ">
@@ -250,12 +254,12 @@
                         </ul>
                     
                         
-                        <div class="sidebar-heading">Diagnostic &amp; Upstream Links</div>
+                        <div class="sidebar-heading">Companion Guides &amp; Links</div>
                         
                         <ul class="nav-list">
                             
                             <li class="nav-item ">
-                                <a href="https://fastapi.drawlib.com/reports/pni501/" target="_blank" rel="noopener noreferrer">PNI501 Diagnostic Report<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                                <a href="https://fastapi.drawlib.com/architecture/" target="_blank" rel="noopener noreferrer">FastAPI Internal Architecture<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
                             </li>
                             
                             <li class="nav-item ">
@@ -263,7 +267,7 @@
                             </li>
                             
                             <li class="nav-item ">
-                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">Demo Source (GitHub)<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub Repository<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
                             </li>
                             
                         </ul>
@@ -312,142 +316,20 @@
   <img src="../../images/06_observability_and_testing/telemetry_and_errors/native_otel_architecture.png" alt="telemetry_and_errors_1" />
   <figcaption class="drawlib-caption">FastAPI v0.162.2 Native OpenTelemetry Pipeline: Root Span, Child Operation Spans & Context Data</figcaption>
 </figure>
-<details class="drawlib-code-details">
-<summary>Source Code</summary>
-<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.canvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">setup</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.diagrams.architecture</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArchitectureDiagram</span><span class="p">,</span> <span class="n">Node</span><span class="p">,</span> <span class="n">NodeGroup</span><span class="p">,</span> <span class="n">PhosphorIcon</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">Styles</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.text</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span>
-
-<span class="n">setup</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">182</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">104</span><span class="p">)</span>
-
-<span class="n">text</span><span class="p">(</span>
-    <span class="p">(</span><span class="mf">91.0</span><span class="p">,</span> <span class="mf">99.0</span><span class="p">),</span>
-    <span class="s2">"FastAPI v0.162.2 Native Telemetry Pipeline (fastapi.telemetry)"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">13.2</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="n">d</span> <span class="o">=</span> <span class="n">ArchitectureDiagram</span><span class="p">(</span>
-    <span class="n">node_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Primary</span><span class="p">,</span>
-    <span class="n">node_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.2</span><span class="p">),</span>
-    <span class="n">edge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">,</span>
-    <span class="n">edge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">node_card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="n">caller</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span><span class="s2">"Caller</span><span class="se">\n</span><span class="s2">(traceparent)"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span> <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">GLOBE</span><span class="p">,</span> <span class="n">icon_size</span><span class="o">=</span><span class="mf">7.0</span><span class="p">),</span>
-    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">13.0</span><span class="p">,</span> <span class="mf">52.0</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="c1"># Central FastAPI Runtime Group (bottom-left at (32, 4))</span>
-<span class="n">runtime</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">NodeGroup</span><span class="p">(</span>
-        <span class="n">title</span><span class="o">=</span><span class="s2">"FastAPI TelemetryConfig"</span><span class="p">,</span>
-        <span class="n">padding</span><span class="o">=</span><span class="mf">5.5</span><span class="p">,</span>
-        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
-        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.8</span><span class="p">,</span> <span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">),</span>
-    <span class="p">),</span>
-    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">32.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="n">root_span</span> <span class="o">=</span> <span class="n">runtime</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span>
-        <span class="s2">"Root Server Span</span><span class="se">\n</span><span class="s2">GET /orders/</span><span class="si">{order_id}</span><span class="s2">"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">34</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mi">17</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">ACTIVITY</span><span class="p">,</span>
-        <span class="n">icon_size</span><span class="o">=</span><span class="mf">7.0</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
-        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="p">,</span>
-        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.2</span><span class="p">),</span>
-    <span class="p">),</span>
-    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">22.5</span><span class="p">,</span> <span class="mf">58.0</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="n">ctx_reader</span> <span class="o">=</span> <span class="n">runtime</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span>
-        <span class="s2">"get_telemetry_data()</span><span class="se">\n</span><span class="s2">request • body • values"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">34</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mi">17</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">DATABASE</span><span class="p">,</span>
-        <span class="n">icon_size</span><span class="o">=</span><span class="mf">7.0</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
-    <span class="p">),</span>
-    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">22.5</span><span class="p">,</span> <span class="mf">20.0</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="c1"># Nested Operation Spans Group inside runtime (global left = 32 + 52 = 84)</span>
-<span class="n">ops</span> <span class="o">=</span> <span class="n">runtime</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">NodeGroup</span><span class="p">(</span>
-        <span class="n">title</span><span class="o">=</span><span class="s2">"operation_spans=True"</span><span class="p">,</span>
-        <span class="n">padding</span><span class="o">=</span><span class="mf">4.5</span><span class="p">,</span>
-        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
-        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">,</span> <span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">),</span>
-    <span class="p">),</span>
-    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">52.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">s_dep</span> <span class="o">=</span> <span class="n">ops</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Node</span><span class="p">(</span><span class="s2">"fastapi.dependencies"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">34</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">10.5</span><span class="p">,</span> <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">),</span> <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">21.5</span><span class="p">,</span> <span class="mf">56.5</span><span class="p">))</span>
-<span class="n">s_end</span> <span class="o">=</span> <span class="n">ops</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Node</span><span class="p">(</span><span class="s2">"fastapi.endpoint"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">34</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">10.5</span><span class="p">,</span> <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">),</span> <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">21.5</span><span class="p">,</span> <span class="mf">41.5</span><span class="p">))</span>
-<span class="n">s_ser</span> <span class="o">=</span> <span class="n">ops</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Node</span><span class="p">(</span><span class="s2">"fastapi.serialization"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">34</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">10.5</span><span class="p">,</span> <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">),</span> <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">21.5</span><span class="p">,</span> <span class="mf">26.5</span><span class="p">))</span>
-<span class="n">s_bg</span> <span class="o">=</span> <span class="n">ops</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Node</span><span class="p">(</span><span class="s2">"fastapi.background_task"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">34</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">10.5</span><span class="p">,</span> <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">),</span> <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">21.5</span><span class="p">,</span> <span class="mf">11.5</span><span class="p">))</span>
-
-<span class="c1"># Right OpenTelemetry SDK Providers Group</span>
-<span class="n">otel_sdk</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">NodeGroup</span><span class="p">(</span>
-        <span class="n">title</span><span class="o">=</span><span class="s2">"OpenTelemetry SDK"</span><span class="p">,</span>
-        <span class="n">padding</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span>
-        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
-        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.8</span><span class="p">,</span> <span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">),</span>
-    <span class="p">),</span>
-    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">138.0</span><span class="p">,</span> <span class="mf">9.0</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">p_trace</span> <span class="o">=</span> <span class="n">otel_sdk</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span><span class="s2">"TracerProvider</span><span class="se">\n</span><span class="s2">Spans &amp; Status"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">26</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">TREE_STRUCTURE</span><span class="p">,</span> <span class="n">icon_size</span><span class="o">=</span><span class="mf">6.5</span><span class="p">,</span> <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">),</span>
-    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">18.0</span><span class="p">,</span> <span class="mf">56.0</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">p_meter</span> <span class="o">=</span> <span class="n">otel_sdk</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span><span class="s2">"MeterProvider</span><span class="se">\n</span><span class="s2">duration &amp; active"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">26</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">CHART_BAR</span><span class="p">,</span> <span class="n">icon_size</span><span class="o">=</span><span class="mf">6.5</span><span class="p">),</span>
-    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">18.0</span><span class="p">,</span> <span class="mf">34.0</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">p_logs</span> <span class="o">=</span> <span class="n">otel_sdk</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span><span class="s2">"LoggerProvider</span><span class="se">\n</span><span class="s2">422 WARN / 500 ERR"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">26</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">WARNING_CIRCLE</span><span class="p">,</span> <span class="n">icon_size</span><span class="o">=</span><span class="mf">6.5</span><span class="p">,</span> <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">),</span>
-    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">18.0</span><span class="p">,</span> <span class="mf">12.0</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="n">d</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">caller</span><span class="p">,</span> <span class="n">root_span</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mf">1.2</span><span class="p">)</span>
-<span class="n">d</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">root_span</span><span class="p">,</span> <span class="n">ctx_reader</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"Context"</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mf">1.2</span><span class="p">)</span>
-<span class="n">j_root</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">junction</span><span class="p">((</span><span class="mf">78.0</span><span class="p">,</span> <span class="mf">62.0</span><span class="p">))</span>
-<span class="n">d</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">root_span</span><span class="p">,</span> <span class="n">j_root</span><span class="p">,</span> <span class="n">arrow</span><span class="o">=</span><span class="s2">"-"</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="p">(</span><span class="mf">1.2</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
-<span class="n">j_rows</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span><span class="o">.</span><span class="n">junction</span><span class="p">((</span><span class="mf">78.0</span><span class="p">,</span> <span class="n">gy</span><span class="p">))</span> <span class="k">for</span> <span class="n">gy</span> <span class="ow">in</span> <span class="p">(</span><span class="mf">65.5</span><span class="p">,</span> <span class="mf">50.5</span><span class="p">,</span> <span class="mf">35.5</span><span class="p">,</span> <span class="mf">20.5</span><span class="p">)]</span>
-<span class="n">d</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">j_root</span><span class="p">,</span> <span class="n">j_rows</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">arrow</span><span class="o">=</span><span class="s2">"-"</span><span class="p">)</span>
-<span class="n">d</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">j_root</span><span class="p">,</span> <span class="n">j_rows</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">arrow</span><span class="o">=</span><span class="s2">"-"</span><span class="p">)</span>
-<span class="n">d</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">j_rows</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">j_rows</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">arrow</span><span class="o">=</span><span class="s2">"-"</span><span class="p">)</span>
-<span class="n">d</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">j_rows</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">j_rows</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">arrow</span><span class="o">=</span><span class="s2">"-"</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">j_row</span><span class="p">,</span> <span class="n">child_span</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">j_rows</span><span class="p">,</span> <span class="p">(</span><span class="n">s_dep</span><span class="p">,</span> <span class="n">s_end</span><span class="p">,</span> <span class="n">s_ser</span><span class="p">,</span> <span class="n">s_bg</span><span class="p">)):</span>
-    <span class="n">d</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">j_row</span><span class="p">,</span> <span class="n">child_span</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">))</span>
-<span class="n">d</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">s_dep</span><span class="p">,</span> <span class="n">p_trace</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mf">1.2</span><span class="p">)</span>
-<span class="n">d</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">s_ser</span><span class="p">,</span> <span class="n">p_meter</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mf">1.2</span><span class="p">)</span>
-<span class="n">d</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">s_bg</span><span class="p">,</span> <span class="n">p_logs</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mf">1.2</span><span class="p">)</span>
-
-<span class="n">d</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">3.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">))</span>
-<span class="n">save</span><span class="p">()</span>
-</code></pre>
-</details>
 <h2>1. Native <code>fastapi.telemetry</code> Architecture</h2>
 <p>Prior to native telemetry, instrumenting FastAPI required external monkey-patching middlewares that could only see raw ASGI messages—missing fine-grained visibility into dependency resolution, Pydantic response serialization, or validation failures. In FastAPI <code>v0.162.2</code>, <code>FastAPI(telemetry=TelemetryConfig(...))</code> instruments the request lifecycle natively against OpenTelemetry semantic conventions (<code>1.44.0</code>):</p>
 <ol>
 <li><strong>Root Server &amp; WebSocket Spans (<code>tracing=True</code>)</strong>: Extracts W3C <code>traceparent</code> and <code>baggage</code> headers, redacts sensitive query keys (<code>sig</code>, <code>X-Amz-Signature</code>, <code>X-Goog-Signature</code>), and updates the span name to <code>&quot;{METHOD} {http.route}&quot;</code> (e.g., <code>GET /orders/{order_id}</code>) once a route matches.</li>
-<li><strong>Four Granular Child Spans (<code>operation_spans=True</code>)</strong>: Automatically wraps internal phases with <code>code.function.name</code> attributes:
+<li><strong>Four Granular Child Spans (<code>operation_spans=True</code>)</strong>: Automatically wraps each request phase with dedicated operation spans:
 <ul>
-<li><code>fastapi.dependencies</code>: Total time spent resolving the <code>Dependant</code> DAG (<code>solve_dependencies</code>).</li>
-<li><code>fastapi.endpoint</code>: Coroutine <code>await</code> or worker-thread execution time (<code>run_endpoint_function</code>).</li>
-<li><code>fastapi.serialization</code>: Pydantic validation and Rust JSON serialization (<code>serialize_response</code>).</li>
+<li><code>fastapi.dependencies</code>: Total time spent resolving the <code>Depends()</code> dependency graph.</li>
+<li><code>fastapi.endpoint</code>: Endpoint execution time (<code>async def</code> coroutine <code>await</code> or worker threadpool execution).</li>
+<li><code>fastapi.serialization</code>: Response validation (<code>response_model</code>) and Pydantic Rust JSON serialization.</li>
 <li><code>fastapi.background_task</code>: Each post-response task inside <a href="../05_async_and_realtime/concurrency_and_middleware.html"><code>BackgroundTasks</code></a>.</li>
 </ul>
 </li>
 <li><strong>Metrics &amp; Structured Logs (<code>metrics=True</code>, <code>logs=True</code>)</strong>: Records <code>http.server.request.duration</code> histograms and <code>http.server.active_requests</code> counters, emits <code>WARN</code> log events (<code>fastapi.validation.failed</code>) on <code>422</code> errors, and emits <code>ERROR</code> log events (<code>http.server.request.exception</code>) on unhandled crashes.</li>
-<li><strong>Synchronous Context Inspection (<code>get_telemetry_data()</code>)</strong>: Exposes a read-only <code>TelemetryData</code> object (<code>request</code>, <code>websocket</code>, <code>body</code>, <code>values</code>, <code>errors</code>) to custom span/log processors during active request execution without leaking payloads into exported spans by default, and clears references (<code>data = None</code>) immediately on teardown.</li>
+<li><strong>Synchronous Context Inspection (<code>get_telemetry_data()</code>)</strong>: Exposes a read-only <code>TelemetryData</code> object (<code>request</code>, <code>websocket</code>, <code>body</code>, <code>values</code>, <code>errors</code>) to custom span/log processors during active request execution without leaking payloads into exported spans by default, and clears context references immediately on teardown.</li>
 </ol>
 <pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span>
 
@@ -526,104 +408,12 @@
 <p>FastAPI intentionally splits exception handling across <strong>two distinct middleware boundaries</strong> in the <a href="../05_async_and_realtime/concurrency_and_middleware.html">ASGI middleware onion</a>:</p>
 <figure class="drawlib-image" style="text-align: center;">
   <img src="../../images/06_observability_and_testing/telemetry_and_errors/exception_hierarchy_routing.png" alt="telemetry_and_errors_2" />
-  <figcaption class="drawlib-caption">Exception Routing Across ExceptionMiddleware (4xx), ExceptionTelemetryMiddleware, and ServerErrorMiddleware (500)</figcaption>
+  <figcaption class="drawlib-caption">FastAPI Exception Routing: Handled Client Errors (4xx / 422) vs Inner Exception Span Recorder & Outer 500 Fallback</figcaption>
 </figure>
-<details class="drawlib-code-details">
-<summary>Source Code</summary>
-<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.canvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">setup</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.diagrams.flow</span><span class="w"> </span><span class="kn">import</span> <span class="n">End</span><span class="p">,</span> <span class="n">FlowDiagram</span><span class="p">,</span> <span class="n">Process</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">Styles</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.text</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span>
-
-<span class="n">setup</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">170</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">92</span><span class="p">)</span>
-
-<span class="n">text</span><span class="p">(</span>
-    <span class="p">(</span><span class="mf">85.0</span><span class="p">,</span> <span class="mf">87.5</span><span class="p">),</span>
-    <span class="s2">"FastAPI Exception Routing: Handled Client Errors vs Server Contract Breaches"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">13.0</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="n">node_txt</span> <span class="o">=</span> <span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.2</span><span class="p">)</span>
-
-<span class="n">flow</span> <span class="o">=</span> <span class="n">FlowDiagram</span><span class="p">(</span>
-    <span class="n">node_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.2</span><span class="p">),</span>
-    <span class="n">edge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">,</span>
-    <span class="n">edge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">width</span><span class="o">=</span><span class="mi">162</span><span class="p">,</span>
-    <span class="n">height</span><span class="o">=</span><span class="mi">78</span><span class="p">,</span>
-    <span class="n">lane_orientation</span><span class="o">=</span><span class="s2">"vertical"</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="c1"># 3 Swimlanes: 54 + 54 + 54 = 162 (centerlines X = 27, 81, 135)</span>
-<span class="n">flow</span><span class="o">.</span><span class="n">add_lane</span><span class="p">(</span>
-    <span class="s2">"1. APIRoute Execution"</span><span class="p">,</span>
-    <span class="n">width</span><span class="o">=</span><span class="mi">54</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
-    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">,</span> <span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">),</span>
-    <span class="n">header_size</span><span class="o">=</span><span class="mf">7.0</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">flow</span><span class="o">.</span><span class="n">add_lane</span><span class="p">(</span>
-    <span class="s2">"2. ExceptionMiddleware"</span><span class="p">,</span>
-    <span class="n">width</span><span class="o">=</span><span class="mi">54</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
-    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
-    <span class="n">header_size</span><span class="o">=</span><span class="mf">7.0</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">flow</span><span class="o">.</span><span class="n">add_lane</span><span class="p">(</span>
-    <span class="s2">"3. Outer 500 &amp; Telemetry"</span><span class="p">,</span>
-    <span class="n">width</span><span class="o">=</span><span class="mi">54</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
-    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">,</span> <span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">),</span>
-    <span class="n">header_size</span><span class="o">=</span><span class="mf">7.0</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="n">req_val</span> <span class="o">=</span> <span class="n">flow</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Process</span><span class="p">(</span><span class="s2">"RequestValidationError</span><span class="se">\n</span><span class="s2">(Invalid Input / Body)"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">41</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span> <span class="n">text_style</span><span class="o">=</span><span class="n">node_txt</span><span class="p">),</span>
-    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mi">27</span><span class="p">,</span> <span class="mi">59</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">dom_err</span> <span class="o">=</span> <span class="n">flow</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Process</span><span class="p">(</span><span class="s2">"HTTPException or</span><span class="se">\n</span><span class="s2">Custom Domain Error"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">41</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span> <span class="n">text_style</span><span class="o">=</span><span class="n">node_txt</span><span class="p">),</span>
-    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mi">27</span><span class="p">,</span> <span class="mi">37</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">resp_val</span> <span class="o">=</span> <span class="n">flow</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Process</span><span class="p">(</span><span class="s2">"ResponseValidationError</span><span class="se">\n</span><span class="s2">or Unhandled Exception"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">41</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span> <span class="n">text_style</span><span class="o">=</span><span class="n">node_txt</span><span class="p">),</span>
-    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mi">27</span><span class="p">,</span> <span class="mi">15</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="n">h_422</span> <span class="o">=</span> <span class="n">flow</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Process</span><span class="p">(</span><span class="s2">"422 Problem JSON</span><span class="se">\n</span><span class="s2">(+ OTel WARN Event)"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">41</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span> <span class="n">text_style</span><span class="o">=</span><span class="n">node_txt</span><span class="p">),</span>
-    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mi">81</span><span class="p">,</span> <span class="mi">59</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">h_4xx</span> <span class="o">=</span> <span class="n">flow</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Process</span><span class="p">(</span><span class="s2">"4xx / 409 JSON</span><span class="se">\n</span><span class="s2">(Span Not Marked 500)"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">41</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span> <span class="n">text_style</span><span class="o">=</span><span class="n">node_txt</span><span class="p">),</span>
-    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mi">81</span><span class="p">,</span> <span class="mi">37</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="n">otel_err</span> <span class="o">=</span> <span class="n">flow</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Process</span><span class="p">(</span><span class="s2">"ExceptionTelemetryMiddleware</span><span class="se">\n</span><span class="s2">(OTel ERROR Log + Span Error)"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">45</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span> <span class="n">text_style</span><span class="o">=</span><span class="n">node_txt</span><span class="p">),</span>
-    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mi">135</span><span class="p">,</span> <span class="mi">42</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">srv_500</span> <span class="o">=</span> <span class="n">flow</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">End</span><span class="p">(</span><span class="s2">"ServerErrorMiddleware</span><span class="se">\n</span><span class="s2">500 Contract Breach Guard"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">45</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span> <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.2</span><span class="p">)),</span>
-    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mi">135</span><span class="p">,</span> <span class="mi">15</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="n">req_val</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">h_422</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"422"</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
-<span class="n">dom_err</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">h_4xx</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"4xx"</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
-<span class="n">resp_val</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">otel_err</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"Bypasses 4xx"</span><span class="p">,</span> <span class="n">start_side</span><span class="o">=</span><span class="s2">"right"</span><span class="p">,</span> <span class="n">end_side</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span><span class="o">.</span><span class="n">via</span><span class="p">((</span><span class="mi">104</span><span class="p">,</span> <span class="mi">15</span><span class="p">),</span> <span class="p">(</span><span class="mi">104</span><span class="p">,</span> <span class="mi">42</span><span class="p">))</span>
-<span class="n">otel_err</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">srv_500</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"Re-raises"</span><span class="p">,</span> <span class="n">start_side</span><span class="o">=</span><span class="s2">"bottom"</span><span class="p">,</span> <span class="n">end_side</span><span class="o">=</span><span class="s2">"top"</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
-
-<span class="n">flow</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">4.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">))</span>
-<span class="n">save</span><span class="p">()</span>
-</code></pre>
-</details>
 <h3>Why <code>ResponseValidationError</code> Returns <code>500</code> (Not <code>422</code>)</h3>
 <ul>
-<li><strong>Client Mistakes (<code>RequestValidationError</code> -&gt; <code>422</code>, <code>HTTPException</code> -&gt; <code>4xx</code>)</strong>: Caught inside <code>ExceptionMiddleware</code>. FastAPI deliberately leaves the root OpenTelemetry span status unset for <code>4xx</code> responses (since the server operated correctly) while emitting a <code>WARN</code> validation event.</li>
-<li><strong>Server Contract Breaches (<code>ResponseValidationError</code> -&gt; <code>500</code>)</strong>: If your backend returns data missing a required field or containing an invalid type against <code>response_model</code>, FastAPI raises <code>ResponseValidationError</code>. Because it represents a <strong>server bug</strong> (never a client fault), it bypasses <code>ExceptionMiddleware</code>, triggers <code>ExceptionTelemetryMiddleware</code> (<code>StatusCode.ERROR</code> + stack trace log), and returns a generic <code>500 Internal Server Error</code> via <code>ServerErrorMiddleware</code>—preventing accidental data leaks while failing CI tests loudly!</li>
+<li><strong>Client Mistakes (<code>RequestValidationError</code> -&gt; <code>422</code>, <code>HTTPException</code> -&gt; <code>4xx</code>)</strong>: Caught inside the handled-error boundary (<code>@app.exception_handler(...)</code>). FastAPI deliberately leaves the root OpenTelemetry span status unset for <code>4xx</code> responses (since the server operated correctly) while emitting a <code>WARN</code> validation event.</li>
+<li><strong>Server Contract Breaches (<code>ResponseValidationError</code> -&gt; <code>500</code>)</strong>: If your backend returns data missing a required field or containing an invalid type against <code>response_model</code>, FastAPI raises <code>ResponseValidationError</code>. Because it represents a <strong>server bug</strong> (never a client fault), it bypasses <code>4xx</code> exception handlers, triggers the inner exception span recorder (<code>StatusCode.ERROR</code> + stack trace log), and returns a generic <code>500 Internal Server Error</code> at the outer <code>500</code> fallback boundary—preventing accidental data leaks while failing CI tests loudly!</li>
 </ul>
 <h3>Standardizing Errors with RFC 9457 (<code>application/problem+json</code>)</h3>
 <p>In multi-team APIs, register custom handlers for domain exceptions and <code>RequestValidationError</code> to emit machine-readable <strong>RFC 9457 Problem Details</strong> envelopes without exposing internal stack traces or database errors to clients:</p>
@@ -716,6 +506,11 @@
 <p>Proceed to <a href="testing_and_deployment.html">Testing Patterns &amp; Production ASGI</a> to verify lifespans, async transports, dependency overrides, and graceful shutdown probes.</p>
 
             </main>
+            <footer class="footer">
+                
+                FastAPI® is a registered trademark of Sebastián Ramírez (<a href="https://github.com/tiangolo" target="_blank" rel="noopener noreferrer">@tiangolo</a>). Unofficial guide — not affiliated with or endorsed by the official FastAPI project (<a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">fastapi.tiangolo.com</a>).
+                
+            </footer>
         </div>
     </div>
     

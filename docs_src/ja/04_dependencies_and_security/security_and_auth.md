@@ -2,7 +2,7 @@
 
 FastAPI `v0.162.2` の `fastapi.security` モジュールは、実行時の資格情報抽出と OpenAPI 3.1 スキーマ生成を単一のクラス階層へ統合します。すべての `SecurityBase` 派生クラスは、[Dependant DAG](dependency_injection.md) 内でリクエストの資格情報を解析すると同時に、`components.securitySchemes` および Swagger UI の対話型 **「Authorize」** モーダルを自動構成します。
 
-```drawlib align=center code=fold file=security_schemes_architecture.png caption="fastapi.security の二重責務アーキテクチャ：実行時 DI による資格情報抽出と OpenAPI 3.1 securitySchemes 自動生成"
+```drawlib align=center code=hide file=security_schemes_architecture.png caption="fastapi.security の二重責務アーキテクチャ：実行時 DI による資格情報抽出と OpenAPI 3.1 securitySchemes 自動生成"
 from drawlib.canvas import save, setup
 from drawlib.diagrams.architecture import ArchitectureDiagram, Node, PhosphorIcon
 from drawlib.icons import phosphor
@@ -198,7 +198,7 @@ save()
 
 通常の `Depends()` に対し、`Security(callable, scopes=[...])`（`fastapi/param_functions.py`）は宣言的な OAuth2 権限スコープ文字列を付与します。たとえばエンドポイントが `get_current_principal` に対して `scopes=["items:write"]` を要求し、さらにその下位の `verify_bearer_claims` が `scopes=["me:read"]` を要求する場合、FastAPI は `_get_oauth_scopes()` によって `parent_oauth_scopes` と `own_oauth_scopes` を上位から下位へ順序を保ったままマージし、`SecurityScopes` 引数へ一括注入します。
 
-```drawlib align=center code=fold file=oauth2_security_scopes_flow.png caption="ネストした依存チェーンにわたる SecurityScopes の累積伝播と 401 / 403 レスポンス分岐"
+```drawlib align=center code=hide file=oauth2_security_scopes_flow.png caption="ネストした依存チェーンにわたる SecurityScopes の累積伝播と 401 / 403 レスポンス分岐"
 from drawlib.canvas import save, setup
 from drawlib.diagrams.sequence import Participant, ParticipantGroup, PhosphorIcon, SequenceDiagram
 from drawlib.styles import Style, Styles

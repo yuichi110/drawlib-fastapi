@@ -2,7 +2,7 @@
 
 FastAPI `v0.162.2` は、外部モンキーパッチ不要のネイティブ OpenTelemetry 計装（`fastapi.telemetry` の `TelemetryConfig` と `get_telemetry_data()`）を本体に組み込み、クライアント起因の `4xx` / `422` エラーとサーバー側の契約違反である `500` エラーを 2 段階の例外境界で明確に分離します。
 
-```drawlib align=center code=fold file=native_otel_architecture.png caption="FastAPI v0.162.2 ネイティブ OpenTelemetry パイプライン：ルートスパン・4 つの子操作スパン・コンテキスト参照"
+```drawlib align=center code=hide file=native_otel_architecture.png caption="FastAPI v0.162.2 ネイティブ OpenTelemetry パイプライン：ルートスパン・4 つの子操作スパン・コンテキスト参照"
 from drawlib.canvas import save, setup
 from drawlib.diagrams.architecture import ArchitectureDiagram, Node, NodeGroup, PhosphorIcon
 from drawlib.styles import Styles
@@ -128,13 +128,13 @@ save()
 従来の外部 ASGI ミドルウェアによる計装では生の ASGI メッセージしか観測できず、依存性注入や Pydantic 直列化、入力検証エラーの内訳までは追跡できませんでした。FastAPI `v0.162.2` では `FastAPI(telemetry=TelemetryConfig(...))` を渡すだけで、OpenTelemetry セマンティック規約（`1.44.0`）に準拠した詳細なシグナルがネイティブに出力されます。
 
 1. **ルート HTTP / WebSocket スパン（`tracing=True`）**: W3C `traceparent` と `baggage` を抽出し、署名付き URL クエリ（`sig`、`X-Amz-Signature`、`X-Goog-Signature` など）を自動マスクした上で、ルート確定時にスパン名を `"{METHOD} {http.route}"`（例: `GET /orders/{order_id}`）へ更新します。
-2. **4 つの子操作スパン（`operation_spans=True`）**: `code.function.name` 属性付きで内部フェーズの所要時間を個別に計測します。
-   - `fastapi.dependencies`: `Dependant` DAG 全体の依存解決時間（`solve_dependencies`）。
-   - `fastapi.endpoint`: コルーチン `await` またはスレッドプール上でのエンドポイント実行時間（`run_endpoint_function`）。
-   - `fastapi.serialization`: Pydantic 出力検証および Rust 製 JSON 直列化時間（`serialize_response`）。
+2. **4 つの子操作スパン（`operation_spans=True`）**: リクエスト処理の各フェーズを専用の子スパンで個別に計測します。
+   - `fastapi.dependencies`: `Depends()` 依存グラフ全体の解決時間。
+   - `fastapi.endpoint`: エンドポイント実行時間（`async def` コルーチンの `await` またはワーカースレッドプール実行）。
+   - `fastapi.serialization`: レスポンス検証（`response_model`）および Pydantic の Rust 製 JSON 直列化時間。
    - `fastapi.background_task`: [`BackgroundTasks`](../05_async_and_realtime/concurrency_and_middleware.md) 内の各バックグラウンド処理。
 3. **メトリクスと構造化ログ（`metrics=True`, `logs=True`）**: `http.server.request.duration` ヒストグラムと `http.server.active_requests` カウンターを記録し、`422` 入力検証失敗時には `WARN` イベント（`fastapi.validation.failed`）、未処理例外時には `ERROR` イベント（`http.server.request.exception`）を送出します。
-4. **同期コンテキスト参照（`get_telemetry_data()`）**: リクエスト処理中に限り、読み取り専用の `TelemetryData`（`request`、`websocket`、`body`、`values`、`errors`）をカスタム SpanProcessor / LogProcessor 等から安全に参照できます。生ペイロードをデフォルトで外部エクスポートせず、レスポンス完了と同時に参照を `None` クリアしてメモリリークを防ぎます。
+4. **同期コンテキスト参照（`get_telemetry_data()`）**: リクエスト処理中に限り、読み取り専用の `TelemetryData`（`request`、`websocket`、`body`、`values`、`errors`）をカスタム SpanProcessor / LogProcessor 等から安全に参照できます。生ペイロードをデフォルトで外部エクスポートせず、レスポンス完了と同時にコンテキスト参照を即座にクリアしてメモリリークを防ぎます。
 
 ```python
 from typing import Annotated
@@ -216,7 +216,7 @@ assert {
 
 FastAPI は [ASGI ミドルウェアオニオン](../05_async_and_realtime/concurrency_and_middleware.md) の中で、例外処理を意図的に **2 つの異なるミドルウェア境界** に分割しています。
 
-```drawlib align=center code=fold file=exception_hierarchy_routing.png caption="ExceptionMiddleware（4xx）・ExceptionTelemetryMiddleware・ServerErrorMiddleware（500）を巡る例外ルーティング"
+```drawlib align=center code=hide file=exception_hierarchy_routing.png caption="FastAPI の例外ルーティング：制御されたクライアントエラー（4xx / 422）と内側例外スパン記録・外側 500 フォールバック"
 from drawlib.canvas import save, setup
 from drawlib.diagrams.flow import End, FlowDiagram, Process
 from drawlib.styles import Styles
@@ -243,15 +243,15 @@ flow = FlowDiagram(
 
 # 3 Swimlanes: 54 + 54 + 54 = 162 (centerlines X = 27, 81, 135)
 flow.add_lane(
-    "1. APIRoute Execution",
+    "1. Endpoint & Validation",
     width=54,
     style=Styles.Neutral,
     header_style=Styles.PrimaryNeutral,
-    text_style=Styles.PrimaryBold.patch(text_size=10.5, halign="left"),
+    text_style=Styles.PrimaryBold.patch(text_size=10.5),
     header_size=7.0,
 )
 flow.add_lane(
-    "2. ExceptionMiddleware",
+    "2. Handled Error Boundary",
     width=54,
     style=Styles.Neutral,
     header_style=Styles.SecondaryNeutral,
@@ -263,7 +263,7 @@ flow.add_lane(
     width=54,
     style=Styles.Neutral,
     header_style=Styles.PrimaryNeutral,
-    text_style=Styles.PrimaryBold.patch(text_size=10.5, halign="left"),
+    text_style=Styles.PrimaryBold.patch(text_size=10.5),
     header_size=7.0,
 )
 
@@ -290,11 +290,11 @@ h_4xx = flow.add(
 )
 
 otel_err = flow.add(
-    Process("ExceptionTelemetryMiddleware\n(OTel ERROR Log + Span Error)", width=45, height=14, style=Styles.PrimaryNeutral, text_style=node_txt),
+    Process("Inner Exception Recorder\n(OTel ERROR Log + Span Error)", width=45, height=14, style=Styles.PrimaryNeutral, text_style=node_txt),
     xy=(135, 42),
 )
 srv_500 = flow.add(
-    End("ServerErrorMiddleware\n500 Contract Breach Guard", width=45, height=13, style=Styles.PrimaryFlat, text_style=Styles.WhiteBold.patch(text_size=10.2)),
+    End("Outer 500 Fallback Guard\n(Safe 500 Response)", width=45, height=13, style=Styles.PrimaryFlat, text_style=Styles.WhiteBold.patch(text_size=10.2)),
     xy=(135, 15),
 )
 
@@ -309,8 +309,8 @@ save()
 
 ### なぜ `ResponseValidationError` は `422` ではなく `500` になるのか
 
-- **クライアント起因のエラー（`RequestValidationError` -> `422`、`HTTPException` -> `4xx`）**: 内側の `ExceptionMiddleware` で捕捉されます。サーバー自体は仕様どおり正常動作しているため、FastAPI はルートスパンを `500` 異常扱いにせず、入力検証失敗は `WARN` イベントとして記録します。
-- **サーバー側の出力契約違反（`ResponseValidationError` -> `500`）**: バックエンド実装が `response_model` の必須フィールド欠落や型不一致データを返した場合、`ResponseValidationError` が発生します。これはクライアントの誤りではなく **サーバー実装のバグ** であるため、`ExceptionMiddleware` を素通りして `ExceptionTelemetryMiddleware`（`StatusCode.ERROR` とスタックトレース記録）および `ServerErrorMiddleware` へ到達し、内部データの漏洩を防ぎつつ CI テストで即座に検知できるよう設計されています。
+- **クライアント起因のエラー（`RequestValidationError` -> `422`、`HTTPException` -> `4xx`）**: 内側の制御されたエラー境界（`@app.exception_handler(...)`）で捕捉されます。サーバー自体は仕様どおり正常動作しているため、FastAPI はルートスパンを `500` 異常扱いにせず、入力検証失敗は `WARN` イベントとして記録します。
+- **サーバー側の出力契約違反（`ResponseValidationError` -> `500`）**: バックエンド実装が `response_model` の必須フィールド欠落や型不一致データを返した場合、`ResponseValidationError` が発生します。これはクライアントの誤りではなく **サーバー実装のバグ** であるため、`4xx` 例外ハンドラーを素通りして内側の例外スパン記録（`StatusCode.ERROR` とスタックトレースログ）および外側の `500` 防衛境界へ到達し、内部データの漏洩を防ぎつつ CI テストで即座に検知できるよう設計されています。
 
 ### RFC 9457（`application/problem+json`）によるエラー応答の標準化
 

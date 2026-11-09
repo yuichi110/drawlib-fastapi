@@ -13,7 +13,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% if title and "Drawlib" not in title %}{{ title }} — FastAPI Visual Guide (Unofficial · Drawlib Demo){% else %}{{ title | default("FastAPI Visual Guide — Unofficial Drawlib Demo") }}{% endif %}</title>
+    <title>{% if title and "Unofficial" not in title %}{{ title }} — FastAPI User Guide (Unofficial){% else %}{{ title | default("FastAPI User Guide (Unofficial)") }}{% endif %}</title>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
     <script>
@@ -55,30 +55,38 @@
     {% endif %}
 </head>
 <body>
-    <div class="demo-banner" role="region" aria-label="{% if html_lang == 'ja' %}非公式ショーケース案内{% else %}Unofficial Showcase Notice{% endif %}">
+    <div class="demo-banner" role="region" aria-label="{% if html_lang == 'ja' %}ポータルナビゲーション{% else %}Portal Navigation{% endif %}">
         <div class="demo-banner-inner">
-            <span class="demo-banner-badge">UNOFFICIAL DEMO</span>
+            <span class="demo-banner-badge">UNOFFICIAL GUIDE</span>
             {% if html_lang == 'ja' %}
             <span class="demo-banner-text">
-                <a href="https://www.drawlib.com/" target="_blank" rel="noopener noreferrer">Drawlib</a> と <a href="https://pypi.org/project/pni501/" target="_blank" rel="noopener noreferrer">PNI501</a> で作成した <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a>（v0.162.2, MIT）の非公式ビジュアル解説ショーケースです。
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a>（v0.162.2）非公式ユーザーガイド
             </span>
             <span class="demo-banner-links">
-                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 診断レポート →</a>
+                <strong style="color:#ffffff;">User Guide</strong>
                 <span class="demo-banner-sep">·</span>
-                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI 公式 Docs ↗</a>
+                <a href="https://fastapi.drawlib.com/architecture/">Architecture</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Audit</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official Docs ↗</a>
                 <span class="demo-banner-sep">·</span>
                 <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
             </span>
             {% else %}
             <span class="demo-banner-text">
-                Unofficial visual architecture showcase of <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a> (v0.162.2, MIT) illustrated as code with <a href="https://www.drawlib.com/" target="_blank" rel="noopener noreferrer">Drawlib</a> &amp; <a href="https://pypi.org/project/pni501/" target="_blank" rel="noopener noreferrer">PNI501</a>.
+                Unofficial Community User Guide for <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a> (v0.162.2)
             </span>
             <span class="demo-banner-links">
-                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Report →</a>
+                <strong style="color:#ffffff;">User Guide</strong>
                 <span class="demo-banner-sep">·</span>
-                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official FastAPI Docs ↗</a>
+                <a href="https://fastapi.drawlib.com/architecture/">Architecture</a>
                 <span class="demo-banner-sep">·</span>
-                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">Demo Source ↗</a>
+                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Audit</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official Docs ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
             </span>
             {% endif %}
         </div>
@@ -87,12 +95,12 @@
     <div class="doc-layout">
         <aside class="sidebar">
             <div class="sidebar-header">
-                <a href="{{ index_url | default('index.html') }}" class="sidebar-brand" aria-label="{{ site_title | default('Drawlib') }}">
+                <a href="{{ index_url | default('index.html') }}" class="sidebar-brand" aria-label="{{ site_title | default('FastAPI Guide') }}">
                     {% if logo_href %}
-                    <img src="{{ logo_href }}" alt="{{ site_title | default('Drawlib') }}" class="sidebar-logo sidebar-logo-light">
-                    <img src="{{ logo_dark_href | default(logo_href) }}" alt="{{ site_title | default('Drawlib') }}" class="sidebar-logo sidebar-logo-dark">
+                    <img src="{{ logo_href }}" alt="{{ site_title | default('FastAPI Guide') }}" class="sidebar-logo sidebar-logo-light">
+                    <img src="{{ logo_dark_href | default(logo_href) }}" alt="{{ site_title | default('FastAPI Guide') }}" class="sidebar-logo sidebar-logo-dark">
                     {% else %}
-                    {{ site_title | default("Drawlib") }}
+                    {{ site_title | default("FastAPI Guide") }}
                     {% endif %}
                 </a>
                 <div class="sidebar-header-actions">
@@ -164,6 +172,13 @@
             <main class="main-content">
                 {{ body | safe }}
             </main>
+            <footer class="footer">
+                {% if html_lang == 'ja' %}
+                FastAPI® は Sebastián Ramírez（<a href="https://github.com/tiangolo" target="_blank" rel="noopener noreferrer">@tiangolo</a>）の登録商標です。本サイトは非公式ガイドであり、公式プロジェクトとは提携していません。公式ドキュメントは <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">fastapi.tiangolo.com</a> をご参照ください。
+                {% else %}
+                FastAPI® is a registered trademark of Sebastián Ramírez (<a href="https://github.com/tiangolo" target="_blank" rel="noopener noreferrer">@tiangolo</a>). Unofficial guide — not affiliated with or endorsed by the official FastAPI project (<a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">fastapi.tiangolo.com</a>).
+                {% endif %}
+            </footer>
         </div>
     </div>
     {% else %}

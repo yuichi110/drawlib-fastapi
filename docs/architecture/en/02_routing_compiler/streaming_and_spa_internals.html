@@ -1,0 +1,570 @@
+<!--
+ Copyright (c) 2026 Yuichi Ito (yuichi@yuichi.com)
+
+ This software is licensed under the Apache License, Version 2.0.
+ For more information, please visit: https://github.com/yuichi110/drawlib
+
+ This software is provided "as is", without warranty of any kind,
+ express or implied, including but not limited to the warranties of
+ merchantability, fitness for a particular purpose and noninfringement.
+-->
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generator Streaming (SSE / JSONL) &amp; SPA Router Internals — FastAPI Architecture Guide (Unofficial)</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-S9N5BZ1VRC');
+    </script>
+    <script>
+        (function() {
+            const saved = localStorage.getItem('drawlib-theme');
+            if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    
+    
+    
+    <link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/architecture/en/02_routing_compiler/streaming_and_spa_internals.html">
+    
+    <link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/architecture/ja/02_routing_compiler/streaming_and_spa_internals.html">
+    
+    <link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/architecture/en/02_routing_compiler/streaming_and_spa_internals.html">
+    
+    
+    
+    <meta name="description" content="Beyond request-response JSON endpoints, FastAPI v0.162.2 compiles two specialized runtime pipelines directly inside fastapi/routing.py and fastapi/sse.py…">
+    <link rel="canonical" href="https://fastapi.drawlib.com/architecture/en/02_routing_compiler/streaming_and_spa_internals.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="FastAPI Architecture">
+    <meta property="og:title" content="Generator Streaming (SSE / JSONL) &amp; SPA Router Internals — FastAPI Architecture">
+    <meta property="og:description" content="Beyond request-response JSON endpoints, FastAPI v0.162.2 compiles two specialized runtime pipelines directly inside fastapi/routing.py and fastapi/sse.py…">
+    <meta property="og:url" content="https://fastapi.drawlib.com/architecture/en/02_routing_compiler/streaming_and_spa_internals.html">
+    <meta property="og:image" content="https://fastapi.drawlib.com/architecture/_assets/ogp.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="ja_JP">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Generator Streaming (SSE / JSONL) &amp; SPA Router Internals — FastAPI Architecture">
+    <meta name="twitter:description" content="Beyond request-response JSON endpoints, FastAPI v0.162.2 compiles two specialized runtime pipelines directly inside fastapi/routing.py and fastapi/sse.py…">
+    <meta name="twitter:image" content="https://fastapi.drawlib.com/architecture/_assets/ogp.png">
+    
+    
+    <link rel="icon" type="image/png" href="../../_assets/favicon.png">
+    
+    
+    <link rel="stylesheet" href="../style.css">
+    
+    
+</head>
+<body>
+    <div class="demo-banner" role="region" aria-label="Portal Navigation">
+        <div class="demo-banner-inner">
+            <span class="demo-banner-badge">INTERNAL ARCHITECTURE</span>
+            
+            <span class="demo-banner-text">
+                Unofficial Internal Architecture Guide to <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a> (v0.162.2)
+            </span>
+            <span class="demo-banner-links">
+                <a href="https://fastapi.drawlib.com/">User Guide</a>
+                <span class="demo-banner-sep">·</span>
+                <strong style="color:#ffffff;">Architecture</strong>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Audit</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official Docs ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+            </span>
+            
+        </div>
+    </div>
+    
+    <div class="doc-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI Architecture">
+                    
+                    FastAPI Architecture
+                    
+                </a>
+                <div class="sidebar-header-actions">
+                    <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">
+                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                    <button type="button" id="menu-toggle" class="menu-toggle-btn" aria-label="Toggle navigation" aria-expanded="false">
+                        <svg class="icon-hamburger" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        <svg class="icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="sidebar-menu">
+                
+                    
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../index.html" >Architecture Overview</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">1. Package Topology &amp; Layers</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../01_package_and_layers/module_hierarchy.html" >5-Tier Module Hierarchy &amp; Shims</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">2. Routing Compiler &amp; Closures</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="apiroute_and_closures.html" >APIRouter, APIRoute &amp; Handler Closure</a>
+                            </li>
+                            
+                            <li class="nav-item active">
+                                <a href="streaming_and_spa_internals.html" >Generator Streaming &amp; SPA Internals</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">3. DI &amp; Security Engine</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../03_di_and_security_engine/dependant_and_solver.html" >Dependant DAG &amp; solve_dependencies</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../03_di_and_security_engine/security_internals.html" >SecurityBase &amp; HTTPConnection</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">4. Pydantic v2 Bridge</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../04_pydantic_bridge/compat_and_serialization.html" >_compat/v2.py, ModelField &amp; Serialization</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">5. ASGI Stack &amp; Telemetry</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../05_asgi_and_telemetry/middleware_and_concurrency.html" >Middleware Onion &amp; Threadpool</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../05_asgi_and_telemetry/native_telemetry_internals.html" >NativeTelemetry &amp; Runtime Spans</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">6. OpenAPI 3.1 Synthesis</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../06_openapi_and_docs/openapi_synthesis_engine.html" >get_openapi(), $defs &amp; Docs UI</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">Companion Guides &amp; Links</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/" target="_blank" rel="noopener noreferrer">FastAPI User Guide<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/reports/pni501/" target="_blank" rel="noopener noreferrer">PNI501 Diagnostic Report<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official FastAPI Docs<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub Repository<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                        </ul>
+                    
+                
+            </div>
+        </aside>
+        <div class="content-wrapper">
+            <header class="top-bar">
+                <div class="breadcrumbs">
+                    <span class="crumb">Architecture</span>
+                    <span class="crumb-separator">&raquo;</span>
+                    <span class="crumb active">Generator Streaming (SSE / JSONL) &amp; SPA Router Internals</span>
+                </div>
+                
+                <div class="lang-switcher">
+                    <details class="lang-dropdown">
+                        <summary class="lang-dropdown-btn" aria-label="Select language">
+                            <svg class="lang-globe-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            <span class="lang-current-label">English</span>
+                            <svg class="lang-caret-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </summary>
+                        <div class="lang-dropdown-menu" role="menu">
+                            
+                            <a href="streaming_and_spa_internals.html" class="lang-option active" lang="en" hreflang="en" aria-current="page">
+                                <span>English</span>
+                                
+                                <svg class="lang-check-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                
+                            </a>
+                            
+                            <a href="../../ja/02_routing_compiler/streaming_and_spa_internals.html" class="lang-option" lang="ja" hreflang="ja" >
+                                <span>日本語</span>
+                                
+                            </a>
+                            
+                        </div>
+                    </details>
+                </div>
+                
+            </header>
+            <main class="main-content">
+                <h1>Generator Streaming (SSE / JSONL) &amp; SPA Router Internals</h1>
+<p>Beyond request-response JSON endpoints, FastAPI <code>v0.162.2</code> compiles two specialized runtime pipelines directly inside <code>fastapi/routing.py</code> and <code>fastapi/sse.py</code>: <strong>native generator streaming</strong>—which turns <code>yield</code> path operations into per-item validated JSON Lines (<code>application/jsonl</code>) or PEP 789-safe Server-Sent Events (<code>text/event-stream</code>) while holding <code>fastapi_inner_astack</code> open until stream completion—and the <strong>low-priority SPA engine</strong> (<code>APIRouter.frontend()</code> / <code>_FrontendRouteGroup</code>), which serves static assets and HTML5 history fallbacks behind normal API routes with strict traversal and <code>Accept</code>-header guards.</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/02_routing_compiler/streaming_and_spa_internals/generator_dispatch_branches.png" alt="streaming_and_spa_internals_1" />
+  <figcaption class="drawlib-caption">Compile-Time Return Annotation Inspection, Generator Streaming Branches & AsyncExitStack Lifetime</figcaption>
+</figure>
+<h2>1. Compile-Time Generator Detection &amp; <code>stream_item_field</code> Synthesis</h2>
+<p>During <code>_populate_api_route_state()</code>, FastAPI tests whether the unwrapped endpoint callable is a synchronous or asynchronous generator (<code>is_generator = _is_async_gen_callable(route.dependant.call) or _is_gen_callable(route.dependant.call)</code>). This compile-time flag splits return-type compilation into four distinct execution modes:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Endpoint Form &amp; <code>response_class</code></th>
+<th style="text-align:left"><code>is_sse_stream</code></th>
+<th style="text-align:left"><code>is_json_stream</code></th>
+<th style="text-align:left">Compiled <code>ModelField</code></th>
+<th style="text-align:left">Wire <code>Content-Type</code> &amp; OpenAPI 3.2 Schema</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><code>def</code> / <code>async def</code> with <code>return</code> (<code>list[Item]</code>)</td>
+<td style="text-align:left"><code>False</code></td>
+<td style="text-align:left"><code>False</code></td>
+<td style="text-align:left"><code>response_field</code> (<code>Response_&lt;id&gt;</code>)</td>
+<td style="text-align:left"><code>application/json</code> (<code>schema</code> array accumulation)</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>yield</code> + <code>Default(JSONResponse)</code></td>
+<td style="text-align:left"><code>False</code></td>
+<td style="text-align:left"><code>True</code></td>
+<td style="text-align:left"><code>stream_item_field</code> (<code>StreamItem_&lt;id&gt;</code>)</td>
+<td style="text-align:left"><code>application/jsonl</code> (<code>itemSchema</code> per-line model)</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>yield</code> + <code>EventSourceResponse</code></td>
+<td style="text-align:left"><code>True</code></td>
+<td style="text-align:left"><code>False</code></td>
+<td style="text-align:left"><code>stream_item_field</code> (unless <code>ServerSentEvent</code>)</td>
+<td style="text-align:left"><code>text/event-stream</code> (<code>_SSE_EVENT_SCHEMA</code> / <code>itemSchema</code>)</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>yield</code> + explicit <code>StreamingResponse</code></td>
+<td style="text-align:left"><code>False</code></td>
+<td style="text-align:left"><code>False</code></td>
+<td style="text-align:left"><code>None</code> (<code>response_model = None</code>)</td>
+<td style="text-align:left">Custom <code>media_type</code> (raw chunk passthrough)</td>
+</tr>
+</tbody>
+</table>
+<p>When <code>response_model</code> is left at <code>Default(None)</code> on a generator endpoint, <code>get_stream_item_type(return_annotation)</code> checks whether <code>get_origin(annotation)</code> belongs to <code>_STREAM_ORIGINS</code> (<code>{AsyncIterable, AsyncIterator, AsyncGenerator, Iterable, Iterator, Generator}</code>):</p>
+<ul>
+<li><strong>Parameterized Stream Types (<code>AsyncIterable[Item]</code>, <code>Generator[Item, None, None]</code>)</strong>: Extracts <code>type_args[0]</code> (<code>Item</code>) as <code>route.stream_item_type</code>, clears <code>route.response_model = None</code> (since the endpoint yields items incrementally rather than returning a single container), and builds <code>route.stream_item_field = create_model_field(name=&quot;StreamItem_&quot; + route.unique_id, type_=Item, mode=&quot;serialization&quot;)</code>.</li>
+<li><strong>Bare Stream Annotations (<code>-&gt; AsyncIterable</code>, <code>-&gt; Iterable</code>)</strong>: <code>get_stream_item_type()</code> returns <code>Any</code>, setting <code>stream_item_type = Any</code> so items still stream as JSONL/SSE via <code>TypeAdapter(Any)</code>.</li>
+<li><strong><code>ServerSentEvent</code> Exclusion</strong>: If the return type is <code>AsyncIterable[ServerSentEvent]</code>, <code>not lenient_issubclass(stream_item, ServerSentEvent)</code> skips <code>stream_item_field</code> creation because <code>ServerSentEvent</code> is a wire-framing envelope rather than a domain payload schema.</li>
+</ul>
+<h2>2. Runtime Streaming Pipelines: JSONL, SSE TaskGroup &amp; <code>fastapi_inner_astack</code></h2>
+<h3>2.1 Shared Per-Item Validation (<code>_serialize_data</code>) &amp; JSONL Framing</h3>
+<p>Inside <code>get_request_handler()</code>, both JSONL and SSE share an inner <code>_serialize_data(data: Any) -&gt; bytes</code> helper:</p>
+<ul>
+<li>When <code>stream_item_field</code> is present, each yielded item is validated incrementally via <code>stream_item_field.validate(data, {}, loc=(&quot;response&quot;,))</code> (raising <code>ResponseValidationError</code> mid-stream if an item violates the schema) and serialized directly to UTF-8 JSON bytes via <code>stream_item_field.serialize_json(...)</code>, honoring <code>response_model_include</code>, <code>response_model_exclude</code>, <code>by_alias</code>, <code>exclude_unset</code>, <code>exclude_defaults</code>, and <code>exclude_none</code>.</li>
+<li>When <code>stream_item_field</code> is <code>None</code>, FastAPI falls back to <code>jsonable_encoder(data)</code> followed by <code>_normalize_non_finite_floats(data)</code> (converting <code>NaN</code>, <code>Infinity</code>, and <code>-Infinity</code> floats into JSON <code>null</code>) and <code>json.dumps(...).encode(&quot;utf-8&quot;)</code>.</li>
+</ul>
+<p>For <strong><code>is_json_stream</code></strong> (<code>application/jsonl</code>), FastAPI wraps <code>gen = dependant.call(**solved_result.values)</code> in <code>_async_stream_jsonl()</code> (for async generators) or <code>_sync_stream_jsonl()</code> (for sync generators, iterated in Starlette's threadpool by <code>StreamingResponse</code>), appending <code>b&quot;\n&quot;</code> to every serialized item. Async generator wrappers explicitly execute <strong><code>await anyio.sleep(0)</code></strong> after every <code>yield</code> (also applied in raw <code>_async_stream_raw</code> for explicit <code>StreamingResponse</code> endpoints) to insert an <code>anyio</code> cancellation checkpoint—ensuring client disconnects cancel fast CPU-bound producers that never otherwise suspend.</p>
+<p>Crucially, because <code>request_response()</code> enters <code>scope[&quot;fastapi_inner_astack&quot;]</code> <strong>outside</strong> <code>await response(scope, receive, send)</code>, any request-scoped <code>yield</code> dependency (such as an async SQLAlchemy session) stays open throughout the entire <code>StreamingResponse</code> body iteration and executes its <code>finally</code> block only after the last chunk is sent or the client disconnects.</p>
+<h3>2.2 <code>fastapi/sse.py</code>: <code>EventSourceResponse</code>, <code>ServerSentEvent</code> &amp; PEP 789 Producer TaskGroup</h3>
+<p><code>fastapi/sse.py</code> defines the public types and wire encoder for Server-Sent Events:</p>
+<ul>
+<li><strong><code>EventSourceResponse(StreamingResponse)</code></strong>: Marker subclass setting <code>media_type = &quot;text/event-stream&quot;</code>. Works on <strong>any HTTP method</strong> (<code>GET</code>, <code>POST</code>, etc.), enabling protocols such as Model Context Protocol (MCP) that stream SSE over <code>POST</code>.</li>
+<li><strong><code>ServerSentEvent(BaseModel)</code></strong>: Structured envelope with <code>data: Any = None</code> (always JSON-serialized, so <code>&quot;hello&quot;</code> becomes <code>data: &quot;hello&quot;</code>), <code>raw_data: str | None = None</code> (unquoted raw string, enforced mutually exclusive with <code>data</code> via <code>@model_validator(mode=&quot;after&quot;)</code>), single-line <code>event</code>, null-free single-line <code>id</code>, <code>retry: int | None</code> (<code>Field(ge=0)</code>), and <code>comment: str | None</code>.</li>
+<li><strong><code>format_sse_event()</code></strong>: Splits <code>comment</code> and <code>data_str</code> exclusively on SSE-spec line endings (<code>\r\n</code>, <code>\r</code>, <code>\n</code>) via <code>_split_sse_lines()</code>, emits <code>: &lt;comment&gt;</code>, <code>event: &lt;event&gt;</code>, one <code>data: &lt;line&gt;</code> per line, <code>id: &lt;id&gt;</code>, and <code>retry: &lt;retry&gt;</code>, and terminates every frame with <code>\n\n</code> encoded as UTF-8 <code>bytes</code>.</li>
+</ul>
+<p>At runtime, <code>is_sse_stream</code> avoids wrapping <code>anyio.fail_after(_PING_INTERVAL)</code> directly around <code>gen.__anext__()</code>—which would inject <code>CancelledError</code> into a slow user generator on idle timeout and prematurely finalize it! Instead, FastAPI enters <code>@asynccontextmanager async def _sse_producer_cm()</code> onto <strong><code>fastapi_inner_astack</code></strong> (<code>await async_exit_stack.enter_async_context(_sse_producer_cm())</code>):</p>
+<ol>
+<li><strong>Decoupled Memory Object Streams</strong>: Creates two bounded <code>anyio.create_memory_object_stream[bytes](max_buffer_size=1)</code> channels (<code>send_stream</code>/<code>receive_stream</code> and <code>send_keepalive</code>/<code>receive_keepalive</code>) inside an <code>anyio.create_task_group()</code>.</li>
+<li><strong>Producer &amp; Keepalive Tasks</strong>: <code>_producer()</code> pulls items from <code>gen.__aiter__()</code> (or <code>iterate_in_threadpool(gen)</code> for sync generators) and serializes <code>ServerSentEvent</code> instances or plain objects into <code>send_stream</code>. Concurrently, <code>_keepalive_inserter()</code> awaits <code>receive_stream.receive()</code> inside <code>with anyio.fail_after(_PING_INTERVAL):</code> (<code>15.0</code> seconds), forwarding serialized frames or emitting <code>KEEPALIVE_COMMENT = b&quot;: ping\n\n&quot;</code> on <code>TimeoutError</code> to prevent reverse-proxy idle disconnects.</li>
+<li><strong>PEP 789-Safe Teardown &amp; Anti-Buffering Headers</strong>: Entering <code>_sse_producer_cm()</code> on <code>fastapi_inner_astack</code> guarantees the <code>TaskGroup</code> cancels cleanly during structured <code>AsyncExitStack</code> unwinding rather than inside <code>GeneratorExit</code> finalization. The <code>StreamingResponse</code> consumes <code>_sse_with_checkpoints(sse_receive_stream)</code> and sets <code>Cache-Control: no-cache</code> plus <code>X-Accel-Buffering: no</code> (disabling Nginx proxy buffering).</li>
+</ol>
+<h2>3. SPA Engine Internals (<code>APIRouter.frontend</code> &amp; <code>_FrontendRouteGroup</code>)</h2>
+<p><code>app.frontend(path, directory=..., fallback=&quot;auto&quot;, check_dir=&quot;auto&quot;)</code> and <code>router.frontend(...)</code> mount static Single-Page Application (SPA) builds without shadowing API endpoints:</p>
+<ul>
+<li><strong>Startup Directory Validation (<code>_resolve_frontend_check_dir</code>)</strong>: When <code>check_dir=&quot;auto&quot;</code>, FastAPI enforces strict directory and fallback file existence (<code>RuntimeError</code>) in production, while downgrading missing build directories to a <code>UserWarning</code> when <code>FASTAPI_ENV == &quot;development&quot;</code> (set automatically by <code>fastapi dev</code> before the frontend bundler has emitted <code>dist/</code>).</li>
+<li><strong>Global Low-Priority Dispatch Order</strong>: <code>APIRouter.frontend()</code> lazily creates <code>self._frontend_routes = _FrontendRouteGroup(...)</code> and appends it to <code>self._low_priority_routes</code> (excluded from OpenAPI schemas). Inside <code>APIRouter.app()</code>, incoming requests always evaluate <strong>all</strong> normal <code>self.routes</code> (including nested <code>_IncludedRouter</code> API routes) in strict priority before touching <code>_match_low_priority(scope)</code>:
+<ol>
+<li>Normal <code>Match.FULL</code> (<code>APIRoute</code>, <code>APIWebSocketRoute</code>, <code>Mount</code>)</li>
+<li>Normal <code>Match.PARTIAL</code> (<code>405 Method Not Allowed</code> on a matched API path beats any frontend fallback!)</li>
+<li><code>redirect_slashes</code> on normal routes (<code>307 Temporary Redirect</code> to <code>/api/</code> beats frontend files!)</li>
+<li><code>_match_low_priority(scope)</code>: Selects the matching <code>_FrontendRoute</code> with the highest <code>_frontend_path_specificity(path)</code> (<code>0</code> for <code>&quot;/&quot;</code>, <code>len(path)</code> otherwise) across segment boundaries, then runs router/app <code>dependencies</code> in outer-to-inner order via <code>_FrontendRouteGroup._solve_dependencies()</code>.</li>
+</ol>
+</li>
+</ul>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/02_routing_compiler/streaming_and_spa_internals/frontend_route_group_fsm.png" alt="streaming_and_spa_internals_2" />
+  <figcaption class="drawlib-caption">APIRouter Dispatch Priority & _FrontendRouteGroup SPA Resolution Decision Tree</figcaption>
+</figure>
+<p>Inside <code>_FrontendStaticFiles(StaticFiles)</code> (initialized with <code>html=True</code> and <code>follow_symlink=False</code>), <code>get_response(path, scope)</code> enforces four security and protocol rules:</p>
+<ol>
+<li><strong>Method &amp; Traversal Protection (<code>_lookup_static_resource</code>)</strong>: Normalizes <code>scope[&quot;fastapi&quot;][&quot;frontend_path&quot;]</code> via <code>os.path.normpath</code> and executes <code>self.lookup_path(path)</code> inside <code>run_in_threadpool</code>. Because <code>follow_symlink=False</code> and Starlette validates <code>os.path.commonpath</code>, path traversal payloads (<code>/../</code>, <code>%2e%2e</code>, <code>%5c</code>) and symlinks escaping <code>directory</code> resolve to <code>404</code> (<code>PermissionError</code> maps to <code>401</code>; <code>ENAMETOOLONG</code> maps to <code>404</code>). Non-<code>GET</code>/<code>HEAD</code> requests return <code>405</code> <strong>only</strong> if <code>_lookup_static_resource</code> finds a real static file or directory <code>index.html</code>; <code>POST</code> requests to virtual client-side paths return <code>404</code>.</li>
+<li><strong>Directory Slash Redirect</strong>: If <code>path</code> resolves to a subdirectory containing <code>index.html</code> and <code>scope[&quot;path&quot;]</code> lacks a trailing <code>&quot;/&quot;</code>, FastAPI returns a <code>307</code> <code>RedirectResponse</code> to <code>url.path + &quot;/&quot;</code> so relative asset URLs resolve cleanly.</li>
+<li><strong>Fallback Cascade &amp; <code>_is_frontend_navigation_request(scope)</code></strong>: When no static file matches:
+<ul>
+<li><strong><code>404.html</code> Precedence</strong>: If <code>fallback == &quot;404.html&quot;</code> or (<code>fallback == &quot;auto&quot;</code> and <code>404.html</code> exists), FastAPI serves <code>404.html</code> with <code>status_code=404</code> for all <code>GET</code>/<code>HEAD</code> misses.</li>
+<li><strong>Explicit HTML Navigation Check for <code>index.html</code></strong>: Otherwise, if <code>index.html</code> is configured/present, FastAPI calls <code>_is_frontend_navigation_request(scope)</code>, which parses <code>Accept</code> media ranges via <code>_iter_accept_media_types()</code> (<code>email.message.Message</code>). It returns <code>True</code> <strong>if and only if</strong> the client explicitly advertises <code>text/html</code> or <code>application/xhtml+xml</code> with quality <code>q != 0</code>. Relying on <code>Accept</code> rather than file-extension heuristics ensures dotted SPA routes like <code>/users/jane.doe</code> or <code>/v/1.2.3</code> receive <code>200 index.html</code> on browser navigation, while missing subresources (<code>/assets/missing.js</code> sent with <code>Accept: */*</code> or <code>text/css</code>) cleanly receive <code>404</code> instead of corrupting the browser's JS parser with HTML!</li>
+</ul>
+</li>
+<li><strong>Conditional Caching &amp; <code>Cache-Control</code> Header Synthesis</strong>: Starlette's <code>file_response()</code> automatically populates <code>ETag</code> and <code>Last-Modified</code> headers (honoring <code>If-None-Match</code> / <code>If-Modified-Since</code> <code>304</code> responses). Because <code>_FrontendRouteGroup.handle()</code> merges <code>solved_result.response.headers.raw</code> onto the static <code>FileResponse</code>, router dependencies can attach differentiated <code>Cache-Control</code> headers—such as <code>public, max-age=31536000, immutable</code> on fingerprinted <code>/assets/*</code> bundles versus <code>no-cache</code> on fallback <code>index.html</code> responses.</li>
+</ol>
+<h2>4. Source-Verified Streaming &amp; SPA Routing Inspection</h2>
+<h3>4.1 Inspecting <code>stream_item_field</code>, JSONL Output &amp; <code>format_sse_event()</code> Wire Framing</h3>
+<p>The snippet below verifies compile-time <code>is_json_stream</code> / <code>is_sse_stream</code> / <code>stream_item_field</code> synthesis alongside <code>format_sse_event()</code> wire encoding and <code>TestClient</code> streaming responses:</p>
+<pre><code class="language-python"><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncIterable</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastAPI</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.routing</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRoute</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.sse</span><span class="w"> </span><span class="kn">import</span> <span class="n">EventSourceResponse</span><span class="p">,</span> <span class="n">ServerSentEvent</span><span class="p">,</span> <span class="n">format_sse_event</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.testclient</span><span class="w"> </span><span class="kn">import</span> <span class="n">TestClient</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MetricChunk</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">step</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">loss</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">tag</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">()</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/metrics.jsonl"</span><span class="p">,</span> <span class="n">response_model_exclude_none</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">stream_jsonl</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">AsyncIterable</span><span class="p">[</span><span class="n">MetricChunk</span><span class="p">]:</span>
+    <span class="k">yield</span> <span class="n">MetricChunk</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="mf">0.42</span><span class="p">)</span>
+    <span class="k">yield</span> <span class="n">MetricChunk</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="mf">0.19</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="s2">"converged"</span><span class="p">)</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/metrics.sse"</span><span class="p">,</span> <span class="n">response_class</span><span class="o">=</span><span class="n">EventSourceResponse</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">stream_sse</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">AsyncIterable</span><span class="p">[</span><span class="n">MetricChunk</span> <span class="o">|</span> <span class="n">ServerSentEvent</span><span class="p">]:</span>
+    <span class="k">yield</span> <span class="n">MetricChunk</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="mf">0.42</span><span class="p">)</span>
+    <span class="k">yield</span> <span class="n">ServerSentEvent</span><span class="p">(</span>
+        <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">"done"</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span> <span class="n">event</span><span class="o">=</span><span class="s2">"complete"</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="s2">"evt-2"</span><span class="p">,</span> <span class="n">retry</span><span class="o">=</span><span class="mi">5000</span>
+    <span class="p">)</span>
+
+
+<span class="n">routes</span> <span class="o">=</span> <span class="p">{</span><span class="n">r</span><span class="o">.</span><span class="n">path</span><span class="p">:</span> <span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">app</span><span class="o">.</span><span class="n">router</span><span class="o">.</span><span class="n">routes</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">APIRoute</span><span class="p">)}</span>
+<span class="k">assert</span> <span class="n">routes</span><span class="p">[</span><span class="s2">"/metrics.jsonl"</span><span class="p">]</span><span class="o">.</span><span class="n">is_json_stream</span> <span class="ow">is</span> <span class="kc">True</span>
+<span class="k">assert</span> <span class="n">routes</span><span class="p">[</span><span class="s2">"/metrics.jsonl"</span><span class="p">]</span><span class="o">.</span><span class="n">stream_item_field</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+<span class="k">assert</span> <span class="n">routes</span><span class="p">[</span><span class="s2">"/metrics.sse"</span><span class="p">]</span><span class="o">.</span><span class="n">is_sse_stream</span> <span class="ow">is</span> <span class="kc">True</span>
+
+<span class="k">assert</span> <span class="n">format_sse_event</span><span class="p">(</span><span class="n">data_str</span><span class="o">=</span><span class="s1">'{"ok":true}'</span><span class="p">,</span> <span class="n">event</span><span class="o">=</span><span class="s2">"tick"</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="s2">"1"</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span>
+    <span class="sa">b</span><span class="s1">'event: tick</span><span class="se">\n</span><span class="s1">data: {"ok":true}</span><span class="se">\n</span><span class="s1">id: 1</span><span class="se">\n\n</span><span class="s1">'</span>
+<span class="p">)</span>
+
+<span class="n">client</span> <span class="o">=</span> <span class="n">TestClient</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+<span class="n">r_jsonl</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/metrics.jsonl"</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">r_jsonl</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">"content-type"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"application/jsonl"</span>
+<span class="k">assert</span> <span class="p">[</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">r_jsonl</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()]</span> <span class="o">==</span> <span class="p">[</span>
+    <span class="p">{</span><span class="s2">"step"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"loss"</span><span class="p">:</span> <span class="mf">0.42</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">"step"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">"loss"</span><span class="p">:</span> <span class="mf">0.19</span><span class="p">,</span> <span class="s2">"tag"</span><span class="p">:</span> <span class="s2">"converged"</span><span class="p">},</span>
+<span class="p">]</span>
+
+<span class="n">r_sse</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/metrics.sse"</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">r_sse</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">"cache-control"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"no-cache"</span>
+<span class="k">assert</span> <span class="n">r_sse</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">"x-accel-buffering"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"no"</span>
+<span class="k">assert</span> <span class="s1">'event: complete</span><span class="se">\n</span><span class="s1">data: {"done": true}</span><span class="se">\n</span><span class="s1">id: evt-2</span><span class="se">\n</span><span class="s1">retry: 5000</span><span class="se">\n\n</span><span class="s1">'</span> <span class="ow">in</span> <span class="n">r_sse</span><span class="o">.</span><span class="n">text</span>
+</code></pre>
+<h3>4.2 Verifying <code>_FrontendRouteGroup</code> Priority, Traversal Protection &amp; <code>Cache-Control</code> Synthesis</h3>
+<p>This snippet mounts a SPA directory via <code>router.frontend()</code> with a <code>Cache-Control</code> policy dependency, demonstrating API route priority, fingerprinted <code>immutable</code> asset headers, <code>no-cache</code> HTML fallback on dotted client routes, <code>*/*</code> asset <code>404</code> rejection, and <code>%2e%2e</code> traversal blocking:</p>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tempfile</span><span class="w"> </span><span class="kn">import</span> <span class="n">TemporaryDirectory</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">Request</span><span class="p">,</span> <span class="n">Response</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.testclient</span><span class="w"> </span><span class="kn">import</span> <span class="n">TestClient</span>
+
+<span class="k">with</span> <span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">tmp</span><span class="p">:</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+    <span class="n">dist</span> <span class="o">=</span> <span class="n">root</span> <span class="o">/</span> <span class="s2">"dist"</span>
+    <span class="p">(</span><span class="n">dist</span> <span class="o">/</span> <span class="s2">"assets"</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="p">(</span><span class="n">dist</span> <span class="o">/</span> <span class="s2">"index.html"</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="s2">"&lt;!doctype html&gt;&lt;title&gt;SPA&lt;/title&gt;"</span><span class="p">)</span>
+    <span class="p">(</span><span class="n">dist</span> <span class="o">/</span> <span class="s2">"assets"</span> <span class="o">/</span> <span class="s2">"app.8f3a1c.js"</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="s2">"console.log('v1');"</span><span class="p">)</span>
+    <span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="s2">"secret.txt"</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="s2">"top-secret"</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">spa_cache_policy</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="n">Response</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">url</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"/assets/"</span><span class="p">):</span>
+            <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">"Cache-Control"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"public, max-age=31536000, immutable"</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">"Cache-Control"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"no-cache"</span>
+
+    <span class="n">spa_router</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">(</span><span class="n">dependencies</span><span class="o">=</span><span class="p">[</span><span class="n">Depends</span><span class="p">(</span><span class="n">spa_cache_policy</span><span class="p">)])</span>
+    <span class="n">spa_router</span><span class="o">.</span><span class="n">frontend</span><span class="p">(</span><span class="s2">"/"</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="n">dist</span><span class="p">,</span> <span class="n">fallback</span><span class="o">=</span><span class="s2">"index.html"</span><span class="p">)</span>
+
+    <span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">()</span>
+
+    <span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/api/status"</span><span class="p">)</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">api_status</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">"service"</span><span class="p">:</span> <span class="s2">"healthy"</span><span class="p">}</span>
+
+    <span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">spa_router</span><span class="p">)</span>
+    <span class="n">client</span> <span class="o">=</span> <span class="n">TestClient</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+
+    <span class="c1"># API route wins even when browser sends Accept: text/html</span>
+    <span class="k">assert</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/api/status"</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">"accept"</span><span class="p">:</span> <span class="s2">"text/html"</span><span class="p">})</span><span class="o">.</span><span class="n">json</span><span class="p">()</span> <span class="o">==</span> <span class="p">{</span>
+        <span class="s2">"service"</span><span class="p">:</span> <span class="s2">"healthy"</span>
+    <span class="p">}</span>
+
+    <span class="c1"># Hashed bundle gets ETag + immutable Cache-Control</span>
+    <span class="n">asset</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/assets/app.8f3a1c.js"</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="s2">"etag"</span> <span class="ow">in</span> <span class="n">asset</span><span class="o">.</span><span class="n">headers</span>
+    <span class="k">assert</span> <span class="n">asset</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">"cache-control"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"public, max-age=31536000, immutable"</span>
+
+    <span class="c1"># Dotted client route with Accept: text/html receives no-cache index.html</span>
+    <span class="n">nav</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/users/jane.doe"</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">"accept"</span><span class="p">:</span> <span class="s2">"text/html"</span><span class="p">})</span>
+    <span class="k">assert</span> <span class="n">nav</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span> <span class="ow">and</span> <span class="n">nav</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">"cache-control"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"no-cache"</span>
+
+    <span class="c1"># Subresource miss (*/*), traversal (%2e%2e), and POST to asset are rejected</span>
+    <span class="k">assert</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/assets/missing.js"</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">"accept"</span><span class="p">:</span> <span class="s2">"*/*"</span><span class="p">})</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">404</span>
+    <span class="k">assert</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/</span><span class="si">%2e%2e</span><span class="s2">/secret.txt"</span><span class="p">)</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">404</span>
+    <span class="k">assert</span> <span class="n">client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/assets/app.8f3a1c.js"</span><span class="p">)</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">405</span>
+</code></pre>
+<p>For the core <code>APIRoute</code> compilation model, return to <a href="apiroute_and_closures.html">APIRouter, APIRoute &amp; Handler Closure</a>. To trace how <code>yield</code> dependencies interact with <code>fastapi_inner_astack</code>, continue to <a href="../03_di_and_security_engine/dependant_and_solver.html">Dependant DAG &amp; solve_dependencies</a>, <a href="../05_asgi_and_telemetry/middleware_and_concurrency.html">Middleware Onion &amp; Threadpool</a>, and <a href="../06_openapi_and_docs/openapi_synthesis_engine.html">get_openapi(), $defs &amp; Docs UI</a>.</p>
+
+            </main>
+            <footer class="footer">
+                
+                FastAPI® is a registered trademark of Sebastián Ramírez (<a href="https://github.com/tiangolo" target="_blank" rel="noopener noreferrer">@tiangolo</a>). Unofficial internal architecture guide — not affiliated with or endorsed by the official FastAPI project (<a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">fastapi.tiangolo.com</a>).
+                
+            </footer>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeBtn = document.getElementById('theme-toggle');
+            if (themeBtn) {
+                themeBtn.addEventListener('click', function() {
+                    const current = document.documentElement.getAttribute('data-theme');
+                    const next = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    localStorage.setItem('drawlib-theme', next);
+                });
+            }
+
+            const langDropdowns = document.querySelectorAll('.lang-dropdown');
+            if (langDropdowns.length > 0) {
+                document.addEventListener('click', function(e) {
+                    langDropdowns.forEach(function(dd) {
+                        if (dd.hasAttribute('open') && !dd.contains(e.target)) {
+                            dd.removeAttribute('open');
+                        }
+                    });
+                });
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        langDropdowns.forEach(function(dd) {
+                            dd.removeAttribute('open');
+                        });
+                    }
+                });
+            }
+
+            const menuBtn = document.getElementById('menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            if (menuBtn && sidebar) {
+                function setMenuOpen(open) {
+                    sidebar.classList.toggle('is-open', open);
+                    menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    document.body.classList.toggle('menu-open', open);
+                    if (open) {
+                        const menu = sidebar.querySelector('.sidebar-menu');
+                        if (menu) {
+                            menu.scrollTop = 0;
+                        }
+                    }
+                }
+
+                menuBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const willOpen = !sidebar.classList.contains('is-open');
+                    setMenuOpen(willOpen);
+                });
+
+                document.addEventListener('click', function(e) {
+                    if (sidebar.classList.contains('is-open') && !sidebar.contains(e.target)) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                const navLinks = sidebar.querySelectorAll('.nav-item a');
+                navLinks.forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        setMenuOpen(false);
+                    });
+                });
+
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                window.addEventListener('resize', function() {
+                    if (window.innerWidth > 768 && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

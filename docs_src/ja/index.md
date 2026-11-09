@@ -1,8 +1,8 @@
-# FastAPI v0.162.2 — ビジュアルアーキテクチャガイド
+# FastAPI v0.162.2 — 実践ユーザーガイド
 
-FastAPI（`v0.162.2`）は、Python `>=3.10` の標準型ヒントを検証済みの依存関係グラフ（DAG）、Rust 製 `pydantic-core` による高速直列化器、そして OpenAPI `3.1.0` 仕様書へとコンパイルする型駆動 ASGI Web フレームワークです。本サイトは [Drawlib](https://www.drawlib.com/)（「図解 as Code」）を用いて FastAPI の内部構造と `100,000+` 行規模の実践設計パターンを日英バイリンガルで解説する非公式ハンドブックです。
+FastAPI（`v0.162.2`）は、Python `>=3.10` の標準型ヒントから境界での入力バリデーション、階層的な依存性注入（DI）、Rust 製 `pydantic-core` による高速シリアライズ、そして対話的な OpenAPI `3.1.0` ドキュメントを一貫して生成する型駆動 ASGI Web フレームワークです。本サイトは最初のエンドポイント実装から `100,000+` 行規模の本番アプリケーション設計までを日英バイリンガルで体系的に解説する非公式ユーザーガイドです。
 
-```drawlib align=center code=fold file=fastapi_lifecycle_anim.png caption="FastAPI v0.162.2 エンドツーエンド処理フロー — 起動時コンパイルから ASGI リクエスト実行まで"
+```drawlib align=center code=hide file=fastapi_lifecycle_anim.png caption="FastAPI v0.162.2 リクエスト処理フロー — 起動時 1 回のルート登録からリクエストごとの ASGI 実行まで"
 from drawlib.anim import Animation
 from drawlib.canvas import save, setup
 from drawlib.icons import phosphor
@@ -15,33 +15,33 @@ setup(width=184, height=68, dpi=150)
 anim = Animation(fps=1.6)
 
 stages = [
-    ("1. Annotated\nSignature", "Type Hints & Doc()"),
-    ("2. Startup\nCompile", "Dependant & Models"),
-    ("3. ASGI &\nDI Solve", "solve_dependencies()"),
-    ("4. Endpoint\nDispatch", "Async / Threadpool"),
-    ("5. Serialize &\nTeardown", "Pydantic v2 & yield"),
+    ("1. Route\nRegistration", "Type Hints & Doc()"),
+    ("2. Schema &\nOpenAPI Prep", "Pydantic v2 & 3.1"),
+    ("3. Validation &\nDependencies", "Inputs & Depends()"),
+    ("4. Endpoint\nExecution", "async / threadpool"),
+    ("5. Response &\nCleanup", "JSON & yield Exit"),
 ]
 
 stage_notes = [
     (
         phosphor.code,
-        "Step 1/5 [Declaration] — Declare Annotated[T, Path/Query/Depends, Doc()] & BaseModel types once.",
+        "Step 1/5 [Route Registration] — Declare Annotated inputs, Depends(), Doc() & BaseModel types.",
     ),
     (
         phosphor.gear,
-        "Step 2/5 [Startup] — get_dependant() & TypeAdapter pre-compile route closures before serving traffic.",
+        "Step 2/5 [Startup] — Inspect signatures once and build Pydantic v2 validators & OpenAPI 3.1.",
     ),
     (
         phosphor.git_branch,
-        "Step 3/5 [ASGI Ingress] — Match route, parse body_field, and resolve cached Dependant DAG nodes.",
+        "Step 3/5 [Request Ingress] — Validate HTTP parameters/body and resolve Depends() graphs.",
     ),
     (
         phosphor.lightning,
-        "Step 4/5 [Execution] — Await async def on event loop or run sync def safely in AnyIO threadpool.",
+        "Step 4/5 [Endpoint Execution] — Await async def on event loop or run def in a threadpool.",
     ),
     (
         phosphor.check_circle,
-        "Step 5/5 [Egress] — Serialize via Rust pydantic-core and unwind AsyncExitStack yield dependencies.",
+        "Step 5/5 [Response & Cleanup] — Validate & serialize JSON via Pydantic v2 and exit yield.",
     ),
 ]
 
@@ -49,7 +49,7 @@ for step in range(len(stages)):
     is_last = step == len(stages) - 1
     with anim.frame(duration=2.8 if is_last else None, clear=True):
         outer = Panel(
-            "FastAPI v0.162.2 — Compile-Once & Zero-Reflection ASGI Pipeline",
+            "FastAPI v0.162.2 — One-Time Startup Setup & Per-Request Execution",
             style=Styles.Neutral.patch(shape_r=2.0),
             header_style=Styles.PrimaryNeutral.patch(shape_line_width=1.2),
             text_style=Styles.DarkBold.patch(text_size=12.0),
@@ -72,7 +72,7 @@ for step in range(len(stages)):
         rectangle((126.0, 24.5), width=100.0, height=8.0, style=r_style.patch(shape_r=1.5))
         text(
             (126.0, 24.5),
-            "Per-Request ASGI Hot Path (Zero inspect.signature())",
+            "Per-Request ASGI Execution (Zero Signature Inspection)",
             style=Styles.DarkBold.patch(text_size=10.5),
         )
 
@@ -121,21 +121,22 @@ for step in range(len(stages)):
 save()
 ```
 
-## FastAPI v0.162.2 エンジニアリング概要
+## FastAPI v0.162.2 の主要機能とランタイム構成
 
-FastAPI はルーティング・入力検証・依存性注入（DI）・API ドキュメント生成を別々のプラグインとしてつぎはぎするのではなく、Python 標準の型アノテーションを軸に単一のパイプラインへ統合しています。併設の [PNI501 診断レポート](https://fastapi.drawlib.com/reports/pni501/) による静的 AST 解析および構造監査が示す通り、`v0.162.2` のコードベースは極めて凝集度が高く簡潔に保たれています。
+FastAPI はルーティング・入力検証・依存性注入（DI）・API ドキュメント生成を別々のプラグインとしてつぎはぎするのではなく、Python 標準の型アノテーションを軸に単一のパイプラインへ統合し、実装コードと外部 API 仕様の乖離を防ぎます。
 
-| 評価軸 | `v0.162.2` 実測メトリクス | アーキテクチャ上の意義 |
+| 機能領域 | `v0.162.2` 対応規格・基盤 | アプリケーション開発における実用メリット |
 | :--- | :--- | :--- |
-| **フレームワーク規模** | `52` モジュール・`19,837` 行（LOC） | `FastAPI` ファサードから `ModelField` アダプタまで明確な 5 層単方向レイヤリング |
-| **自動テストスイート** | `273` テストファイル | ルーティング・OpenAPI `3.1.0`・DI スコープ・SSE・OTel を網羅的に検証 |
-| **コア実行時依存パッケージ** | `6` パッケージ（`pyproject.toml`） | `starlette`, `pydantic`, `typing-extensions`, `typing-inspection`, `annotated-doc`, `opentelemetry-api` |
-| **対応 Python バージョン** | Python `>=3.10`（`3.10` ～ `3.14`） | `PEP 561` `py.typed` 静的型検査と `PEP 727` `Doc()` インライン文書化に完全対応 |
-| **PNI501 診断スコア** | **`93 / 100`（`Grade S`）** | ハードコードされた秘密情報ゼロ・決定論的な `uv.lock`・堅牢なモジュール境界 |
+| **対応 Python バージョン** | Python `>=3.10`（`3.10` ～ `3.14`） | `PEP 561` `py.typed` 静的型検査と `PEP 727` `Doc()` インライン説明記述に標準対応 |
+| **入力検証 & シリアライズ** | Pydantic v2（`>=2.9`、Rust 製 `pydantic-core`） | 高速な境界バリデーション、パラメータモデル合成、型安全な JSON 出力直列化 |
+| **API 仕様 & 対話型 Docs** | OpenAPI `3.1.0` & JSON Schema `2020-12` | `/openapi.json`・Swagger UI（`/docs`）・ReDoc（`/redoc`）の自動提供とクライアント SDK 生成 |
+| **依存性注入（DI） & 認可** | `Depends()`・`Security()`・`yield` ライフサイクル | リクエスト単位の結果キャッシュ、確実なリソース解放、OAuth2 スコープ・WebSocket 認可 |
+| **配信・SPA・トレーシング** | `fastapi.sse`・`frontend()`・`fastapi.telemetry` | 標準搭載の Server-Sent Events、SPA 配信ヘルパー、パッチ不要の OpenTelemetry 分散トレース |
+| **コア実行時依存パッケージ** | 直接依存 `6` パッケージ（`pyproject.toml`） | `starlette`, `pydantic`, `typing-extensions`, `typing-inspection`, `annotated-doc`, `opentelemetry-api` |
 
 ### 20 行で完結する Single Source of Truth
 
-わずか 1 つのエンドポイント関数シグネチャを書くだけで、URL パラメータ抽出、正規表現・文字長バリデーション、OpenAPI パラメータ説明文、レスポンス直列化、そして静的型検査が同時に定義されます。
+わずか 1 つのエンドポイント関数シグネチャを書くだけで、URL パラメータ抽出、正規表現・文字長バリデーション、OpenAPI パラメータ説明文、レスポンス検証・直列化、そして静的型検査が同時に定義されます。
 
 ```python
 from typing import Annotated
@@ -163,9 +164,9 @@ async def read_product(
 
 ## 全 8 章・20 ページのカリキュラムマップ
 
-本ガイドは **全 8 章・20 ページ** にわたり、最初のエンドポイント構築から、`100,000+` 行規模のモジュラーモノリス設計、カスタム `APIRoute` 拡張、`pwdlib` Argon2id + `PyJWT` + WebSocket `Security()` 認可、ネイティブ Server-Sent Events（`fastapi.sse`）、ネイティブ OpenTelemetry 計装（`fastapi.telemetry`）、SPA `frontend()` 配信と SDK 自動生成、そして `pydantic-settings`・SQL DB・AI/MCP 連携までを体系的に解説します。
+本ガイドは **全 8 章・20 ページ** にわたり、最初のエンドポイント構築から、`100,000+` 行規模のモジュラーモノリス設計、カスタム `APIRoute` 拡張、`pwdlib` Argon2id + `PyJWT` + WebSocket `Security()` 認可、ネイティブ Server-Sent Events（`fastapi.sse`）、標準搭載の OpenTelemetry 計装（`fastapi.telemetry`）、SPA `frontend()` 配信と SDK 自動生成、そして `pydantic-settings`・SQL DB・AI/MCP 連携までを体系的に解説します。
 
-```drawlib align=center code=fold file=guide_chapter_map.png caption="ビジュアル解説カリキュラムマップ — クイックスタートから本番エコシステムまでの全 8 章・20 ページ構成"
+```drawlib align=center code=hide file=guide_chapter_map.png caption="ユーザーガイド全カリキュラムマップ — クイックスタートから本番エコシステムまでの全 8 章・20 ページ構成"
 from drawlib.canvas import save, setup
 from drawlib.icons import phosphor
 from drawlib.smartarts import CardList, Panel
@@ -199,7 +200,7 @@ cl_left = CardList(
 )
 cl_left.add(
     "Ch 1 · Introduction & Quickstart",
-    "Design pillars, startup compile & OpenAPI 3.1",
+    "Design pillars, request flow & OpenAPI 3.1",
     badge_text="Ch 1",
     icon=phosphor.rocket_launch,
     style=Styles.PrimaryNeutral,
@@ -221,7 +222,7 @@ cl_left.add(
 )
 cl_left.add(
     "Ch 4 · DI, OAuth2, JWT & WS Security",
-    "Dependant DAG, Argon2 + PyJWT & WS Security()",
+    "Depends() graph, Argon2 + PyJWT & WS Security()",
     badge_text="Ch 4",
     icon=phosphor.shield_check,
 )
@@ -284,18 +285,20 @@ cl_right.draw(xy=r_xy, width=r_w, height=r_h)
 save()
 ```
 
-| 章 | ページ構成と主要テーマ | 扱う主な FastAPI サブシステム |
+| 章 | ページ構成と主要テーマ | 扱う主な FastAPI API |
 | :--- | :--- | :--- |
-| **1. イントロ & クイックスタート** | [FastAPI の設計思想と内部構造](01_getting_started/overview.md) · [クイックスタートと自動生成 Docs](01_getting_started/quickstart.md) | `FastAPI`, `Annotated`, `Doc()`, `APIRoute`, Swagger UI & ReDoc |
+| **1. イントロ & クイックスタート** | [FastAPI の設計思想と基本概念](01_getting_started/overview.md) · [クイックスタートと自動生成 Docs](01_getting_started/quickstart.md) | `FastAPI`, `Annotated`, `Doc()`, `APIRoute`, Swagger UI & ReDoc |
 | **2. 10万行規模の設計ベストプラクティス** | [境界づけられたコンテキストと階層化](02_enterprise_architecture/modular_design.md) · [大規模 DI・Lifespan 管理・テスト戦略](02_enterprise_architecture/di_lifespan_testing.md) | `APIRouter`, `lifespan`, `dependency_overrides`, ドメイン境界分離 |
-| **3. ルーティング・入力検証・スキーマ** | [Path・Query・Header・Cookie・Body](03_routing_and_models/parameters_and_validation.md) · [レスポンス直列化と OpenAPI 3.1](03_routing_and_models/responses_and_openapi.md) · [パラメータモデル合成・特殊型・例示](03_routing_and_models/advanced_types_and_models.md) · [カスタム Request と APIRoute 拡張](03_routing_and_models/custom_request_and_route.md) | `Path`, `Query`, `Header`, `Cookie`, `Body`, `ModelField`, カスタム `APIRoute` |
-| **4. 依存性注入（DI）とセキュリティ** | [Dependant DAG・キャッシュ・yield スコープ](04_dependencies_and_security/dependency_injection.md) · [認証・OAuth2 スコープ認可・抽出器](04_dependencies_and_security/security_and_auth.md) · [JWT (PyJWT + Argon2) と WS 認可](04_dependencies_and_security/jwt_and_websocket_security.md) | `Depends`, `Security`, `SecurityScopes`, `pwdlib` Argon2id, `PyJWT`, `HTTPConnection` |
+| **3. ルーティング・入力検証・スキーマ** | [Path・Query・Header・Cookie・Body](03_routing_and_models/parameters_and_validation.md) · [レスポンス直列化と OpenAPI 3.1](03_routing_and_models/responses_and_openapi.md) · [パラメータモデル合成・特殊型・例示](03_routing_and_models/advanced_types_and_models.md) · [カスタム Request と APIRoute 拡張](03_routing_and_models/custom_request_and_route.md) | `Path`, `Query`, `Header`, `Cookie`, `Body`, `BaseModel`, カスタム `APIRoute` |
+| **4. 依存性注入（DI）とセキュリティ** | [依存グラフ・キャッシュ・yield スコープ](04_dependencies_and_security/dependency_injection.md) · [認証・OAuth2 スコープ認可・抽出器](04_dependencies_and_security/security_and_auth.md) · [JWT (PyJWT + Argon2) と WS 認可](04_dependencies_and_security/jwt_and_websocket_security.md) | `Depends`, `Security`, `SecurityScopes`, `pwdlib` Argon2id, `PyJWT`, `HTTPConnection` |
 | **5. 非同期並行・ミドルウェア・ストリーミング** | [ASGI ミドルウェアとスレッドプール制御](05_async_and_realtime/concurrency_and_middleware.md) · [ネイティブ SSE・JSONL・WebSocket](05_async_and_realtime/sse_websockets_streaming.md) | `run_in_threadpool`, `EventSourceResponse`, `ServerSentEvent`, `WebSocket` |
-| **6. 可観測性・例外設計・実践テスト** | [ネイティブ OpenTelemetry と例外処理](06_observability_and_testing/telemetry_and_errors.md) · [実践テスト手法と本番 ASGI 運用](06_observability_and_testing/testing_and_deployment.md) | `TelemetryConfig`, `NativeTelemetry`, `RequestValidationError`, `TestClient` |
+| **6. 可観測性・例外設計・実践テスト** | [ネイティブ OpenTelemetry と例外処理](06_observability_and_testing/telemetry_and_errors.md) · [実践テスト手法と本番 ASGI 運用](06_observability_and_testing/testing_and_deployment.md) | `TelemetryConfig`, `get_telemetry_data()`, `HTTPException`, `RequestValidationError`, `TestClient` |
 | **7. フロントエンド・マウント・OpenAPI 拡張** | [SPA frontend()・静的配信・マウント統合](07_frontend_and_openapi_ext/frontend_templates_mounts.md) · [Webhooks・Callbacks・SDK 生成・Docs UI](07_frontend_and_openapi_ext/webhooks_callbacks_sdks.md) | `frontend()`, `StaticFiles`, `Jinja2Templates`, `app.webhooks`, `callbacks` |
 | **8. 設定管理・SQL DB・CLI・エコシステム** | [pydantic-settings 設定管理と SQL DB](08_ecosystem_and_operations/settings_and_databases.md) · [FastAPI CLI・プロキシ・GraphQL・AI 連携](08_ecosystem_and_operations/cli_proxy_graphql_ai.md) | `BaseSettings`, `@lru_cache`, SQL `yield` セッション, `fastapi-cli`, `--proxy-headers` |
 
-## 謝辞・ライセンス帰属と併設診断レポート
+## 公式リソースと関連ガイド
 
-- **FastAPI への敬意と公式リソース**: FastAPI は **Sebastián Ramírez 氏（`@tiangolo`）** およびコミュニティによって MIT ライセンスのもと開発・保守されています。公式ドキュメントや最新のリリースノートについては必ず **[https://fastapi.tiangolo.com/](https://fastapi.tiangolo.com/)** および **[github.com/fastapi/fastapi](https://github.com/fastapi/fastapi)** をご参照ください。
-- **非公式 Drawlib & PNI501 技術ショーケース**: 本ポータルは **[Drawlib](https://www.drawlib.com/)**（`type = "site"`、日英バイリンガル構成）と自動診断レポート **[PNI501 エンジニアリング・アーキテクチャ診断レポート](https://fastapi.drawlib.com/reports/pni501/)** による独立した技術解説デモです。まずは **[第 1 章：FastAPI の設計思想と内部構造](01_getting_started/overview.md)** から読み進めるか、**[クイックスタートと自動生成 Docs](01_getting_started/quickstart.md)** で実際に動作するコードをお試しください。
+- **FastAPI への敬意と公式ドキュメント**: FastAPI は **Sebastián Ramírez 氏（`@tiangolo`）** およびコミュニティによって MIT ライセンスのもと開発・保守されています。公式ドキュメントや最新のリリースノートについては **[https://fastapi.tiangolo.com/](https://fastapi.tiangolo.com/)** および **[github.com/fastapi/fastapi](https://github.com/fastapi/fastapi)** をご参照ください。
+- **読み進め方**: まずは **[第 1 章：FastAPI の設計思想と基本概念](01_getting_started/overview.md)** でリクエスト処理モデルの全体像を掴むか、**[クイックスタートと自動生成 Docs](01_getting_started/quickstart.md)** で実際に動作するコードをお試しください。
+
+> **FastAPI 本体のソースコード実装を学びたい方へ**: FastAPI 自体の内部モジュール構造、ルートコンパイラの実装詳細、Pydantic v2 アダプタの仕組みを深掘りしたい場合は、併設の **[FastAPI 内部アーキテクチャ解説ガイド](https://fastapi.drawlib.com/architecture/)** をご覧ください。

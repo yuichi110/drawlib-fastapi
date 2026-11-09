@@ -1,0 +1,572 @@
+<!--
+ Copyright (c) 2026 Yuichi Ito (yuichi@yuichi.com)
+
+ This software is licensed under the Apache License, Version 2.0.
+ For more information, please visit: https://github.com/yuichi110/drawlib
+
+ This software is provided "as is", without warranty of any kind,
+ express or implied, including but not limited to the warranties of
+ merchantability, fitness for a particular purpose and noninfringement.
+-->
+<!DOCTYPE html>
+<html lang="ja" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ジェネレータ配信（SSE / JSONL）と SPA ルータ内部実装 — FastAPI Architecture Guide (Unofficial)</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-S9N5BZ1VRC');
+    </script>
+    <script>
+        (function() {
+            const saved = localStorage.getItem('drawlib-theme');
+            if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    
+    <link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/architecture/en/02_routing_compiler/streaming_and_spa_internals.html">
+    
+    <link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/architecture/ja/02_routing_compiler/streaming_and_spa_internals.html">
+    
+    <link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/architecture/en/02_routing_compiler/streaming_and_spa_internals.html">
+    
+    
+    
+    <meta name="description" content="通常のリクエスト／レスポンス型 JSON エンドポイントに加え、FastAPI v0.162.2 は fastapi/routing.py と fastapi/sse.py の内部に 2 つの特化型ランタイムパイプラインを備えています。1 つは yield パスオペレーションから要素単位の型検証付き JSON…">
+    <link rel="canonical" href="https://fastapi.drawlib.com/architecture/ja/02_routing_compiler/streaming_and_spa_internals.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="FastAPI 内部構造">
+    <meta property="og:title" content="ジェネレータ配信（SSE / JSONL）と SPA ルータ内部実装 — FastAPI 内部構造">
+    <meta property="og:description" content="通常のリクエスト／レスポンス型 JSON エンドポイントに加え、FastAPI v0.162.2 は fastapi/routing.py と fastapi/sse.py の内部に 2 つの特化型ランタイムパイプラインを備えています。1 つは yield パスオペレーションから要素単位の型検証付き JSON…">
+    <meta property="og:url" content="https://fastapi.drawlib.com/architecture/ja/02_routing_compiler/streaming_and_spa_internals.html">
+    <meta property="og:image" content="https://fastapi.drawlib.com/architecture/_assets/ogp.png">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:locale:alternate" content="en_US">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ジェネレータ配信（SSE / JSONL）と SPA ルータ内部実装 — FastAPI 内部構造">
+    <meta name="twitter:description" content="通常のリクエスト／レスポンス型 JSON エンドポイントに加え、FastAPI v0.162.2 は fastapi/routing.py と fastapi/sse.py の内部に 2 つの特化型ランタイムパイプラインを備えています。1 つは yield パスオペレーションから要素単位の型検証付き JSON…">
+    <meta name="twitter:image" content="https://fastapi.drawlib.com/architecture/_assets/ogp.png">
+    
+    
+    <link rel="icon" type="image/png" href="../../_assets/favicon.png">
+    
+    
+    <link rel="stylesheet" href="../style.css">
+    
+    
+</head>
+<body>
+    <div class="demo-banner" role="region" aria-label="ポータルナビゲーション">
+        <div class="demo-banner-inner">
+            <span class="demo-banner-badge">INTERNAL ARCHITECTURE</span>
+            
+            <span class="demo-banner-text">
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a>（v0.162.2）内部アーキテクチャ解説（非公式）
+            </span>
+            <span class="demo-banner-links">
+                <a href="https://fastapi.drawlib.com/">User Guide</a>
+                <span class="demo-banner-sep">·</span>
+                <strong style="color:#ffffff;">Architecture</strong>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Audit</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official Docs ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+            </span>
+            
+        </div>
+    </div>
+    
+    <div class="doc-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI 内部構造">
+                    
+                    FastAPI 内部構造
+                    
+                </a>
+                <div class="sidebar-header-actions">
+                    <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">
+                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                    <button type="button" id="menu-toggle" class="menu-toggle-btn" aria-label="Toggle navigation" aria-expanded="false">
+                        <svg class="icon-hamburger" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        <svg class="icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="sidebar-menu">
+                
+                    
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../index.html" >アーキテクチャ全体像</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">1. パッケージ階層と境界設計</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../01_package_and_layers/module_hierarchy.html" >5層モジュール構造と Starlette 再公開</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">2. ルーティングコンパイラとクロージャ</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="apiroute_and_closures.html" >APIRouter・APIRoute とクロージャ合成</a>
+                            </li>
+                            
+                            <li class="nav-item active">
+                                <a href="streaming_and_spa_internals.html" >ジェネレータ配信と SPA ルータ内部実装</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">3. DI 解決エンジンと認証機構</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../03_di_and_security_engine/dependant_and_solver.html" >Dependant グラフと solve_dependencies</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../03_di_and_security_engine/security_internals.html" >SecurityBase 階層と HTTPConnection</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">4. Pydantic v2 ブリッジ層</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../04_pydantic_bridge/compat_and_serialization.html" >_compat/v2.py・ModelField・直列化</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">5. ASGI スタックとテレメトリ</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../05_asgi_and_telemetry/middleware_and_concurrency.html" >ミドルウェア7層構造とスレッドプール</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../05_asgi_and_telemetry/native_telemetry_internals.html" >NativeTelemetry と例外スパン記録</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">6. OpenAPI 3.1 合成エンジン</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../06_openapi_and_docs/openapi_synthesis_engine.html" >get_openapi()・$defs 集約・Docs UI</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">関連ガイド &amp; 公式リンク</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/" target="_blank" rel="noopener noreferrer">FastAPI ユーザーガイド<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/reports/pni501/" target="_blank" rel="noopener noreferrer">PNI501 診断レポート<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI 公式ドキュメント<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub リポジトリ<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                        </ul>
+                    
+                
+            </div>
+        </aside>
+        <div class="content-wrapper">
+            <header class="top-bar">
+                <div class="breadcrumbs">
+                    <span class="crumb">Architecture</span>
+                    <span class="crumb-separator">&raquo;</span>
+                    <span class="crumb active">ジェネレータ配信（SSE / JSONL）と SPA ルータ内部実装</span>
+                </div>
+                
+                <div class="lang-switcher">
+                    <details class="lang-dropdown">
+                        <summary class="lang-dropdown-btn" aria-label="Select language">
+                            <svg class="lang-globe-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            <span class="lang-current-label">日本語</span>
+                            <svg class="lang-caret-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </summary>
+                        <div class="lang-dropdown-menu" role="menu">
+                            
+                            <a href="../../en/02_routing_compiler/streaming_and_spa_internals.html" class="lang-option" lang="en" hreflang="en" >
+                                <span>English</span>
+                                
+                            </a>
+                            
+                            <a href="streaming_and_spa_internals.html" class="lang-option active" lang="ja" hreflang="ja" aria-current="page">
+                                <span>日本語</span>
+                                
+                                <svg class="lang-check-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                
+                            </a>
+                            
+                        </div>
+                    </details>
+                </div>
+                
+            </header>
+            <main class="main-content">
+                <h1>ジェネレータ配信（SSE / JSONL）と SPA ルータ内部実装</h1>
+<p>通常のリクエスト／レスポンス型 JSON エンドポイントに加え、FastAPI <code>v0.162.2</code> は <code>fastapi/routing.py</code> と <code>fastapi/sse.py</code> の内部に 2 つの特化型ランタイムパイプラインを備えています。1 つは <code>yield</code> パスオペレーションから要素単位の型検証付き JSON Lines（<code>application/jsonl</code>）や PEP 789 準拠の Server-Sent Events（<code>text/event-stream</code>）を生成し、ストリーム完了まで <code>fastapi_inner_astack</code> を維持する<strong>ネイティブジェネレータ配信機構</strong>、もう 1 つは通常の API ルート群の後段でパストラバーサル防御と <code>Accept</code> ヘッダ判定を伴って静的アセットおよび HTML5 History フォールバックを配信する<strong>低優先度 SPA エンジン</strong>（<code>APIRouter.frontend()</code> / <code>_FrontendRouteGroup</code>）です。</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/02_routing_compiler/streaming_and_spa_internals/generator_dispatch_branches.png" alt="streaming_and_spa_internals_1" />
+  <figcaption class="drawlib-caption">コンパイル時の戻り値アノテーション解析・ジェネレータ配信分岐・AsyncExitStack 寿命管理フロー</figcaption>
+</figure>
+<h2>1. コンパイル時のジェネレータ検出と <code>stream_item_field</code> 合成</h2>
+<p><code>_populate_api_route_state()</code> の実行時、FastAPI はラップ解除されたエンドポイント関数が同期または非同期ジェネレータであるかを判定します（<code>is_generator = _is_async_gen_callable(route.dependant.call) or _is_gen_callable(route.dependant.call)</code>）。このコンパイル時フラグによって、戻り値型のコンパイルは 4 つの実行モードに分岐します。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">エンドポイント形式と <code>response_class</code></th>
+<th style="text-align:left"><code>is_sse_stream</code></th>
+<th style="text-align:left"><code>is_json_stream</code></th>
+<th style="text-align:left">生成される <code>ModelField</code></th>
+<th style="text-align:left">送信 <code>Content-Type</code> と OpenAPI 3.2 スキーマ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><code>return</code> を用いる通常の <code>def</code> / <code>async def</code>（<code>list[Item]</code>）</td>
+<td style="text-align:left"><code>False</code></td>
+<td style="text-align:left"><code>False</code></td>
+<td style="text-align:left"><code>response_field</code>（<code>Response_&lt;id&gt;</code>）</td>
+<td style="text-align:left"><code>application/json</code>（配列一括直列化・<code>schema</code>）</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>yield</code> + <code>Default(JSONResponse)</code>（既定）</td>
+<td style="text-align:left"><code>False</code></td>
+<td style="text-align:left"><code>True</code></td>
+<td style="text-align:left"><code>stream_item_field</code>（<code>StreamItem_&lt;id&gt;</code>）</td>
+<td style="text-align:left"><code>application/jsonl</code>（1行ごとの <code>itemSchema</code>）</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>yield</code> + <code>EventSourceResponse</code></td>
+<td style="text-align:left"><code>True</code></td>
+<td style="text-align:left"><code>False</code></td>
+<td style="text-align:left"><code>stream_item_field</code>（<code>ServerSentEvent</code> 以外）</td>
+<td style="text-align:left"><code>text/event-stream</code>（<code>_SSE_EVENT_SCHEMA</code> / <code>itemSchema</code>）</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>yield</code> + 明示的な <code>StreamingResponse</code> 等</td>
+<td style="text-align:left"><code>False</code></td>
+<td style="text-align:left"><code>False</code></td>
+<td style="text-align:left"><code>None</code>（<code>response_model = None</code>）</td>
+<td style="text-align:left">カスタム <code>media_type</code>（生チャンク透過配信）</td>
+</tr>
+</tbody>
+</table>
+<p>ジェネレータエンドポイントで <code>response_model</code> が既定の <code>Default(None)</code> のままである場合、<code>get_stream_item_type(return_annotation)</code> は <code>get_origin(annotation)</code> が <code>_STREAM_ORIGINS</code>（<code>{AsyncIterable, AsyncIterator, AsyncGenerator, Iterable, Iterator, Generator}</code>）に含まれるかを検査します。</p>
+<ul>
+<li><strong>型引数付きストリーム型（<code>AsyncIterable[Item]</code>、<code>Generator[Item, None, None]</code> など）</strong>: <code>type_args[0]</code>（<code>Item</code>）を <code>route.stream_item_type</code> として抽出し、単一コンテナではなく逐次配信であることを示すため <code>route.response_model = None</code> に設定したうえで、<code>route.stream_item_field = create_model_field(name=&quot;StreamItem_&quot; + route.unique_id, type_=Item, mode=&quot;serialization&quot;)</code> を構築します。</li>
+<li><strong>型引数なしのストリーム型（<code>-&gt; AsyncIterable</code>、<code>-&gt; Iterable</code>）</strong>: <code>get_stream_item_type()</code> が <code>Any</code> を返すため、<code>stream_item_type = Any</code> として <code>TypeAdapter(Any)</code> 経由で JSONL／SSE ストリーミングが有効化されます。</li>
+<li><strong><code>ServerSentEvent</code> の除外</strong>: 戻り値型が <code>AsyncIterable[ServerSentEvent]</code> の場合、<code>ServerSentEvent</code> はドメインデータではなくトランスポート層のフレームラッパであるため、<code>not lenient_issubclass(stream_item, ServerSentEvent)</code> によって検証および OpenAPI データモデル生成から除外されます。</li>
+</ul>
+<h2>2. ランタイム配信パイプライン：JSONL・SSE TaskGroup・<code>fastapi_inner_astack</code></h2>
+<h3>2.1 共通の要素単位検証（<code>_serialize_data</code>）と JSONL 改行フレーミング</h3>
+<p><code>get_request_handler()</code> の内部では、JSONL と SSE の双方が内部ヘルパ <code>_serialize_data(data: Any) -&gt; bytes</code> を共有しています。</p>
+<ul>
+<li><code>stream_item_field</code> が設定されている場合、<code>yield</code> された各要素は <code>stream_item_field.validate(data, {}, loc=(&quot;response&quot;,))</code> で逐次検証され（スキーマ違反時はストリーム途中でも <code>ResponseValidationError</code> を送出）、<code>response_model_include</code>、<code>response_model_exclude</code>、<code>by_alias</code>、<code>exclude_unset</code>、<code>exclude_defaults</code>、<code>exclude_none</code> を適用した <code>stream_item_field.serialize_json(...)</code> によって UTF-8 JSON バイト列へ直接変換されます。</li>
+<li><code>stream_item_field</code> が <code>None</code> の場合は、<code>jsonable_encoder(data)</code> に続けて <code>_normalize_non_finite_floats(data)</code>（<code>NaN</code>、<code>Infinity</code>、<code>-Infinity</code> を JSON <code>null</code> へ正規化）を通し、<code>json.dumps(...).encode(&quot;utf-8&quot;)</code> で直列化します。</li>
+</ul>
+<p><strong><code>is_json_stream</code></strong>（<code>application/jsonl</code>）分岐では、<code>gen = dependant.call(**solved_result.values)</code> を非同期ジェネレータ用の <code>_async_stream_jsonl()</code> または同期ジェネレータ用の <code>_sync_stream_jsonl()</code>（<code>StreamingResponse</code> 側で Starlette のスレッドプールにより反復）で包み、直列化済みバイト列の末尾に <code>b&quot;\n&quot;</code> を付与します。非同期ジェネレータラッパ（明示的 <code>StreamingResponse</code> 用の <code>_async_stream_raw</code> も同様）は、各 <code>yield</code> の直後に必ず <strong><code>await anyio.sleep(0)</code></strong> を実行して <code>anyio</code> のキャンセルチェックポイントを挿入し、一度も待機しない高速なプロデューサであってもクライアント切断時に確実にキャンセルが伝播するように設計されています。</p>
+<p>さらに、<code>request_response()</code> が <code>await response(scope, receive, send)</code> の<strong>外側</strong>で <code>scope[&quot;fastapi_inner_astack&quot;]</code> を保持しているため、非同期 SQLAlchemy セッションなどの <code>scope=&quot;request&quot;</code> な <code>yield</code> 依存関係は <code>StreamingResponse</code> の全チャンク送信中も開いたまま維持され、ストリーム完了または切断後に初めて <code>finally</code> ブロックでクリーンアップされます。</p>
+<h3>2.2 <code>fastapi/sse.py</code>：<code>EventSourceResponse</code>・<code>ServerSentEvent</code> と PEP 789 安全な TaskGroup</h3>
+<p><code>fastapi/sse.py</code> は Server-Sent Events 向けの公開型とワイヤフォーマット変換器を提供します。</p>
+<ul>
+<li><strong><code>EventSourceResponse(StreamingResponse)</code></strong>: <code>media_type = &quot;text/event-stream&quot;</code> を宣言するマーカサブクラスです。<code>GET</code> だけでなく <strong><code>POST</code> を含む任意の HTTP メソッド</strong>で動作するため、Model Context Protocol（MCP）のように <code>POST</code> レスポンス上で SSE を流すプロトコルにもそのまま対応します。</li>
+<li><strong><code>ServerSentEvent(BaseModel)</code></strong>: 単一イベントを表す Pydantic モデルで、<code>data: Any = None</code>（常に JSON 直列化され、<code>&quot;hello&quot;</code> はワイヤ上で引用符付きの <code>data: &quot;hello&quot;</code> となる）、<code>raw_data: str | None = None</code>（JSON 変換を行わない生文字列。<code>@model_validator(mode=&quot;after&quot;)</code> により <code>data</code> との同時指定を禁止）、単一行制約付きの <code>event</code>、NULL 文字禁止かつ単一行制約付きの <code>id</code>、<code>retry: int | None</code>（<code>Field(ge=0)</code>）、キープアライブ等に使われる <code>comment: str | None</code> を備えます。</li>
+<li><strong><code>format_sse_event()</code></strong>: <code>_split_sse_lines()</code> で SSE 仕様の改行コード（<code>\r\n</code>、<code>\r</code>、<code>\n</code>）のみを分割し、<code>: &lt;comment&gt;</code>、<code>event: &lt;event&gt;</code>、行ごとの <code>data: &lt;line&gt;</code>、<code>id: &lt;id&gt;</code>、<code>retry: &lt;retry&gt;</code> を組み立て、イベント終端である <code>\n\n</code> を付与した UTF-8 <code>bytes</code> を返します。</li>
+</ul>
+<p>実行時の <code>is_sse_stream</code> 分岐では、<code>gen.__anext__()</code> を直接 <code>anyio.fail_after(_PING_INTERVAL)</code> で囲むことを意図的に避けています（タイムアウト時にユーザジェネレータへ <code>CancelledError</code> が注入されてジェネレータ自体が終了してしまうため、またスレッドプール上の同期ジェネレータにも適用するためです）。代わりに FastAPI は <code>@asynccontextmanager async def _sse_producer_cm()</code> を <strong><code>fastapi_inner_astack</code></strong> 上へ登録します（<code>await async_exit_stack.enter_async_context(_sse_producer_cm())</code>）。</p>
+<ol>
+<li><strong>分離されたメモリストリーム</strong>: <code>anyio.create_task_group()</code> の内部で、バッファサイズ <code>1</code> の 2 組のチャネル <code>anyio.create_memory_object_stream[bytes](max_buffer_size=1)</code>（<code>send_stream</code>/<code>receive_stream</code> と <code>send_keepalive</code>/<code>receive_keepalive</code>）を生成します。</li>
+<li><strong>Producer タスクと Keepalive タスクの並行実行</strong>: <code>_producer()</code> が <code>gen.__aiter__()</code>（同期ジェネレータでは <code>iterate_in_threadpool(gen)</code>）から要素を取り出して <code>ServerSentEvent</code> または一般オブジェクトを SSE バイト列へ変換し <code>send_stream</code> に送ります。並行して <code>_keepalive_inserter()</code> が <code>with anyio.fail_after(_PING_INTERVAL):</code>（<code>15.0</code> 秒）付きで <code>receive_stream.receive()</code> を待機し、アイドルによる <code>TimeoutError</code> 発生時には <code>KEEPALIVE_COMMENT = b&quot;: ping\n\n&quot;</code> を送出してリバースプロキシのタイムアウト切断を防ぎます。</li>
+<li><strong>PEP 789 準拠の終了処理とバッファリング抑止ヘッダ</strong>: <code>_sse_producer_cm()</code> をリクエストスコープの <code>fastapi_inner_astack</code> に積むことで、非同期ジェネレータの <code>GeneratorExit</code> ファイナライズ中ではなく、構造化された <code>AsyncExitStack</code> の巻き戻し時に <code>TaskGroup</code> を安全にキャンセルします。レスポンスには <code>_sse_with_checkpoints(sse_receive_stream)</code> が渡され、<code>Cache-Control: no-cache</code> と Nginx のプロキシバッファリングを無効化する <code>X-Accel-Buffering: no</code> が自動付与されます。</li>
+</ol>
+<h2>3. SPA エンジン内部構造（<code>APIRouter.frontend</code> と <code>_FrontendRouteGroup</code>）</h2>
+<p><code>app.frontend(path, directory=..., fallback=&quot;auto&quot;, check_dir=&quot;auto&quot;)</code> および <code>router.frontend(...)</code> は、API エンドポイントを覆い隠すことなく Single-Page Application（SPA）の静的ビルド成果物をマウントします。</p>
+<ul>
+<li><strong>起動時のディレクトリ検証（<code>_resolve_frontend_check_dir</code>）</strong>: <code>check_dir=&quot;auto&quot;</code> の場合、本番環境ではディレクトリおよび明示指定されたフォールバックファイルの存在を起動時に厳格チェック（欠落時は <code>RuntimeError</code>）しますが、<code>FASTAPI_ENV == &quot;development&quot;</code>（<code>fastapi dev</code> 実行時に自動設定）ではフロントエンドの初回ビルド前でも起動できるよう <code>UserWarning</code> の警告出力に留めてチェックをスキップします。</li>
+<li><strong>グローバルな低優先度ディスパッチ順序</strong>: <code>APIRouter.frontend()</code> は <code>self._frontend_routes = _FrontendRouteGroup(...)</code> を遅延生成し、OpenAPI スキーマ生成対象外の <code>self._low_priority_routes</code> へ格納します。<code>APIRouter.app()</code> は、ネストされた <code>_IncludedRouter</code> を含む<strong>すべての通常ルート</strong>を以下の優先順で評価し終えた後にのみ <code>_match_low_priority(scope)</code> を照会します。
+<ol>
+<li>通常ルートの <code>Match.FULL</code>（<code>APIRoute</code>、<code>APIWebSocketRoute</code>、<code>Mount</code>）</li>
+<li>通常ルートの <code>Match.PARTIAL</code>（API パスに対する <code>405 Method Not Allowed</code> はフロントエンドのフォールバックより常に優先）</li>
+<li>通常ルートの <code>redirect_slashes</code>（<code>/api/</code> への <code>307 Temporary Redirect</code> もフロントエンドより優先）</li>
+<li><code>_match_low_priority(scope)</code>：セグメント境界を尊重しつつ <code>_frontend_path_specificity(path)</code>（<code>&quot;/&quot;</code> は <code>0</code>、それ以外は <code>len(path)</code>）が最長の <code>_FrontendRoute</code> を選択し、<code>_FrontendRouteGroup._solve_dependencies()</code> でルータ／アプリの <code>dependencies</code> を外側から内側の順に実行します。</li>
+</ol>
+</li>
+</ul>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/02_routing_compiler/streaming_and_spa_internals/frontend_route_group_fsm.png" alt="streaming_and_spa_internals_2" />
+  <figcaption class="drawlib-caption">APIRouter のルート優先順位と _FrontendRouteGroup による SPA 解決決定木</figcaption>
+</figure>
+<p><code>html=True</code> かつ <code>follow_symlink=False</code> で初期化される <code>_FrontendStaticFiles(StaticFiles)</code> の <code>get_response(path, scope)</code> は、以下の 4 段階のセキュリティおよびプロトコル規則を適用します。</p>
+<ol>
+<li><strong>HTTP メソッド制限とパストラバーサル防御（<code>_lookup_static_resource</code>）</strong>: <code>scope[&quot;fastapi&quot;][&quot;frontend_path&quot;]</code> を <code>os.path.normpath</code> で正規化し、<code>run_in_threadpool</code> 内で <code>self.lookup_path(path)</code> を呼び出します。<code>follow_symlink=False</code> と Starlette の <code>os.path.commonpath</code> 境界検証により、<code>/../</code>・<code>%2e%2e</code>・<code>%5c</code> などのトラバーサル文字列やディレクトリ外を指すシンボリックリンクはすべて <code>404</code> として拒否されます（<code>PermissionError</code> は <code>401</code>、<code>ENAMETOOLONG</code> は <code>404</code> に変換）。また <code>GET</code>/<code>HEAD</code> 以外のメソッドは、実ファイルまたはディレクトリ内 <code>index.html</code> が実在する場合のみ <code>405</code> を返し、クライアントサイドルートのみの仮想パスへの <code>POST</code> 等には <code>404</code> を返します。</li>
+<li><strong>ディレクトリ末尾スラッシュの 307 リダイレクト</strong>: <code>path</code> が <code>index.html</code> を含むサブディレクトリに解決され、かつ <code>scope[&quot;path&quot;]</code> が <code>&quot;/&quot;</code> で終わっていない場合、相対アセットパスの基準ずれを防ぐため <code>url.path + &quot;/&quot;</code> への <code>307</code> <code>RedirectResponse</code> を返します。</li>
+<li><strong>フォールバック優先順位と <code>_is_frontend_navigation_request(scope)</code></strong>: 静的ファイルが存在しない場合、次の順でフォールバックを判定します。
+<ul>
+<li><strong><code>404.html</code> の優先適用</strong>: <code>fallback == &quot;404.html&quot;</code> または（<code>fallback == &quot;auto&quot;</code> かつ <code>404.html</code> が存在）の場合、<code>Accept</code> ヘッダに関わらず <code>status_code=404</code> で <code>404.html</code> を返します。</li>
+<li><strong><code>index.html</code> に対する明示的 HTML ナビゲーション判定</strong>: 上記に該当せず <code>index.html</code> が有効な場合、<code>_is_frontend_navigation_request(scope)</code> が <code>_iter_accept_media_types()</code>（<code>email.message.Message</code>）で <code>Accept</code> ヘッダを解析し、品質係数 <code>q != 0</code> の <code>text/html</code> または <code>application/xhtml+xml</code> が<strong>明示的に含まれる場合のみ</strong> <code>200 index.html</code> を返します。拡張子の有無ではなく <code>Accept</code> ヘッダで判定するため、<code>/users/jane.doe</code> や <code>/v/1.2.3</code> のようなドットを含む SPA ルートでもブラウザ遷移時は正しく <code>index.html</code> が返る一方、欠損した JS/CSS サブリソース（<code>Accept: */*</code> や <code>text/css</code>）には確実に <code>404</code> を返し、HTML を JS として読み込ませてしまう事故を防ぎます。</li>
+</ul>
+</li>
+<li><strong>条件付きキャッシュと <code>Cache-Control</code> ヘッダ合成</strong>: Starlette の <code>file_response()</code> は自動的に <code>ETag</code> および <code>Last-Modified</code> ヘッダを付与し、<code>If-None-Match</code> / <code>If-Modified-Since</code> による <code>304 Not Modified</code> 応答を処理します。さらに <code>_FrontendRouteGroup.handle()</code> は解決済み依存関係の <code>solved_result.response.headers.raw</code> を <code>FileResponse</code> に統合するため、ルータの <code>dependencies</code> を通じてハッシュ付き <code>/assets/*</code> バンドルには <code>public, max-age=31536000, immutable</code>、フォールバック <code>index.html</code> には <code>no-cache</code> といった <code>Cache-Control</code> ポリシーを宣言的に付与できます。</li>
+</ol>
+<h2>4. ソース検証済みストリーミング・SPA ルーティング検証</h2>
+<h3>4.1 <code>stream_item_field</code>・JSONL 出力・<code>format_sse_event()</code> ワイヤ形式の検証</h3>
+<p>以下のスニペットは、コンパイル時の <code>is_json_stream</code> / <code>is_sse_stream</code> / <code>stream_item_field</code> 生成結果と、<code>format_sse_event()</code> のバイト列エンコード、および <code>TestClient</code> による JSONL／SSE レスポンスヘッダ・ペイロードを検証します。</p>
+<pre><code class="language-python"><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncIterable</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastAPI</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.routing</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRoute</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.sse</span><span class="w"> </span><span class="kn">import</span> <span class="n">EventSourceResponse</span><span class="p">,</span> <span class="n">ServerSentEvent</span><span class="p">,</span> <span class="n">format_sse_event</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.testclient</span><span class="w"> </span><span class="kn">import</span> <span class="n">TestClient</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MetricChunk</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">step</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">loss</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">tag</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">()</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/metrics.jsonl"</span><span class="p">,</span> <span class="n">response_model_exclude_none</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">stream_jsonl</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">AsyncIterable</span><span class="p">[</span><span class="n">MetricChunk</span><span class="p">]:</span>
+    <span class="k">yield</span> <span class="n">MetricChunk</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="mf">0.42</span><span class="p">)</span>
+    <span class="k">yield</span> <span class="n">MetricChunk</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="mf">0.19</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="s2">"converged"</span><span class="p">)</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/metrics.sse"</span><span class="p">,</span> <span class="n">response_class</span><span class="o">=</span><span class="n">EventSourceResponse</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">stream_sse</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">AsyncIterable</span><span class="p">[</span><span class="n">MetricChunk</span> <span class="o">|</span> <span class="n">ServerSentEvent</span><span class="p">]:</span>
+    <span class="k">yield</span> <span class="n">MetricChunk</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="mf">0.42</span><span class="p">)</span>
+    <span class="k">yield</span> <span class="n">ServerSentEvent</span><span class="p">(</span>
+        <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">"done"</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span> <span class="n">event</span><span class="o">=</span><span class="s2">"complete"</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="s2">"evt-2"</span><span class="p">,</span> <span class="n">retry</span><span class="o">=</span><span class="mi">5000</span>
+    <span class="p">)</span>
+
+
+<span class="n">routes</span> <span class="o">=</span> <span class="p">{</span><span class="n">r</span><span class="o">.</span><span class="n">path</span><span class="p">:</span> <span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">app</span><span class="o">.</span><span class="n">router</span><span class="o">.</span><span class="n">routes</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">APIRoute</span><span class="p">)}</span>
+<span class="k">assert</span> <span class="n">routes</span><span class="p">[</span><span class="s2">"/metrics.jsonl"</span><span class="p">]</span><span class="o">.</span><span class="n">is_json_stream</span> <span class="ow">is</span> <span class="kc">True</span>
+<span class="k">assert</span> <span class="n">routes</span><span class="p">[</span><span class="s2">"/metrics.jsonl"</span><span class="p">]</span><span class="o">.</span><span class="n">stream_item_field</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+<span class="k">assert</span> <span class="n">routes</span><span class="p">[</span><span class="s2">"/metrics.sse"</span><span class="p">]</span><span class="o">.</span><span class="n">is_sse_stream</span> <span class="ow">is</span> <span class="kc">True</span>
+
+<span class="k">assert</span> <span class="n">format_sse_event</span><span class="p">(</span><span class="n">data_str</span><span class="o">=</span><span class="s1">'{"ok":true}'</span><span class="p">,</span> <span class="n">event</span><span class="o">=</span><span class="s2">"tick"</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="s2">"1"</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span>
+    <span class="sa">b</span><span class="s1">'event: tick</span><span class="se">\n</span><span class="s1">data: {"ok":true}</span><span class="se">\n</span><span class="s1">id: 1</span><span class="se">\n\n</span><span class="s1">'</span>
+<span class="p">)</span>
+
+<span class="n">client</span> <span class="o">=</span> <span class="n">TestClient</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+<span class="n">r_jsonl</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/metrics.jsonl"</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">r_jsonl</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">"content-type"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"application/jsonl"</span>
+<span class="k">assert</span> <span class="p">[</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">r_jsonl</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()]</span> <span class="o">==</span> <span class="p">[</span>
+    <span class="p">{</span><span class="s2">"step"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"loss"</span><span class="p">:</span> <span class="mf">0.42</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">"step"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">"loss"</span><span class="p">:</span> <span class="mf">0.19</span><span class="p">,</span> <span class="s2">"tag"</span><span class="p">:</span> <span class="s2">"converged"</span><span class="p">},</span>
+<span class="p">]</span>
+
+<span class="n">r_sse</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/metrics.sse"</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">r_sse</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">"cache-control"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"no-cache"</span>
+<span class="k">assert</span> <span class="n">r_sse</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">"x-accel-buffering"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"no"</span>
+<span class="k">assert</span> <span class="s1">'event: complete</span><span class="se">\n</span><span class="s1">data: {"done": true}</span><span class="se">\n</span><span class="s1">id: evt-2</span><span class="se">\n</span><span class="s1">retry: 5000</span><span class="se">\n\n</span><span class="s1">'</span> <span class="ow">in</span> <span class="n">r_sse</span><span class="o">.</span><span class="n">text</span>
+</code></pre>
+<h3>4.2 <code>_FrontendRouteGroup</code> の優先順位・トラバーサル防御・<code>Cache-Control</code> 合成の検証</h3>
+<p>次のスニペットは、<code>Cache-Control</code> 付与用の依存関係を持つ <code>APIRouter</code> に <code>router.frontend()</code> で SPA ディレクトリをマウントし、API ルート優先順位・ハッシュ付きアセットへの <code>immutable</code> ヘッダ付与・ドット入りクライアントルートへの <code>no-cache</code> HTML フォールバック・<code>*/*</code> アセット欠損時の <code>404</code>・<code>%2e%2e</code> トラバーサル遮断を確認します。</p>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tempfile</span><span class="w"> </span><span class="kn">import</span> <span class="n">TemporaryDirectory</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">Request</span><span class="p">,</span> <span class="n">Response</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.testclient</span><span class="w"> </span><span class="kn">import</span> <span class="n">TestClient</span>
+
+<span class="k">with</span> <span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">tmp</span><span class="p">:</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+    <span class="n">dist</span> <span class="o">=</span> <span class="n">root</span> <span class="o">/</span> <span class="s2">"dist"</span>
+    <span class="p">(</span><span class="n">dist</span> <span class="o">/</span> <span class="s2">"assets"</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="p">(</span><span class="n">dist</span> <span class="o">/</span> <span class="s2">"index.html"</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="s2">"&lt;!doctype html&gt;&lt;title&gt;SPA&lt;/title&gt;"</span><span class="p">)</span>
+    <span class="p">(</span><span class="n">dist</span> <span class="o">/</span> <span class="s2">"assets"</span> <span class="o">/</span> <span class="s2">"app.8f3a1c.js"</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="s2">"console.log('v1');"</span><span class="p">)</span>
+    <span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="s2">"secret.txt"</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="s2">"top-secret"</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">spa_cache_policy</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="n">Response</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">url</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"/assets/"</span><span class="p">):</span>
+            <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">"Cache-Control"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"public, max-age=31536000, immutable"</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">"Cache-Control"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"no-cache"</span>
+
+    <span class="n">spa_router</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">(</span><span class="n">dependencies</span><span class="o">=</span><span class="p">[</span><span class="n">Depends</span><span class="p">(</span><span class="n">spa_cache_policy</span><span class="p">)])</span>
+    <span class="n">spa_router</span><span class="o">.</span><span class="n">frontend</span><span class="p">(</span><span class="s2">"/"</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="n">dist</span><span class="p">,</span> <span class="n">fallback</span><span class="o">=</span><span class="s2">"index.html"</span><span class="p">)</span>
+
+    <span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">()</span>
+
+    <span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/api/status"</span><span class="p">)</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">api_status</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">"service"</span><span class="p">:</span> <span class="s2">"healthy"</span><span class="p">}</span>
+
+    <span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">spa_router</span><span class="p">)</span>
+    <span class="n">client</span> <span class="o">=</span> <span class="n">TestClient</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+
+    <span class="c1"># API route wins even when browser sends Accept: text/html</span>
+    <span class="k">assert</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/api/status"</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">"accept"</span><span class="p">:</span> <span class="s2">"text/html"</span><span class="p">})</span><span class="o">.</span><span class="n">json</span><span class="p">()</span> <span class="o">==</span> <span class="p">{</span>
+        <span class="s2">"service"</span><span class="p">:</span> <span class="s2">"healthy"</span>
+    <span class="p">}</span>
+
+    <span class="c1"># Hashed bundle gets ETag + immutable Cache-Control</span>
+    <span class="n">asset</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/assets/app.8f3a1c.js"</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="s2">"etag"</span> <span class="ow">in</span> <span class="n">asset</span><span class="o">.</span><span class="n">headers</span>
+    <span class="k">assert</span> <span class="n">asset</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">"cache-control"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"public, max-age=31536000, immutable"</span>
+
+    <span class="c1"># Dotted client route with Accept: text/html receives no-cache index.html</span>
+    <span class="n">nav</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/users/jane.doe"</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">"accept"</span><span class="p">:</span> <span class="s2">"text/html"</span><span class="p">})</span>
+    <span class="k">assert</span> <span class="n">nav</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span> <span class="ow">and</span> <span class="n">nav</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">"cache-control"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"no-cache"</span>
+
+    <span class="c1"># Subresource miss (*/*), traversal (%2e%2e), and POST to asset are rejected</span>
+    <span class="k">assert</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/assets/missing.js"</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">"accept"</span><span class="p">:</span> <span class="s2">"*/*"</span><span class="p">})</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">404</span>
+    <span class="k">assert</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/</span><span class="si">%2e%2e</span><span class="s2">/secret.txt"</span><span class="p">)</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">404</span>
+    <span class="k">assert</span> <span class="n">client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/assets/app.8f3a1c.js"</span><span class="p">)</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">405</span>
+</code></pre>
+<p>コアとなる <code>APIRoute</code> クロージャ合成モデルについては <a href="apiroute_and_closures.html">APIRouter・APIRoute とクロージャ合成</a> を参照してください。また、<code>yield</code> 依存関係と <code>fastapi_inner_astack</code> の連携や OpenAPI 3.2 <code>itemSchema</code> のスキーマ合成については、<a href="../03_di_and_security_engine/dependant_and_solver.html">Dependant グラフと solve_dependencies</a>、<a href="../05_asgi_and_telemetry/middleware_and_concurrency.html">ミドルウェア7層構造とスレッドプール</a>、および <a href="../06_openapi_and_docs/openapi_synthesis_engine.html">get_openapi()・$defs 集約・Docs UI</a> へ進んでください。</p>
+
+            </main>
+            <footer class="footer">
+                
+                FastAPI® は Sebastián Ramírez（<a href="https://github.com/tiangolo" target="_blank" rel="noopener noreferrer">@tiangolo</a>）の登録商標です。本サイトは非公式の内部アーキテクチャ解説であり、公式プロジェクトとは提携していません。公式ドキュメントは <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">fastapi.tiangolo.com</a> をご参照ください。
+                
+            </footer>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeBtn = document.getElementById('theme-toggle');
+            if (themeBtn) {
+                themeBtn.addEventListener('click', function() {
+                    const current = document.documentElement.getAttribute('data-theme');
+                    const next = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    localStorage.setItem('drawlib-theme', next);
+                });
+            }
+
+            const langDropdowns = document.querySelectorAll('.lang-dropdown');
+            if (langDropdowns.length > 0) {
+                document.addEventListener('click', function(e) {
+                    langDropdowns.forEach(function(dd) {
+                        if (dd.hasAttribute('open') && !dd.contains(e.target)) {
+                            dd.removeAttribute('open');
+                        }
+                    });
+                });
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        langDropdowns.forEach(function(dd) {
+                            dd.removeAttribute('open');
+                        });
+                    }
+                });
+            }
+
+            const menuBtn = document.getElementById('menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            if (menuBtn && sidebar) {
+                function setMenuOpen(open) {
+                    sidebar.classList.toggle('is-open', open);
+                    menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    document.body.classList.toggle('menu-open', open);
+                    if (open) {
+                        const menu = sidebar.querySelector('.sidebar-menu');
+                        if (menu) {
+                            menu.scrollTop = 0;
+                        }
+                    }
+                }
+
+                menuBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const willOpen = !sidebar.classList.contains('is-open');
+                    setMenuOpen(willOpen);
+                });
+
+                document.addEventListener('click', function(e) {
+                    if (sidebar.classList.contains('is-open') && !sidebar.contains(e.target)) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                const navLinks = sidebar.querySelectorAll('.nav-item a');
+                navLinks.forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        setMenuOpen(false);
+                    });
+                });
+
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                window.addEventListener('resize', function() {
+                    if (window.innerWidth > 768 && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

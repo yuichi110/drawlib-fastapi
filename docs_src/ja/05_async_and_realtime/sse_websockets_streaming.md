@@ -2,7 +2,7 @@
 
 FastAPI `v0.162.2` は、外部ライブラリなしでネイティブ Server-Sent Events（`EventSourceResponse`）、型安全な JSON Lines ストリーミング（`AsyncIterator[Model]`）、および双方向 `WebSocket` エンドポイントの 3 方式を標準搭載し、Pydantic による高速直列化・プロキシのバッファ抑止ヘッダー・協調的キャンセルチェックポイントを自動化します。
 
-```drawlib align=center code=fold file=streaming_modes_comparison.png caption="FastAPI v0.162.2 標準搭載の 3 大リアルタイム・ジェネレーター配信モードの比較"
+```drawlib align=center code=hide file=streaming_modes_comparison.png caption="FastAPI v0.162.2 標準搭載の 3 大リアルタイム・ジェネレーター配信モードの比較"
 from drawlib.canvas import save, setup
 from drawlib.icons import phosphor
 from drawlib.smartarts import CardList, Panel
@@ -69,7 +69,7 @@ cl_jsonl = CardList(
     spacing=2.2,
 )
 cl_jsonl.add("AsyncIterator[Model]", "Zero response_class needed", badge_text="A")
-cl_jsonl.add("Per-Item Validation", "Rust serialize_json + \\n", badge_text="B")
+cl_jsonl.add("Per-Item Validation", "Pydantic Rust JSON + \\n", badge_text="B")
 cl_jsonl.add("Cancel Checkpoint", "await anyio.sleep(0) per row", badge_text="C")
 cl_jsonl.draw(xy2, width=w2, height=h2)
 
@@ -116,7 +116,7 @@ save()
 | **キープアライブ** | `15` 秒ごとに `: ping` コメントを自動送出 | チャンク送出駆動 | プロトコルレベルの Ping/Pong フレーム |
 | **適したユースケース** | LLM トークン配信、`POST` 型 MCP ストリーム、進捗通知 | 大量データの逐次エクスポート、サービス間連携 | 共同編集ルーム、低遅延な双方向制御 |
 
-```drawlib align=center code=fold file=sse_and_websocket_sequence.png caption="通信ライフサイクルの対比：単方向ネイティブ SSE（Last-Event-ID 再開）vs 双方向 WebSocket セッション"
+```drawlib align=center code=hide file=sse_and_websocket_sequence.png caption="通信ライフサイクルの対比：単方向ネイティブ SSE（Last-Event-ID 再開）vs 双方向 WebSocket セッション"
 from drawlib.canvas import save, setup
 from drawlib.diagrams.sequence import Participant, PhosphorIcon, SequenceDiagram
 from drawlib.styles import Styles
@@ -188,7 +188,7 @@ save()
 FastAPI `v0.162.2` は、ルーティング層と密結合した専用モジュール `fastapi.sse`（`EventSourceResponse` および `ServerSentEvent`）を提供します。
 
 - **`GET` だけでなく `POST` でも動作**: 従来の `GET` 限定ラッパーとは異なり、`response_class=EventSourceResponse` は任意の HTTP メソッドに対応するため、JSON ボディを受け取る LLM 推論ストリームや **MCP（Model Context Protocol）** サーバーの `POST` ストリーミングをそのまま実装できます。
-- **リバースプロキシ対策と自動キープアライブ**: `Cache-Control: no-cache` と `X-Accel-Buffering: no`（Nginx のレスポンスバッファリング抑止）を自動付与し、さらに `fastapi_inner_astack` 上で分離された AnyIO メモリストリームタスクが `15` 秒ごとに `: ping` コメントを送出します。ジェネレーター本体に `CancelledError` を混入させずにアイドルタイムアウトを防げる設計です。
+- **リバースプロキシ対策と自動キープアライブ**: `Cache-Control: no-cache` と `X-Accel-Buffering: no`（Nginx のレスポンスバッファリング抑止）を自動付与し、さらにリクエストスコープのクリーンアップ境界（ストリーム終了後に解放）内で分離された AnyIO メモリストリームタスクが `15` 秒ごとに `: ping` コメントを送出します。ジェネレーター本体に `CancelledError` を混入させずにアイドルタイムアウトを防げる設計です。
 - **型安全な `ServerSentEvent` 構造**: `data` フィールド（Pydantic モデル・辞書・文字列）は常に JSON 直列化され、事前整形済みテキスト（`[DONE]` や HTML 断片など）には排他的な `raw_data` を使用します。`event` や `id` の改行・ヌル文字検証により SSE フォーマット破壊も防止されます。
 
 ```python
@@ -244,7 +244,7 @@ assert "id: 2\n" in res.text
 バックエンドマイクロサービス間、CLI クライアント、データパイプライン向けに構造化レコードを逐次配信する場合は、`response_class` を指定せずジェネレーター関数の戻り値型に `AsyncIterator[MyModel]`（または `Iterator[MyModel]`）を宣言するだけで完結します。
 
 1. FastAPI が自動的に `media_type="application/jsonl"` を設定し、[OpenAPI 3.1 スキーマ](../03_routing_and_models/responses_and_openapi.md) にも要素モデルを出力します。
-2. `yield` された各要素は Pydantic の Rust 製 `TypeAdapter`（`stream_item_field.serialize_json`）で 1 件ずつ検証・UTF-8 JSON バイト列化（`+ b"\n"`）され、契約違反があれば即座に `ResponseValidationError` を送出します。
+2. `yield` された各要素は Pydantic の Rust 製 `TypeAdapter` で 1 件ずつ検証・UTF-8 JSON バイト列化（`+ b"\n"`）され、契約違反があれば即座に `ResponseValidationError` を送出します。
 3. 非同期ジェネレーターでは 1 行送出するごとに `await anyio.sleep(0)` のチェックポイントを挟むため、クライアント切断時に高速なインメモリ生成ループも即座にキャンセルされます。
 
 ```python

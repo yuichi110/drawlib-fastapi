@@ -13,7 +13,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dependant DAG・リクエスト単位キャッシュ・yield スコープ — FastAPI Visual Guide (Unofficial · Drawlib Demo)</title>
+    <title>依存関係グラフ・リクエスト単位キャッシュ・yield スコープ — FastAPI User Guide (Unofficial)</title>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
     <script>
@@ -46,19 +46,19 @@
     
     
     
-    <meta name="description" content="FastAPI v0.162.2 はすべてのパスオペレーションとサブ依存関数を再帰的な Dependant 有向非巡回グラフ（DAG）として構築し、リクエスト単位のメモ化キャッシュと二重 AsyncExitStack による yield の解放タイミングを厳密に制御します。">
+    <meta name="description" content="FastAPI v0.162.2 はすべてのパスオペレーションとサブ依存関数を有向非巡回グラフ（DAG）として構成し、リクエスト単位の依存結果キャッシュと関数スコープ／リクエストスコープの 2 段階による yield クリーンアップタイミングを厳密に制御します。">
     <link rel="canonical" href="https://fastapi.drawlib.com/ja/04_dependencies_and_security/dependency_injection.html">
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="FastAPI ビジュアル解説">
-    <meta property="og:title" content="Dependant DAG・リクエスト単位キャッシュ・yield スコープ — FastAPI ビジュアル解説">
-    <meta property="og:description" content="FastAPI v0.162.2 はすべてのパスオペレーションとサブ依存関数を再帰的な Dependant 有向非巡回グラフ（DAG）として構築し、リクエスト単位のメモ化キャッシュと二重 AsyncExitStack による yield の解放タイミングを厳密に制御します。">
+    <meta property="og:site_name" content="FastAPI ユーザーガイド">
+    <meta property="og:title" content="依存関係グラフ・リクエスト単位キャッシュ・yield スコープ — FastAPI ユーザーガイド">
+    <meta property="og:description" content="FastAPI v0.162.2 はすべてのパスオペレーションとサブ依存関数を有向非巡回グラフ（DAG）として構成し、リクエスト単位の依存結果キャッシュと関数スコープ／リクエストスコープの 2 段階による yield クリーンアップタイミングを厳密に制御します。">
     <meta property="og:url" content="https://fastapi.drawlib.com/ja/04_dependencies_and_security/dependency_injection.html">
     <meta property="og:image" content="https://fastapi.drawlib.com/_assets/ogp.png">
     <meta property="og:locale" content="ja_JP">
     <meta property="og:locale:alternate" content="en_US">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Dependant DAG・リクエスト単位キャッシュ・yield スコープ — FastAPI ビジュアル解説">
-    <meta name="twitter:description" content="FastAPI v0.162.2 はすべてのパスオペレーションとサブ依存関数を再帰的な Dependant 有向非巡回グラフ（DAG）として構築し、リクエスト単位のメモ化キャッシュと二重 AsyncExitStack による yield の解放タイミングを厳密に制御します。">
+    <meta name="twitter:title" content="依存関係グラフ・リクエスト単位キャッシュ・yield スコープ — FastAPI ユーザーガイド">
+    <meta name="twitter:description" content="FastAPI v0.162.2 はすべてのパスオペレーションとサブ依存関数を有向非巡回グラフ（DAG）として構成し、リクエスト単位の依存結果キャッシュと関数スコープ／リクエストスコープの 2 段階による yield クリーンアップタイミングを厳密に制御します。">
     <meta name="twitter:image" content="https://fastapi.drawlib.com/_assets/ogp.png">
     
     
@@ -70,17 +70,21 @@
     
 </head>
 <body>
-    <div class="demo-banner" role="region" aria-label="非公式ショーケース案内">
+    <div class="demo-banner" role="region" aria-label="ポータルナビゲーション">
         <div class="demo-banner-inner">
-            <span class="demo-banner-badge">UNOFFICIAL DEMO</span>
+            <span class="demo-banner-badge">UNOFFICIAL GUIDE</span>
             
             <span class="demo-banner-text">
-                <a href="https://www.drawlib.com/" target="_blank" rel="noopener noreferrer">Drawlib</a> と <a href="https://pypi.org/project/pni501/" target="_blank" rel="noopener noreferrer">PNI501</a> で作成した <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a>（v0.162.2, MIT）の非公式ビジュアル解説ショーケースです。
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a>（v0.162.2）非公式ユーザーガイド
             </span>
             <span class="demo-banner-links">
-                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 診断レポート →</a>
+                <strong style="color:#ffffff;">User Guide</strong>
                 <span class="demo-banner-sep">·</span>
-                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI 公式 Docs ↗</a>
+                <a href="https://fastapi.drawlib.com/architecture/">Architecture</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Audit</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official Docs ↗</a>
                 <span class="demo-banner-sep">·</span>
                 <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
             </span>
@@ -91,9 +95,9 @@
     <div class="doc-layout">
         <aside class="sidebar">
             <div class="sidebar-header">
-                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI ビジュアル解説">
+                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI ユーザーガイド">
                     
-                    FastAPI ビジュアル解説
+                    FastAPI ユーザーガイド
                     
                 </a>
                 <div class="sidebar-header-actions">
@@ -114,7 +118,7 @@
                         <ul class="nav-list">
                             
                             <li class="nav-item ">
-                                <a href="../index.html" >ガイド概要と全体マップ</a>
+                                <a href="../index.html" >ガイド概要</a>
                             </li>
                             
                         </ul>
@@ -125,7 +129,7 @@
                         <ul class="nav-list">
                             
                             <li class="nav-item ">
-                                <a href="../01_getting_started/overview.html" >FastAPI の設計思想と内部構造</a>
+                                <a href="../01_getting_started/overview.html" >FastAPI の設計思想と基本概念</a>
                             </li>
                             
                             <li class="nav-item ">
@@ -178,7 +182,7 @@
                         <ul class="nav-list">
                             
                             <li class="nav-item active">
-                                <a href="dependency_injection.html" >Dependant DAG・キャッシュ・yield スコープ</a>
+                                <a href="dependency_injection.html" >依存グラフ・キャッシュ・yield スコープ</a>
                             </li>
                             
                             <li class="nav-item ">
@@ -252,12 +256,12 @@
                         </ul>
                     
                         
-                        <div class="sidebar-heading">診断レポート &amp; 公式リンク</div>
+                        <div class="sidebar-heading">関連ガイド &amp; 公式リンク</div>
                         
                         <ul class="nav-list">
                             
                             <li class="nav-item ">
-                                <a href="https://fastapi.drawlib.com/reports/pni501/" target="_blank" rel="noopener noreferrer">PNI501 診断レポート<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                                <a href="https://fastapi.drawlib.com/architecture/" target="_blank" rel="noopener noreferrer">FastAPI 内部アーキテクチャ解説<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
                             </li>
                             
                             <li class="nav-item ">
@@ -265,7 +269,7 @@
                             </li>
                             
                             <li class="nav-item ">
-                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">デモのリポジトリ (GitHub)<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub リポジトリ<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
                             </li>
                             
                         </ul>
@@ -278,7 +282,7 @@
                 <div class="breadcrumbs">
                     <span class="crumb">Docs</span>
                     <span class="crumb-separator">&raquo;</span>
-                    <span class="crumb active">Dependant DAG・リクエスト単位キャッシュ・yield スコープ</span>
+                    <span class="crumb active">依存関係グラフ・リクエスト単位キャッシュ・yield スコープ</span>
                 </div>
                 
                 <div class="lang-switcher">
@@ -308,240 +312,55 @@
                 
             </header>
             <main class="main-content">
-                <h1>Dependant DAG・リクエスト単位キャッシュ・yield スコープ</h1>
-<p>FastAPI <code>v0.162.2</code> はすべてのパスオペレーションとサブ依存関数を再帰的な <code>Dependant</code> 有向非巡回グラフ（DAG）として構築し、リクエスト単位のメモ化キャッシュと二重 <code>AsyncExitStack</code> による <code>yield</code> の解放タイミングを厳密に制御します。</p>
+                <h1>依存関係グラフ・リクエスト単位キャッシュ・yield スコープ</h1>
+<p>FastAPI <code>v0.162.2</code> はすべてのパスオペレーションとサブ依存関数を有向非巡回グラフ（DAG）として構成し、リクエスト単位の依存結果キャッシュと関数スコープ／リクエストスコープの 2 段階による <code>yield</code> クリーンアップタイミングを厳密に制御します。</p>
 <figure class="drawlib-image" style="text-align: center;">
   <img src="../../images/04_dependencies_and_security/dependency_injection/dependant_dag_cache.png" alt="dependency_injection_1" />
-  <figcaption class="drawlib-caption">再帰的な Dependant DAG の解決とリクエスト単位 dependency_cache のメモ化構造</figcaption>
+  <figcaption class="drawlib-caption">依存関係グラフ（DAG）の解決とリクエスト単位キャッシュ（use_cache=True と use_cache=False）の共有構造</figcaption>
 </figure>
-<details class="drawlib-code-details">
-<summary>Source Code</summary>
-<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.canvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">setup</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.diagrams.architecture</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArchitectureDiagram</span><span class="p">,</span> <span class="n">Node</span><span class="p">,</span> <span class="n">PhosphorIcon</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.icons</span><span class="w"> </span><span class="kn">import</span> <span class="n">phosphor</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.lines</span><span class="w"> </span><span class="kn">import</span> <span class="n">line</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.smartarts</span><span class="w"> </span><span class="kn">import</span> <span class="n">CardList</span><span class="p">,</span> <span class="n">Panel</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">Styles</span>
-
-<span class="n">setup</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">166</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">98</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
-
-<span class="c1"># Left Zone: Outer Panel framing the Multi-Level Dependant DAG</span>
-<span class="n">dag_panel</span> <span class="o">=</span> <span class="n">Panel</span><span class="p">(</span>
-    <span class="s2">"solve_dependencies() Recursive Dependant DAG"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
-    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_line_width</span><span class="o">=</span><span class="mf">1.2</span><span class="p">),</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.5</span><span class="p">),</span>
-    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">tree_structure</span><span class="p">,</span>
-    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">,</span>
-    <span class="n">header_variant</span><span class="o">=</span><span class="s2">"filled"</span><span class="p">,</span>
-    <span class="n">header_height</span><span class="o">=</span><span class="mf">9.5</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">dag_panel</span><span class="o">.</span><span class="n">draw</span><span class="p">((</span><span class="mf">4.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">102.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">88.0</span><span class="p">,</span> <span class="n">align</span><span class="o">=</span><span class="s2">"bottom_left"</span><span class="p">)</span>
-
-<span class="n">dag</span> <span class="o">=</span> <span class="n">ArchitectureDiagram</span><span class="p">(</span>
-    <span class="n">width</span><span class="o">=</span><span class="mf">96.0</span><span class="p">,</span>
-    <span class="n">height</span><span class="o">=</span><span class="mf">75.0</span><span class="p">,</span>
-    <span class="n">node_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Primary</span><span class="p">,</span>
-    <span class="n">node_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
-    <span class="n">edge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">,</span>
-    <span class="n">edge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">node_card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="n">endpoint</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span>
-        <span class="s2">"POST /billing/invoices</span><span class="se">\n</span><span class="s2">(Root Dependant)"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">GLOBE</span><span class="p">,</span>
-        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.8</span><span class="p">,</span>
-        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
-        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
-    <span class="p">),</span>
-    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">48.0</span><span class="p">,</span> <span class="mf">66.5</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="n">billing</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span>
-        <span class="s2">"BillingService</span><span class="se">\n</span><span class="s2">Depends()"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">RECEIPT</span><span class="p">,</span>
-        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.8</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
-    <span class="p">),</span>
-    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">25.0</span><span class="p">,</span> <span class="mf">41.5</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="n">audit</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span>
-        <span class="s2">"AuditLogger</span><span class="se">\n</span><span class="s2">Depends()"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">SCROLL</span><span class="p">,</span>
-        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.8</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
-    <span class="p">),</span>
-    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">71.0</span><span class="p">,</span> <span class="mf">41.5</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="n">db_dep</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span>
-        <span class="s2">"get_db_session()</span><span class="se">\n</span><span class="s2">use_cache=True (1x)"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">29</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mf">13.5</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">DATABASE</span><span class="p">,</span>
-        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.5</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span>
-    <span class="p">),</span>
-    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">15.5</span><span class="p">,</span> <span class="mf">9.0</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="n">settings_dep</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span>
-        <span class="s2">"get_settings()</span><span class="se">\n</span><span class="s2">use_cache=True (1x)"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">28</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mf">13.5</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">GEAR</span><span class="p">,</span>
-        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.5</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
-    <span class="p">),</span>
-    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">48.0</span><span class="p">,</span> <span class="mf">9.0</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="n">nonce_dep</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span>
-        <span class="s2">"generate_nonce()</span><span class="se">\n</span><span class="s2">use_cache=False (2x)"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">29</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mf">13.5</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">ARROW_CLOCKWISE</span><span class="p">,</span>
-        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.5</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WarningNeutral</span><span class="p">,</span>
-    <span class="p">),</span>
-    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">80.5</span><span class="p">,</span> <span class="mf">9.0</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="c1"># Root fan-out (|dx|=23 &lt; |dy|=25 -&gt; clean bottom-to-top anchors)</span>
-<span class="n">dag</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">endpoint</span><span class="p">,</span> <span class="n">billing</span><span class="p">,</span> <span class="n">routing</span><span class="o">=</span><span class="s2">"direct"</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
-<span class="n">dag</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">endpoint</span><span class="p">,</span> <span class="n">audit</span><span class="p">,</span> <span class="n">routing</span><span class="o">=</span><span class="s2">"direct"</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
-<span class="n">dag</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">7.0</span><span class="p">,</span> <span class="mf">6.5</span><span class="p">))</span>
-
-<span class="c1"># Sub-dependency edges across open canvas corridor y=[23.0, 41.0]</span>
-<span class="c1"># 1. First-time executions from BillingService (solid dark strokes)</span>
-<span class="n">line</span><span class="p">((</span><span class="mf">28.0</span><span class="p">,</span> <span class="mf">41.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">20.0</span><span class="p">,</span> <span class="mf">23.0</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">)</span>
-<span class="n">line</span><span class="p">((</span><span class="mf">32.0</span><span class="p">,</span> <span class="mf">41.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">52.5</span><span class="p">,</span> <span class="mf">23.0</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">)</span>
-
-<span class="c1"># 2. Per-request cache hits from AuditLogger (dashed primary strokes)</span>
-<span class="n">line</span><span class="p">((</span><span class="mf">74.0</span><span class="p">,</span> <span class="mf">41.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">25.0</span><span class="p">,</span> <span class="mf">23.0</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryDashedBold</span><span class="p">)</span>
-<span class="n">line</span><span class="p">((</span><span class="mf">78.0</span><span class="p">,</span> <span class="mf">41.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">57.5</span><span class="p">,</span> <span class="mf">23.0</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryDashedBold</span><span class="p">)</span>
-
-<span class="c1"># 3. Uncached fresh invocations with use_cache=False (warning strokes)</span>
-<span class="n">line</span><span class="p">((</span><span class="mf">36.0</span><span class="p">,</span> <span class="mf">41.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">85.0</span><span class="p">,</span> <span class="mf">23.0</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WarningBold</span><span class="p">)</span>
-<span class="n">line</span><span class="p">((</span><span class="mf">82.0</span><span class="p">,</span> <span class="mf">41.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">90.0</span><span class="p">,</span> <span class="mf">23.0</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WarningBold</span><span class="p">)</span>
-
-<span class="c1"># Right Zone: Per-Request Cache Mechanics Panel</span>
-<span class="n">cache_panel</span> <span class="o">=</span> <span class="n">Panel</span><span class="p">(</span>
-    <span class="s2">"dependency_cache Dict"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
-    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_line_width</span><span class="o">=</span><span class="mf">1.2</span><span class="p">),</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.5</span><span class="p">),</span>
-    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span>
-    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">,</span>
-    <span class="n">header_variant</span><span class="o">=</span><span class="s2">"filled"</span><span class="p">,</span>
-    <span class="n">header_height</span><span class="o">=</span><span class="mf">9.5</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">cache_panel</span><span class="o">.</span><span class="n">draw</span><span class="p">((</span><span class="mf">110.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">52.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">88.0</span><span class="p">,</span> <span class="n">align</span><span class="o">=</span><span class="s2">"bottom_left"</span><span class="p">)</span>
-<span class="n">c_xy</span><span class="p">,</span> <span class="n">c_w</span><span class="p">,</span> <span class="n">c_h</span> <span class="o">=</span> <span class="n">cache_panel</span><span class="o">.</span><span class="n">get_content_box</span><span class="p">(</span>
-    <span class="p">(</span><span class="mf">110.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">),</span>
-    <span class="n">width</span><span class="o">=</span><span class="mf">52.0</span><span class="p">,</span>
-    <span class="n">height</span><span class="o">=</span><span class="mf">88.0</span><span class="p">,</span>
-    <span class="n">padding</span><span class="o">=</span><span class="p">(</span><span class="mf">3.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">),</span>
-    <span class="n">align</span><span class="o">=</span><span class="s2">"bottom_left"</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="n">cards</span> <span class="o">=</span> <span class="n">CardList</span><span class="p">(</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
-    <span class="n">description_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">badge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
-    <span class="n">badge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">spacing</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">cards</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="s2">"Cache Key Tuple"</span><span class="p">,</span>
-    <span class="s2">"(call, tuple(scopes), scope)</span><span class="se">\n</span><span class="s2">in _get_cache_key()"</span><span class="p">,</span>
-    <span class="n">badge_text</span><span class="o">=</span><span class="s2">"1"</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">cards</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="s2">"Solid -&gt; Dashed Hit"</span><span class="p">,</span>
-    <span class="s2">"use_cache=True runs 1x;</span><span class="se">\n</span><span class="s2">AuditLogger reuses same DB"</span><span class="p">,</span>
-    <span class="n">badge_text</span><span class="o">=</span><span class="s2">"2"</span><span class="p">,</span>
-    <span class="n">badge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span>
-    <span class="n">badge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">cards</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="s2">"use_cache=False"</span><span class="p">,</span>
-    <span class="s2">"Skips cache lookup; runs</span><span class="se">\n</span><span class="s2">generate_nonce() 2x freshly"</span><span class="p">,</span>
-    <span class="n">badge_text</span><span class="o">=</span><span class="s2">"3"</span><span class="p">,</span>
-    <span class="n">badge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WarningNeutral</span><span class="p">,</span>
-    <span class="n">badge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">cards</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="s2">"Threadpool Dispatch"</span><span class="p">,</span>
-    <span class="s2">"async def awaits directly;</span><span class="se">\n</span><span class="s2">def runs in AnyIO worker"</span><span class="p">,</span>
-    <span class="n">badge_text</span><span class="o">=</span><span class="s2">"4"</span><span class="p">,</span>
-    <span class="n">badge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
-    <span class="n">badge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">cards</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">c_xy</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">c_w</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">c_h</span><span class="p">)</span>
-
-<span class="n">save</span><span class="p">()</span>
-</code></pre>
-</details>
-<h2>1. Dependant DAG の構築と解決アルゴリズム</h2>
-<p>FastAPI はルート登録時に <code>get_dependant()</code> を呼び出し、すべてのエンドポイント引数・<code>Annotated[..., Depends()]</code> マーカー・<code>Security()</code> 宣言を解析して不変の <code>Dependant</code> データクラス木（<code>fastapi/dependencies/models.py</code>）へとコンパイルします。リクエスト処理時のホットパスでは型リフレクションを行わず、<code>solve_dependencies()</code>（<code>fastapi/dependencies/utils.py</code>）が構築済みの DAG を深さ優先で走査します。</p>
+<h2>1. 依存関係グラフ（DAG）の構築と解決の仕組み</h2>
+<p>FastAPI はルート登録時に一度だけエンドポイントのシグネチャ・<code>Annotated[..., Depends()]</code> マーカー・<code>Security()</code> 宣言を解析し、不変の依存関係グラフを構築します。リクエスト処理時のホットパスでは型リフレクションを行わず、事前構築済みの DAG を深さ優先で走査して各依存を解決します。</p>
 <table>
 <thead>
 <tr>
-<th style="text-align:left"><code>Dependant</code> / 解決機構</th>
-<th style="text-align:left">内部モジュール位置</th>
-<th style="text-align:left">リクエスト実行時の責務</th>
+<th style="text-align:left">依存関係システムの機能</th>
+<th style="text-align:left">宣言パターン</th>
+<th style="text-align:left">リクエスト実行時の動作</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align:left"><strong><code>Dependant</code> データクラス</strong></td>
-<td style="text-align:left"><code>fastapi/dependencies/models.py</code></td>
-<td style="text-align:left">抽出対象の <code>path_params</code>・<code>query_params</code>・<code>header_params</code>・<code>cookie_params</code>・<code>body_params</code>、子の <code>dependencies</code>、OAuth2 スコープ、<code>use_cache</code>、<code>scope</code> を保持します。</td>
+<td style="text-align:left"><strong>サブ依存グラフ（DAG）</strong></td>
+<td style="text-align:left"><code>Annotated[T, Depends(fn)]</code> / <code>Depends()</code></td>
+<td style="text-align:left">末端のパラメータ（<code>Path</code>・<code>Query</code>・<code>Header</code>・<code>Cookie</code>・<code>Body</code>）および子依存を先に検証・解決してから親 Callable を呼び出します。</td>
 </tr>
 <tr>
-<td style="text-align:left"><strong><code>_get_cache_key()</code></strong></td>
-<td style="text-align:left"><code>fastapi/dependencies/models.py</code></td>
-<td style="text-align:left"><code>(dependant.call, scopes_for_cache, computed_scope)</code> のタプルを算出し、累積 OAuth2 スコープが一致する場合にのみセキュリティ依存のキャッシュを共有します。</td>
+<td style="text-align:left"><strong>リクエスト単位キャッシュ</strong></td>
+<td style="text-align:left"><code>Depends(fn, use_cache=True)</code> <em>（既定）</em></td>
+<td style="text-align:left"><code>(callable, oauth_scopes, scope)</code> をキーとしてリクエストごとに戻り値を保持し、ダイヤモンド依存の分岐間で結果を共有します。</td>
 </tr>
 <tr>
-<td style="text-align:left"><strong><code>solve_dependencies()</code></strong></td>
-<td style="text-align:left"><code>fastapi/dependencies/utils.py</code></td>
-<td style="text-align:left">子 <code>Dependant</code> ノードを再帰的に解決し、<code>app.dependency_overrides</code> の適用・<code>dependency_cache</code> への格納・検証エラーの集約を行ったうえで親 Callable を呼び出します。</td>
+<td style="text-align:left"><strong>グラフ全体の一括差し替え</strong></td>
+<td style="text-align:left"><code>app.dependency_overrides[orig] = mock</code></td>
+<td style="text-align:left">ルーター・認可ガード・入れ子のクラス依存にまたがる任意の依存ノードをテストやステージング環境で一括置換します。</td>
 </tr>
 <tr>
 <td style="text-align:left"><strong>実行ディスパッチ</strong></td>
-<td style="text-align:left"><code>fastapi/dependencies/utils.py</code></td>
-<td style="text-align:left"><code>async def</code> コルーチンはイベントループ上で直接 <code>await</code> し、同期 <code>def</code> は <code>run_in_threadpool()</code> へ委譲し、ジェネレータは <code>AsyncExitStack</code> に登録します。</td>
+<td style="text-align:left"><code>async def</code> / <code>def</code> / <code>yield</code></td>
+<td style="text-align:left"><code>async def</code> はイベントループ上で直接 <code>await</code> し、同期 <code>def</code> はワーカースレッドプールで実行し、<code>yield</code> は自動解放を予約します。</td>
 </tr>
 </tbody>
 </table>
-<h3>1.1 リクエスト単位メモ化（<code>use_cache=True</code> と <code>use_cache=False</code>）</h3>
-<p>実践的なレイヤード設計では、エンドポイントが <code>BillingService</code> と <code>AuditLogger</code> の両方を注入し、その双方が <code>get_db_session</code> と <code>get_settings</code> に依存するような「ひし形（ダイヤモンド）依存」が頻出します。FastAPI はデフォルトで <code>Depends(..., use_cache=True)</code> を有効にしており、<code>solve_dependencies()</code> 内でリクエスト固有の辞書 <code>dependency_cache: dict[DependencyCacheKey, Any]</code> を管理します。</p>
+<h3>1.1 リクエスト単位キャッシュ（<code>use_cache=True</code> と <code>use_cache=False</code>）</h3>
+<p>実践的なレイヤード設計では、エンドポイントが <code>BillingService</code> と <code>AuditLogger</code> の両方を注入し、その双方が <code>get_db_session</code> と <code>get_settings</code> に依存するような「ひし形（ダイヤモンド）依存」が頻出します。FastAPI はデフォルトで <code>Depends(..., use_cache=True)</code> を有効にしており、各 HTTP リクエストまたは WebSocket セッションの生存期間にわたってリクエスト単位の依存キャッシュ（Callable とスコープの組で管理）を保持します。</p>
 <ul>
-<li><strong>リクエスト内シングルトン共有（<code>use_cache=True</code>）</strong>: 先に解決される <code>BillingService</code> が <code>get_db_session()</code> を 1 回だけ実行し、戻り値を <code>(get_db_session, (), &quot;&quot;)</code> キーで保存します。直後に同一リクエスト内で <code>AuditLogger</code> が <code>get_db_session</code> を要求すると、FastAPI はキャッシュから同一の Python オブジェクト（<code>billing.db is billing.audit.db</code>）を返し、複数サービス間のトランザクション整合性を保証します。</li>
+<li><strong>リクエスト内シングルトン共有（<code>use_cache=True</code>）</strong>: 先に解決される <code>BillingService</code> が <code>get_db_session()</code> を 1 回だけ実行し、そのセッションを当該リクエスト用にキャッシュします。直後に同一リクエスト内で <code>AuditLogger</code> が <code>get_db_session</code> を要求すると、FastAPI はキャッシュから同一の Python オブジェクト（<code>billing.db is billing.audit.db</code>）を返し、複数サービス間のトランザクション整合性を保証します。</li>
 <li><strong>毎回新規実行（<code>use_cache=False</code>）</strong>: <code>Depends(generate_trace_nonce, use_cache=False)</code> を指定するとキャッシュ参照をスキップし、注入箇所ごとに毎回新しく関数を呼び出します。</li>
-<li><strong>OAuth2 スコープを考慮したキャッシュ分離</strong>: サブ依存が <code>SecurityScopes</code> を受け取る場合（詳細は <a href="security_and_auth.html">認証・OAuth2 スコープ認可・抽出器</a> を参照）、<code>_uses_scopes()</code> によって <code>tuple(sorted(set(oauth_scopes)))</code> がキャッシュキーへ組み込まれ、要求スコープの異なる呼び出し同士の衝突を防ぎます。</li>
+<li><strong>OAuth2 スコープを考慮したキャッシュ分離</strong>: サブ依存が <code>SecurityScopes</code> を受け取る場合（詳細は <a href="security_and_auth.html">認証・OAuth2 スコープ認可・抽出器</a> を参照）、累積された OAuth2 スコープもキャッシュキーへ組み込まれるため、要求スコープの異なる呼び出し同士が誤って共有されることはありません。</li>
 </ul>
 <blockquote>
 <p>[!IMPORTANT]
-FastAPI の依存関数や Pydantic モデルをネストしたスコープ内で定義するモジュールでは、<code>from __future__ import annotations</code> の使用を避けてください。FastAPI はルート登録時に <code>Annotated[T, Depends(...)]</code> の型メタデータを評価するため、解決不能なローカルシンボルを参照する文字列化アノテーションは依存として認識されず、必須クエリパラメータ（<code>422 Unprocessable Entity</code>）として扱われます。</p>
+FastAPI の依存関数や Pydantic モデルをネストしたローカルスコープ内で定義するモジュールでは、<code>from __future__ import annotations</code> の使用を避けてください。FastAPI はルート登録時に <code>Annotated[T, Depends(...)]</code> の型メタデータを評価するため、解決不能なローカルシンボルを参照する文字列化アノテーションは依存として認識されず、必須クエリパラメータ（<code>422 Unprocessable Content</code>）として扱われます。</p>
 </blockquote>
 <h3>1.2 多階層サブ依存・クラス依存・パラメータ化 Callable</h3>
 <p>FastAPI では通常の関数だけでなく、クラスのコンストラクタ（<code>__init__</code>）や呼び出し可能インスタンス（<code>__call__</code>）もそのまま依存ノードとして利用できます。</p>
@@ -555,7 +374,6 @@ FastAPI の依存関数や Pydantic モデルをネストしたスコープ内�
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">Header</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">status</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.testclient</span><span class="w"> </span><span class="kn">import</span> <span class="n">TestClient</span>
 
 
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -658,139 +476,19 @@ FastAPI の依存関数や Pydantic モデルをネストしたスコープ内�
 <span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">()</span>
 <span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">billing_router</span><span class="p">)</span>
 </code></pre>
-<p>上の構成では <code>get_settings()</code> が 3 箇所（<code>verify_tenant_header</code>・<code>AuditLogger</code>・<code>BillingService</code>）で宣言されていますが、<code>dependency_cache</code> によってリクエストあたり 1 回しか実行されず、<code>billing.db is billing.audit.db</code> も常に <code>True</code> となります。また結合テスト時には <code>app.dependency_overrides[get_db_session] = override_db</code> を設定するだけで、DAG 全体の末端ノードを一括差し替えできます（<a href="../02_enterprise_architecture/di_lifespan_testing.html">大規模 DI・Lifespan 管理・テスト戦略</a> および <a href="../06_observability_and_testing/testing_and_deployment.html">実践テスト手法と本番 ASGI 運用</a> を参照）。</p>
-<h2>2. <code>yield</code> によるリソース管理と二重 <code>AsyncExitStack</code></h2>
-<p><code>async def</code> または同期 <code>def</code> 内で <code>yield</code> を使うジェネレータ依存は、処理を <strong><code>yield</code> 前のセットアップフェーズ</strong> と <strong><code>yield</code> 後のティアダウンフェーズ</strong> に分割します。FastAPI <code>v0.162.2</code> では、<code>fastapi/routing.py</code> の <code>request_response()</code> がすべての HTTP リクエストを ASGI <code>scope</code> 上の <strong>入れ子になった 2 つの <code>AsyncExitStack</code></strong> で包んでいます。</p>
+<p>上の構成では <code>get_settings()</code> が 3 箇所（<code>verify_tenant_header</code>・<code>AuditLogger</code>・<code>BillingService</code>）で宣言されていますが、リクエスト単位キャッシュによってリクエストあたり 1 回しか実行されず、<code>billing.db is billing.audit.db</code> も常に <code>True</code> となります。また結合テスト時には <code>app.dependency_overrides[get_db_session] = override_db</code> を設定するだけで、DAG 全体の末端ノードを一括差し替えできます（<a href="../02_enterprise_architecture/di_lifespan_testing.html">大規模 DI・Lifespan 管理・テスト戦略</a> および <a href="../06_observability_and_testing/testing_and_deployment.html">実践テスト手法と本番 ASGI 運用</a> を参照）。</p>
+<h2>2. <code>yield</code> によるリソース管理とクリーンアップスコープ</h2>
+<p><code>async def</code> または同期 <code>def</code> 内で <code>yield</code> を使うジェネレータ依存は、処理を <strong><code>yield</code> 前のセットアップフェーズ</strong> と <strong><code>yield</code> 後のティアダウンフェーズ</strong> に分割します。FastAPI <code>v0.162.2</code> では、入れ子になった 2 種類のクリーンアップスコープによって解放タイミングを正確に制御できます。</p>
 <ul>
-<li><strong><code>scope[&quot;fastapi_function_astack&quot;]</code>（<code>scope=&quot;function&quot;</code>）</strong>: パスオペレーション関数が <code>Response</code> オブジェクトを返した <strong>直後</strong>、すなわち <code>await response(scope, receive, send)</code> がネットワークへバイト列を送信したりストリーミングを開始する <strong>前</strong> にクリーンアップを実行します。</li>
-<li><strong><code>scope[&quot;fastapi_inner_astack&quot;]</code>（<code>scope=&quot;request&quot;</code>、デフォルト）</strong>: パスオペレーションと <code>await response(scope, receive, send)</code> の双方を外側から包み、HTTP レスポンス送信・ストリーミングチャンク送出・バックグラウンドタスクが <strong>すべて完了した後</strong> にクリーンアップを実行します。</li>
+<li><strong>関数スコープのクリーンアップ（<code>Depends(..., scope=&quot;function&quot;)</code>）</strong>: パスオペレーション関数が戻り値を返した <strong>直後</strong>、すなわちレスポンスバイト列のネットワーク送信や <code>StreamingResponse</code> のイテレーションが開始される <strong>前</strong> にクリーンアップを実行します。</li>
+<li><strong>リクエストスコープのクリーンアップ（<code>Depends(..., scope=&quot;request&quot;)</code>、デフォルト）</strong>: パスオペレーションとレスポンス送信の双方を外側から包み、HTTP レスポンス送信・ストリーミングチャンク送出・バックグラウンドタスクが <strong>すべて完了した後</strong> にクリーンアップを実行します。</li>
 </ul>
 <figure class="drawlib-image" style="text-align: center;">
   <img src="../../images/04_dependencies_and_security/dependency_injection/yield_scope_exit_stacks.png" alt="dependency_injection_2" />
-  <figcaption class="drawlib-caption">FastAPI v0.162.2 の二重 AsyncExitStack ライフサイクル：scope='function' と scope='request' および例外発生時の解放順序</figcaption>
+  <figcaption class="drawlib-caption">FastAPI v0.162.2 のジェネレータ依存クリーンアップライフサイクル：Depends(scope='function') と Depends(scope='request')</figcaption>
 </figure>
-<details class="drawlib-code-details">
-<summary>Source Code</summary>
-<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.canvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">setup</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.diagrams.sequence</span><span class="w"> </span><span class="kn">import</span> <span class="n">Participant</span><span class="p">,</span> <span class="n">ParticipantGroup</span><span class="p">,</span> <span class="n">PhosphorIcon</span><span class="p">,</span> <span class="n">SequenceDiagram</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">Style</span><span class="p">,</span> <span class="n">Styles</span>
-
-<span class="n">setup</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">166</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">134</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
-
-<span class="n">seq</span> <span class="o">=</span> <span class="n">SequenceDiagram</span><span class="p">(</span>
-    <span class="n">node_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Primary</span><span class="p">,</span>
-    <span class="n">node_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
-    <span class="n">edge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">,</span>
-    <span class="n">edge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">node_card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
-    <span class="n">col_width</span><span class="o">=</span><span class="mf">37.0</span><span class="p">,</span>
-    <span class="n">step_y</span><span class="o">=</span><span class="mf">6.8</span><span class="p">,</span>
-    <span class="n">margin</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="n">client</span> <span class="o">=</span> <span class="n">seq</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Participant</span><span class="p">(</span>
-        <span class="s2">"ASGI Client"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">23</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mf">13.5</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">GLOBE</span><span class="p">,</span>
-        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.8</span><span class="p">,</span>
-    <span class="p">)</span>
-<span class="p">)</span>
-
-<span class="n">runtime</span> <span class="o">=</span> <span class="n">seq</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">ParticipantGroup</span><span class="p">(</span>
-        <span class="n">title</span><span class="o">=</span><span class="s2">"FastAPI request_response() Dual AsyncExitStack"</span><span class="p">,</span>
-        <span class="n">padding</span><span class="o">=</span><span class="mf">4.5</span><span class="p">,</span>
-        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
-        <span class="n">text_style</span><span class="o">=</span><span class="n">Style</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.0</span><span class="p">),</span>
-    <span class="p">)</span>
-<span class="p">)</span>
-
-<span class="n">req_stack</span> <span class="o">=</span> <span class="n">runtime</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Participant</span><span class="p">(</span>
-        <span class="s1">'scope="request"</span><span class="se">\n</span><span class="s1">(inner_astack)'</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">26</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">STACK</span><span class="p">,</span>
-        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.8</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span>
-    <span class="p">)</span>
-<span class="p">)</span>
-
-<span class="n">fn_stack</span> <span class="o">=</span> <span class="n">runtime</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Participant</span><span class="p">(</span>
-        <span class="s1">'scope="function"</span><span class="se">\n</span><span class="s1">(function_astack)'</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">26</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">DATABASE</span><span class="p">,</span>
-        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.8</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
-    <span class="p">)</span>
-<span class="p">)</span>
-
-<span class="n">endpoint</span> <span class="o">=</span> <span class="n">runtime</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Participant</span><span class="p">(</span>
-        <span class="s2">"Endpoint &amp;</span><span class="se">\n</span><span class="s2">ASGI Response"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">26</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">FILE_CODE</span><span class="p">,</span>
-        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.8</span><span class="p">,</span>
-        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
-        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
-    <span class="p">)</span>
-<span class="p">)</span>
-
-<span class="n">client</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">req_stack</span><span class="p">,</span> <span class="s2">"1. Enter outer AsyncExitStack"</span><span class="p">)</span>
-<span class="n">req_stack</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">fn_stack</span><span class="p">,</span> <span class="s2">"2. yield conn -&gt; enter function_astack"</span><span class="p">)</span>
-<span class="n">fn_stack</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">endpoint</span><span class="p">,</span> <span class="s2">"3. yield tx -&gt; await endpoint()"</span><span class="p">)</span>
-
-<span class="k">with</span> <span class="n">seq</span><span class="o">.</span><span class="n">alt</span><span class="p">(</span><span class="s2">"200 OK"</span><span class="p">)</span> <span class="k">as</span> <span class="n">alt_blk</span><span class="p">:</span>
-    <span class="n">alt_blk</span><span class="o">.</span><span class="n">style</span> <span class="o">=</span> <span class="n">Styles</span><span class="o">.</span><span class="n">MutedDashed</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_line_width</span><span class="o">=</span><span class="mf">1.2</span><span class="p">)</span>
-    <span class="n">alt_blk</span><span class="o">.</span><span class="n">text_style</span> <span class="o">=</span> <span class="n">Style</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">)</span>
-    <span class="n">endpoint</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span><span class="n">fn_stack</span><span class="p">,</span> <span class="s2">"4. Return StreamingResponse"</span><span class="p">)</span>
-    <span class="n">seq</span><span class="o">.</span><span class="n">note</span><span class="p">(</span>
-        <span class="s2">"function_astack exits BEFORE send():</span><span class="se">\n</span><span class="s2">commit tx &amp; release DB lock early!"</span><span class="p">,</span>
-        <span class="n">over</span><span class="o">=</span><span class="p">[</span><span class="n">fn_stack</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">],</span>
-        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="p">)</span>
-    <span class="n">endpoint</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span>
-        <span class="n">client</span><span class="p">,</span>
-        <span class="s2">"5. await response(scope, receive, send) [Stream CSV]"</span><span class="p">,</span>
-        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SuccessBold</span><span class="p">,</span>
-        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="p">)</span>
-    <span class="n">endpoint</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span><span class="n">req_stack</span><span class="p">,</span> <span class="s2">"6. Stream done -&gt; inner_astack.__aexit__()"</span><span class="p">)</span>
-
-<span class="k">with</span> <span class="n">seq</span><span class="o">.</span><span class="n">else_</span><span class="p">(</span><span class="s2">"HTTPException"</span><span class="p">)</span> <span class="k">as</span> <span class="n">else_blk</span><span class="p">:</span>
-    <span class="n">else_blk</span><span class="o">.</span><span class="n">style</span> <span class="o">=</span> <span class="n">Styles</span><span class="o">.</span><span class="n">MutedDashed</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_line_width</span><span class="o">=</span><span class="mf">1.2</span><span class="p">)</span>
-    <span class="n">else_blk</span><span class="o">.</span><span class="n">text_style</span> <span class="o">=</span> <span class="n">Style</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">)</span>
-    <span class="n">endpoint</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span>
-        <span class="n">fn_stack</span><span class="p">,</span>
-        <span class="s2">"4b. Raise HTTPException into yield frame"</span><span class="p">,</span>
-        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DangerBold</span><span class="p">,</span>
-        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DangerBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="p">)</span>
-    <span class="n">fn_stack</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span>
-        <span class="n">req_stack</span><span class="p">,</span>
-        <span class="s2">"5b. try...finally: rollback &amp; re-raise (LIFO)"</span><span class="p">,</span>
-        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DangerBold</span><span class="p">,</span>
-        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DangerBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="p">)</span>
-    <span class="n">req_stack</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span>
-        <span class="n">client</span><span class="p">,</span>
-        <span class="s2">"6b. Release conn -&gt; send HTTP error JSON"</span><span class="p">,</span>
-        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DangerBold</span><span class="p">,</span>
-        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DangerBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="p">)</span>
-
-<span class="n">seq</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">83.0</span><span class="p">,</span> <span class="mf">67.0</span><span class="p">),</span> <span class="n">align</span><span class="o">=</span><span class="s2">"center"</span><span class="p">)</span>
-<span class="n">save</span><span class="p">()</span>
-</code></pre>
-</details>
 <h3>2.1 <code>scope=&quot;function&quot;</code> と <code>scope=&quot;request&quot;</code> の使い分け</h3>
-<p><code>scope</code> を省略（<code>scope=None</code>）した場合、<code>_get_computed_scope()</code> はストリーミング応答のジェネレータ内からも安全にリソースを参照できるようデフォルトで <code>&quot;request&quot;</code> を選択します。低速なクライアント回線下で DB コネクションプールの枯渇を防ぐには、用途に応じて <code>scope=&quot;function&quot;</code> と <code>scope=&quot;request&quot;</code> を明示的に使い分けます。</p>
+<p><code>scope</code> を省略した場合、ストリーミング応答のジェネレータ内からも安全にリソースを参照できるようデフォルトで <code>scope=&quot;request&quot;</code> が選択されます。低速なクライアント回線下で DB コネクションプールの枯渇を防ぐには、用途に応じて <code>scope=&quot;function&quot;</code> と <code>scope=&quot;request&quot;</code> を明示的に使い分けます。</p>
 <table>
 <thead>
 <tr>
@@ -801,13 +499,13 @@ FastAPI の依存関数や Pydantic モデルをネストしたスコープ内�
 </thead>
 <tbody>
 <tr>
-<td style="text-align:left"><strong>登録先スタック</strong></td>
-<td style="text-align:left"><code>request.scope[&quot;fastapi_function_astack&quot;]</code></td>
-<td style="text-align:left"><code>request.scope[&quot;fastapi_inner_astack&quot;]</code></td>
+<td style="text-align:left"><strong>クリーンアップ段階</strong></td>
+<td style="text-align:left">関数スコープ（エンドポイント関数が返った直後）</td>
+<td style="text-align:left">リクエストスコープ（応答送信・ストリーミング完了後）</td>
 </tr>
 <tr>
 <td style="text-align:left"><strong>解放タイミング</strong></td>
-<td style="text-align:left"><code>await response(scope, receive, send)</code> の <strong>実行前</strong></td>
+<td style="text-align:left">レスポンスバイト列およびストリーミング送信の <strong>開始前</strong></td>
 <td style="text-align:left">レスポンス送信・ストリーミング・背景タスクの <strong>完了後</strong></td>
 </tr>
 <tr>
@@ -823,17 +521,16 @@ FastAPI の依存関数や Pydantic モデルをネストしたスコープ内�
 </tbody>
 </table>
 <h3>2.2 必須の <code>try...finally</code> クリーンアップと例外再送出</h3>
-<p>あなたの <code>yield</code> 依存が開始された <strong>後</strong> に、兄弟となる別の依存関数やエンドポイント本体が例外（<code>HTTPException</code> やドメイン例外など）を送出すると、Python の <code>AsyncExitStack</code> は待機中の <code>yield</code> 行へ <code>athrow()</code> / <code>throw()</code> でその例外を再注入します。本番コードでは次の 2 原則が絶対条件となります。</p>
+<p>あなたの <code>yield</code> 依存が開始された <strong>後</strong> に、兄弟となる別の依存関数やエンドポイント本体が例外（<code>HTTPException</code> やドメイン例外など）を送出すると、FastAPI は待機中の <code>yield</code> 行へ逆順（LIFO）でその例外を伝播させます。本番コードでは次の 2 原則が絶対条件となります。</p>
 <ol>
 <li><strong>必ず <code>try ... finally:</code> で <code>yield</code> を囲む</strong>: <code>finally:</code> を使わず <code>yield</code> の後ろにそのまま後処理を記述すると、未捕捉例外でリクエストが中断された際にクリーンアップがスキップされ、DB セッションやセマフォがリークします。</li>
-<li><strong><code>yield</code> 後に例外を握りつぶさない</strong>: ロールバック処理のために <code>except Exception:</code> で捕捉する場合（<code>except Exception: await tx.rollback(); raise</code>）も、<strong>必ず例外を再送出（<code>raise</code>）</strong> してください。レスポンス送信前に <code>scope=&quot;request&quot;</code> の依存が例外を握りつぶすと、FastAPI <code>v0.162.2</code> は <code>FastAPIError: Response not awaited</code> を送出して停止します。</li>
+<li><strong><code>yield</code> 後に例外を握りつぶさない</strong>: ロールバック処理のために <code>except Exception:</code> で捕捉する場合（<code>except Exception: await tx.rollback(); raise</code>）も、<strong>必ず例外を再送出（<code>raise</code>）</strong> してください。<code>yield</code> 後に例外を握りつぶして再送出しないと、FastAPI の例外ハンドラが動作せずレスポンス未生成となり、<code>500 Internal Server Error</code> の原因となります。</li>
 </ol>
 <pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncIterator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">status</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.responses</span><span class="w"> </span><span class="kn">import</span> <span class="n">StreamingResponse</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.testclient</span><span class="w"> </span><span class="kn">import</span> <span class="n">TestClient</span>
 
 <span class="n">events</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">()</span>
@@ -880,9 +577,14 @@ FastAPI の依存関数や Pydantic モデルをネストしたスコープ内�
     <span class="k">return</span> <span class="n">StreamingResponse</span><span class="p">(</span><span class="n">stream_rows</span><span class="p">(),</span> <span class="n">media_type</span><span class="o">=</span><span class="s2">"text/csv"</span><span class="p">)</span>
 </code></pre>
 <p><code>GET /reports/export</code> を実行すると、<code>events</code> には <code>[&quot;req_conn:enter&quot;, &quot;fn_tx:enter(conn_pool_1)&quot;, &quot;endpoint:body(tx_active)&quot;, &quot;fn_tx:commit&quot;, &quot;fn_tx:exit&quot;, &quot;stream:chunk_1&quot;, &quot;req_conn:exit&quot;]</code> の順序が記録されます。<code>&quot;function&quot;</code> スコープのトランザクションは <code>stream_rows()</code> が最初のチャンクを送出する <strong>前</strong> にコミット・解放され、一方で <code>&quot;request&quot;</code> スコープのコネクションはストリーミング完了後まで維持されます。また <code>?fail=true</code> で <code>409 Conflict</code> が発生した場合も、<code>except</code> での再送出と <code>finally:</code> によって <code>[&quot;req_conn:enter&quot;, &quot;fn_tx:enter(conn_pool_1)&quot;, &quot;endpoint:body(tx_active)&quot;, &quot;fn_tx:rollback&quot;, &quot;fn_tx:exit&quot;, &quot;req_conn:exit&quot;]</code> と LIFO 順で確実に解放されます。</p>
-<p>続いて次節 <a href="security_and_auth.html">認証・OAuth2 スコープ認可・抽出器</a> では、<code>fastapi.security</code> がこの <code>Dependant</code> DAG の上に資格情報抽出・階層的 <code>SecurityScopes</code>・OpenAPI 3.1 <code>securitySchemes</code> をどのように統合しているかを解説し、ストリーミングとの組み合わせについては <a href="../05_async_and_realtime/sse_websockets_streaming.html">ネイティブ SSE・JSONL・WebSocket</a> で掘り下げます。</p>
+<p>続いて次節 <a href="security_and_auth.html">認証・OAuth2 スコープ認可・抽出器</a> では、<code>fastapi.security</code> がこの依存関係グラフの上に資格情報抽出・階層的 <code>SecurityScopes</code>・OpenAPI 3.1 <code>securitySchemes</code> をどのように統合しているかを解説し、ストリーミングとの組み合わせについては <a href="../05_async_and_realtime/sse_websockets_streaming.html">ネイティブ SSE・JSONL・WebSocket</a> で掘り下げます。</p>
 
             </main>
+            <footer class="footer">
+                
+                FastAPI® は Sebastián Ramírez（<a href="https://github.com/tiangolo" target="_blank" rel="noopener noreferrer">@tiangolo</a>）の登録商標です。本サイトは非公式ガイドであり、公式プロジェクトとは提携していません。公式ドキュメントは <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">fastapi.tiangolo.com</a> をご参照ください。
+                
+            </footer>
         </div>
     </div>
     

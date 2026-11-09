@@ -2,7 +2,7 @@
 
 FastAPI `v0.162.2` はルート定義と型アノテーションから **OpenAPI `3.1.0`** および JSON Schema `2020-12` を直接合成するため、同一の Pydantic モデル群をアウトバウンド通知契約（`app.webhooks` と `callbacks`）、TypeScript / Python クライアント SDK 自動生成（`generate_unique_id_function`）、そして閉域網対応の Swagger UI / ReDoc ポータルにそのまま活用できます。
 
-```drawlib align=center code=fold file=webhooks_and_callbacks_flow.png caption="OpenAPI 3.1 の Webhooks (@app.webhooks.post) とリクエスト連動 Callbacks (callbacks=router.routes) の構造比較"
+```drawlib align=center code=hide file=webhooks_and_callbacks_flow.png caption="OpenAPI 3.1 の Webhooks (@app.webhooks.post) とリクエスト連動 Callbacks (callbacks=router.routes) の構造比較"
 from drawlib.canvas import save, setup
 from drawlib.icons import code, phosphor
 from drawlib.lines import line
@@ -202,7 +202,7 @@ async def create_invoice(invoice: InvoiceRequest) -> dict[str, str]:
 
 フロントエンド向けの `@hey-api/openapi-ts` や Python マイクロサービス向けの `openapi-python-client` といった SDK ジェネレータは、OpenAPI 各オペレーションの **`operationId`** からメソッド名を決定します。
 
-```drawlib align=center code=fold file=sdk_generation_and_docs_ui.png caption="generate_unique_id_function によるクリーンな SDK 生成パイプラインと Docs UI の 3 種類の配信形態"
+```drawlib align=center code=hide file=sdk_generation_and_docs_ui.png caption="generate_unique_id_function によるクリーンな SDK 生成パイプラインと Docs UI の 3 種類の配信形態"
 from drawlib.canvas import save, setup
 from drawlib.icons import phosphor
 from drawlib.lines import line

@@ -2,7 +2,7 @@
 
 This guide walks from a clean Python `>=3.10` project to a fully typed **Inventory API** on FastAPI `v0.162.2`—complete with boundary validation, aggregated `422 Unprocessable Content` error reporting, interactive OpenAPI `3.1.0` consoles, and an in-process `TestClient` suite.
 
-```drawlib align=center code=fold file=quickstart_request_anatomy.png caption="Anatomy of POST /items/{item_id}?currency=JPY — Multi-Source Extraction, Pydantic v2 Validation, and Dual 201 / 422 Outcomes"
+```drawlib align=center code=hide file=quickstart_request_anatomy.png caption="Anatomy of POST /items/{item_id}?currency=JPY — Multi-Source Extraction, Pydantic v2 Validation, and Dual 201 / 422 Outcomes"
 from drawlib.canvas import save, setup
 from drawlib.diagrams.architecture import ArchitectureDiagram, CodeIcon, Node, PhosphorIcon
 from drawlib.shapes import rectangle
@@ -232,7 +232,7 @@ Instead of failing on the first bad field and forcing callers through frustratin
 
 Without writing a single line of YAML, `app.openapi()` inspects every registered `APIRoute` and synthesizes an OpenAPI `3.1.0` + JSON Schema `2020-12` document cached on `app.openapi_schema`:
 
-```drawlib align=center code=fold file=openapi_docs_ecosystem.png caption="Single Endpoint Contract Fan-Out — Powering /openapi.json, Swagger UI (/docs), ReDoc (/redoc), and Typed Client SDKs"
+```drawlib align=center code=hide file=openapi_docs_ecosystem.png caption="Single Endpoint Contract Fan-Out — Powering /openapi.json, Swagger UI (/docs), ReDoc (/redoc), and Typed Client SDKs"
 from drawlib.canvas import save, setup
 from drawlib.diagrams.architecture import (
     ArchitectureDiagram,

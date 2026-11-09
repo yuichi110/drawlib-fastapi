@@ -2,7 +2,7 @@
 
 FastAPI `v0.162.2`'s `fastapi.security` module unifies runtime credential extraction and OpenAPI 3.1 schema generation: every `SecurityBase` dependency parses incoming HTTP credentials in the `Dependant` DAG while automatically populating `components.securitySchemes` and Swagger UI's interactive **"Authorize"** modal.
 
-```drawlib align=center code=fold file=security_schemes_architecture.png caption="Dual-Role Architecture of fastapi.security: Runtime DI Credential Extraction & OpenAPI 3.1 securitySchemes"
+```drawlib align=center code=hide file=security_schemes_architecture.png caption="Dual-Role Architecture of fastapi.security: Runtime DI Credential Extraction & OpenAPI 3.1 securitySchemes"
 from drawlib.canvas import save, setup
 from drawlib.diagrams.architecture import ArchitectureDiagram, Node, PhosphorIcon
 from drawlib.icons import phosphor
@@ -198,7 +198,7 @@ Unlike traditional middleware that intercepts every URL path indiscriminately, F
 
 While `Depends()` resolves any callable, `Security(callable, scopes=[...])` (`fastapi/param_functions.py`) extends `Depends()` with declarative OAuth2 permission strings. When dependencies are nested across layers—for example, a route requires `scopes=["items:write"]` on `get_current_principal`, which in turn requires `scopes=["me:read"]` on `verify_bearer_claims`—FastAPI merges `parent_oauth_scopes` and `own_oauth_scopes` top-down through `_get_oauth_scopes()` and injects the combined list into a `SecurityScopes` parameter.
 
-```drawlib align=center code=fold file=oauth2_security_scopes_flow.png caption="Hierarchical SecurityScopes Propagation & 401 vs 403 Challenge Semantics Across Nested Dependencies"
+```drawlib align=center code=hide file=oauth2_security_scopes_flow.png caption="Hierarchical SecurityScopes Propagation & 401 vs 403 Challenge Semantics Across Nested Dependencies"
 from drawlib.canvas import save, setup
 from drawlib.diagrams.sequence import Participant, ParticipantGroup, PhosphorIcon, SequenceDiagram
 from drawlib.styles import Style, Styles

@@ -13,7 +13,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>大規模 DI エイリアス・Lifespan 管理・テストピラミッド戦略 — FastAPI Visual Guide (Unofficial · Drawlib Demo)</title>
+    <title>大規模 DI エイリアス・Lifespan 管理・テストピラミッド戦略 — FastAPI User Guide (Unofficial)</title>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
     <script>
@@ -49,15 +49,15 @@
     <meta name="description" content="500以上のエンドポイントと10万行超（100,000+ LOC）のコードベースにおいて、サブ秒単位のテストフィードバックと確実なリソース解放を維持するには、プロセス寿命のインフラ管理（lifespan）、リクエスト寿命の Unit-of-Work 注入（Annotated[...…">
     <link rel="canonical" href="https://fastapi.drawlib.com/ja/02_enterprise_architecture/di_lifespan_testing.html">
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="FastAPI ビジュアル解説">
-    <meta property="og:title" content="大規模 DI エイリアス・Lifespan 管理・テストピラミッド戦略 — FastAPI ビジュアル解説">
+    <meta property="og:site_name" content="FastAPI ユーザーガイド">
+    <meta property="og:title" content="大規模 DI エイリアス・Lifespan 管理・テストピラミッド戦略 — FastAPI ユーザーガイド">
     <meta property="og:description" content="500以上のエンドポイントと10万行超（100,000+ LOC）のコードベースにおいて、サブ秒単位のテストフィードバックと確実なリソース解放を維持するには、プロセス寿命のインフラ管理（lifespan）、リクエスト寿命の Unit-of-Work 注入（Annotated[...…">
     <meta property="og:url" content="https://fastapi.drawlib.com/ja/02_enterprise_architecture/di_lifespan_testing.html">
     <meta property="og:image" content="https://fastapi.drawlib.com/_assets/ogp.png">
     <meta property="og:locale" content="ja_JP">
     <meta property="og:locale:alternate" content="en_US">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="大規模 DI エイリアス・Lifespan 管理・テストピラミッド戦略 — FastAPI ビジュアル解説">
+    <meta name="twitter:title" content="大規模 DI エイリアス・Lifespan 管理・テストピラミッド戦略 — FastAPI ユーザーガイド">
     <meta name="twitter:description" content="500以上のエンドポイントと10万行超（100,000+ LOC）のコードベースにおいて、サブ秒単位のテストフィードバックと確実なリソース解放を維持するには、プロセス寿命のインフラ管理（lifespan）、リクエスト寿命の Unit-of-Work 注入（Annotated[...…">
     <meta name="twitter:image" content="https://fastapi.drawlib.com/_assets/ogp.png">
     
@@ -70,17 +70,21 @@
     
 </head>
 <body>
-    <div class="demo-banner" role="region" aria-label="非公式ショーケース案内">
+    <div class="demo-banner" role="region" aria-label="ポータルナビゲーション">
         <div class="demo-banner-inner">
-            <span class="demo-banner-badge">UNOFFICIAL DEMO</span>
+            <span class="demo-banner-badge">UNOFFICIAL GUIDE</span>
             
             <span class="demo-banner-text">
-                <a href="https://www.drawlib.com/" target="_blank" rel="noopener noreferrer">Drawlib</a> と <a href="https://pypi.org/project/pni501/" target="_blank" rel="noopener noreferrer">PNI501</a> で作成した <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a>（v0.162.2, MIT）の非公式ビジュアル解説ショーケースです。
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a>（v0.162.2）非公式ユーザーガイド
             </span>
             <span class="demo-banner-links">
-                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 診断レポート →</a>
+                <strong style="color:#ffffff;">User Guide</strong>
                 <span class="demo-banner-sep">·</span>
-                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI 公式 Docs ↗</a>
+                <a href="https://fastapi.drawlib.com/architecture/">Architecture</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Audit</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official Docs ↗</a>
                 <span class="demo-banner-sep">·</span>
                 <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
             </span>
@@ -91,9 +95,9 @@
     <div class="doc-layout">
         <aside class="sidebar">
             <div class="sidebar-header">
-                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI ビジュアル解説">
+                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI ユーザーガイド">
                     
-                    FastAPI ビジュアル解説
+                    FastAPI ユーザーガイド
                     
                 </a>
                 <div class="sidebar-header-actions">
@@ -114,7 +118,7 @@
                         <ul class="nav-list">
                             
                             <li class="nav-item ">
-                                <a href="../index.html" >ガイド概要と全体マップ</a>
+                                <a href="../index.html" >ガイド概要</a>
                             </li>
                             
                         </ul>
@@ -125,7 +129,7 @@
                         <ul class="nav-list">
                             
                             <li class="nav-item ">
-                                <a href="../01_getting_started/overview.html" >FastAPI の設計思想と内部構造</a>
+                                <a href="../01_getting_started/overview.html" >FastAPI の設計思想と基本概念</a>
                             </li>
                             
                             <li class="nav-item ">
@@ -178,7 +182,7 @@
                         <ul class="nav-list">
                             
                             <li class="nav-item ">
-                                <a href="../04_dependencies_and_security/dependency_injection.html" >Dependant DAG・キャッシュ・yield スコープ</a>
+                                <a href="../04_dependencies_and_security/dependency_injection.html" >依存グラフ・キャッシュ・yield スコープ</a>
                             </li>
                             
                             <li class="nav-item ">
@@ -252,12 +256,12 @@
                         </ul>
                     
                         
-                        <div class="sidebar-heading">診断レポート &amp; 公式リンク</div>
+                        <div class="sidebar-heading">関連ガイド &amp; 公式リンク</div>
                         
                         <ul class="nav-list">
                             
                             <li class="nav-item ">
-                                <a href="https://fastapi.drawlib.com/reports/pni501/" target="_blank" rel="noopener noreferrer">PNI501 診断レポート<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                                <a href="https://fastapi.drawlib.com/architecture/" target="_blank" rel="noopener noreferrer">FastAPI 内部アーキテクチャ解説<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
                             </li>
                             
                             <li class="nav-item ">
@@ -265,7 +269,7 @@
                             </li>
                             
                             <li class="nav-item ">
-                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">デモのリポジトリ (GitHub)<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub リポジトリ<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
                             </li>
                             
                         </ul>
@@ -314,140 +318,6 @@
   <img src="../../images/02_enterprise_architecture/di_lifespan_testing/enterprise_di_lifespan_flow.png" alt="di_lifespan_testing_1" />
   <figcaption class="drawlib-caption">Lifespan とリクエストスコープ DI の二層配線および RFC 9457 ドメイン例外変換フロー</figcaption>
 </figure>
-<details class="drawlib-code-details">
-<summary>Source Code</summary>
-<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.canvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">setup</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.diagrams.architecture</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArchitectureDiagram</span><span class="p">,</span> <span class="n">Node</span><span class="p">,</span> <span class="n">NodeGroup</span><span class="p">,</span> <span class="n">PhosphorIcon</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">Styles</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.text</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span>
-
-<span class="n">setup</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">180</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">88</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
-
-<span class="n">text</span><span class="p">(</span>
-    <span class="p">(</span><span class="mi">90</span><span class="p">,</span> <span class="mf">82.5</span><span class="p">),</span>
-    <span class="s2">"Enterprise Lifespan, Scoped DI Wiring &amp; RFC 9457 Exception Boundary"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">13.5</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="n">diag</span> <span class="o">=</span> <span class="n">ArchitectureDiagram</span><span class="p">(</span>
-    <span class="n">node_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Primary</span><span class="p">,</span>
-    <span class="n">node_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.2</span><span class="p">),</span>
-    <span class="n">edge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">,</span>
-    <span class="n">edge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">node_card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="c1"># Zone 1: Process Lifespan (Once per Worker)</span>
-<span class="n">life_grp</span> <span class="o">=</span> <span class="n">diag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">NodeGroup</span><span class="p">(</span>
-        <span class="n">title</span><span class="o">=</span><span class="s2">"1. Process Lifespan (app.state)"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">46</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mi">65</span><span class="p">,</span>
-        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">2.0</span><span class="p">),</span>
-        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span> <span class="n">text_size</span><span class="o">=</span><span class="mf">10.8</span><span class="p">),</span>
-    <span class="p">),</span>
-    <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">life_node</span> <span class="o">=</span> <span class="n">life_grp</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span>
-        <span class="s2">"Lifespan Hook</span><span class="se">\n</span><span class="s2">(Startup / Shutdown)"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">36</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">STACK</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
-    <span class="p">),</span>
-    <span class="p">(</span><span class="mi">23</span><span class="p">,</span> <span class="mi">44</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">pool_node</span> <span class="o">=</span> <span class="n">life_grp</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span>
-        <span class="s2">"AppContainer</span><span class="se">\n</span><span class="s2">(DB Pool &amp; HTTPX)"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">36</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">DATABASE</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
-    <span class="p">),</span>
-    <span class="p">(</span><span class="mi">23</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="c1"># Zone 2: Per-Request DI Graph (Annotated Aliases)</span>
-<span class="n">di_grp</span> <span class="o">=</span> <span class="n">diag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">NodeGroup</span><span class="p">(</span>
-        <span class="n">title</span><span class="o">=</span><span class="s2">"2. Per-Request DI (Depends)"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">52</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mi">65</span><span class="p">,</span>
-        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">2.0</span><span class="p">),</span>
-        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span> <span class="n">text_size</span><span class="o">=</span><span class="mf">10.8</span><span class="p">),</span>
-    <span class="p">),</span>
-    <span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">uow_node</span> <span class="o">=</span> <span class="n">di_grp</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span>
-        <span class="s2">"DbSessionDep</span><span class="se">\n</span><span class="s2">(yield, scope='function')"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">ARROWS_CLOCKWISE</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
-    <span class="p">),</span>
-    <span class="p">(</span><span class="mi">26</span><span class="p">,</span> <span class="mi">44</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">route_node</span> <span class="o">=</span> <span class="n">di_grp</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span>
-        <span class="s2">"3-Line APIRouter</span><span class="se">\n</span><span class="s2">+ CurrentActorDep"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">PLUGS_CONNECTED</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
-        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.2</span><span class="p">),</span>
-        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="p">,</span>
-    <span class="p">),</span>
-    <span class="p">(</span><span class="mi">26</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="c1"># Zone 3: Pure Domain &amp; RFC 9457 Edge</span>
-<span class="n">dom_grp</span> <span class="o">=</span> <span class="n">diag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">NodeGroup</span><span class="p">(</span>
-        <span class="n">title</span><span class="o">=</span><span class="s2">"3. Domain &amp; ASGI Edge"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">46</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mi">65</span><span class="p">,</span>
-        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">2.0</span><span class="p">),</span>
-        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span> <span class="n">text_size</span><span class="o">=</span><span class="mf">10.8</span><span class="p">),</span>
-    <span class="p">),</span>
-    <span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">uc_node</span> <span class="o">=</span> <span class="n">dom_grp</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span>
-        <span class="s2">"OrderUseCase</span><span class="se">\n</span><span class="s2">(Pure Domain Logic)"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">36</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">CUBE</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
-    <span class="p">),</span>
-    <span class="p">(</span><span class="mi">23</span><span class="p">,</span> <span class="mi">44</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">err_node</span> <span class="o">=</span> <span class="n">dom_grp</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span>
-        <span class="s2">"DomainError -&gt;</span><span class="se">\n</span><span class="s2">RFC 9457 JSON"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">36</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">SHIELD_WARNING</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DangerNeutral</span><span class="p">,</span>
-        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DangerBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.2</span><span class="p">),</span>
-        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DangerBold</span><span class="p">,</span>
-    <span class="p">),</span>
-    <span class="p">(</span><span class="mi">23</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="c1"># Connections across lifecycle tiers</span>
-<span class="n">diag</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">life_node</span><span class="p">,</span> <span class="n">pool_node</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"owns"</span><span class="p">)</span>
-<span class="n">diag</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">pool_node</span><span class="p">,</span> <span class="n">uow_node</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"pool"</span><span class="p">,</span> <span class="n">routing</span><span class="o">=</span><span class="s2">"orthogonal"</span><span class="p">)</span>
-<span class="n">diag</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">uow_node</span><span class="p">,</span> <span class="n">route_node</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"injects"</span><span class="p">)</span>
-<span class="n">diag</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">route_node</span><span class="p">,</span> <span class="n">uc_node</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"calls"</span><span class="p">,</span> <span class="n">routing</span><span class="o">=</span><span class="s2">"orthogonal"</span><span class="p">)</span>
-<span class="n">diag</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">uc_node</span><span class="p">,</span> <span class="n">err_node</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"raises"</span><span class="p">)</span>
-
-<span class="n">diag</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
-<span class="n">save</span><span class="p">()</span>
-</code></pre>
-</details>
 <hr />
 <h2>1. 決定論的なプロセス Lifespan 管理と import 時グローバル変数の排除</h2>
 <p>大規模 Python バックエンドにおける最も高コストなアンチパターンの1つが、ファイルが import された瞬間に DB エンジンや Redis クライアント、<code>httpx.AsyncClient</code> プールを <strong>モジュールレベルのグローバル変数</strong> として初期化してしまう実装（<code>engine = create_async_engine(os.environ[&quot;DB_URL&quot;])</code>）です。</p>
@@ -670,93 +540,6 @@
   <img src="../../images/02_enterprise_architecture/di_lifespan_testing/enterprise_test_pyramid.png" alt="di_lifespan_testing_2" />
   <figcaption class="drawlib-caption">10万行規模システムのテストピラミッド：70% 純粋ドメイン単体・20% FastAPI 契約 DI 差替・10% コンテナ統合</figcaption>
 </figure>
-<details class="drawlib-code-details">
-<summary>Source Code</summary>
-<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.canvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">setup</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.icons</span><span class="w"> </span><span class="kn">import</span> <span class="n">phosphor</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.smartarts</span><span class="w"> </span><span class="kn">import</span> <span class="n">CardList</span><span class="p">,</span> <span class="n">Pyramid</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">Styles</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.text</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span>
-
-<span class="n">setup</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">174</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">86</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
-
-<span class="n">text</span><span class="p">(</span>
-    <span class="p">(</span><span class="mi">87</span><span class="p">,</span> <span class="mf">80.5</span><span class="p">),</span>
-    <span class="s2">"Enterprise Test Pyramid for 100k+ LOC FastAPI Systems"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">13.5</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="c1"># Left: 3-Tier Testing Pyramid (Base at bottom, vertex_to_base: Top=10%, Mid=20%, Base=70%)</span>
-<span class="n">pyramid</span> <span class="o">=</span> <span class="n">Pyramid</span><span class="p">(</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.0</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">pyramid</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="s2">"10%</span><span class="se">\n</span><span class="s2">E2E"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">pyramid</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="s2">"20% HTTP Contract</span><span class="se">\n</span><span class="s2">&amp; DI Overrides"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.8</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">pyramid</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="s2">"70% Pure Domain &amp; UseCase Unit Tests"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.0</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">pyramid</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span>
-    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span>
-    <span class="n">width</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
-    <span class="n">height</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
-    <span class="n">margin</span><span class="o">=</span><span class="mf">2.2</span><span class="p">,</span>
-    <span class="n">direction</span><span class="o">=</span><span class="s2">"bottom"</span><span class="p">,</span>
-    <span class="n">order</span><span class="o">=</span><span class="s2">"vertex_to_base"</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="c1"># Right: Aligned Tier Specifications via CardList</span>
-<span class="n">cards</span> <span class="o">=</span> <span class="n">CardList</span><span class="p">(</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.8</span><span class="p">),</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.0</span><span class="p">),</span>
-    <span class="n">description_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">badge_shape</span><span class="o">=</span><span class="s2">"rounded_rect"</span><span class="p">,</span>
-    <span class="n">badge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span>
-    <span class="n">badge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryBold</span><span class="p">,</span>
-    <span class="n">direction</span><span class="o">=</span><span class="s2">"vertical"</span><span class="p">,</span>
-    <span class="n">spacing</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">cards</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="s2">"Containerized Lifespan &amp; DB (~50–200 ms)"</span><span class="p">,</span>
-    <span class="s2">"Real PostgreSQL/Redis via Testcontainers,</span><span class="se">\n</span><span class="s2">SQL migrations &amp; lifespan shutdown."</span><span class="p">,</span>
-    <span class="n">badge_text</span><span class="o">=</span><span class="s2">"10%"</span><span class="p">,</span>
-    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">database</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">cards</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="s2">"FastAPI Router &amp; Contract Tests (~2–8 ms)"</span><span class="p">,</span>
-    <span class="s2">"TestClient + app.dependency_overrides:</span><span class="se">\n</span><span class="s2">DTO 422s, Auth headers &amp; RFC 9457 JSON."</span><span class="p">,</span>
-    <span class="n">badge_text</span><span class="o">=</span><span class="s2">"20%"</span><span class="p">,</span>
-    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">plugs_connected</span><span class="p">,</span>
-    <span class="n">badge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
-    <span class="n">badge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">cards</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="s2">"Pure Domain &amp; UseCase Tests (&lt; 0.5 ms)"</span><span class="p">,</span>
-    <span class="s2">"In-memory Protocol fakes, zero ASGI/HTTP,</span><span class="se">\n</span><span class="s2">1,000+ deterministic cases/sec in CI."</span><span class="p">,</span>
-    <span class="n">badge_text</span><span class="o">=</span><span class="s2">"70%"</span><span class="p">,</span>
-    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">lightning</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.8</span><span class="p">),</span>
-    <span class="n">badge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
-    <span class="n">badge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">cards</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mi">76</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">92</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">64</span><span class="p">)</span>
-
-<span class="n">save</span><span class="p">()</span>
-</code></pre>
-</details>
 <h3>FastAPI での実践：サブミリ秒単体テストと <code>app.dependency_overrides</code></h3>
 <p><code>Domain</code> 層と <code>UseCase</code> 層が <code>Protocol</code> ポートのみに依存しているため、<strong>全体の70%を占める単体テストは ASGI や HTTP を一切経由せずメモリ上で完結</strong>します。続く <strong>20%の HTTP 契約テスト層</strong> では、FastAPI の <code>app.dependency_overrides</code> を用いて関数オブジェクト参照で安全に依存を差し替え、<code>try ... finally: app.dependency_overrides.clear()</code> で確実にクリーンアップします（非同期 <code>httpx.AsyncClient</code> や負荷試験パターンは <a href="../06_observability_and_testing/testing_and_deployment.html">実践テスト手法と本番 ASGI 運用</a> を参照してください）。</p>
 <pre><code class="language-python"><span class="c1"># tests/orders/test_order_contracts.py — 純粋単体テスト層 + 密閉型 DI オーバーライド層</span>
@@ -826,6 +609,11 @@
 <p>続いて第3章の <a href="../03_routing_and_models/parameters_and_validation.html">Path・Query・Header・Cookie・Body</a> へ進み、FastAPI が <code>Annotated</code> パラメータメタデータをどのように解析し、高速な Pydantic v2 バリデータへとコンパイルしているのかを詳しく見ていきましょう。</p>
 
             </main>
+            <footer class="footer">
+                
+                FastAPI® は Sebastián Ramírez（<a href="https://github.com/tiangolo" target="_blank" rel="noopener noreferrer">@tiangolo</a>）の登録商標です。本サイトは非公式ガイドであり、公式プロジェクトとは提携していません。公式ドキュメントは <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">fastapi.tiangolo.com</a> をご参照ください。
+                
+            </footer>
         </div>
     </div>
     

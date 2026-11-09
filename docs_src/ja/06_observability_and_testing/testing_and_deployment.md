@@ -2,7 +2,7 @@
 
 FastAPI `v0.162.2` は、同期的な `with TestClient(app) as client:` と非同期イベントループ直結の `httpx.ASGITransport` の双方でミリ秒未満のインメモリ統合テストを実現し、本番環境ではリバースプロキシ配下の ASGI ワーカー・ヘルスプローブ・`lifespan` による安全なドレイン終了とシームレスに連携します。
 
-```drawlib align=center code=fold file=testing_modes_architecture.png caption="インメモリ FastAPI 統合テスト構成：同期 TestClient ポータル方式 vs 非同期 httpx.ASGITransport 直結方式"
+```drawlib align=center code=hide file=testing_modes_architecture.png caption="インメモリ FastAPI 統合テスト構成：同期 TestClient ポータル方式 vs 非同期 httpx.ASGITransport 直結方式"
 from drawlib.canvas import save, setup
 from drawlib.icons import phosphor
 from drawlib.lines import line
@@ -198,7 +198,7 @@ async def test_async_readiness_transitions() -> None:
 
 Kubernetes、Cloud Run、systemd などの本番環境では、TLS 終端を行うリバースプロキシやロードバランサーの背後に単一プロセスの Uvicorn ASGI ワーカーを配置し、水平スケーリングはコンテナオーケストレーター側のレプリカ制御に委ねます。
 
-```drawlib align=center code=fold file=production_asgi_readiness.png caption="本番 ASGI デプロイトポロジ：TLS リバースプロキシ・Uvicorn ワーカー・ヘルスプローブ・Lifespan ドレイン終了"
+```drawlib align=center code=hide file=production_asgi_readiness.png caption="本番 ASGI デプロイトポロジ：TLS リバースプロキシ・Uvicorn ワーカー・ヘルスプローブ・Lifespan ドレイン終了"
 from drawlib.canvas import save, setup
 from drawlib.diagrams.architecture import ArchitectureDiagram, GcpIcon, Node, NodeGroup, PhosphorIcon
 from drawlib.styles import Styles

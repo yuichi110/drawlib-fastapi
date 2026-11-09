@@ -2,7 +2,7 @@
 
 FastAPI `v0.162.2` は、新設された低優先度静的ルーティング機構 `app.frontend()` / `router.frontend()` を軸に、モダンな Single-Page Application（SPA）配信、サーバーサイド HTML テンプレート、独立した ASGI サブアプリケーション、そしてレガシー WSGI アプリの段階的移行を単一プロセス上でシームレスに統合します。
 
-```drawlib align=center code=fold file=spa_frontend_routing_priority.png caption="FastAPI v0.162.2 の app.frontend() / router.frontend() 優先順位ディスパッチとブラウザ HTML フォールバック判定"
+```drawlib align=center code=hide file=spa_frontend_routing_priority.png caption="FastAPI v0.162.2 の app.frontend() / router.frontend() 優先順位ディスパッチとブラウザ HTML フォールバック判定"
 from drawlib.canvas import save, setup
 from drawlib.icons import code, phosphor
 from drawlib.lines import line, lines
@@ -25,7 +25,7 @@ outer = Panel(
 )
 outer.draw((4.0, 4.0), width=180.0, height=90.0)
 
-# Top 4-Stage Evaluation Order inside APIRouter.app()
+# Top 4-Stage SPA Dispatch Evaluation Order
 stages = ChevronProcess(
     style=Styles.Neutral,
     text_style=Styles.DarkBold.patch(text_size=10.5),
@@ -34,7 +34,7 @@ stages = ChevronProcess(
     spacing=1.6,
     flat_left_end=True,
 )
-stages.add("1. Normal Routes", description="APIRoute, WS & Mount", style=Styles.SecondaryNeutral)
+stages.add("1. Normal Routes", description="API Routes, WS & Mount", style=Styles.SecondaryNeutral)
 stages.add("2. Router DI Gate", description="Depends() & Longest Path", style=Styles.PrimaryNeutral)
 stages.add("3. Static Lookup", description="dist/ File & Dir Index", style=Styles.Neutral)
 stages.add(
@@ -60,21 +60,21 @@ text(
 tracks = [
     (
         56.5,
-        ("1. self.routes Match?", "@app.get / WS / Mount", Styles.SecondaryNeutral, False),
+        ("1. API or Mount Match?", "@app.get / WS / Mount", Styles.SecondaryNeutral, False),
         ("Execute API Route", "Never shadowed by '/'", Styles.White, False),
         ("200 / API JSON 404", "API 404s stay JSON", Styles.SecondaryNeutral, False),
         False,
     ),
     (
         43.2,
-        ("2. File in dist/?", "_lookup_static_resource", Styles.Neutral, False),
+        ("2. File in dist/?", "Static Asset Lookup", Styles.Neutral, False),
         ("Direct FileResponse", "Threadpool stat + ETag", Styles.White, False),
         ("200 OK Static Asset", "dist/assets/app.js", Styles.PrimaryNeutral, False),
         False,
     ),
     (
         29.9,
-        ("3. Accept: text/html?", "_is_frontend_navigation", Styles.PrimaryNeutral, False),
+        ("3. Accept: text/html?", "HTML Navigation Check", Styles.PrimaryNeutral, False),
         ("SPA Shell Fallback", "Serves dist/index.html", Styles.PrimaryFlat, True),
         ("200 OK Client Router", "React / Vue / Svelte", Styles.PrimaryNeutral, False),
         True,
@@ -126,9 +126,9 @@ save()
 
 従来、React・Vue・Svelte などのビルド成果物（`dist/`）を `app.mount("/", StaticFiles(directory="dist", html=True))` でルート `"/"` に配信しようとすると、「先にマウントすると `@app.get("/api/...")` を覆い隠してしまう」「クライアントサイドルート（`/dashboard/analytics` 等）をブラウザでリロードすると `404` になる」という 2 つの課題がつきまとっていました。
 
-FastAPI `v0.162.2` では、`app.frontend()` と `router.frontend()` によってこれらがフレームワーク標準機能として解決されました。通常の `router.routes` ではなく低優先度リスト `router._low_priority_routes` に `_FrontendRouteGroup` を登録するため、アプリケーション全体（インクルードされた全 `APIRouter` を含む）の API ルート・WebSocket・末尾スラッシュリダイレクトがすべて不一致だった場合にのみフロントエンド探索が実行されます。
+FastAPI `v0.162.2` では、`app.frontend()`（および `app.router.frontend()` / `router.frontend()`）によってこれらがフレームワーク標準機能として解決されました。`"/"` 配下を無差別に捕捉する貪欲な `Mount` ではなく、専用の **低優先度 SPA フロントエンドルーター** として登録されるため、アプリケーション全体（インクルードされた全 `APIRouter` を含む）の API ルート・WebSocket・マウント・末尾スラッシュリダイレクトがすべて不一致だった場合にのみフロントエンド探索が実行されます。
 
-| パラメータ / 指定値 | 既定値 | `_FrontendStaticFiles`（`fastapi/routing.py`）の実行時挙動 |
+| パラメータ / 指定値 | 既定値 | `app.frontend()` / `router.frontend()` の実行時挙動 |
 | :--- | :--- | :--- |
 | **`fallback="auto"`** | はい | `directory` 直下に `404.html` があれば `404` で返し、なければ HTML ナビゲーション要求時に `index.html`（`200`）へフォールバック（どちらも無ければ `404`） |
 | **`fallback="index.html"`** | いいえ | `404.html` が共存していても HTML ナビゲーション要求には常に `index.html`（`200`）を返却。`check_dir` 有効時は起動時に `index.html` の存在を検証 |
@@ -138,10 +138,10 @@ FastAPI `v0.162.2` では、`app.frontend()` と `router.frontend()` によっ�
 
 ### グローバル優先順位・セグメント境界一致・ルーター DI 保護
 
-自前のキャッチオール `@app.get("/{full_path:path}")` 実装では見落とされがちな以下の 4 つの安全設計が、`_FrontendRoute` と `_FrontendRouteGroup` に組み込まれています。
+自前のキャッチオール `@app.get("/{full_path:path}")` 実装では見落とされがちな以下の 4 つの安全設計が、組み込みの SPA フロントエンドルーターには標準装備されています。
 
-1. **グローバル API 優先と API `404` の保全**: `include_router()` の登録順序に関わらず通常の `APIRoute` と `WebSocket` が常に優先されます。`@app.get("/api/items/{item_id}")` にマッチした上でエンドポイントが `HTTPException(404)` を送出した場合も、SPA の `index.html` にすり替わることなく JSON の `404` 応答がそのまま返ります。
-2. **`Accept` ヘッダー交渉によるブラウザナビゲーション判定（`_is_frontend_navigation_request`）**: `index.html` フォールバック時は `Accept` ヘッダーのメディアタイプと品質値（`q`）を厳密に解析し、`text/html` または `application/xhtml+xml`（`q != 0`）を明示的に受け入れる `GET` / `HEAD` 要求のみ `index.html`（`200 OK`）を返します。存在しない JS バンドル（`GET /assets/missing.js` / `Accept: */*`）や API 誤 URL（`Accept: application/json`）には正しく `404` を返すため、`<script>` タグが HTML を読み込んで `Unexpected token '<'` で壊れる事故を防ぎます。
+1. **グローバル API 優先と API `404` の保全**: `include_router()` の登録順序に関わらず、通常の API ルート（`@app.get`、`@app.post` 等）と `WebSocket` ハンドラーが常に優先されます。`@app.get("/api/items/{item_id}")` にマッチした上でエンドポイントが `HTTPException(404)` を送出した場合も、SPA の `index.html` にすり替わることなく JSON の `404` 応答がそのまま返ります。
+2. **ブラウザ HTML ナビゲーション判定（`Accept` ヘッダー交渉）**: `index.html` フォールバック時は `Accept` ヘッダーのメディアタイプと品質値（`q`）を厳密に解析し、`text/html` または `application/xhtml+xml`（`q != 0`）を明示的に受け入れる `GET` / `HEAD` 要求のみ `index.html`（`200 OK`）を返します。存在しない JS バンドル（`GET /assets/missing.js` / `Accept: */*`）や API 誤 URL（`Accept: application/json`）には正しく `404` を返すため、`<script>` タグが HTML を読み込んで `Unexpected token '<'` で壊れる事故を防ぎます。
 3. **セグメント境界での最長プレフィックス選択**: `app.frontend("/", directory="site")` と `router.frontend("/admin", directory="admin_dist")` を併用した場合、パスセグメント境界で一致判定を行い（`/admin` が `/administration` を誤捕捉しない）、最も具体的なプレフィックスを選択します。
 4. **保護されたフロントエンドへの依存性注入（DI）適用**: `router.frontend()` はアプリ階層・`include_router()`・`APIRouter(dependencies=[Depends(...)])` の依存関数を外側から内側へ順に解決します。Cookie セッション検証、カスタム `Response` ヘッダー付与、`BackgroundTasks`、テスト時の `app.dependency_overrides` がそのまま機能します。
 
@@ -177,7 +177,7 @@ def build_spa_service(dist_dir: Path, admin_dist: Path) -> FastAPI:
 
 1 つの FastAPI ASGI ホストプロセス上で、クライアントサイド描画（SPA）、Jinja2 によるサーバーサイド HTML 描画、サブチーム単位の独立 FastAPI アプリ、そして同期型 WSGI レガシー資産を適材適所で共存させることができます。
 
-```drawlib align=center code=fold file=mounts_templates_wsgi_topology.png caption="単一 ASGI ホスト上の統合トポロジ — app.frontend()・Jinja2Templates + StaticFiles・サブアプリ・a2wsgi の比較"
+```drawlib align=center code=hide file=mounts_templates_wsgi_topology.png caption="単一 ASGI ホスト上の統合トポロジ — app.frontend()・Jinja2Templates + StaticFiles・サブアプリ・a2wsgi の比較"
 from drawlib.canvas import save, setup
 from drawlib.diagrams.architecture import (
     ArchitectureDiagram,
@@ -216,7 +216,7 @@ diag = ArchitectureDiagram(
 # Top Focal Dispatcher Node (center at y=75.0 -> bottom=68.0)
 diag.add(
     Node(
-        "Root FastAPI Router & Middleware Stack\nself.routes  ->  app.mount()  ->  _low_priority_routes",
+        "Root FastAPI Router & Middleware Stack\nAPI Routes  ->  app.mount()  ->  SPA frontend()",
         width=86.0,
         height=14.0,
         icon=CodeIcon.FASTAPI,
@@ -318,9 +318,9 @@ save()
 
 | 統合メカニズム | 登録 API | 優先順位とスコープ分離 | 最適なユースケース |
 | :--- | :--- | :--- | :--- |
-| **SPA 静的ビルド配信** | `app.frontend("/", directory="dist")` | 最低優先度（`_low_priority_routes`）・`Depends()` 対応 | `/api` と同居する Vite / React / Vue / Svelte / 静的サイト |
-| **名前付き静的マウント** | `app.mount("/static", StaticFiles(...), name="static")` | `self.routes` 内のプレフィックス `Mount`・`url_for` 対応 | Jinja2 や自己配信 Swagger UI から参照する CSS / JS / 画像 |
-| **サーバーサイド描画** | `Jinja2Templates(directory="templates")` | 通常の `APIRoute`（`response_class=HTMLResponse`） | HTMX フラグメント、メール本文生成、SEO 重視の SSR ページ |
+| **SPA 静的ビルド配信** | `app.frontend("/", directory="dist")` | 最低優先度（全 API ルート不一致後に評価）・`Depends()` 対応 | `/api` と同居する Vite / React / Vue / Svelte / 静的サイト |
+| **名前付き静的マウント** | `app.mount("/static", StaticFiles(...), name="static")` | `/static` プレフィックスの `Mount`・`url_for` 対応 | Jinja2 や自己配信 Swagger UI から参照する CSS / JS / 画像 |
+| **サーバーサイド描画** | `Jinja2Templates(directory="templates")` | 標準 HTTP ルート（`response_class=HTMLResponse`） | HTMX フラグメント、メール本文生成、SEO 重視の SSR ページ |
 | **独立サブアプリ** | `app.mount("/subapi", subapi)` | 独立した `FastAPI` インスタンス（`root_path="/subapi"`・専用 `/docs`） | マルチバージョン公開 API（`/v2`）、パートナー向け API、管理画面 |
 | **レガシー WSGI 統合** | `app.mount("/v1", WSGIMiddleware(flask_app))` | `a2wsgi` により同期 WSGI をワーカースレッド上で実行 | Flask / Django モノリスから FastAPI への段階的マイグレーション |
 

@@ -2,7 +2,7 @@
 
 FastAPI `v0.162.2` は、開発から本番までのサーバー運用（`fastapi dev` / `fastapi run` と ASGI `--root-path` プロキシ連携）、`Depends()` を共有する `Strawberry` GraphQL サブルーター、そしてパッケージ同梱の AI エージェントスキル（`uvx library-skills`・`PEP 727` `Doc()`・SSE/JSONL ストリーミング）を一貫した設計で統合します。
 
-```drawlib align=center code=fold file=cli_and_reverse_proxy_topology.png caption="FastAPI CLI 実行モード（fastapi dev vs fastapi run）とリバースプロキシのパスプレフィックス（--root-path）運用トポロジ"
+```drawlib align=center code=hide file=cli_and_reverse_proxy_topology.png caption="FastAPI CLI 実行モード（fastapi dev vs fastapi run）とリバースプロキシのパスプレフィックス（--root-path）運用トポロジ"
 from drawlib.canvas import save, setup
 from drawlib.icons import phosphor
 from drawlib.lines import line
@@ -242,7 +242,7 @@ def test_root_path_openapi_servers_and_edge_middlewares() -> None:
 
 FastAPI の型アノテーション中心の設計は、**`Strawberry`** による型安全な GraphQL クエリグラフと、最新の **AI コーディングエージェント / MCP ツール基盤** の双方へ自然に拡張できます。
 
-```drawlib align=center code=fold file=graphql_and_ai_agent_workflow.png caption="Depends() コンテキストを共有する Strawberry GraphQLRouter と FastAPI v0.162.2 の AI エージェント開発ワークフロー"
+```drawlib align=center code=hide file=graphql_and_ai_agent_workflow.png caption="Depends() コンテキストを共有する Strawberry GraphQLRouter と FastAPI v0.162.2 の AI エージェント開発ワークフロー"
 from drawlib.canvas import save, setup
 from drawlib.icons import phosphor
 from drawlib.smartarts import CardList, Panel

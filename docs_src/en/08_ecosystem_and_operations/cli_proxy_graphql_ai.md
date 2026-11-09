@@ -2,7 +2,7 @@
 
 FastAPI `v0.162.2` unifies local-to-production server operations (`fastapi dev` / `fastapi run` and ASGI `--root-path` proxy routing), hybrid `Strawberry` GraphQL sub-routers sharing `Depends()`, and bundled AI coding agent skills (`uvx library-skills` + `PEP 727` `Doc()` + SSE/JSONL streaming).
 
-```drawlib align=center code=fold file=cli_and_reverse_proxy_topology.png caption="FastAPI CLI Modes (fastapi dev vs fastapi run) & Reverse Proxy Path Prefix (--root-path) Topology"
+```drawlib align=center code=hide file=cli_and_reverse_proxy_topology.png caption="FastAPI CLI Modes (fastapi dev vs fastapi run) & Reverse Proxy Path Prefix (--root-path) Topology"
 from drawlib.canvas import save, setup
 from drawlib.icons import phosphor
 from drawlib.lines import line
@@ -242,7 +242,7 @@ def test_root_path_openapi_servers_and_edge_middlewares() -> None:
 
 FastAPI's type-annotation design extends naturally to both typed GraphQL query graphs via **`Strawberry`** and modern **AI Coding Agents / MCP tool ecosystems**.
 
-```drawlib align=center code=fold file=graphql_and_ai_agent_workflow.png caption="Hybrid Strawberry GraphQLRouter with Shared Depends() Context & FastAPI v0.162.2 AI Agent Workflow"
+```drawlib align=center code=hide file=graphql_and_ai_agent_workflow.png caption="Hybrid Strawberry GraphQLRouter with Shared Depends() Context & FastAPI v0.162.2 AI Agent Workflow"
 from drawlib.canvas import save, setup
 from drawlib.icons import phosphor
 from drawlib.smartarts import CardList, Panel

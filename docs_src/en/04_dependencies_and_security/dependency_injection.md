@@ -1,8 +1,8 @@
-# Dependant DAG, Per-Request Caching & Scopes
+# Dependency Graph, Per-Request Caching & Scopes
 
-FastAPI `v0.162.2` models every path operation and sub-dependency as a recursive `Dependant` Directed Acyclic Graph (DAG), memoizing shared resources per request while governing `yield` cleanup timing across dual `AsyncExitStack` scopes.
+FastAPI `v0.162.2` models every path operation and sub-dependency as a Directed Acyclic Graph (DAG), caching shared dependency results per request while governing `yield` cleanup timing across function-level and request-level scopes.
 
-```drawlib align=center code=fold file=dependant_dag_cache.png caption="Recursive Dependant DAG Resolution & Per-Request dependency_cache Memoization"
+```drawlib align=center code=hide file=dependant_dag_cache.png caption="Dependency Graph (DAG) Resolution & Per-Request Dependency Cache (use_cache=True vs use_cache=False)"
 from drawlib.canvas import save, setup
 from drawlib.diagrams.architecture import ArchitectureDiagram, Node, PhosphorIcon
 from drawlib.icons import phosphor
@@ -12,9 +12,9 @@ from drawlib.styles import Styles
 
 setup(width=166, height=98, dpi=150)
 
-# Left Zone: Outer Panel framing the Multi-Level Dependant DAG
+# Left Zone: Outer Panel framing the Multi-Level Dependency Graph
 dag_panel = Panel(
-    "solve_dependencies() Recursive Dependant DAG",
+    "Per-Request Dependency Graph (DAG)",
     style=Styles.Neutral,
     header_style=Styles.SecondaryNeutral.patch(shape_line_width=1.2),
     text_style=Styles.DarkBold.patch(text_size=11.5),
@@ -37,7 +37,7 @@ dag = ArchitectureDiagram(
 
 endpoint = dag.add(
     Node(
-        "POST /billing/invoices\n(Root Dependant)",
+        "POST /billing/invoices\n(Path Operation)",
         width=40,
         height=13,
         icon=PhosphorIcon.GLOBE,
@@ -129,7 +129,7 @@ line((82.0, 41.0), (90.0, 23.0), arrow_head="->", style=Styles.WarningBold)
 
 # Right Zone: Per-Request Cache Mechanics Panel
 cache_panel = Panel(
-    "dependency_cache Dict",
+    "Per-Request Cache",
     style=Styles.Neutral,
     header_style=Styles.PrimaryNeutral.patch(shape_line_width=1.2),
     text_style=Styles.DarkBold.patch(text_size=11.5),
@@ -156,8 +156,8 @@ cards = CardList(
     spacing=2.5,
 )
 cards.add(
-    "Cache Key Tuple",
-    "(call, tuple(scopes), scope)\nin _get_cache_key()",
+    "Callable + Scopes Key",
+    "Keyed by (callable,\noauth_scopes, scope)",
     badge_text="1",
 )
 cards.add(
@@ -186,27 +186,27 @@ cards.draw(c_xy, width=c_w, height=c_h)
 save()
 ```
 
-## 1. How FastAPI Compiles and Solves the Dependant DAG
+## 1. How FastAPI Builds and Resolves the Dependency Graph
 
-At route registration time, `get_dependant()` inspects every endpoint signature, `Annotated[..., Depends()]` marker, and `Security()` declaration to construct an immutable tree of `Dependant` dataclasses (`fastapi/dependencies/models.py`). No reflection overhead occurs on the hot path; instead, `solve_dependencies()` (`fastapi/dependencies/utils.py`) walks the pre-built DAG depth-first on each incoming request.
+At route registration time, FastAPI inspects every endpoint signature, `Annotated[..., Depends()]` marker, and `Security()` declaration once to assemble an immutable dependency graph. No signature reflection runs on the request hot path; instead, FastAPI traverses the pre-built DAG depth-first on each incoming request.
 
-| `Dependant` / Solver Mechanism | Internal Module Location | Runtime Responsibility |
+| Dependency Mechanism | Declaration Pattern | Runtime Behavior |
 | :--- | :--- | :--- |
-| **`Dependant` Dataclass** | `fastapi/dependencies/models.py` | Stores extracted `path_params`, `query_params`, `header_params`, `cookie_params`, `body_params`, child `dependencies`, OAuth2 scopes, `use_cache`, and `scope`. |
-| **`_get_cache_key()`** | `fastapi/dependencies/models.py` | Computes `(dependant.call, scopes_for_cache, computed_scope)` so security-aware callables only share cached results when their accumulated OAuth2 scopes match. |
-| **`solve_dependencies()`** | `fastapi/dependencies/utils.py` | Recursively resolves child `Dependant` nodes, applies `app.dependency_overrides`, populates `dependency_cache`, and aggregates validation errors before running the parent callable. |
-| **Execution Dispatch** | `fastapi/dependencies/utils.py` | Awaits `async def` coroutines on the event loop, dispatches sync `def` callables via `run_in_threadpool()`, and enters sync/async generators on an `AsyncExitStack`. |
+| **Sub-Dependency Graph (DAG)** | `Annotated[T, Depends(fn)]` / `Depends()` | Resolves leaf parameters (`Path`, `Query`, `Header`, `Cookie`, `Body`) and child dependencies before invoking parent callables. |
+| **Per-Request Dependency Cache** | `Depends(fn, use_cache=True)` *(default)* | Caches each dependency return value per request under `(callable, oauth_scopes, scope)`, sharing results across diamond branches. |
+| **Graph-Wide Overrides** | `app.dependency_overrides[orig] = mock` | Replaces any callable across all routers, guards, and nested class dependencies during testing or staging. |
+| **Execution Dispatch** | `async def` / `def` / `yield` | Awaits `async def` coroutines on the event loop, runs sync `def` callables in a worker threadpool, and schedules `yield` cleanup automatically. |
 
-### 1.1 Per-Request Memoization (`use_cache=True` vs `use_cache=False`)
+### 1.1 Per-Request Caching (`use_cache=True` vs `use_cache=False`)
 
-In real-world layered services, diamond dependencies are ubiquitous: an endpoint injects both `BillingService` and `AuditLogger`, and both services require `get_db_session` and `get_settings`. Because `Depends(..., use_cache=True)` is the default, `solve_dependencies()` maintains a request-local `dependency_cache: dict[DependencyCacheKey, Any]`:
+In layered services, diamond dependencies are ubiquitous: an endpoint injects both `BillingService` and `AuditLogger`, and both services require `get_db_session` and `get_settings`. Because `Depends(..., use_cache=True)` is the default, FastAPI maintains a per-request dependency cache (keyed by callable + scopes) for the lifetime of each HTTP request or WebSocket session:
 
-- **Shared Singleton per Request (`use_cache=True`)**: When `BillingService` resolves first, `get_db_session()` executes once and stores its session under `(get_db_session, (), "")`. When `AuditLogger` requests `get_db_session` moments later in the same request, FastAPI returns the exact same Python object (`billing.db is billing.audit.db`), guaranteeing transactional consistency across services.
-- **Fresh Invocation (`use_cache=False`)**: Passing `Depends(generate_trace_nonce, use_cache=False)` skips the cache read and invokes the callable freshly for each injection site.
-- **Scope-Aware Cache Isolation**: If a sub-dependency inspects `SecurityScopes` (covered in [Authentication & OAuth2 Scopes](security_and_auth.md)), `_uses_scopes()` includes `tuple(sorted(set(oauth_scopes)))` inside the cache key so distinct scope requirements never collide.
+- **Shared Singleton per Request (`use_cache=True`)**: When `BillingService` resolves first, `get_db_session()` executes once and caches its session for the current request. When `AuditLogger` requests `get_db_session` moments later in the same request, FastAPI returns the exact same Python object (`billing.db is billing.audit.db`), guaranteeing transactional consistency across services.
+- **Fresh Invocation (`use_cache=False`)**: Passing `Depends(generate_trace_nonce, use_cache=False)` bypasses the per-request cache and invokes the callable freshly for each injection site.
+- **Scope-Aware Cache Isolation**: If a sub-dependency inspects `SecurityScopes` (covered in [Authentication & OAuth2 Scopes](security_and_auth.md)), FastAPI includes the accumulated OAuth2 scopes in the cache key so distinct permission checks never collide.
 
 > [!IMPORTANT]
-> Avoid placing `from __future__ import annotations` in modules where FastAPI dependencies or Pydantic models are defined inside nested scopes. FastAPI evaluates `Annotated[T, Depends(...)]` metadata at route registration time; stringified annotations that reference unresolvable local symbols cannot be inspected as dependencies and will fall back to required query parameters (`422 Unprocessable Entity`).
+> Avoid placing `from __future__ import annotations` in modules where FastAPI dependencies or Pydantic models are defined inside nested local scopes. FastAPI evaluates `Annotated[T, Depends(...)]` metadata at route registration time; stringified annotations that reference unresolvable local symbols cannot be inspected as dependencies and will fall back to required query parameters (`422 Unprocessable Content`).
 
 ### 1.2 Multi-Layer Sub-Dependencies, Classes & Parameterized Callables
 
@@ -222,7 +222,6 @@ from dataclasses import dataclass
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, FastAPI, Header, HTTPException, status
-from fastapi.testclient import TestClient
 
 
 @dataclass(frozen=True)
@@ -326,16 +325,16 @@ app = FastAPI()
 app.include_router(billing_router)
 ```
 
-Notice that `get_settings()` is declared in **three** places (`verify_tenant_header`, `AuditLogger`, and `BillingService`), yet `dependency_cache` ensures it executes only once per request, and `billing.db is billing.audit.db` evaluates to `True`. During integration testing, swapping `app.dependency_overrides[get_db_session] = override_db` replaces the leaf node across the entire DAG simultaneously (see [Enterprise DI, Lifespan & Testing](../02_enterprise_architecture/di_lifespan_testing.md) and [Testing Patterns & Production ASGI](../06_observability_and_testing/testing_and_deployment.md)).
+Notice that `get_settings()` is declared in **three** places (`verify_tenant_header`, `AuditLogger`, and `BillingService`), yet the per-request dependency cache ensures it executes only once per request, and `billing.db is billing.audit.db` evaluates to `True`. During integration testing, setting `app.dependency_overrides[get_db_session] = override_db` replaces the leaf node across the entire DAG simultaneously (see [Enterprise DI, Lifespan & Testing](../02_enterprise_architecture/di_lifespan_testing.md) and [Testing Patterns & Production ASGI](../06_observability_and_testing/testing_and_deployment.md)).
 
-## 2. Resource Lifecycles with `yield` & Dual `AsyncExitStack`s
+## 2. Resource Lifecycles with `yield` & Cleanup Scopes
 
-Generator dependencies (`yield` inside `async def` or sync `def`) split execution into a **setup phase** (before `yield`) and a **teardown phase** (after `yield`). In FastAPI `v0.162.2`, `request_response()` in `fastapi/routing.py` wraps every HTTP request inside **two nested `AsyncExitStack` context managers** stored in the ASGI `scope`:
+Generator dependencies (`yield` inside `async def` or sync `def`) split execution into a **setup phase** (before `yield`) and a **teardown phase** (after `yield`). FastAPI `v0.162.2` lets you control exactly when teardown runs via two nested cleanup scopes:
 
-- **`scope["fastapi_function_astack"]` (`scope="function"`)**: Exits **immediately after** the path operation function returns its `Response` object—**before** `await response(scope, receive, send)` transmits bytes over the network or runs streaming generators.
-- **`scope["fastapi_inner_astack"]` (`scope="request"`, default)**: Wraps both the path operation and `await response(scope, receive, send)`, exiting only **after** the entire HTTP response, streaming chunks, and background tasks have finished.
+- **Function-Scope Cleanup (`Depends(..., scope="function")`)**: Runs teardown **immediately after** the path operation function returns—**before** FastAPI sends response bytes over the network or iterates a `StreamingResponse`.
+- **Request-Scope Cleanup (`Depends(..., scope="request")`, default)**: Wraps both the path operation and response transmission, running teardown only **after** the entire HTTP response, streaming chunks, and background tasks have finished.
 
-```drawlib align=center code=fold file=yield_scope_exit_stacks.png caption="FastAPI v0.162.2 Dual AsyncExitStack Lifecycle: scope='function' vs scope='request' & Exception Teardown"
+```drawlib align=center code=hide file=yield_scope_exit_stacks.png caption="FastAPI v0.162.2 Generator Dependency Cleanup Lifecycle: Depends(scope='function') vs Depends(scope='request')"
 from drawlib.canvas import save, setup
 from drawlib.diagrams.sequence import Participant, ParticipantGroup, PhosphorIcon, SequenceDiagram
 from drawlib.styles import Style, Styles
@@ -365,7 +364,7 @@ client = seq.add(
 
 runtime = seq.add(
     ParticipantGroup(
-        title="FastAPI request_response() Dual AsyncExitStack",
+        title="FastAPI Generator Dependency Scopes",
         padding=4.5,
         style=Styles.Neutral,
         text_style=Style(text_size=11.0),
@@ -374,7 +373,7 @@ runtime = seq.add(
 
 req_stack = runtime.add(
     Participant(
-        'scope="request"\n(inner_astack)',
+        'scope="request"\n(After Streaming)',
         width=26,
         height=14,
         icon=PhosphorIcon.STACK,
@@ -385,7 +384,7 @@ req_stack = runtime.add(
 
 fn_stack = runtime.add(
     Participant(
-        'scope="function"\n(function_astack)',
+        'scope="function"\n(Before Response)',
         width=26,
         height=14,
         icon=PhosphorIcon.DATABASE,
@@ -396,7 +395,7 @@ fn_stack = runtime.add(
 
 endpoint = runtime.add(
     Participant(
-        "Endpoint &\nASGI Response",
+        "Endpoint &\nStreaming Body",
         width=26,
         height=14,
         icon=PhosphorIcon.FILE_CODE,
@@ -407,8 +406,8 @@ endpoint = runtime.add(
     )
 )
 
-client.request(req_stack, "1. Enter outer AsyncExitStack")
-req_stack.request(fn_stack, "2. yield conn -> enter function_astack")
+client.request(req_stack, "1. Enter request-scope setup")
+req_stack.request(fn_stack, "2. yield conn -> enter function-scope")
 fn_stack.request(endpoint, "3. yield tx -> await endpoint()")
 
 with seq.alt("200 OK") as alt_blk:
@@ -416,17 +415,17 @@ with seq.alt("200 OK") as alt_blk:
     alt_blk.text_style = Style(text_size=10.0, halign="left")
     endpoint.reply(fn_stack, "4. Return StreamingResponse")
     seq.note(
-        "function_astack exits BEFORE send():\ncommit tx & release DB lock early!",
+        "Function scope exits BEFORE stream:\ncommit tx & release DB lock early!",
         over=[fn_stack, endpoint],
         style=Styles.PrimaryNeutral.patch(text_size=10.0),
     )
     endpoint.reply(
         client,
-        "5. await response(scope, receive, send) [Stream CSV]",
+        "5. Stream CSV chunks to client",
         style=Styles.SuccessBold,
         text_style=Styles.DarkBold.patch(text_size=10.0),
     )
-    endpoint.reply(req_stack, "6. Stream done -> inner_astack.__aexit__()")
+    endpoint.reply(req_stack, "6. Stream complete -> request-scope exit")
 
 with seq.else_("HTTPException") as else_blk:
     else_blk.style = Styles.MutedDashed.patch(shape_line_width=1.2)
@@ -456,21 +455,21 @@ save()
 
 ### 2.1 Choosing Between `scope="function"` and `scope="request"`
 
-When `scope` is omitted (`scope=None`), `_get_computed_scope()` defaults generator dependencies to `"request"` so resources remain alive if consumed by a streaming body generator. Explicitly selecting `scope="function"` vs `scope="request"` prevents subtle connection-pool exhaustion under slow clients:
+When `scope` is omitted, FastAPI defaults `yield` dependencies to `scope="request"` so resources remain open if consumed inside a streaming response body. Explicitly selecting `scope="function"` vs `scope="request"` prevents subtle connection-pool exhaustion under slow clients:
 
 | Attribute | `Depends(dep, scope="function")` | `Depends(dep, scope="request")` *(Default for `yield`)* |
 | :--- | :--- | :--- |
-| **Underlying Stack** | `request.scope["fastapi_function_astack"]` | `request.scope["fastapi_inner_astack"]` |
-| **Teardown Timing** | **Before** `await response(scope, receive, send)` | **After** response transmission, streaming & background tasks |
+| **Cleanup Phase** | Function-Scope Cleanup (immediately after endpoint returns) | Request-Scope Cleanup (after full response & streaming complete) |
+| **Teardown Timing** | **Before** response bytes or streaming chunks are sent | **After** response transmission, streaming & background tasks |
 | **Primary Use Cases** | Write transactions, row locks, RPC spans around handler logic | Cursors read inside `StreamingResponse` / SSE, request-wide audit contexts |
 | **Composition Rule** | Can depend on both `"request"` and `"function"` dependencies | Must **not** depend on shorter-lived `"function"` dependencies |
 
 ### 2.2 Mandatory `try...finally` Cleanup & Exception Propagation
 
-Whenever an endpoint or a sibling sub-dependency raises an exception (such as `HTTPException` or a domain error) **after** your `yield` dependency has entered, Python's `AsyncExitStack` injects that exception back into the suspended `yield` statement via `athrow()` / `throw()`. Two rules are non-negotiable in production code:
+Whenever an endpoint or a sibling sub-dependency raises an exception (such as `HTTPException` or a domain error) **after** your `yield` dependency has entered, FastAPI propagates that exception back into the suspended `yield` statement in reverse (LIFO) order. Two rules are non-negotiable in production code:
 
 1. **Always wrap `yield` in `try ... finally:`**: Code written bare after `yield` without `finally:` will **never execute** if an unhandled exception aborts the request, leaking database sessions or semaphores.
-2. **Never swallow exceptions after `yield`**: If you catch exceptions to trigger a transaction rollback (`except Exception: await tx.rollback(); raise`), you **must re-raise** the exception. If a `scope="request"` dependency swallows an exception without re-raising before `response` was sent, FastAPI `v0.162.2` halts with `FastAPIError: Response not awaited`.
+2. **Never swallow exceptions after `yield`**: If you catch exceptions to trigger a transaction rollback (`except Exception: await tx.rollback(); raise`), you **must re-raise** the exception. Swallowing an exception after `yield` without re-raising prevents FastAPI from running its exception handlers and triggers a `500 Internal Server Error` because no response was produced.
 
 ```python
 from collections.abc import AsyncIterator
@@ -478,7 +477,6 @@ from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.responses import StreamingResponse
-from fastapi.testclient import TestClient
 
 events: list[str] = []
 app = FastAPI()
@@ -527,4 +525,4 @@ async def export_report(
 
 Running `GET /reports/export` records the exact deterministic sequence `["req_conn:enter", "fn_tx:enter(conn_pool_1)", "endpoint:body(tx_active)", "fn_tx:commit", "fn_tx:exit", "stream:chunk_1", "req_conn:exit"]`: the `"function"`-scoped transaction commits and exits **before** `stream_rows()` emits bytes, while the `"request"`-scoped connection remains open until streaming completes. When `?fail=true` raises `409 Conflict`, re-raising inside `except` plus `finally:` guarantees `["req_conn:enter", "fn_tx:enter(conn_pool_1)", "endpoint:body(tx_active)", "fn_tx:rollback", "fn_tx:exit", "req_conn:exit"]`.
 
-Next, see [Authentication & OAuth2 Scopes](security_and_auth.md) for how `fastapi.security` layers credential extraction, OAuth2 `SecurityScopes`, and OpenAPI 3.1 `securitySchemes` directly atop this `Dependant` DAG, and [Native SSE, JSONL & WebSockets](../05_async_and_realtime/sse_websockets_streaming.md) for streaming lifecycles.
+Next, see [Authentication & OAuth2 Scopes](security_and_auth.md) for how `fastapi.security` layers credential extraction, OAuth2 `SecurityScopes`, and OpenAPI 3.1 `securitySchemes` directly atop this dependency graph, and [Native SSE, JSONL & WebSockets](../05_async_and_realtime/sse_websockets_streaming.md) for streaming lifecycles.

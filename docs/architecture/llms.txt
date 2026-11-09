@@ -1,0 +1,39 @@
+# FastAPI Internal Architecture Guide (Unofficial)
+
+> Source-level internal architecture guide to FastAPI v0.162.2: routing closure compilation, Dependant & solve_dependencies, Pydantic v2 bridge, ASGI middleware onion, native OpenTelemetry, and OpenAPI 3.1 synthesis.
+
+## Overview
+
+- [Architecture Overview](https://fastapi.drawlib.com/architecture/en/): FastAPI (v0.162.2 · 52 Python modules · 19,837 LOC · 0 circular imports) achieves near-raw ASGI throughput while providing rich dependency injection…
+
+## 1. Package Topology & Layers
+
+- [5-Tier Module Hierarchy & Shims](https://fastapi.drawlib.com/architecture/en/01_package_and_layers/module_hierarchy.html): FastAPI v0.162.2 packs routing compilation, recursive dependency injection, Pydantic v2 validation, native Server-Sent Events, OpenTelemetry instrumentation…
+
+## 2. Routing Compiler & Closures
+
+- [APIRouter, APIRoute & Handler Closure](https://fastapi.drawlib.com/architecture/en/02_routing_compiler/apiroute_and_closures.html): FastAPI's routing engine (fastapi/routing.py) operates as an ahead-of-time closure compiler built atop Starlette's Router and Route primitives. Rather than…
+- [Generator Streaming & SPA Internals](https://fastapi.drawlib.com/architecture/en/02_routing_compiler/streaming_and_spa_internals.html): Beyond request-response JSON endpoints, FastAPI v0.162.2 compiles two specialized runtime pipelines directly inside fastapi/routing.py and fastapi/sse.py…
+
+## 3. DI & Security Engine
+
+- [Dependant DAG & solve_dependencies](https://fastapi.drawlib.com/architecture/en/03_di_and_security_engine/dependant_and_solver.html): FastAPI's dependency injection (DI) engine separates signature reflection from request execution across two phases: route-registration compilation…
+- [SecurityBase & HTTPConnection](https://fastapi.drawlib.com/architecture/en/03_di_and_security_engine/security_internals.html): FastAPI implements authentication and authorization not as separate WSGI/ASGI middleware layers, but as first-class nodes inside the Dependant dependency…
+
+## 4. Pydantic v2 Bridge
+
+- [_compat/v2.py, ModelField & Serialization](https://fastapi.drawlib.com/architecture/en/04_pydantic_bridge/compat_and_serialization.html): FastAPI isolates Pydantic's internal validation, schema generation, and Rust serialization APIs behind a dedicated adapter package: fastapi/_compat/…
+
+## 5. ASGI Stack & Telemetry
+
+- [Middleware Onion & Threadpool](https://fastapi.drawlib.com/architecture/en/05_asgi_and_telemetry/middleware_and_concurrency.html): Every HTTP request, WebSocket session, and ASGI lifespan event entering a FastAPI instance passes through FastAPI.call in fastapi/applications.py. Rather…
+- [NativeTelemetry & Runtime Spans](https://fastapi.drawlib.com/architecture/en/05_asgi_and_telemetry/native_telemetry_internals.html): FastAPI v0.162.2 ships a built-in OpenTelemetry subsystem under fastapi/telemetry/ (init.py, _api.py, _asgi.py, and _runtime.py). Depending only on the…
+
+## 6. OpenAPI 3.1 Synthesis
+
+- [get_openapi(), $defs & Docs UI](https://fastapi.drawlib.com/architecture/en/06_openapi_and_docs/openapi_synthesis_engine.html): FastAPI treats OpenAPI 3.1.0 (backed by JSON Schema Draft 2020-12) as a first-class compilation target rather than a hand-written YAML artifact. Instead of…
+
+## Locales
+
+- [English (en)](https://fastapi.drawlib.com/architecture/en/): Source-level internal architecture guide to FastAPI v0.162.2: routing closure compilation, Dependant & solve_dependencies, Pydantic v2 bridge, ASGI…
+- [日本語 (ja)](https://fastapi.drawlib.com/architecture/ja/): FastAPI v0.162.2 の内部アーキテクチャ解説（非公式）：ルーティングクロージャ生成、Dependant 解決エンジン、Pydantic v2 ブリッジ、ASGI ミドルウェア階層、ネイティブ OpenTelemetry、OpenAPI 3.1 合成の仕組み。

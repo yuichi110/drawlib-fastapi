@@ -2,7 +2,7 @@
 
 FastAPI `v0.162.2` は、`pydantic-settings` と `@lru_cache` による型安全な 12-Factor 環境変数管理と、`SQLModel` およびリクエスト単位の `yield` セッションによる RDB 永続化を組み合わせることで、`app.dependency_overrides` を通じて本番インフラをテスト環境から 100% 差し替え可能にします。
 
-```drawlib align=center code=fold file=pydantic_settings_di_flow.png caption="型安全な 12-Factor 設定パイプライン：環境変数ソース -> BaseSettings -> @lru_cache DI -> 環境変数を汚さないテスト分離"
+```drawlib align=center code=hide file=pydantic_settings_di_flow.png caption="型安全な 12-Factor 設定パイプライン：環境変数ソース -> BaseSettings -> @lru_cache DI -> 環境変数を汚さないテスト分離"
 from drawlib.canvas import save, setup
 from drawlib.icons import phosphor
 from drawlib.lines import line
@@ -197,7 +197,7 @@ def test_settings_dependency_override_isolation() -> None:
 
 FastAPI 作者（`@tiangolo`）が設計した **`SQLModel`** は、**SQLAlchemy 2.0** と **Pydantic v2** を単一のクラス階層へ統合し、DB テーブル定義と HTTP バリデーションスキーマの間でフィールド型・制約・エディタ補完を重複なく共有します。
 
-```drawlib align=center code=fold file=sqlmodel_session_and_testing.png caption="FastAPI + SQLModel マルチモデル階層・リクエスト単位の Session yield ライフサイクル・StaticPool SQLite テスト分離"
+```drawlib align=center code=hide file=sqlmodel_session_and_testing.png caption="FastAPI + SQLModel マルチモデル階層・リクエスト単位の Session yield ライフサイクル・StaticPool SQLite テスト分離"
 from drawlib.canvas import save, setup
 from drawlib.icons import phosphor
 from drawlib.lines import lines

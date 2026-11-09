@@ -1,8 +1,8 @@
 # レスポンス直列化・ステータスコード・OpenAPI 3.1
 
-FastAPI は `serialize_response()` によって出力契約を厳格に強制し、機密フィールドの除去から UTF-8 JSON バイト列への変換までを Pydantic v2 の単一 Rust パスで実行するとともに、入出力分割型の JSON Schema 2020-12 を備えた OpenAPI 3.1.0 仕様を遅延合成します。
+FastAPI は自動レスポンス検証およびフィルタリングによって出力契約を厳格に強制し、機密フィールドの除去から UTF-8 JSON バイト列への変換までを Pydantic v2 の単一 Rust パスで実行するとともに、入出力分割型の JSON Schema 2020-12 を備えた OpenAPI 3.1.0 仕様を遅延合成します。
 
-```drawlib align=center code=fold file=response_serialization_pipeline.png caption="get_request_handler() および serialize_response() における出力直列化パイプライン"
+```drawlib align=center code=hide file=response_serialization_pipeline.png caption="出力レスポンスの検証・機密フィールド除去・Rust TypeAdapter 高速直列化パイプライン"
 from drawlib.canvas import save, setup
 from drawlib.icons import code, phosphor
 from drawlib.lines import line, lines
@@ -17,7 +17,7 @@ setup(width=168, height=92, dpi=150)
 code.fastapi((11, 86.5), width=5.2, style=Styles.Primary)
 text(
     (16.5, 86.5),
-    "Outbound Response Pipeline: serialize_response() & Rust TypeAdapter Fast Path",
+    "Outbound Response Pipeline: Validation, Filtering & TypeAdapter Fast Path",
     style=Styles.DarkBold.patch(text_size=12.5, halign="left"),
 )
 
@@ -31,9 +31,9 @@ macro = ChevronProcess(
     flat_left_end=True,
 )
 macro.add("1. Endpoint Return", description="ORM / Model / dict")
-macro.add("2. Branch Check", description="Response vs Field", style=Styles.PrimaryNeutral)
+macro.add("2. Route Contract", description="Model vs Response", style=Styles.PrimaryNeutral)
 macro.add(
-    "3. Validate & Strip",
+    "3. Validate & Filter",
     description="Drop secret fields",
     style=Styles.PrimaryFlat,
     text_style=Styles.WhiteBold.patch(text_size=10.3),
@@ -50,7 +50,7 @@ phosphor.code((21, 52.5), width=6.0, style=Styles.PrimaryBold)
 text((21, 44.5), "Endpoint Result", style=Styles.DarkBold.patch(text_size=11.0))
 text(
     (21, 26.5),
-    "• async def: inline\n• def: threadpool\n• Captures mutated\n  response.headers\n• Attaches solved\n  BackgroundTasks",
+    "• async def: inline\n• def: threadpool\n• Captures mutated\n  response.headers\n• Attaches injected\n  BackgroundTasks",
     style=Styles.Dark.patch(text_size=10.0),
 )
 
@@ -60,19 +60,19 @@ text(
 tracks = [
     (
         53,
-        ("route.response_field", "field.validate() + strip", Styles.White, False),
+        ("response_model / -> T", "Validate & filter fields", Styles.White, False),
         ("TypeAdapter.dump_json()", "exclude_unset / by_alias", Styles.PrimaryFlat, True),
         ("Response(bytes)", "Merges response.headers", Styles.SecondaryNeutral, False),
     ),
     (
         34,
-        ("response_field is None", "Unconstrained return", Styles.Neutral, False),
+        ("response_model=None", "Unconstrained return", Styles.Neutral, False),
         ("jsonable_encoder()", "Python dict conversion", Styles.White, False),
         ("JSONResponse", "Merges response.headers", Styles.SecondaryNeutral, False),
     ),
     (
         15,
-        ("isinstance(Response)", "304 / File / Custom", Styles.Neutral, False),
+        ("Return Response", "304 / File / Custom", Styles.Neutral, False),
         ("Bypass Serialization", "Skips response_model", Styles.PrimaryNeutral, False),
         ("Direct ASGI Send", "Keeps BackgroundTasks", Styles.White, False),
     ),
@@ -113,22 +113,22 @@ save()
 
 内部の永続化モデルと外部向け DTO を明確に分離することで、資格情報の誤漏洩を構造的に防ぎながら、Pydantic のコンパイル済み Rust コアによる高速なシリアライズを実現できます。
 
-## 1. レスポンス直列化パイプライン（`serialize_response`）
+## 1. レスポンス検証・機密フィールド除去・高速直列化
 
-ルート初期化時（`fastapi/routing.py` の `_populate_api_route_state()`）において、FastAPI は明確な優先順位規則に従って `route.response_field` を決定します。
+パスオペレーション登録時、FastAPI は明確な優先順位規則に従って出力レスポンス契約を決定します。
 
-| エンドポイントの宣言パターン | `route.response_field` | `get_request_handler()` における実行時パス |
+| エンドポイントの宣言パターン | 適用されるレスポンス契約 | 実行時の直列化パス |
 | :--- | :--- | :--- |
-| `@app.get(..., response_model=PublicDTO)` | `ModelField(mode="serialization")` | 戻り値の型注釈より優先し、検証後に Rust `TypeAdapter.dump_json()` を実行 |
-| `async def ep(...) -> PublicDTO:`（`response_model` 省略） | `ModelField(mode="serialization")` | 戻り値の型注釈を自動的に `response_model` として昇格 |
-| `@app.get(..., response_model=None)` または `-> Response` | `None` | `ModelField` 生成を抑止し、`Response \| dict` などの Union 返却を許容 |
-| 実行時に `isinstance(val, Response)` を直接返却 | *(バイパス)* | `serialize_response()` をスキップし、`Response` インスタンスをそのまま送信 |
+| `@app.get(..., response_model=PublicDTO)` | `PublicDTO`（戻り値型注釈より優先） | 検証・機密属性除去後に Rust `TypeAdapter.dump_json()` で UTF-8 バイト列を出力 |
+| `async def ep(...) -> PublicDTO:`（`response_model` 省略） | `PublicDTO`（戻り値型注釈から自動採用） | 戻り値の型注釈をそのまま出力検証および OpenAPI スキーマ契約として適用 |
+| `@app.get(..., response_model=None)` または `-> Response` | 無効化 | レスポンス検証を抑止し、`Response \| dict` などの Union 返却を許容（辞書等は `jsonable_encoder()` で変換） |
+| 実行時に `Response` インスタンスを直接返却 | *(当該呼び出しのみバイパス)* | `response_model` によるフィルタリングをスキップし、`Response` オブジェクトをそのまま送信 |
 
-`route.response_field` が存在し、`response_class` が既定の `JSONResponse`（`DefaultPlaceholder`）である場合、`get_request_handler()` は高速パス `use_dump_json = True` を有効化します。
+レスポンス契約が有効であり、`response_class` が既定の `JSONResponse` である場合、FastAPI は以下の 3 ステップで出力処理を実行します。
 
-1. **出力契約の検証と機密フィールド除去**: `serialize_response()` は返却値（ORM エンティティ・`BaseModel`・`dict`）に対し `from_attributes=True` で `field.validate(..., loc=("response",))` を実行します（`async def` ではイベントループ上、同期 `def` では `run_in_threadpool` 経由）。公開モデルに定義されていない `hashed_password` や `totp_secret` などの属性は確実に除去され、契約違反があれば不正データを外部へ返す前にサーバー側の `ResponseValidationError`（`500`）を送出します。
-2. **Rust 1 パス JSON バイト列出力（`dump_json`）**: Python の中間 `dict` と `json.dumps()` を経由せず、`field.serialize_json()` が `include`・`exclude`・`by_alias`・`exclude_unset`・`exclude_defaults`・`exclude_none` を適用したうえで `TypeAdapter.dump_json()` を呼び出し、生成された UTF-8 `bytes` を直接 `Response(media_type="application/json")` に格納します。
-3. **ステータスコード別のボディ制御とヘッダ統合**: 引数注入された `response: Response` 上で設定されたヘッダや Cookie（`solved_result.response.headers.raw`）は最終レスポンスへ自動追記され、ボディを持たないステータス（`204`・`205`・`304`・`1xx`）では `response.body = b""` が強制されます。
+1. **出力契約の検証と機密フィールド除去**: 返却値（ORM エンティティ・`BaseModel`・`dict`）に対し `from_attributes=True` でモデル検証を実行します（`async def` ではイベントループ上、同期 `def` ではワーカースレッドプール経由）。公開モデルに定義されていない `hashed_password` や `totp_secret` などの属性は自動的に除去され、契約違反があれば不正データを外部へ返す前にサーバー側の `ResponseValidationError`（`500`）を送出します。
+2. **Rust 1 パス JSON バイト列出力（`TypeAdapter.dump_json`）**: Python の中間 `dict` と `json.dumps()` を経由せず、`response_model_include`・`response_model_exclude`・`response_model_by_alias`・`response_model_exclude_unset`・`response_model_exclude_defaults`・`response_model_exclude_none` を適用したうえで Pydantic v2 の `TypeAdapter.dump_json()` を呼び出し、生成された UTF-8 `bytes` を直接 `Response(media_type="application/json")` に格納します。
+3. **ステータスコード別のボディ制御とヘッダ統合**: 引数として注入された `response: Response` 上で設定されたヘッダや `Set-Cookie` は最終レスポンスへ自動マージされ、ボディを持たない HTTP ステータス（`204`・`205`・`304`・`1xx`）では空ボディ（`b""`）が強制されます。
 
 ### 機密フィールド除去と疎な PATCH 応答（`exclude_unset`）
 
@@ -231,15 +231,15 @@ async def raw_probe(etag_match: Annotated[str | None, Header()] = None) -> Respo
 
 ## 2. OpenAPI 3.1.0 遅延合成と入出力分割スキーマ
 
-プロセス起動時間を圧迫しないよう、`FastAPI.openapi()`（`fastapi/applications.py`）は初回の `/openapi.json` リクエストまたは `app.openapi()` 呼び出し時に OpenAPI `3.1.0` 仕様を遅延生成し、`router._get_routes_version()`（`_openapi_routes_version`）と紐づけてキャッシュします。後から動的にルーターや Webhook が追加された場合はルート世代番号が更新され、キャッシュが自動的に再生成されます。
+アプリケーションの起動時間を圧迫しないよう、`app.openapi()` は初回の `/openapi.json` リクエスト（または直接の `app.openapi()` 呼び出し）のタイミングで OpenAPI `3.1.0` 仕様を遅延生成し、メモリ上にキャッシュします。後から動的にルーターや Webhook が追加された場合は、次回アクセス時にキャッシュが自動更新されます。
 
-`get_openapi()`（`fastapi/openapi/utils.py`）の内部は以下の 3 段階で動作します。
+OpenAPI 仕様の合成は以下の 3 段階で進行します。
 
-1. **全ルートからのフィールド収集（`get_fields_from_routes`）**: 公開対象の全 `APIRoute` と Webhook を走査し、`body_field`（`mode="validation"`）、`response_field`、`responses={...}` 由来のステータス別 `response_fields`、`stream_item_field`（いずれも `mode="serialization"`）、コールバック、および平坦化された `Dependant` パラメータを収集します。
-2. **入出力分割 JSON Schema 2020-12 生成（`get_definitions`）**: 既定の `separate_input_output_schemas=True` により、Pydantic の `GenerateJsonSchema(ref_template="#/components/schemas/{model}")` に対して `"validation"` と `"serialization"` の双方の `CoreSchema` が渡されます。`Decimal` フィールド（入力時は `number | string` を許容し、出力時は厳密な `string` に直列化）や `@computed_field`、`serialization_alias` など入出力で型表現が異なるモデルは、自動的に `<Model>-Input` と `<Model>-Output` へ分割して `#/components/schemas/` に出力されます。
-3. **オペレーション合成とエラー統合（`get_openapi_path`）**: 共有依存関数間の重複パラメータを統合し、`operationId` を確定させたうえで、`responses={404: ..., 409: ...}` を `deep_dict_update()` でマージし、入力引数やボディを持つルートには `422`（`HTTPValidationError`）を自動付与します。
+1. **スキーマキャッシュとルート探索**: 公開対象の全 `APIRoute` と `@app.webhooks` オペレーションを走査し、リクエストボディモデル、`response_model`、`responses={...}` で宣言されたステータス別エラーモデル、ストリーミング項目スキーマ、コールバック、および入れ子の `Depends()` / `Security()` 関数群のパラメータを一括収集します。
+2. **入出力分割 JSON Schema 2020-12 生成**: 既定の `separate_input_output_schemas=True` により、Pydantic v2 は入力検証用と出力直列化用の JSON Schema を比較して `#/components/schemas/` を生成します。`Decimal` フィールド（入力時は `number | string` を許容し、出力時は厳密な `string` に直列化）や `@computed_field`、`serialization_alias` など入出力で型表現が異なるモデルは、自動的に `<Model>-Input` と `<Model>-Output` へ分割して定義されます。
+3. **オペレーションとエラー契約の統合**: 共有依存関数間の重複パラメータを排除し、`operationId` を確定させたうえで、正常系 `status_code` とカスタム `responses={404: ..., 409: ...}` 定義を統合し、入力引数やリクエストボディを持つルートには `422`（`HTTPValidationError`）を自動付与します。
 
-```drawlib align=center code=fold file=openapi_31_synthesis_flow.png caption="OpenAPI 3.1.0 遅延合成フロー: _openapi_routes_version キャッシュ・入出力分割スキーマ・パス統合"
+```drawlib align=center code=hide file=openapi_31_synthesis_flow.png caption="OpenAPI 3.1.0 遅延合成フロー: スキーマキャッシュ・ルート探索・入出力分割スキーマ・オペレーション統合"
 from drawlib.canvas import save, setup
 from drawlib.icons import code, phosphor
 from drawlib.lines import line
@@ -267,16 +267,16 @@ flow = ChevronProcess(
     spacing=1.5,
     flat_left_end=True,
 )
-flow.add("1. Version Cache", description="_openapi_routes_version")
-flow.add("2. Field Harvest", description="get_fields_from_routes()", style=Styles.PrimaryNeutral)
+flow.add("1. Schema Cache", description="Lazy build & refresh")
+flow.add("2. Route Discovery", description="Params, body & status", style=Styles.PrimaryNeutral)
 flow.add(
     "3. Split Schemas",
-    description="GenerateJsonSchema 2020-12",
+    description="JSON Schema 2020-12",
     style=Styles.PrimaryFlat,
     text_style=Styles.WhiteBold.patch(text_size=10.5),
     description_style=Styles.White.patch(text_size=10.0),
 )
-flow.add("4. Path Assembly", description="get_openapi_path() -> 3.1.0", style=Styles.SecondaryNeutral)
+flow.add("4. Path Operations", description="Merge -> OpenAPI 3.1.0", style=Styles.SecondaryNeutral)
 flow.draw((6, 68), width=156, height=13)
 
 # Bottom-Left Panel: Split Input/Output Schema Generation
@@ -292,8 +292,8 @@ left_p = Panel(
 left_p.draw((6, 6), width=78, height=57)
 
 rectangle((45, 46.5), width=68, height=10.5, style=Styles.White.patch(shape_r=1.8))
-text((45, 48.7), "Pydantic v2 GenerateJsonSchema", style=Styles.DarkBold.patch(text_size=10.5))
-text((45, 44.2), "Evaluates mode='validation' vs mode='serialization'", style=Styles.Dark.patch(text_size=10.0))
+text((45, 48.7), "Pydantic v2 JSON Schema 2020-12", style=Styles.DarkBold.patch(text_size=10.5))
+text((45, 44.2), "Compares validation input vs serialization output", style=Styles.Dark.patch(text_size=10.0))
 
 # Arrows down from y=41.2 to y=33.0 (8.2 units gap)
 line((26.5, 41.2), (26.5, 33.0), arrow_head="->", style=Styles.DarkBold)
@@ -317,7 +317,7 @@ text(
 
 # Bottom-Right Panel: Operation & Custom Status Code Assembly
 right_p = Panel(
-    "Operation Assembly (get_openapi_path)",
+    "Operation & Error Contract Assembly",
     style=Styles.Neutral,
     header_style=Styles.SecondaryNeutral,
     text_style=Styles.DarkBold.patch(text_size=10.8),
@@ -339,13 +339,13 @@ ops = CardList(
     spacing=2.4,
 )
 ops.add(
-    "Versioned Schema Cache",
-    "O(1) hit; invalidates on\n_get_routes_version() bump",
+    "Lazy Schema Cache",
+    "Cached after first request;\nrefreshes if routes change",
     badge_text="O(1)",
 )
 ops.add(
     "Custom Status Merging",
-    "responses={404, 409} merged\nvia deep_dict_update()",
+    "Merges status_code=201\nwith responses={404, 409}",
     badge_text="4xx",
     style=Styles.SecondaryNeutral,
 )
@@ -412,4 +412,4 @@ assert "SkuSpec-Output" in openapi_doc["components"]["schemas"]
 assert set(openapi_doc["paths"]["/skus"]["post"]["responses"]) >= {"201", "404", "409", "422"}
 ```
 
-入力パラメータやマルチパートボディの分類規則については [Path・Query・Header・Cookie・Body](parameters_and_validation.md) を参照してください。続いて、階層的な `Depends()` グラフの解決は [Dependant DAG・キャッシュ・yield スコープ](../04_dependencies_and_security/dependency_injection.md)、`itemSchema` を用いたストリーミング OpenAPI 契約は [ネイティブ SSE・JSONL・WebSocket](../05_async_and_realtime/sse_websockets_streaming.md) で詳しく解説します。
+入力パラメータやマルチパートボディの束縛ルールについては [Path・Query・Header・Cookie・Body](parameters_and_validation.md) を参照してください。続いて、階層的な `Depends()` グラフの解決は [依存グラフ・キャッシュ・yield スコープ](../04_dependencies_and_security/dependency_injection.md)、`itemSchema` を用いたストリーミング OpenAPI 契約は [ネイティブ SSE・JSONL・WebSocket](../05_async_and_realtime/sse_websockets_streaming.md) で詳しく解説します。

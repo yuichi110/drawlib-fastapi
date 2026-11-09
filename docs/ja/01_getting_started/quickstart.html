@@ -13,7 +13,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>クイックスタートと自動生成 Docs — FastAPI Visual Guide (Unofficial · Drawlib Demo)</title>
+    <title>クイックスタートと自動生成 Docs — FastAPI User Guide (Unofficial)</title>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
     <script>
@@ -49,15 +49,15 @@
     <meta name="description" content="本ページでは、クリーンな Python &gt;=3.10 環境から出発し、FastAPI v0.162.2 で型安全な Inventory API（在庫管理 API） を構築します。境界での入力検証、複数箇所の違反を一括報告する 422 Unprocessable Content エラー構造、自動生成される…">
     <link rel="canonical" href="https://fastapi.drawlib.com/ja/01_getting_started/quickstart.html">
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="FastAPI ビジュアル解説">
-    <meta property="og:title" content="クイックスタートと自動生成 Docs — FastAPI ビジュアル解説">
+    <meta property="og:site_name" content="FastAPI ユーザーガイド">
+    <meta property="og:title" content="クイックスタートと自動生成 Docs — FastAPI ユーザーガイド">
     <meta property="og:description" content="本ページでは、クリーンな Python &gt;=3.10 環境から出発し、FastAPI v0.162.2 で型安全な Inventory API（在庫管理 API） を構築します。境界での入力検証、複数箇所の違反を一括報告する 422 Unprocessable Content エラー構造、自動生成される…">
     <meta property="og:url" content="https://fastapi.drawlib.com/ja/01_getting_started/quickstart.html">
     <meta property="og:image" content="https://fastapi.drawlib.com/_assets/ogp.png">
     <meta property="og:locale" content="ja_JP">
     <meta property="og:locale:alternate" content="en_US">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="クイックスタートと自動生成 Docs — FastAPI ビジュアル解説">
+    <meta name="twitter:title" content="クイックスタートと自動生成 Docs — FastAPI ユーザーガイド">
     <meta name="twitter:description" content="本ページでは、クリーンな Python &gt;=3.10 環境から出発し、FastAPI v0.162.2 で型安全な Inventory API（在庫管理 API） を構築します。境界での入力検証、複数箇所の違反を一括報告する 422 Unprocessable Content エラー構造、自動生成される…">
     <meta name="twitter:image" content="https://fastapi.drawlib.com/_assets/ogp.png">
     
@@ -70,17 +70,21 @@
     
 </head>
 <body>
-    <div class="demo-banner" role="region" aria-label="非公式ショーケース案内">
+    <div class="demo-banner" role="region" aria-label="ポータルナビゲーション">
         <div class="demo-banner-inner">
-            <span class="demo-banner-badge">UNOFFICIAL DEMO</span>
+            <span class="demo-banner-badge">UNOFFICIAL GUIDE</span>
             
             <span class="demo-banner-text">
-                <a href="https://www.drawlib.com/" target="_blank" rel="noopener noreferrer">Drawlib</a> と <a href="https://pypi.org/project/pni501/" target="_blank" rel="noopener noreferrer">PNI501</a> で作成した <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a>（v0.162.2, MIT）の非公式ビジュアル解説ショーケースです。
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a>（v0.162.2）非公式ユーザーガイド
             </span>
             <span class="demo-banner-links">
-                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 診断レポート →</a>
+                <strong style="color:#ffffff;">User Guide</strong>
                 <span class="demo-banner-sep">·</span>
-                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI 公式 Docs ↗</a>
+                <a href="https://fastapi.drawlib.com/architecture/">Architecture</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Audit</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official Docs ↗</a>
                 <span class="demo-banner-sep">·</span>
                 <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
             </span>
@@ -91,9 +95,9 @@
     <div class="doc-layout">
         <aside class="sidebar">
             <div class="sidebar-header">
-                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI ビジュアル解説">
+                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI ユーザーガイド">
                     
-                    FastAPI ビジュアル解説
+                    FastAPI ユーザーガイド
                     
                 </a>
                 <div class="sidebar-header-actions">
@@ -114,7 +118,7 @@
                         <ul class="nav-list">
                             
                             <li class="nav-item ">
-                                <a href="../index.html" >ガイド概要と全体マップ</a>
+                                <a href="../index.html" >ガイド概要</a>
                             </li>
                             
                         </ul>
@@ -125,7 +129,7 @@
                         <ul class="nav-list">
                             
                             <li class="nav-item ">
-                                <a href="overview.html" >FastAPI の設計思想と内部構造</a>
+                                <a href="overview.html" >FastAPI の設計思想と基本概念</a>
                             </li>
                             
                             <li class="nav-item active">
@@ -178,7 +182,7 @@
                         <ul class="nav-list">
                             
                             <li class="nav-item ">
-                                <a href="../04_dependencies_and_security/dependency_injection.html" >Dependant DAG・キャッシュ・yield スコープ</a>
+                                <a href="../04_dependencies_and_security/dependency_injection.html" >依存グラフ・キャッシュ・yield スコープ</a>
                             </li>
                             
                             <li class="nav-item ">
@@ -252,12 +256,12 @@
                         </ul>
                     
                         
-                        <div class="sidebar-heading">診断レポート &amp; 公式リンク</div>
+                        <div class="sidebar-heading">関連ガイド &amp; 公式リンク</div>
                         
                         <ul class="nav-list">
                             
                             <li class="nav-item ">
-                                <a href="https://fastapi.drawlib.com/reports/pni501/" target="_blank" rel="noopener noreferrer">PNI501 診断レポート<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                                <a href="https://fastapi.drawlib.com/architecture/" target="_blank" rel="noopener noreferrer">FastAPI 内部アーキテクチャ解説<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
                             </li>
                             
                             <li class="nav-item ">
@@ -265,7 +269,7 @@
                             </li>
                             
                             <li class="nav-item ">
-                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">デモのリポジトリ (GitHub)<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub リポジトリ<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
                             </li>
                             
                         </ul>
@@ -314,118 +318,6 @@
   <img src="../../images/01_getting_started/quickstart/quickstart_request_anatomy.png" alt="quickstart_1" />
   <figcaption class="drawlib-caption">POST /items/{item_id}?currency=JPY の解剖図 — マルチソース抽出・Pydantic v2 検証・201 / 422 分岐</figcaption>
 </figure>
-<details class="drawlib-code-details">
-<summary>Source Code</summary>
-<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.canvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">setup</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.diagrams.architecture</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArchitectureDiagram</span><span class="p">,</span> <span class="n">CodeIcon</span><span class="p">,</span> <span class="n">Node</span><span class="p">,</span> <span class="n">PhosphorIcon</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.shapes</span><span class="w"> </span><span class="kn">import</span> <span class="n">rectangle</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">Styles</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.text</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span>
-
-<span class="n">setup</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">184</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">84</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
-
-<span class="c1"># Top HTTP Request Banner</span>
-<span class="n">rectangle</span><span class="p">((</span><span class="mf">92.0</span><span class="p">,</span> <span class="mf">74.5</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">172.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">2.0</span><span class="p">))</span>
-<span class="n">text</span><span class="p">(</span>
-    <span class="p">(</span><span class="mf">92.0</span><span class="p">,</span> <span class="mf">74.5</span><span class="p">),</span>
-    <span class="s1">'HTTP Request:  POST /items/42?currency=JPY   +   JSON Body {"name": "Mechanical Keyboard", "price_cents": 15800}'</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="n">diag</span> <span class="o">=</span> <span class="n">ArchitectureDiagram</span><span class="p">(</span>
-    <span class="n">node_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">,</span>
-    <span class="n">node_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
-    <span class="n">edge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">,</span>
-    <span class="n">edge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">node_card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="c1"># Left Column: Three Typed Parameter Extractors</span>
-<span class="n">n_path</span> <span class="o">=</span> <span class="n">diag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span>
-        <span class="s2">"URL Path Segment</span><span class="se">\n</span><span class="s2">item_id: Path(ge=1)"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">46</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mf">14.5</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">PATH</span><span class="p">,</span>
-        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.6</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
-    <span class="p">),</span>
-    <span class="p">(</span><span class="mi">29</span><span class="p">,</span> <span class="mf">54.5</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">n_query</span> <span class="o">=</span> <span class="n">diag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span>
-        <span class="s2">"Query Parameter</span><span class="se">\n</span><span class="s2">currency: Query(pattern=...)"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">46</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mf">14.5</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">FILE_SEARCH</span><span class="p">,</span>
-        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.6</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
-    <span class="p">),</span>
-    <span class="p">(</span><span class="mi">29</span><span class="p">,</span> <span class="mf">34.5</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">n_body</span> <span class="o">=</span> <span class="n">diag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span>
-        <span class="s2">"JSON Request Body</span><span class="se">\n</span><span class="s2">payload: ItemCreate"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">46</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mf">14.5</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">CodeIcon</span><span class="o">.</span><span class="n">PYDANTIC</span><span class="p">,</span>
-        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.6</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
-    <span class="p">),</span>
-    <span class="p">(</span><span class="mi">29</span><span class="p">,</span> <span class="mf">14.5</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="c1"># Center Gate: FastAPI + Pydantic v2 Handler</span>
-<span class="n">n_gate</span> <span class="o">=</span> <span class="n">diag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span>
-        <span class="s2">"FastAPI + Pydantic v2</span><span class="se">\n</span><span class="s2">create_item() Validation</span><span class="se">\n</span><span class="s2">&amp; Type Coercion"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mf">21.0</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">CodeIcon</span><span class="o">.</span><span class="n">FASTAPI</span><span class="p">,</span>
-        <span class="n">icon_size</span><span class="o">=</span><span class="mf">6.4</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
-        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
-        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="p">,</span>
-    <span class="p">),</span>
-    <span class="p">(</span><span class="mi">92</span><span class="p">,</span> <span class="mf">34.5</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="c1"># Right Column: Valid 201 vs Invalid 422 Outcomes</span>
-<span class="n">n_ok</span> <span class="o">=</span> <span class="n">diag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span>
-        <span class="s2">"201 Created</span><span class="se">\n</span><span class="s2">response_model=ItemRead</span><span class="se">\n</span><span class="s2">Filtered JSON Output"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">46</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mf">18.5</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">CHECK_CIRCLE</span><span class="p">,</span>
-        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.8</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SuccessNeutral</span><span class="p">,</span>
-        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SuccessBold</span><span class="p">,</span>
-    <span class="p">),</span>
-    <span class="p">(</span><span class="mi">155</span><span class="p">,</span> <span class="mf">50.0</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">n_err</span> <span class="o">=</span> <span class="n">diag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span>
-        <span class="s2">"422 Unprocessable Content</span><span class="se">\n</span><span class="s2">RequestValidationError</span><span class="se">\n</span><span class="s2">detail: [{loc, msg, type}]"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">46</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mf">18.5</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">WARNING_CIRCLE</span><span class="p">,</span>
-        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.8</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DangerNeutral</span><span class="p">,</span>
-        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DangerBold</span><span class="p">,</span>
-    <span class="p">),</span>
-    <span class="p">(</span><span class="mi">155</span><span class="p">,</span> <span class="mf">19.0</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="n">diag</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">n_path</span><span class="p">,</span> <span class="n">n_gate</span><span class="p">,</span> <span class="n">routing</span><span class="o">=</span><span class="s2">"orthogonal"</span><span class="p">)</span>
-<span class="n">diag</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">n_query</span><span class="p">,</span> <span class="n">n_gate</span><span class="p">,</span> <span class="n">routing</span><span class="o">=</span><span class="s2">"direct"</span><span class="p">)</span>
-<span class="n">diag</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">n_body</span><span class="p">,</span> <span class="n">n_gate</span><span class="p">,</span> <span class="n">routing</span><span class="o">=</span><span class="s2">"orthogonal"</span><span class="p">)</span>
-<span class="n">diag</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">n_gate</span><span class="p">,</span> <span class="n">n_ok</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"Valid"</span><span class="p">,</span> <span class="n">routing</span><span class="o">=</span><span class="s2">"orthogonal"</span><span class="p">)</span>
-<span class="n">diag</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">n_gate</span><span class="p">,</span> <span class="n">n_err</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"Invalid"</span><span class="p">,</span> <span class="n">routing</span><span class="o">=</span><span class="s2">"orthogonal"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DangerBold</span><span class="p">)</span>
-
-<span class="n">diag</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
-<span class="n">save</span><span class="p">()</span>
-</code></pre>
-</details>
 <h2>1. インストール：標準オールインワン構成 vs 本番最小構成</h2>
 <p>ローカル開発で CLI やテストツールまで一括導入するか、本番コンテナ向けに最小限の依存関係のみを導入するかに応じて 2 つのプロファイルを使い分けます。</p>
 <table>
@@ -551,108 +443,6 @@ uv<span class="w"> </span>run<span class="w"> </span>fastapi<span class="w"> </s
   <img src="../../images/01_getting_started/quickstart/openapi_docs_ecosystem.png" alt="quickstart_2" />
   <figcaption class="drawlib-caption">単一エンドポイント定義からの自動展開 — /openapi.json・Swagger UI (/docs)・ReDoc (/redoc)・型付き SDK 生成</figcaption>
 </figure>
-<details class="drawlib-code-details">
-<summary>Source Code</summary>
-<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.canvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">setup</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.diagrams.architecture</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">ArchitectureDiagram</span><span class="p">,</span>
-    <span class="n">CodeIcon</span><span class="p">,</span>
-    <span class="n">Node</span><span class="p">,</span>
-    <span class="n">PhosphorIcon</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.icons</span><span class="w"> </span><span class="kn">import</span> <span class="n">phosphor</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.smartarts</span><span class="w"> </span><span class="kn">import</span> <span class="n">Panel</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">Styles</span>
-
-<span class="n">setup</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">190</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
-
-<span class="n">outer</span> <span class="o">=</span> <span class="n">Panel</span><span class="p">(</span>
-    <span class="s2">"Zero-Drift OpenAPI 3.1.0 Synthesis &amp; Consumer Ecosystem"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">2.0</span><span class="p">),</span>
-    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_line_width</span><span class="o">=</span><span class="mf">1.2</span><span class="p">),</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">12.0</span><span class="p">),</span>
-    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">book_open</span><span class="p">,</span>
-    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">,</span>
-    <span class="n">header_variant</span><span class="o">=</span><span class="s2">"filled"</span><span class="p">,</span>
-    <span class="n">header_height</span><span class="o">=</span><span class="mf">8.5</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">outer</span><span class="o">.</span><span class="n">draw</span><span class="p">((</span><span class="mf">4.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">182.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">72.0</span><span class="p">)</span>
-
-<span class="n">diag</span> <span class="o">=</span> <span class="n">ArchitectureDiagram</span><span class="p">(</span>
-    <span class="n">node_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">,</span>
-    <span class="n">node_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
-    <span class="n">edge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">,</span>
-    <span class="n">edge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">node_card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="n">n_route</span> <span class="o">=</span> <span class="n">diag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span>
-        <span class="s2">"@app.post('/items/</span><span class="si">{item_id}</span><span class="s2">')</span><span class="se">\n</span><span class="s2">Annotated + Doc() + BaseModel</span><span class="se">\n</span><span class="s2">response_model=ItemRead"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">46</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mf">20.0</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">CodeIcon</span><span class="o">.</span><span class="n">PYTHON</span><span class="p">,</span>
-        <span class="n">icon_size</span><span class="o">=</span><span class="mf">6.0</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span>
-    <span class="p">),</span>
-    <span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">36</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="n">n_schema</span> <span class="o">=</span> <span class="n">diag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span>
-        <span class="s2">"GET /openapi.json</span><span class="se">\n</span><span class="s2">get_openapi() Synthesis</span><span class="se">\n</span><span class="s2">OpenAPI 3.1.0 Schema"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">44</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mf">20.0</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">CodeIcon</span><span class="o">.</span><span class="n">OPENAPI</span><span class="p">,</span>
-        <span class="n">icon_size</span><span class="o">=</span><span class="mf">6.2</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
-        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
-        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="p">,</span>
-    <span class="p">),</span>
-    <span class="p">(</span><span class="mi">91</span><span class="p">,</span> <span class="mi">36</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="n">n_swagger</span> <span class="o">=</span> <span class="n">diag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span>
-        <span class="s2">"GET /docs — Swagger UI</span><span class="se">\n</span><span class="s2">Interactive Try-It-Out"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">44</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mf">15.5</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">BROWSERS</span><span class="p">,</span>
-        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.2</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
-    <span class="p">),</span>
-    <span class="p">(</span><span class="mi">157</span><span class="p">,</span> <span class="mf">55.5</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">n_redoc</span> <span class="o">=</span> <span class="n">diag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span>
-        <span class="s2">"GET /redoc — ReDoc</span><span class="se">\n</span><span class="s2">3-Pane Reference Docs"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">44</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mf">15.5</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">BOOK_OPEN</span><span class="p">,</span>
-        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.2</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
-    <span class="p">),</span>
-    <span class="p">(</span><span class="mi">157</span><span class="p">,</span> <span class="mf">36.0</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">n_sdk</span> <span class="o">=</span> <span class="n">diag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span>
-        <span class="s2">"Client SDK Generators</span><span class="se">\n</span><span class="s2">TypeScript · Python · Go"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">44</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mf">15.5</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">CodeIcon</span><span class="o">.</span><span class="n">TYPESCRIPT</span><span class="p">,</span>
-        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
-    <span class="p">),</span>
-    <span class="p">(</span><span class="mi">157</span><span class="p">,</span> <span class="mf">16.5</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="n">diag</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">n_route</span><span class="p">,</span> <span class="n">n_schema</span><span class="p">,</span> <span class="n">routing</span><span class="o">=</span><span class="s2">"direct"</span><span class="p">)</span>
-<span class="n">n_schema</span><span class="o">.</span><span class="n">fork</span><span class="p">([</span><span class="n">n_swagger</span><span class="p">,</span> <span class="n">n_redoc</span><span class="p">,</span> <span class="n">n_sdk</span><span class="p">],</span> <span class="n">at_x</span><span class="o">=</span><span class="mf">122.0</span><span class="p">)</span>
-
-<span class="n">diag</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
-<span class="n">save</span><span class="p">()</span>
-</code></pre>
-</details>
 <ul>
 <li><strong><code>GET /openapi.json</code></strong>: API ゲートウェイ、契約テスト、クライアント SDK 自動生成ツール（<code>openapi-ts</code> や <code>openapi-python-client</code> 等）が参照する OpenAPI <code>3.1.0</code> 機械可読スキーマです。</li>
 <li><strong><code>GET /docs</code>（Swagger UI）</strong> &amp; <strong><code>GET /redoc</code>（ReDoc）</strong>: ブラウザから即座に試せる対話型コンソールと 3 ペイン仕様書です。外部公開を制限したい本番環境では <code>FastAPI(openapi_url=None)</code> を指定するか、内部認証の背後に配置して安全に保護できます。</li>
@@ -675,6 +465,11 @@ uv<span class="w"> </span>run<span class="w"> </span>fastapi<span class="w"> </s
 <p>基本動作を確認できたら、続いて <strong><a href="../02_enterprise_architecture/modular_design.html">第 2 章：境界づけられたコンテキストと階層化</a></strong> で <code>100,000+</code> 行規模へスケールさせる設計手法を学ぶか、<strong><a href="../03_routing_and_models/parameters_and_validation.html">第 3 章：Path・Query・Header・Cookie・Body</a></strong> で高度なパラメータ検証パターンを深掘りしてください。</p>
 
             </main>
+            <footer class="footer">
+                
+                FastAPI® は Sebastián Ramírez（<a href="https://github.com/tiangolo" target="_blank" rel="noopener noreferrer">@tiangolo</a>）の登録商標です。本サイトは非公式ガイドであり、公式プロジェクトとは提携していません。公式ドキュメントは <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">fastapi.tiangolo.com</a> をご参照ください。
+                
+            </footer>
         </div>
     </div>
     

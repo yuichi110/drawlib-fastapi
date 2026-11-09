@@ -2,7 +2,7 @@
 
 `APIRoute.get_route_handler()` と Starlette の `Request` をサブクラス化すると、ルーターのパス照合が成功した**直後**かつ FastAPI が JSON デコードや Pydantic 検証を実行する**直前**に処理を挟み込むことができ、ルーター単位での透過的 `gzip` 解凍・生バイト列に対する HMAC 署名検証・オペレーション別レイテンシ計測・構造化 `422` エラー拡張を実現できます。
 
-```drawlib align=center code=fold file=custom_apiroute_interception.png caption="インターセプト境界の比較: グローバル ASGI ミドルウェアとルーター単位の APIRoute.get_route_handler()"
+```drawlib align=center code=hide file=custom_apiroute_interception.png caption="インターセプト境界の比較: グローバル ASGI ミドルウェアとルーター単位の APIRoute.get_route_handler()"
 from drawlib.canvas import save, setup
 from drawlib.icons import code, phosphor
 from drawlib.lines import line
@@ -61,7 +61,7 @@ p_route.draw((5, 6), width=164, height=38)
 route_steps = [
     (24.5, "1. Matched Route", "Fires ONLY on target\nAPIRouter endpoints", Styles.PrimaryNeutral, False),
     (64.5, "2. Custom Handler", "Swaps GzipRequest &\nverifies raw body HMAC", Styles.PrimaryFlat, True),
-    (104.5, "3. original_handler", "get_request_handler()\nJSON + Depends + Model", Styles.White, False),
+    (104.5, "3. original_handler", "Built-in route handler\nJSON + Depends + Model", Styles.White, False),
     (144.5, "4. 422 & Latency", "Catches ValidationError\n& sets X-Response-Time", Styles.SecondaryNeutral, False),
 ]
 for idx, (cx, rt_title, rt_sub, rt_fill, is_focal) in enumerate(route_steps):
@@ -81,26 +81,26 @@ FastAPI で横断的関心事を実装する際は、ASGI ライフサイクル�
 
 ## 1. ASGI ミドルウェアと `APIRoute.get_route_handler()` のライフサイクル
 
-`fastapi/routing.py` では、`APIRouter` に登録される各パスオペレーションが `APIRoute`（または `APIRouter(route_class=...)` に指定したカスタムサブクラス）を生成し、`self.app = request_response(self.get_route_handler())` を構築します。さらに子ルーターを `app.include_router()` で統合する際も、`_EffectiveRouteContext.from_api_route()` が `_effective_route_context_var` を設定したうえで統合コンテキストごとに一度だけ `original_route.get_route_handler()` を再呼び出しするため、親ルーターから継承したプレフィックスや依存関係を含むハンドラを確実にラップでき、他の兄弟ルーターには一切影響を与えません。
+`APIRouter` に登録される各パスオペレーションは `APIRoute` インスタンス（または `APIRouter(route_class=...)` に指定したカスタムサブクラス）を生成し、`self.get_route_handler()` を呼び出してリクエストハンドラを構築します。さらに子ルーターを `app.include_router()` で統合する際も、**ルーターのプレフィックスおよび依存関係の継承**が自動適用されたうえで統合先ごとに `get_route_handler()` が構築されるため、親ルーターから引き継いだ設定を含むハンドラを確実にラップでき、他の兄弟ルーターには一切影響を与えません。
 
-特に重要なのが、`get_request_handler()`（`fastapi/routing.py`）内部の実行順序です。
+FastAPI 標準のルートハンドラ内部における実行順序を理解すると、`Depends()` ではなくカスタム `APIRoute` が必要となる場面が明確になります。
 
 1. **ボディ読み取りと JSON デコード（`await request.body()` / `await request.json()`）**が**最初**に実行され、JSON 構文が不正な場合は即座に `RequestValidationError(type="json_invalid")` が送出されます。
-2. **依存関係の解決（`await solve_dependencies(...)`）**はその**後**に実行されます。したがって、`Depends()` 関数では `request.json()` が失敗する前に `gzip` 圧縮ストリームを解凍することはできず、ボディやパラメータ検証が送出する `RequestValidationError` を捕捉することもできません。
+2. **依存関係の解決とパラメータ検証**はその**後**に実行されます。したがって、`Depends()` 関数では `request.json()` が失敗する前に `gzip` 圧縮ストリームを解凍することはできず、ボディやパラメータ検証が送出する `RequestValidationError` を捕捉することもできません。
 
 | 比較軸 | グローバル純粋 ASGI ミドルウェア | `APIRouter(route_class=CustomRoute)` | `Depends()` / `Security()` |
 | :--- | :--- | :--- | :--- |
-| **実行タイミング** | ルーティング前（`404`・`/static`・全ルーターで常時実行） | `APIRoute.matches()` 成功後、**JSON 解析および `Depends()` の直前** | `get_request_handler()` による JSON／Form 解析の**後** |
+| **実行タイミング** | ルーティング前（`404`・`/static`・全ルーターで常時実行） | ルート照合成功後、**JSON 解析および `Depends()` の直前** | FastAPI による JSON／Form 解析の**後** |
 | **適用スコープの粒度** | `FastAPI` アプリ全体（またはマウントされたサブアプリ） | 対象の `APIRouter` サブツリーのみ（`route_class=...`） | アプリ・`APIRouter`・ルート `dependencies`・個別引数 |
 | **`Request`（`body()`）の差し替え** | 低レベル ASGI `receive` ラッパーの手動実装が必要 | ネイティブ対応（`CustomRequest(request.scope, request.receive)`） | 不可（すでに `request.json()` が実行済み） |
-| **`RequestValidationError` の捕捉** | 不可（外側の `ExceptionMiddleware` 等で一括処理） | **可能**（`try: await original_route_handler(request)` で捕捉） | 不可（`solve_dependencies()` 完了後に送出されるため） |
-| **ルートメタデータへの参照** | ルーティング前のため `scope["route"]` 未確定 | `self.operation_id`・`self.path`・`self.tags`・`self.dependant` を直接参照 | `request.scope["route"]` 経由のみ |
+| **`RequestValidationError` の捕捉** | 不可（アプリ全体の `@app.exception_handler` で処理） | **可能**（`try: await original_route_handler(request)` で捕捉） | 不可（エンドポイント実行前の検証段階で送出されるため） |
+| **ルートメタデータへの参照** | ルーティング前のため `scope["route"]` 未確定 | `self.operation_id`・`self.path`・`self.tags`・`self.name` を直接参照 | `request.scope["route"]` 経由のみ |
 
 ## 2. 透過的 `GzipRequest`・`422` エラー拡張・Webhook HMAC 検証ルート
 
-カスタム `Request` サブクラスとカスタム `APIRoute` を組み合わせることで、各エンドポイントの関数署名を一切汚さずにストリーム変換や暗号学的署名検証を組み込めます。
+カスタム `Request` サブクラスとカスタム `APIRoute` を組み合わせることで、各エンドポイントの関数シグネチャを一切汚さずにストリーム変換や暗号学的署名検証を組み込めます。
 
-```drawlib align=center code=fold file=gzip_and_hmac_route_pipeline.png caption="カスタム APIRoute の実行シーケンス: 上限付き GzipRequest 解凍・定数時間 HMAC-SHA256 検証・422 エラー拡張"
+```drawlib align=center code=hide file=gzip_and_hmac_route_pipeline.png caption="カスタム APIRoute の実行シーケンス: 上限付き GzipRequest 解凍・定数時間 HMAC-SHA256 検証・422 エラー拡張"
 from drawlib.canvas import save, setup
 from drawlib.diagrams.sequence import Participant, ParticipantGroup, PhosphorIcon, SequenceDiagram
 from drawlib.icons import code
@@ -168,7 +168,7 @@ gzip_req = router_grp.add(
 )
 inner_handler = router_grp.add(
     Participant(
-        "get_request_handler()",
+        "original_handler",
         width=30,
         height=13,
         icon=PhosphorIcon.CPU,
@@ -179,7 +179,7 @@ inner_handler = router_grp.add(
 
 client.request(custom_route, "POST Content-Encoding: gzip + X-Hub-Signature")
 custom_route.request(gzip_req, "Wrap scope & await request.body()")
-gzip_req.reply(custom_route, "Gunzip (<=1 MiB cap) & cache self._body")
+gzip_req.reply(custom_route, "Gunzip (<=1 MiB cap) & cache bytes")
 d.note(
     "hmac.compare_digest() & perf_counter()",
     over=[custom_route, gzip_req],
@@ -189,7 +189,7 @@ d.note(
 with d.opt("Valid HMAC & <=1 MiB") as ok_blk:
     ok_blk.text_style = Styles.DarkBold.patch(text_size=10.0, halign="left")
     custom_route.request(inner_handler, "await original_route_handler(request)")
-    inner_handler.request(gzip_req, "await request.json() [reuses _body]")
+    inner_handler.request(gzip_req, "await request.json() [reuses cache]")
     gzip_req.reply(inner_handler, "Decompressed UTF-8 JSON")
     inner_handler.reply(custom_route, "200 Response or RequestValidationError")
     custom_route.reply(
@@ -214,7 +214,7 @@ save()
 
 ### 上限付き `GzipRequest` と `GzipRoute` による透過解凍
 
-Starlette の `Request.json()` は内部で `await self.body()` を呼び出し、結果を `self._body` にキャッシュします。`GzipRequest` で `async def body(self) -> bytes` をオーバーライドし、無制限な `gzip.decompress()` ではなく `gzip.GzipFile.read(MAX_DECOMPRESSED_BYTES + 1)` で展開バイト数に上限を設けることで、gzip 圧縮爆弾（DoS）を `413 Content Too Large` で遮断しつつ、解凍済み UTF-8 JSON を `get_request_handler()` へ透過的に引き渡せます。
+Starlette の `Request.json()` は内部で `await self.body()` を呼び出し、読み取ったバイト列をリクエスト期間中メモリ上にキャッシュします。`GzipRequest` で `async def body(self) -> bytes` をオーバーライドし、無制限な `gzip.decompress()` ではなく `gzip.GzipFile.read(MAX_DECOMPRESSED_BYTES + 1)` で展開バイト数に上限を設けることで、gzip 圧縮爆弾（DoS）を `413 Content Too Large` で遮断しつつ、解凍済み UTF-8 JSON を `original_route_handler` へ透過的に引き渡せます。
 
 ```python
 import gzip
@@ -392,6 +392,6 @@ app.include_router(webhook_router)
 ```
 
 > [!TIP]
-> `await request.body()` は読み取ったバイト列を `request._body` にキャッシュするため、`HmacTimedRoute` 内で先に `await request.body()` を呼び出しても後続の `original_route_handler(request)` でストリームが枯渇することはなく、`get_request_handler()` はキャッシュ済みのバイト列を即座に再利用します。ただし数メガバイト規模のマルチパートファイルアップロード（`request.stream()` から `SpooledTemporaryFile` へ逐次書き出すルート）では、メモリ一括展開を避けるため `Request.body()` の事前読み取りを行わないルーターへ分離してください。
+> `await request.body()` は読み取った生バイト列を `Request` インスタンス上のメモリにキャッシュするため、`HmacTimedRoute` 内で先に `await request.body()` を呼び出しても後続の `original_route_handler(request)` で ASGI ストリームが枯渇することはなく、標準ルートハンドラはキャッシュ済みのバイト列を即座に再利用します。ただし数メガバイト規模のマルチパートファイルアップロード（`request.stream()` から `SpooledTemporaryFile` へ逐次書き出すルート）では、メモリ一括展開を避けるため `Request.body()` の事前読み取りを行わないルーターへ分離してください。
 
-以上で第 3 章（[Path・Query・Header・Cookie・Body](parameters_and_validation.md)、[レスポンス直列化と OpenAPI 3.1](responses_and_openapi.md)、[パラメータモデル合成・特殊型・例示](advanced_types_and_models.md)、および本ページ）のルーティング・モデル基盤が完結します。続いて第 4 章の [Dependant DAG・キャッシュ・yield スコープ](../04_dependencies_and_security/dependency_injection.md)、トランスポート層ミドルウェアを扱う [ASGI ミドルウェアとスレッドプール制御](../05_async_and_realtime/concurrency_and_middleware.md)、アプリ全体の例外ハンドラを扱う [ネイティブ OpenTelemetry と例外処理](../06_observability_and_testing/telemetry_and_errors.md)、および `@app.webhooks` スキーマ文書化を扱う [Webhooks・Callbacks・SDK 生成・Docs UI](../07_frontend_and_openapi_ext/webhooks_callbacks_sdks.md) へ進んでください。
+以上で第 3 章（[Path・Query・Header・Cookie・Body](parameters_and_validation.md)、[レスポンス直列化と OpenAPI 3.1](responses_and_openapi.md)、[パラメータモデル合成・特殊型・例示](advanced_types_and_models.md)、および本ページ）のルーティング・モデル基盤が完結します。続いて第 4 章の [依存グラフ・キャッシュ・yield スコープ](../04_dependencies_and_security/dependency_injection.md)、トランスポート層ミドルウェアを扱う [ASGI ミドルウェアとスレッドプール制御](../05_async_and_realtime/concurrency_and_middleware.md)、アプリ全体の例外ハンドラを扱う [ネイティブ OpenTelemetry と例外処理](../06_observability_and_testing/telemetry_and_errors.md)、および `@app.webhooks` スキーマ文書化を扱う [Webhooks・Callbacks・SDK 生成・Docs UI](../07_frontend_and_openapi_ext/webhooks_callbacks_sdks.md) へ進んでください。

@@ -1,0 +1,466 @@
+<!--
+ Copyright (c) 2026 Yuichi Ito (yuichi@yuichi.com)
+
+ This software is licensed under the Apache License, Version 2.0.
+ For more information, please visit: https://github.com/yuichi110/drawlib
+
+ This software is provided "as is", without warranty of any kind,
+ express or implied, including but not limited to the warranties of
+ merchantability, fitness for a particular purpose and noninfringement.
+-->
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lazy `get_openapi()`, JSON Schema `$defs` &amp; Docs UI — FastAPI Architecture Guide (Unofficial)</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-S9N5BZ1VRC');
+    </script>
+    <script>
+        (function() {
+            const saved = localStorage.getItem('drawlib-theme');
+            if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    
+    
+    
+    <link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/architecture/en/06_openapi_and_docs/openapi_synthesis_engine.html">
+    
+    <link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/architecture/ja/06_openapi_and_docs/openapi_synthesis_engine.html">
+    
+    <link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/architecture/en/06_openapi_and_docs/openapi_synthesis_engine.html">
+    
+    
+    
+    <meta name="description" content="FastAPI treats OpenAPI 3.1.0 (backed by JSON Schema Draft 2020-12) as a first-class compilation target rather than a hand-written YAML artifact. Instead of…">
+    <link rel="canonical" href="https://fastapi.drawlib.com/architecture/en/06_openapi_and_docs/openapi_synthesis_engine.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="FastAPI Architecture">
+    <meta property="og:title" content="Lazy get_openapi(), JSON Schema $defs &amp; Docs UI — FastAPI Architecture">
+    <meta property="og:description" content="FastAPI treats OpenAPI 3.1.0 (backed by JSON Schema Draft 2020-12) as a first-class compilation target rather than a hand-written YAML artifact. Instead of…">
+    <meta property="og:url" content="https://fastapi.drawlib.com/architecture/en/06_openapi_and_docs/openapi_synthesis_engine.html">
+    <meta property="og:image" content="https://fastapi.drawlib.com/architecture/_assets/ogp.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="ja_JP">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Lazy get_openapi(), JSON Schema $defs &amp; Docs UI — FastAPI Architecture">
+    <meta name="twitter:description" content="FastAPI treats OpenAPI 3.1.0 (backed by JSON Schema Draft 2020-12) as a first-class compilation target rather than a hand-written YAML artifact. Instead of…">
+    <meta name="twitter:image" content="https://fastapi.drawlib.com/architecture/_assets/ogp.png">
+    
+    
+    <link rel="icon" type="image/png" href="../../_assets/favicon.png">
+    
+    
+    <link rel="stylesheet" href="../style.css">
+    
+    
+</head>
+<body>
+    <div class="demo-banner" role="region" aria-label="Portal Navigation">
+        <div class="demo-banner-inner">
+            <span class="demo-banner-badge">INTERNAL ARCHITECTURE</span>
+            
+            <span class="demo-banner-text">
+                Unofficial Internal Architecture Guide to <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a> (v0.162.2)
+            </span>
+            <span class="demo-banner-links">
+                <a href="https://fastapi.drawlib.com/">User Guide</a>
+                <span class="demo-banner-sep">·</span>
+                <strong style="color:#ffffff;">Architecture</strong>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Audit</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official Docs ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+            </span>
+            
+        </div>
+    </div>
+    
+    <div class="doc-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI Architecture">
+                    
+                    FastAPI Architecture
+                    
+                </a>
+                <div class="sidebar-header-actions">
+                    <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">
+                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                    <button type="button" id="menu-toggle" class="menu-toggle-btn" aria-label="Toggle navigation" aria-expanded="false">
+                        <svg class="icon-hamburger" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        <svg class="icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="sidebar-menu">
+                
+                    
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../index.html" >Architecture Overview</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">1. Package Topology &amp; Layers</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../01_package_and_layers/module_hierarchy.html" >5-Tier Module Hierarchy &amp; Shims</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">2. Routing Compiler &amp; Closures</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../02_routing_compiler/apiroute_and_closures.html" >APIRouter, APIRoute &amp; Handler Closure</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../02_routing_compiler/streaming_and_spa_internals.html" >Generator Streaming &amp; SPA Internals</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">3. DI &amp; Security Engine</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../03_di_and_security_engine/dependant_and_solver.html" >Dependant DAG &amp; solve_dependencies</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../03_di_and_security_engine/security_internals.html" >SecurityBase &amp; HTTPConnection</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">4. Pydantic v2 Bridge</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../04_pydantic_bridge/compat_and_serialization.html" >_compat/v2.py, ModelField &amp; Serialization</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">5. ASGI Stack &amp; Telemetry</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../05_asgi_and_telemetry/middleware_and_concurrency.html" >Middleware Onion &amp; Threadpool</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../05_asgi_and_telemetry/native_telemetry_internals.html" >NativeTelemetry &amp; Runtime Spans</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">6. OpenAPI 3.1 Synthesis</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item active">
+                                <a href="openapi_synthesis_engine.html" >get_openapi(), $defs &amp; Docs UI</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">Companion Guides &amp; Links</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/" target="_blank" rel="noopener noreferrer">FastAPI User Guide<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/reports/pni501/" target="_blank" rel="noopener noreferrer">PNI501 Diagnostic Report<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official FastAPI Docs<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub Repository<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                        </ul>
+                    
+                
+            </div>
+        </aside>
+        <div class="content-wrapper">
+            <header class="top-bar">
+                <div class="breadcrumbs">
+                    <span class="crumb">Architecture</span>
+                    <span class="crumb-separator">&raquo;</span>
+                    <span class="crumb active">Lazy `get_openapi()`, JSON Schema `$defs` &amp; Docs UI</span>
+                </div>
+                
+                <div class="lang-switcher">
+                    <details class="lang-dropdown">
+                        <summary class="lang-dropdown-btn" aria-label="Select language">
+                            <svg class="lang-globe-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            <span class="lang-current-label">English</span>
+                            <svg class="lang-caret-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </summary>
+                        <div class="lang-dropdown-menu" role="menu">
+                            
+                            <a href="openapi_synthesis_engine.html" class="lang-option active" lang="en" hreflang="en" aria-current="page">
+                                <span>English</span>
+                                
+                                <svg class="lang-check-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                
+                            </a>
+                            
+                            <a href="../../ja/06_openapi_and_docs/openapi_synthesis_engine.html" class="lang-option" lang="ja" hreflang="ja" >
+                                <span>日本語</span>
+                                
+                            </a>
+                            
+                        </div>
+                    </details>
+                </div>
+                
+            </header>
+            <main class="main-content">
+                <h1>Lazy <code>get_openapi()</code>, JSON Schema <code>$defs</code> &amp; Docs UI</h1>
+<p>FastAPI treats OpenAPI <code>3.1.0</code> (backed by JSON Schema Draft <code>2020-12</code>) as a first-class compilation target rather than a hand-written YAML artifact. Instead of paying JSON Schema generation costs during Python module import, <code>FastAPI.openapi()</code> lazily synthesizes and memoizes the entire document on first access, invalidating the cache automatically whenever routes or included <code>APIRouter</code> trees mutate.</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/06_openapi_and_docs/openapi_synthesis_engine/lazy_openapi_synthesis_pipeline.png" alt="openapi_synthesis_engine_1" />
+  <figcaption class="drawlib-caption">Lazy FastAPI.openapi() Version-Gated Cache and the 5-Stage get_openapi() Synthesis Pipeline</figcaption>
+</figure>
+<hr />
+<h2>1. Lazy Memoization and <code>_openapi_routes_version</code> Invalidation</h2>
+<p>In <code>fastapi/applications.py</code>, <code>FastAPI.__init__()</code> sets <code>self.openapi_version = &quot;3.1.0&quot;</code>, <code>self.openapi_schema = None</code>, and <code>self._openapi_routes_version = None</code>. No Pydantic JSON Schema adapters are invoked while routers and endpoints are being registered.</p>
+<p>When <code>app.openapi()</code> is called (either directly in user/test code or by an HTTP <code>GET /openapi.json</code> request), it checks two invariants before returning <code>self.openapi_schema</code>:</p>
+<ol>
+<li><strong>Cold Cache Check (<code>not self.openapi_schema</code>)</strong>: Synthesizes the full OpenAPI dictionary on the very first call and caches it on <code>self.openapi_schema</code>.</li>
+<li><strong>Recursive Route-Mutation Check (<code>self._openapi_routes_version != routes_version</code>)</strong>: Calls <code>self.router._get_routes_version()</code> in <code>fastapi/routing.py</code>. Every <code>APIRouter</code> maintains a monotonically increasing <code>self._routes_version</code> counter incremented by <code>_mark_routes_changed()</code> inside <code>add_route()</code>, <code>add_api_route()</code>, <code>add_websocket_route()</code>, <code>include_router()</code>, and <code>frontend()</code>. Crucially, <code>_get_routes_version(seen)</code> recursively sums <code>_routes_version</code> across every nested <code>_IncludedRouter</code> (using <code>seen: set[int]</code> to guard against router cycles), so adding a route dynamically to an already-included child <code>APIRouter</code> automatically invalidates the root <code>FastAPI</code> OpenAPI cache!</li>
+</ol>
+<hr />
+<h2>2. Inside <code>get_openapi()</code>: Field Harvesting, <code>FieldMap</code>, and <code>$defs</code> Deduplication</h2>
+<p><code>get_openapi()</code> in <code>fastapi/openapi/utils.py</code> coordinates with <code>fastapi/_compat/v2.py</code> and <code>fastapi/openapi/constants.py</code> across five deterministic passes:</p>
+<ol>
+<li><strong>Harvesting All <code>ModelField</code>s (<code>get_fields_from_routes()</code>)</strong>: Walks <code>routing.iter_route_contexts(list(routes) + list(webhooks or []))</code>, inspecting every <code>APIRoute</code> with <code>include_in_schema=True</code>. For each route, it collects request-side fields (<code>body_field</code> and <code>get_flat_params(api_route.dependant)</code>, all carrying <code>mode=&quot;validation&quot;</code>), response-side fields (<code>response_field</code>, additional <code>response_fields.values()</code>, and <code>stream_item_field</code> for JSONL/SSE generators, all carrying <code>mode=&quot;serialization&quot;</code>), and recursively harvests <code>api_route.callbacks</code>.</li>
+<li><strong>Flattening Nested Types (<code>get_flat_models_from_fields()</code> &amp; <code>get_model_name_map()</code>)</strong>: Recursively traverses generic annotations, unions, <code>BaseModel</code> fields, and <code>Enum</code> subclasses to build the complete <code>TypeModelSet</code>, normalizing schema keys via <code>re.sub(r&quot;[^a-zA-Z0-9.\-_]&quot;, &quot;_&quot;, name)</code>.</li>
+<li><strong>Single-Pass <code>$defs</code> Generation (<code>get_definitions()</code> &amp; <code>GenerateJsonSchema</code>)</strong>: In <code>fastapi/_compat/v2.py</code>, <code>get_definitions()</code> instantiates FastAPI's <code>GenerateJsonSchema(ref_template=REF_TEMPLATE)</code> subclass (where <code>REF_TEMPLATE = &quot;#/components/schemas/{model}&quot;</code> and <code>bytes_schema()</code> emits <code>contentMediaType: &quot;application/octet-stream&quot;</code>). Because <code>ModelField.__hash__</code> returns <code>id(self)</code>, every <code>(ModelField, mode)</code> pair acts as a unique lookup key in <code>inputs</code>. Passing all collected fields and nested models into <code>schema_generator.generate_definitions(inputs=inputs)</code> produces two structures in a single Pydantic pass:
+<ul>
+<li><strong><code>field_mapping</code> (<code>FieldMap</code>)</strong>: Maps each <code>(ModelField, &quot;validation&quot; | &quot;serialization&quot;)</code> tuple to its inline JSON Schema or <code>{&quot;$ref&quot;: &quot;#/components/schemas/...&quot;}</code> pointer.</li>
+<li><strong><code>definitions</code></strong>: The deduplicated global dictionary of named component schemas (with form-feed <code>\f</code> characters stripped from model docstrings via <code>description.split(&quot;\f&quot;)[0]</code>).</li>
+</ul>
+</li>
+<li><strong>Operation, Callback, Webhook &amp; Streaming Synthesis (<code>get_openapi_path()</code>)</strong>:
+<ul>
+<li><strong>Dependency &amp; Security Graph</strong>: <code>_get_openapi_dependency_data(route.dependant)</code> walks the <code>Dependant</code> DAG once per route (deduplicating via <code>_get_cache_key</code>), while <code>_get_openapi_security_definitions()</code> merges OAuth2 scopes per <code>scheme_name</code> into <code>components[&quot;securitySchemes&quot;]</code> and per-operation <code>security</code> arrays.</li>
+<li><strong>Parameters, Request Bodies &amp; <code>422</code> Schemas</strong>: <code>_get_openapi_operation_parameters()</code> ensures <code>required=True</code> parameter declarations override optional duplicates on <code>(in, name)</code>. Methods in <code>METHODS_WITH_BODY</code> (<code>GET</code>, <code>HEAD</code>, <code>POST</code>, <code>PUT</code>, <code>DELETE</code>, <code>PATCH</code>) attach <code>requestBody</code> schemas, and any operation accepting parameters or a body automatically receives a <code>422</code> response referencing <code>#/components/schemas/HTTPValidationError</code> and <code>ValidationError</code>.</li>
+<li><strong>Streaming, Callbacks &amp; Webhooks</strong>: Generator routes with <code>is_json_stream</code> emit <code>application/jsonl</code> <code>itemSchema</code>, while <code>is_sse_stream</code> routes emit <code>text/event-stream</code> <code>_SSE_EVENT_SCHEMA</code> (<code>contentMediaType: &quot;application/json&quot;</code>, <code>contentSchema</code>). Per-route <code>callbacks</code> recurse into <code>get_openapi_path()</code>, and <code>app.webhooks.routes</code> populate top-level OpenAPI 3.1 <code>output[&quot;webhooks&quot;]</code>.</li>
+</ul>
+</li>
+<li><strong>Pydantic Self-Validation (<code>OpenAPI(**output)</code>)</strong>: After sorting <code>components[&quot;schemas&quot;]</code> alphabetically, <code>get_openapi()</code> validates the assembled dictionary against <code>fastapi.openapi.models.OpenAPI</code> (<code>Schema</code>, <code>PathItem</code>, <code>Operation</code>, <code>Components</code>) and serializes it via <code>jsonable_encoder(..., by_alias=True, exclude_none=True)</code>.</li>
+</ol>
+<hr />
+<h2>3. <code>separate_input_output_schemas</code> and Interactive Docs UI (<code>docs.py</code>)</h2>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/06_openapi_and_docs/openapi_synthesis_engine/defs_bundling_and_docs_ui.png" alt="openapi_synthesis_engine_2" />
+  <figcaption class="drawlib-caption">Conditional Model-Input / Model-Output Schema Splitting and Automatic Docs UI Routes</figcaption>
+</figure>
+<h3>When <code>Model-Input</code> and <code>Model-Output</code> Split vs Coalesce</h3>
+<p>With <code>separate_input_output_schemas=True</code> (default), <code>get_definitions()</code> feeds request <code>ModelField</code>s into <code>GenerateJsonSchema</code> with <code>mode=&quot;validation&quot;</code> and response <code>ModelField</code>s with <code>mode=&quot;serialization&quot;</code>. Crucially, Pydantic <strong>only emits <code>-Input</code> and <code>-Output</code> suffixed schemas when the two JSON Schemas actually differ</strong>:</p>
+<ul>
+<li><strong>Coalesced (<code>#/components/schemas/Tag</code>)</strong>: When every field produces the exact same validation and serialization JSON Schema, <code>GenerateJsonSchema</code> deduplicates both modes into a single <code>&quot;Tag&quot;</code> component—avoiding redundant schema bloat for simple DTOs.</li>
+<li><strong>Split (<code>#/components/schemas/Item-Input</code> &amp; <code>Item-Output</code>)</strong>: Whenever input and output representations diverge—for example, <code>Decimal</code> (accepts <code>number | string</code> on input, serializes as <code>string</code>), <code>Field(exclude=True)</code> (accepted on input, omitted on output), <code>@field_serializer</code> changing return types, <code>@computed_field</code> (present only on output), or <code>ConfigDict(json_schema_serialization_defaults_required=True)</code>—Pydantic emits distinct <code>Item-Input</code> and <code>Item-Output</code> definitions so generated TypeScript/Python SDK clients receive exact request and response types.</li>
+<li><strong><code>_has_computed_fields()</code> Safeguard</strong>: Even if an application opts out via <code>FastAPI(separate_input_output_schemas=False)</code>, <code>_has_computed_fields(field)</code> in <code>fastapi/_compat/v2.py</code> inspects <code>field._type_adapter.core_schema</code> for <code>computed_fields</code> and still preserves <code>mode=&quot;serialization&quot;</code> on those models so <code>@computed_field</code> properties remain documented in responses.</li>
+</ul>
+<h3>Automatic Docs UI Generators (<code>FastAPI.setup()</code> &amp; <code>fastapi/openapi/docs.py</code>)</h3>
+<p>At the end of <code>FastAPI.__init__()</code>, <code>self.setup()</code> registers up to four hidden documentation routes (<code>include_in_schema=False</code>) gated on <code>self.openapi_url</code> (setting <code>openapi_url=None</code> disables all four):</p>
+<ol>
+<li><strong><code>GET {openapi_url}</code> (<code>/openapi.json</code>)</strong>: Invokes <code>self.openapi()</code>. If <code>req.scope.get(&quot;root_path&quot;)</code> is non-empty (e.g., behind a reverse proxy or <code>Mount</code>) and <code>self.root_path_in_servers=True</code>, it shallow-copies the cached dict and prepends <code>{&quot;url&quot;: root_path}</code> to <code>schema[&quot;servers&quot;]</code> when not already listed.</li>
+<li><strong><code>GET {docs_url}</code> (<code>/docs</code> via <code>get_swagger_ui_html()</code>)</strong>: Merges <code>swagger_ui_default_parameters</code> with <code>self.swagger_ui_parameters</code> and renders an <code>HTMLResponse</code> booting <code>SwaggerUIBundle</code> (<code>swagger-ui-dist@5</code>). All embedded JSON configuration keys, parameter values, and <code>init_oauth</code> payloads pass through <code>_html_safe_json()</code>, which escapes <code>&lt;</code>, <code>&gt;</code>, and <code>&amp;</code> into <code>\u003c</code>, <code>\u003e</code>, and <code>\u0026</code> so untrusted strings cannot break out of the inline <code>&lt;script&gt;</code> block.</li>
+<li><strong><code>GET {swagger_ui_oauth2_redirect_url}</code> (<code>/docs/oauth2-redirect</code> via <code>get_swagger_ui_oauth2_redirect_html()</code>)</strong>: Serves the OAuth2 popup callback page that verifies <code>qp.state === sentState</code> and forwards authorization codes or tokens to <code>window.opener.swaggerUIRedirectOauth2</code>.</li>
+<li><strong><code>GET {redoc_url}</code> (<code>/redoc</code> via <code>get_redoc_html()</code>)</strong>: Renders <code>&lt;redoc spec-url=&quot;{openapi_url}&quot;&gt;&lt;/redoc&gt;</code> backed by the <code>redoc@2</code> standalone bundle and optional <code>Montserrat</code>/<code>Roboto</code> Google Fonts.</li>
+</ol>
+<hr />
+<h2>4. Verifying Lazy Caching, Router Invalidation, and Schema Divergence</h2>
+<p>The snippet below verifies cold-start lazy memoization, automatic cache invalidation when a route is added to an already-included <code>APIRouter</code>, and selective <code>Item-Input</code> / <code>Item-Output</code> splitting alongside a unified <code>Tag</code> component:</p>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">decimal</span><span class="w"> </span><span class="kn">import</span> <span class="n">Decimal</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">FastAPI</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Tag</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">label</span><span class="p">:</span> <span class="nb">str</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Item</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">price</span><span class="p">:</span> <span class="n">Decimal</span>
+    <span class="n">secret_token</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">""</span><span class="p">,</span> <span class="n">exclude</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">tags</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Tag</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">"Inventory API"</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s2">"1.0.0"</span><span class="p">)</span>
+<span class="n">sub_router</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">"/v1"</span><span class="p">)</span>
+
+
+<span class="nd">@sub_router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/items"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">Item</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">create_item</span><span class="p">(</span><span class="n">item</span><span class="p">:</span> <span class="n">Item</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Item</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">item</span>
+
+
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">sub_router</span><span class="p">)</span>
+
+<span class="c1"># 1. Lazy synthesis: openapi_schema stays None until first app.openapi() call</span>
+<span class="k">assert</span> <span class="n">app</span><span class="o">.</span><span class="n">openapi_schema</span> <span class="ow">is</span> <span class="kc">None</span>
+<span class="n">schema_v1</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">openapi</span><span class="p">()</span>
+<span class="k">assert</span> <span class="n">app</span><span class="o">.</span><span class="n">openapi_schema</span> <span class="ow">is</span> <span class="n">schema_v1</span>
+<span class="k">assert</span> <span class="n">app</span><span class="o">.</span><span class="n">openapi</span><span class="p">()</span> <span class="ow">is</span> <span class="n">schema_v1</span>
+
+<span class="c1"># 2. Divergent Item splits into Item-Input / Item-Output; identical Tag stays unified</span>
+<span class="n">schemas</span> <span class="o">=</span> <span class="n">schema_v1</span><span class="p">[</span><span class="s2">"components"</span><span class="p">][</span><span class="s2">"schemas"</span><span class="p">]</span>
+<span class="k">assert</span> <span class="p">{</span><span class="s2">"Item-Input"</span><span class="p">,</span> <span class="s2">"Item-Output"</span><span class="p">,</span> <span class="s2">"Tag"</span><span class="p">}</span> <span class="o">&lt;=</span> <span class="nb">set</span><span class="p">(</span><span class="n">schemas</span><span class="p">)</span>
+<span class="k">assert</span> <span class="s2">"Tag-Input"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">schemas</span>
+<span class="k">assert</span> <span class="s2">"secret_token"</span> <span class="ow">in</span> <span class="n">schemas</span><span class="p">[</span><span class="s2">"Item-Input"</span><span class="p">][</span><span class="s2">"properties"</span><span class="p">]</span>
+<span class="k">assert</span> <span class="s2">"secret_token"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">schemas</span><span class="p">[</span><span class="s2">"Item-Output"</span><span class="p">][</span><span class="s2">"properties"</span><span class="p">]</span>
+<span class="k">assert</span> <span class="s2">"anyOf"</span> <span class="ow">in</span> <span class="n">schemas</span><span class="p">[</span><span class="s2">"Item-Input"</span><span class="p">][</span><span class="s2">"properties"</span><span class="p">][</span><span class="s2">"price"</span><span class="p">]</span>
+<span class="k">assert</span> <span class="n">schemas</span><span class="p">[</span><span class="s2">"Item-Output"</span><span class="p">][</span><span class="s2">"properties"</span><span class="p">][</span><span class="s2">"price"</span><span class="p">][</span><span class="s2">"type"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"string"</span>
+
+
+<span class="c1"># 3. Adding a route to an included APIRouter bumps _get_routes_version() &amp; rebuilds</span>
+<span class="nd">@sub_router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/health"</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">health</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"status"</span><span class="p">:</span> <span class="s2">"ok"</span><span class="p">}</span>
+
+
+<span class="n">schema_v2</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">openapi</span><span class="p">()</span>
+<span class="k">assert</span> <span class="n">schema_v2</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">schema_v1</span>
+<span class="k">assert</span> <span class="s2">"/v1/health"</span> <span class="ow">in</span> <span class="n">schema_v2</span><span class="p">[</span><span class="s2">"paths"</span><span class="p">]</span>
+</code></pre>
+<p>To trace how <code>ModelField</code> and <code>TypeAdapter</code> execute runtime validation and Rust-backed JSON serialization on each request, see <a href="../04_pydantic_bridge/compat_and_serialization.html">_compat/v2.py, ModelField &amp; Serialization</a>.</p>
+
+            </main>
+            <footer class="footer">
+                
+                FastAPI® is a registered trademark of Sebastián Ramírez (<a href="https://github.com/tiangolo" target="_blank" rel="noopener noreferrer">@tiangolo</a>). Unofficial internal architecture guide — not affiliated with or endorsed by the official FastAPI project (<a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">fastapi.tiangolo.com</a>).
+                
+            </footer>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeBtn = document.getElementById('theme-toggle');
+            if (themeBtn) {
+                themeBtn.addEventListener('click', function() {
+                    const current = document.documentElement.getAttribute('data-theme');
+                    const next = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    localStorage.setItem('drawlib-theme', next);
+                });
+            }
+
+            const langDropdowns = document.querySelectorAll('.lang-dropdown');
+            if (langDropdowns.length > 0) {
+                document.addEventListener('click', function(e) {
+                    langDropdowns.forEach(function(dd) {
+                        if (dd.hasAttribute('open') && !dd.contains(e.target)) {
+                            dd.removeAttribute('open');
+                        }
+                    });
+                });
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        langDropdowns.forEach(function(dd) {
+                            dd.removeAttribute('open');
+                        });
+                    }
+                });
+            }
+
+            const menuBtn = document.getElementById('menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            if (menuBtn && sidebar) {
+                function setMenuOpen(open) {
+                    sidebar.classList.toggle('is-open', open);
+                    menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    document.body.classList.toggle('menu-open', open);
+                    if (open) {
+                        const menu = sidebar.querySelector('.sidebar-menu');
+                        if (menu) {
+                            menu.scrollTop = 0;
+                        }
+                    }
+                }
+
+                menuBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const willOpen = !sidebar.classList.contains('is-open');
+                    setMenuOpen(willOpen);
+                });
+
+                document.addEventListener('click', function(e) {
+                    if (sidebar.classList.contains('is-open') && !sidebar.contains(e.target)) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                const navLinks = sidebar.querySelectorAll('.nav-item a');
+                navLinks.forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        setMenuOpen(false);
+                    });
+                });
+
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                window.addEventListener('resize', function() {
+                    if (window.innerWidth > 768 && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,447 @@
+<!--
+ Copyright (c) 2026 Yuichi Ito (yuichi@yuichi.com)
+
+ This software is licensed under the Apache License, Version 2.0.
+ For more information, please visit: https://github.com/yuichi110/drawlib
+
+ This software is provided "as is", without warranty of any kind,
+ express or implied, including but not limited to the warranties of
+ merchantability, fitness for a particular purpose and noninfringement.
+-->
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NativeTelemetry, Lazy Runtime &amp; Exception Spans — FastAPI Architecture Guide (Unofficial)</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-S9N5BZ1VRC');
+    </script>
+    <script>
+        (function() {
+            const saved = localStorage.getItem('drawlib-theme');
+            if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    
+    
+    
+    <link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/architecture/en/05_asgi_and_telemetry/native_telemetry_internals.html">
+    
+    <link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/architecture/ja/05_asgi_and_telemetry/native_telemetry_internals.html">
+    
+    <link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/architecture/en/05_asgi_and_telemetry/native_telemetry_internals.html">
+    
+    
+    
+    <meta name="description" content="FastAPI v0.162.2 ships a built-in OpenTelemetry subsystem under fastapi/telemetry/ (init.py, _api.py, _asgi.py, and _runtime.py). Depending only on the…">
+    <link rel="canonical" href="https://fastapi.drawlib.com/architecture/en/05_asgi_and_telemetry/native_telemetry_internals.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="FastAPI Architecture">
+    <meta property="og:title" content="NativeTelemetry, Lazy Runtime &amp; Exception Spans — FastAPI Architecture">
+    <meta property="og:description" content="FastAPI v0.162.2 ships a built-in OpenTelemetry subsystem under fastapi/telemetry/ (init.py, _api.py, _asgi.py, and _runtime.py). Depending only on the…">
+    <meta property="og:url" content="https://fastapi.drawlib.com/architecture/en/05_asgi_and_telemetry/native_telemetry_internals.html">
+    <meta property="og:image" content="https://fastapi.drawlib.com/architecture/_assets/ogp.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="ja_JP">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="NativeTelemetry, Lazy Runtime &amp; Exception Spans — FastAPI Architecture">
+    <meta name="twitter:description" content="FastAPI v0.162.2 ships a built-in OpenTelemetry subsystem under fastapi/telemetry/ (init.py, _api.py, _asgi.py, and _runtime.py). Depending only on the…">
+    <meta name="twitter:image" content="https://fastapi.drawlib.com/architecture/_assets/ogp.png">
+    
+    
+    <link rel="icon" type="image/png" href="../../_assets/favicon.png">
+    
+    
+    <link rel="stylesheet" href="../style.css">
+    
+    
+</head>
+<body>
+    <div class="demo-banner" role="region" aria-label="Portal Navigation">
+        <div class="demo-banner-inner">
+            <span class="demo-banner-badge">INTERNAL ARCHITECTURE</span>
+            
+            <span class="demo-banner-text">
+                Unofficial Internal Architecture Guide to <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a> (v0.162.2)
+            </span>
+            <span class="demo-banner-links">
+                <a href="https://fastapi.drawlib.com/">User Guide</a>
+                <span class="demo-banner-sep">·</span>
+                <strong style="color:#ffffff;">Architecture</strong>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Audit</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official Docs ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+            </span>
+            
+        </div>
+    </div>
+    
+    <div class="doc-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI Architecture">
+                    
+                    FastAPI Architecture
+                    
+                </a>
+                <div class="sidebar-header-actions">
+                    <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">
+                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                    <button type="button" id="menu-toggle" class="menu-toggle-btn" aria-label="Toggle navigation" aria-expanded="false">
+                        <svg class="icon-hamburger" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        <svg class="icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="sidebar-menu">
+                
+                    
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../index.html" >Architecture Overview</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">1. Package Topology &amp; Layers</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../01_package_and_layers/module_hierarchy.html" >5-Tier Module Hierarchy &amp; Shims</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">2. Routing Compiler &amp; Closures</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../02_routing_compiler/apiroute_and_closures.html" >APIRouter, APIRoute &amp; Handler Closure</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../02_routing_compiler/streaming_and_spa_internals.html" >Generator Streaming &amp; SPA Internals</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">3. DI &amp; Security Engine</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../03_di_and_security_engine/dependant_and_solver.html" >Dependant DAG &amp; solve_dependencies</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../03_di_and_security_engine/security_internals.html" >SecurityBase &amp; HTTPConnection</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">4. Pydantic v2 Bridge</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../04_pydantic_bridge/compat_and_serialization.html" >_compat/v2.py, ModelField &amp; Serialization</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">5. ASGI Stack &amp; Telemetry</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="middleware_and_concurrency.html" >Middleware Onion &amp; Threadpool</a>
+                            </li>
+                            
+                            <li class="nav-item active">
+                                <a href="native_telemetry_internals.html" >NativeTelemetry &amp; Runtime Spans</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">6. OpenAPI 3.1 Synthesis</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../06_openapi_and_docs/openapi_synthesis_engine.html" >get_openapi(), $defs &amp; Docs UI</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">Companion Guides &amp; Links</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/" target="_blank" rel="noopener noreferrer">FastAPI User Guide<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/reports/pni501/" target="_blank" rel="noopener noreferrer">PNI501 Diagnostic Report<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official FastAPI Docs<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub Repository<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                        </ul>
+                    
+                
+            </div>
+        </aside>
+        <div class="content-wrapper">
+            <header class="top-bar">
+                <div class="breadcrumbs">
+                    <span class="crumb">Architecture</span>
+                    <span class="crumb-separator">&raquo;</span>
+                    <span class="crumb active">NativeTelemetry, Lazy Runtime &amp; Exception Spans</span>
+                </div>
+                
+                <div class="lang-switcher">
+                    <details class="lang-dropdown">
+                        <summary class="lang-dropdown-btn" aria-label="Select language">
+                            <svg class="lang-globe-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            <span class="lang-current-label">English</span>
+                            <svg class="lang-caret-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </summary>
+                        <div class="lang-dropdown-menu" role="menu">
+                            
+                            <a href="native_telemetry_internals.html" class="lang-option active" lang="en" hreflang="en" aria-current="page">
+                                <span>English</span>
+                                
+                                <svg class="lang-check-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                
+                            </a>
+                            
+                            <a href="../../ja/05_asgi_and_telemetry/native_telemetry_internals.html" class="lang-option" lang="ja" hreflang="ja" >
+                                <span>日本語</span>
+                                
+                            </a>
+                            
+                        </div>
+                    </details>
+                </div>
+                
+            </header>
+            <main class="main-content">
+                <h1>NativeTelemetry, Lazy Runtime &amp; Exception Spans</h1>
+<p>FastAPI <code>v0.162.2</code> ships a built-in OpenTelemetry subsystem under <code>fastapi/telemetry/</code> (<code>__init__.py</code>, <code>_api.py</code>, <code>_asgi.py</code>, and <code>_runtime.py</code>). Depending only on the lightweight <code>opentelemetry-api</code> package in core dependencies, FastAPI stays a zero-overhead no-op when unconfigured while automatically instrumenting W3C trace propagation, low-cardinality route spans, child operation spans, HTTP server metrics, and deduplicated exception telemetry once an OpenTelemetry SDK provider is active.</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/05_asgi_and_telemetry/native_telemetry_internals/native_telemetry_dual_middleware.png" alt="native_telemetry_internals_1" />
+  <figcaption class="drawlib-caption">Dual-Layer Collaboration Between NativeTelemetry (L1) and ExceptionTelemetryMiddleware (L3)</figcaption>
+</figure>
+<hr />
+<h2>1. Zero-SDK Core Design and Lazy Runtime Binding (<code>_runtime.py</code>)</h2>
+<p>A core design goal of <code>fastapi/telemetry/</code> is avoiding heavyweight SDK imports or per-request overhead for applications that do not export telemetry. FastAPI achieves this by separating <strong>API-level instrumentation</strong> from <strong>SDK/exporter initialization</strong>:</p>
+<ul>
+<li><strong>Deferred Proxy Detection (<code>_api.py</code>)</strong>: Installing <code>fastapi</code> pulls in <code>opentelemetry-api&gt;=1.44.0</code>, whose default global providers are lightweight no-op proxies listed in <code>_DEFERRED_PROVIDERS</code>: <code>ProxyTracerProvider</code>, <code>_ProxyMeterProvider</code>, and <code>ProxyLoggerProvider</code>. The helper <code>_unconfigured(provider)</code> checks <code>(type(provider).__module__, type(provider).__name__) in _DEFERRED_PROVIDERS</code>.</li>
+<li><strong>Hot-Path Gate (<code>NativeTelemetry.enabled()</code>)</strong>: When <code>tracer_provider</code>, <code>meter_provider</code>, and <code>logger_provider</code> in <code>self._telemetry</code> are <code>None</code> and all three global providers satisfy <code>_unconfigured(...)</code>, <code>NativeTelemetry.enabled()</code> returns <code>False</code>. <code>FastAPI.__call__</code> immediately short-circuits to <code>await super().__call__(scope, receive, send)</code> without allocating <code>_RequestTelemetry</code>, parsing headers, or wrapping <code>send</code>/<code>receive</code>.</li>
+<li><strong>Lazy SDK &amp; OTLP Import on Lifespan Startup (<code>_runtime.py</code>)</strong>: Optional packages <code>opentelemetry-sdk</code> and <code>opentelemetry-exporter-otlp-proto-http</code> (installed via <code>fastapi[opentelemetry]</code> or <code>fastapi[standard]</code>) are imported lazily inside <code>_configure_from_environment(config)</code> only during <code>lifespan.startup</code>, and only when <code>auto_configure=True</code> (or <code>FASTAPI_OTEL_AUTO_CONFIGURE=true</code>) with <code>OTEL_SDK_DISABLED != &quot;true&quot;</code> and a valid <code>http</code>/<code>https</code> <code>OTEL_EXPORTER_OTLP_*</code> (<code>http/protobuf</code>) endpoint.</li>
+<li><strong>Provider Ownership Safety (<code>_owned</code> &amp; <code>_configured</code>)</strong>: Under a re-entrant <code>_lock</code>, <code>_configure_from_environment()</code> attaches <code>BatchSpanProcessor(OTLPSpanExporter(...))</code>, <code>PeriodicExportingMetricReader(OTLPMetricExporter(...))</code>, and <code>BatchLogRecordProcessor(OTLPLogExporter(...))</code> at most once per <code>(signal, provider)</code> pair. Only components instantiated by FastAPI are appended to <code>_owned</code>—flushed via <code>await run_sync(_flush)</code> on <code>lifespan.shutdown.complete</code> (or startup/shutdown failure) and closed via <code>atexit.register(_shutdown)</code>. User-supplied providers are never shut down by FastAPI.</li>
+</ul>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/05_asgi_and_telemetry/native_telemetry_internals/lazy_otel_runtime_binding.png" alt="native_telemetry_internals_2" />
+  <figcaption class="drawlib-caption">Zero-SDK Default Fast Path vs Lifespan Lazy OTLP Auto-Configuration in _runtime.py</figcaption>
+</figure>
+<hr />
+<h2>2. <code>NativeTelemetry</code> Span, Context, and Metric Mechanics (<code>_asgi.py</code>)</h2>
+<p>When <code>NativeTelemetry.__call__</code> executes on an active HTTP or WebSocket scope (and <code>config[&quot;exclude&quot;](scope)</code> does not exclude it, nor does <code>_legacy_otel()</code> detect <code>OpenTelemetryMiddleware</code>), it orchestrates five stages across the request lifecycle:</p>
+<ol>
+<li><strong>W3C Context Extraction &amp; Sanitization</strong>: <code>propagate.extract(Headers(scope=scope), getter=_HEADERS_GETTER)</code> extracts inbound <code>traceparent</code>, <code>tracestate</code>, and multi-header <code>baggage</code> into <code>parent</code> and attaches it via <code>otel_context.attach(parent)</code>. Unknown HTTP verbs outside <code>_HTTP_METHODS</code> (or <code>OTEL_INSTRUMENTATION_HTTP_KNOWN_METHODS</code>) normalize to <code>&quot;_OTHER&quot;</code> (saving the raw verb in <code>http.request.method_original</code>), while <code>_SENSITIVE_QUERY_PARAMETERS</code> (<code>X-Amz-Signature</code>, <code>X-Amz-Credential</code>, <code>X-Amz-Security-Token</code>, <code>sig</code>, <code>X-Goog-Signature</code>) are redacted to <code>&quot;REDACTED&quot;</code> in <code>url.query</code>.</li>
+<li><strong>Root <code>SpanKind.SERVER</code> Span &amp; <code>_RequestTelemetry</code> Attachment</strong>: <code>tracer.start_span(span_method, context=parent, kind=SpanKind.SERVER, attributes=span_attributes)</code> starts the server span under schema URL <code>https://opentelemetry.io/schemas/1.44.0</code>—initially named after the bare verb (<code>&quot;GET&quot;</code>, <code>&quot;POST&quot;</code>, or <code>&quot;WS&quot;</code>) so unmatched <code>404</code> scanner traffic cannot explode span-name cardinality. FastAPI stores <code>_RequestTelemetry</code> in <strong>both</strong> <code>scope[&quot;fastapi.telemetry&quot;]</code> (for ASGI routing hooks) and <code>otel_context</code> under <code>_REQUEST_TELEMETRY_KEY</code> (<code>&quot;fastapi.request&quot;</code>, accessible via <code>get_telemetry_data()</code> across worker threads).</li>
+<li><strong>Low-Cardinality Route Resolution (<code>_route_selected()</code>)</strong>: As <code>APIRouter.app</code> matches a route (or traverses a <code>Mount</code>, accumulating <code>_mount_prefix</code>), it calls <code>_route_selected(scope=scope, path=route.path_format, mount=...)</code>. <code>_route_selected()</code> sets <code>http.route</code> on the span and calls <code>span.update_name(f&quot;{span_method} {route}&quot;)</code> (for example, <code>&quot;GET /items/{item_id}&quot;</code>).</li>
+<li><strong>Child Operation Spans (<code>_operation()</code>)</strong>: When <code>operation_spans=True</code> (default), <code>_traced_operation()</code> creates child spans <code>fastapi.dependencies</code>, <code>fastapi.endpoint</code>, <code>fastapi.serialization</code>, and <code>fastapi.background_task</code> tagged with <code>code.function.name = f&quot;{module}.{qualname}&quot;</code>.</li>
+<li><strong>Exemplar-Aligned Metrics &amp; Zero-Retention Teardown</strong>: <code>NativeTelemetry._instruments()</code> registers <code>http.server.request.duration</code> (<code>Histogram</code> in seconds with <code>_DURATION_BUCKETS</code> from <code>0.005</code> to <code>10.0</code>) and <code>http.server.active_requests</code> (<code>UpDownCounter</code>). Inside <code>finish()</code>, <code>duration.record(...)</code> runs <em>while the server span is still current</em>—enabling metric exemplars to link latency spikes directly to trace IDs—before calling <code>span.end()</code>. Finally, the outer <code>finally:</code> block clears <code>request_telemetry.data = None</code> and <code>_exceptions.clear()</code> so retained OpenTelemetry contexts never leak request bodies or parsed arguments.</li>
+</ol>
+<hr />
+<h2>3. Why <code>ExceptionTelemetryMiddleware</code> Collaborates with <code>ExceptionMiddleware</code> and <code>ServerErrorMiddleware</code></h2>
+<p>Recording accurate exception telemetry in ASGI is subtle because expected HTTP errors, custom exception handlers, and unhandled <code>500</code> crashes unwind at different layers of the middleware onion:</p>
+<ul>
+<li><strong>Handled <code>4xx</code> / <code>422</code> Errors Stay Inside <code>ExceptionMiddleware</code> (L5)</strong>: When an endpoint or dependency raises <code>HTTPException(404)</code> or <code>RequestValidationError</code> (<code>422</code>), <code>ExceptionMiddleware</code> (and <code>request_response()</code>'s <code>wrap_app_handling_exceptions</code>) catches the exception at <strong>L5</strong> and emits a normal HTTP response before execution ever unwinds to <code>ExceptionTelemetryMiddleware</code> (<strong>L3</strong>). For <code>status_code &lt; 500</code>, <code>finish()</code> evaluates <code>failed = False</code>, leaving the <code>SERVER</code> span status at <code>StatusCode.UNSET</code> with no <code>error.type</code> (while <code>_validation_failed()</code> emits a <code>WARN</code> log event <code>fastapi.validation.failed</code> containing <code>fastapi.validation.error_count</code> when <code>logs=True</code>). Likewise, <code>_traced_operation()</code> explicitly ignores <code>HTTPException</code>, <code>RequestValidationError</code>, <code>WebSocketException</code>, <code>WebSocketRequestValidationError</code>, and normal WebSocket disconnects (<code>1000</code>, <code>1001</code>) on child spans—unless custom <code>@app.exception_handler(...)</code> returns a <code>5xx</code> status code, in which case <code>finish()</code> marks the <code>SERVER</code> span <code>StatusCode.ERROR</code> with <code>error.type = str(status_code)</code>.</li>
+<li><strong>Unhandled Crashes &amp; the <code>ServerErrorMiddleware</code> <code>wrapped_send</code> Ordering Trap (L3 Inside L2)</strong>: When an unhandled <code>ZeroDivisionError</code> escapes <code>user_middleware</code>, it reaches <code>ServerErrorMiddleware</code> (<strong>L2</strong>). Crucially, <code>ServerErrorMiddleware</code> <strong>sends the complete <code>500</code> HTTP response body via <code>send()</code> before re-raising <code>exc</code></strong>. When <code>send({&quot;type&quot;: &quot;http.response.body&quot;, &quot;more_body&quot;: False})</code> passes through <code>NativeTelemetry.wrapped_send()</code>, <code>NativeTelemetry</code> immediately calls <code>finish()</code> and ends the <code>SERVER</code> span—<em>before</em> Python finishes unwinding out of <code>ServerErrorMiddleware</code> into <code>NativeTelemetry</code>'s <code>except BaseException:</code> block! Placing <code>ExceptionTelemetryMiddleware</code> at <strong>L3</strong> (inside <code>ServerErrorMiddleware</code>) solves this race: <strong>L3</strong> catches <code>exc</code> first, calls <code>_exception(scope=scope, exc=exc)</code> to append <code>exc</code> to <code>request_telemetry._exceptions</code> and emit an <code>http.server.request.exception</code> <code>ERROR</code> log record, and re-raises <code>exc</code> into <strong>L2</strong>. Moments later, when <strong>L2</strong> sends the <code>500</code> response and triggers <code>finish()</code>, <code>finish()</code> reads <code>errors[-1]</code> and stamps <code>error.type = &quot;ZeroDivisionError&quot;</code> and <code>StatusCode.ERROR</code> onto the root span.</li>
+<li><strong>Identity Deduplication Against Double-Recording</strong>: After sending the <code>500</code> response, <code>ServerErrorMiddleware</code> re-raises <code>exc</code> up to <code>NativeTelemetry</code> (<strong>L1</strong>), whose <code>except BaseException as exc:</code> block also calls <code>_exception(scope=scope, exc=exc)</code> and <code>finish(exc)</code> (catching <code>BaseException</code>s like <code>CancelledError</code> or crashes inside <strong>L2</strong> itself). Because <code>_exception()</code> checks <code>if not any(previous is exc for previous in seen):</code> using object identity (<code>is</code>) and <code>finish()</code> guards <code>if finished: return</code>, unhandled exceptions are never double-logged or double-ended.</li>
+</ul>
+<hr />
+<h2>4. Inspecting Emitted Spans with <code>InMemorySpanExporter</code></h2>
+<p>The snippet below wires an OpenTelemetry SDK <code>TracerProvider</code> and <code>InMemorySpanExporter</code> into <code>FastAPI(telemetry=...)</code>, verifying W3C <code>traceparent</code> inheritance, low-cardinality <code>http.route</code> span renaming, <code>404</code> <code>UNSET</code> status handling, and <code>500</code> <code>error.type</code> capture:</p>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">HTTPException</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.testclient</span><span class="w"> </span><span class="kn">import</span> <span class="n">TestClient</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">opentelemetry.sdk.trace</span><span class="w"> </span><span class="kn">import</span> <span class="n">TracerProvider</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">opentelemetry.sdk.trace.export</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimpleSpanProcessor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">opentelemetry.sdk.trace.export.in_memory_span_exporter</span><span class="w"> </span><span class="kn">import</span> <span class="n">InMemorySpanExporter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">opentelemetry.trace</span><span class="w"> </span><span class="kn">import</span> <span class="n">SpanKind</span><span class="p">,</span> <span class="n">StatusCode</span>
+
+<span class="n">exporter</span> <span class="o">=</span> <span class="n">InMemorySpanExporter</span><span class="p">()</span>
+<span class="n">provider</span> <span class="o">=</span> <span class="n">TracerProvider</span><span class="p">()</span>
+<span class="n">provider</span><span class="o">.</span><span class="n">add_span_processor</span><span class="p">(</span><span class="n">SimpleSpanProcessor</span><span class="p">(</span><span class="n">exporter</span><span class="p">))</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">(</span><span class="n">telemetry</span><span class="o">=</span><span class="p">{</span><span class="s2">"tracer_provider"</span><span class="p">:</span> <span class="n">provider</span><span class="p">})</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/items/</span><span class="si">{item_id}</span><span class="s2">"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_item</span><span class="p">(</span><span class="n">item_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="n">item_id</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Item not found"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">item_id</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ZeroDivisionError</span><span class="p">(</span><span class="s2">"negative item crash"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"item_id"</span><span class="p">:</span> <span class="n">item_id</span><span class="p">}</span>
+
+
+<span class="n">trace_id_hex</span> <span class="o">=</span> <span class="s2">"4bf92f3577b34da6a3ce929d0e0e4736"</span>
+<span class="n">traceparent</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"00-</span><span class="si">{</span><span class="n">trace_id_hex</span><span class="si">}</span><span class="s2">-00f067aa0ba902b7-01"</span>
+
+<span class="k">with</span> <span class="n">TestClient</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">raise_server_exceptions</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
+    <span class="c1"># 1. 200 OK: W3C traceparent inherited, child spans + low-cardinality route name</span>
+    <span class="k">assert</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/items/7"</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">"traceparent"</span><span class="p">:</span> <span class="n">traceparent</span><span class="p">})</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span>
+    <span class="n">spans</span> <span class="o">=</span> <span class="n">exporter</span><span class="o">.</span><span class="n">get_finished_spans</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="p">{</span><span class="s2">"fastapi.dependencies"</span><span class="p">,</span> <span class="s2">"fastapi.endpoint"</span><span class="p">,</span> <span class="s2">"GET /items/</span><span class="si">{item_id}</span><span class="s2">"</span><span class="p">}</span> <span class="o">&lt;=</span> <span class="p">{</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">spans</span>
+    <span class="p">}</span>
+    <span class="n">server_span</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">spans</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="n">SpanKind</span><span class="o">.</span><span class="n">SERVER</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">server_span</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">trace_id</span><span class="si">:</span><span class="s2">032x</span><span class="si">}</span><span class="s2">"</span> <span class="o">==</span> <span class="n">trace_id_hex</span>
+    <span class="k">assert</span> <span class="n">server_span</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s2">"http.route"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"/items/</span><span class="si">{item_id}</span><span class="s2">"</span>
+    <span class="k">assert</span> <span class="n">server_span</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s2">"http.response.status_code"</span><span class="p">]</span> <span class="o">==</span> <span class="mi">200</span>
+    <span class="k">assert</span> <span class="n">server_span</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="n">StatusCode</span><span class="o">.</span><span class="n">UNSET</span>
+    <span class="n">exporter</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+    <span class="c1"># 2. Handled 404 HTTPException: absorbed at L5 -&gt; UNSET span status, no error.type</span>
+    <span class="k">assert</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/items/0"</span><span class="p">)</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">404</span>
+    <span class="n">span_404</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">exporter</span><span class="o">.</span><span class="n">get_finished_spans</span><span class="p">()</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="n">SpanKind</span><span class="o">.</span><span class="n">SERVER</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">span_404</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="n">StatusCode</span><span class="o">.</span><span class="n">UNSET</span>
+    <span class="k">assert</span> <span class="s2">"error.type"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">span_404</span><span class="o">.</span><span class="n">attributes</span>
+    <span class="n">exporter</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+    <span class="c1"># 3. Unhandled 500 crash: L3 records ZeroDivisionError before L2 sends 500 body</span>
+    <span class="k">assert</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/items/-1"</span><span class="p">)</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">500</span>
+    <span class="n">span_500</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">exporter</span><span class="o">.</span><span class="n">get_finished_spans</span><span class="p">()</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="n">SpanKind</span><span class="o">.</span><span class="n">SERVER</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">span_500</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s2">"http.response.status_code"</span><span class="p">]</span> <span class="o">==</span> <span class="mi">500</span>
+    <span class="k">assert</span> <span class="n">span_500</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s2">"error.type"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"ZeroDivisionError"</span>
+    <span class="k">assert</span> <span class="n">span_500</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="n">StatusCode</span><span class="o">.</span><span class="n">ERROR</span>
+</code></pre>
+<p>For how FastAPI turns those same compiled <code>APIRoute</code> definitions and <code>ModelField</code> schemas into OpenAPI 3.1.0 documents and interactive UI endpoints, continue to <a href="../06_openapi_and_docs/openapi_synthesis_engine.html">OpenAPI 3.1 Synthesis</a>.</p>
+
+            </main>
+            <footer class="footer">
+                
+                FastAPI® is a registered trademark of Sebastián Ramírez (<a href="https://github.com/tiangolo" target="_blank" rel="noopener noreferrer">@tiangolo</a>). Unofficial internal architecture guide — not affiliated with or endorsed by the official FastAPI project (<a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">fastapi.tiangolo.com</a>).
+                
+            </footer>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeBtn = document.getElementById('theme-toggle');
+            if (themeBtn) {
+                themeBtn.addEventListener('click', function() {
+                    const current = document.documentElement.getAttribute('data-theme');
+                    const next = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    localStorage.setItem('drawlib-theme', next);
+                });
+            }
+
+            const langDropdowns = document.querySelectorAll('.lang-dropdown');
+            if (langDropdowns.length > 0) {
+                document.addEventListener('click', function(e) {
+                    langDropdowns.forEach(function(dd) {
+                        if (dd.hasAttribute('open') && !dd.contains(e.target)) {
+                            dd.removeAttribute('open');
+                        }
+                    });
+                });
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        langDropdowns.forEach(function(dd) {
+                            dd.removeAttribute('open');
+                        });
+                    }
+                });
+            }
+
+            const menuBtn = document.getElementById('menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            if (menuBtn && sidebar) {
+                function setMenuOpen(open) {
+                    sidebar.classList.toggle('is-open', open);
+                    menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    document.body.classList.toggle('menu-open', open);
+                    if (open) {
+                        const menu = sidebar.querySelector('.sidebar-menu');
+                        if (menu) {
+                            menu.scrollTop = 0;
+                        }
+                    }
+                }
+
+                menuBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const willOpen = !sidebar.classList.contains('is-open');
+                    setMenuOpen(willOpen);
+                });
+
+                document.addEventListener('click', function(e) {
+                    if (sidebar.classList.contains('is-open') && !sidebar.contains(e.target)) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                const navLinks = sidebar.querySelectorAll('.nav-item a');
+                navLinks.forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        setMenuOpen(false);
+                    });
+                });
+
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                window.addEventListener('resize', function() {
+                    if (window.innerWidth > 768 && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

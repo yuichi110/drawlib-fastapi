@@ -1,0 +1,525 @@
+<!--
+ Copyright (c) 2026 Yuichi Ito (yuichi@yuichi.com)
+
+ This software is licensed under the Apache License, Version 2.0.
+ For more information, please visit: https://github.com/yuichi110/drawlib
+
+ This software is provided "as is", without warranty of any kind,
+ express or implied, including but not limited to the warranties of
+ merchantability, fitness for a particular purpose and noninfringement.
+-->
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>`SecurityBase` Hierarchy, `HTTPConnection` &amp; `SecurityScopes` — FastAPI Architecture Guide (Unofficial)</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-S9N5BZ1VRC');
+    </script>
+    <script>
+        (function() {
+            const saved = localStorage.getItem('drawlib-theme');
+            if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    
+    
+    
+    <link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/architecture/en/03_di_and_security_engine/security_internals.html">
+    
+    <link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/architecture/ja/03_di_and_security_engine/security_internals.html">
+    
+    <link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/architecture/en/03_di_and_security_engine/security_internals.html">
+    
+    
+    
+    <meta name="description" content="FastAPI implements authentication and authorization not as separate WSGI/ASGI middleware layers, but as first-class nodes inside the Dependant dependency…">
+    <link rel="canonical" href="https://fastapi.drawlib.com/architecture/en/03_di_and_security_engine/security_internals.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="FastAPI Architecture">
+    <meta property="og:title" content="SecurityBase Hierarchy, HTTPConnection &amp; SecurityScopes — FastAPI Architecture">
+    <meta property="og:description" content="FastAPI implements authentication and authorization not as separate WSGI/ASGI middleware layers, but as first-class nodes inside the Dependant dependency…">
+    <meta property="og:url" content="https://fastapi.drawlib.com/architecture/en/03_di_and_security_engine/security_internals.html">
+    <meta property="og:image" content="https://fastapi.drawlib.com/architecture/_assets/ogp.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="ja_JP">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="SecurityBase Hierarchy, HTTPConnection &amp; SecurityScopes — FastAPI Architecture">
+    <meta name="twitter:description" content="FastAPI implements authentication and authorization not as separate WSGI/ASGI middleware layers, but as first-class nodes inside the Dependant dependency…">
+    <meta name="twitter:image" content="https://fastapi.drawlib.com/architecture/_assets/ogp.png">
+    
+    
+    <link rel="icon" type="image/png" href="../../_assets/favicon.png">
+    
+    
+    <link rel="stylesheet" href="../style.css">
+    
+    
+</head>
+<body>
+    <div class="demo-banner" role="region" aria-label="Portal Navigation">
+        <div class="demo-banner-inner">
+            <span class="demo-banner-badge">INTERNAL ARCHITECTURE</span>
+            
+            <span class="demo-banner-text">
+                Unofficial Internal Architecture Guide to <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a> (v0.162.2)
+            </span>
+            <span class="demo-banner-links">
+                <a href="https://fastapi.drawlib.com/">User Guide</a>
+                <span class="demo-banner-sep">·</span>
+                <strong style="color:#ffffff;">Architecture</strong>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Audit</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official Docs ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+            </span>
+            
+        </div>
+    </div>
+    
+    <div class="doc-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI Architecture">
+                    
+                    FastAPI Architecture
+                    
+                </a>
+                <div class="sidebar-header-actions">
+                    <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">
+                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                    <button type="button" id="menu-toggle" class="menu-toggle-btn" aria-label="Toggle navigation" aria-expanded="false">
+                        <svg class="icon-hamburger" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        <svg class="icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="sidebar-menu">
+                
+                    
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../index.html" >Architecture Overview</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">1. Package Topology &amp; Layers</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../01_package_and_layers/module_hierarchy.html" >5-Tier Module Hierarchy &amp; Shims</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">2. Routing Compiler &amp; Closures</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../02_routing_compiler/apiroute_and_closures.html" >APIRouter, APIRoute &amp; Handler Closure</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../02_routing_compiler/streaming_and_spa_internals.html" >Generator Streaming &amp; SPA Internals</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">3. DI &amp; Security Engine</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="dependant_and_solver.html" >Dependant DAG &amp; solve_dependencies</a>
+                            </li>
+                            
+                            <li class="nav-item active">
+                                <a href="security_internals.html" >SecurityBase &amp; HTTPConnection</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">4. Pydantic v2 Bridge</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../04_pydantic_bridge/compat_and_serialization.html" >_compat/v2.py, ModelField &amp; Serialization</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">5. ASGI Stack &amp; Telemetry</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../05_asgi_and_telemetry/middleware_and_concurrency.html" >Middleware Onion &amp; Threadpool</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../05_asgi_and_telemetry/native_telemetry_internals.html" >NativeTelemetry &amp; Runtime Spans</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">6. OpenAPI 3.1 Synthesis</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../06_openapi_and_docs/openapi_synthesis_engine.html" >get_openapi(), $defs &amp; Docs UI</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">Companion Guides &amp; Links</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/" target="_blank" rel="noopener noreferrer">FastAPI User Guide<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/reports/pni501/" target="_blank" rel="noopener noreferrer">PNI501 Diagnostic Report<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official FastAPI Docs<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub Repository<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                        </ul>
+                    
+                
+            </div>
+        </aside>
+        <div class="content-wrapper">
+            <header class="top-bar">
+                <div class="breadcrumbs">
+                    <span class="crumb">Architecture</span>
+                    <span class="crumb-separator">&raquo;</span>
+                    <span class="crumb active">`SecurityBase` Hierarchy, `HTTPConnection` &amp; `SecurityScopes`</span>
+                </div>
+                
+                <div class="lang-switcher">
+                    <details class="lang-dropdown">
+                        <summary class="lang-dropdown-btn" aria-label="Select language">
+                            <svg class="lang-globe-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            <span class="lang-current-label">English</span>
+                            <svg class="lang-caret-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </summary>
+                        <div class="lang-dropdown-menu" role="menu">
+                            
+                            <a href="security_internals.html" class="lang-option active" lang="en" hreflang="en" aria-current="page">
+                                <span>English</span>
+                                
+                                <svg class="lang-check-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                
+                            </a>
+                            
+                            <a href="../../ja/03_di_and_security_engine/security_internals.html" class="lang-option" lang="ja" hreflang="ja" >
+                                <span>日本語</span>
+                                
+                            </a>
+                            
+                        </div>
+                    </details>
+                </div>
+                
+            </header>
+            <main class="main-content">
+                <h1><code>SecurityBase</code> Hierarchy, <code>HTTPConnection</code> &amp; <code>SecurityScopes</code></h1>
+<p>FastAPI implements authentication and authorization not as separate WSGI/ASGI middleware layers, but as first-class nodes inside the <code>Dependant</code> dependency injection graph. Every built-in class under <code>fastapi/security/</code> inherits from <code>SecurityBase</code> (<code>fastapi/security/base.py</code>), serving simultaneously as an <strong>asynchronous runtime credential extractor</strong> (<code>async def __call__(self, request: HTTPConnection)</code>) and a <strong>compile-time OpenAPI 3.1 <code>SecurityScheme</code> descriptor</strong> (<code>self.model</code> and <code>self.scheme_name</code>). Paired with <code>Security(..., scopes=[...])</code> and Starlette's <code>HTTPConnection</code> base class, a single security dependency works uniformly across HTTP endpoints, WebSocket handshakes, OAuth2 scope hierarchies, and multi-scheme fallback chains.</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/03_di_and_security_engine/security_internals/security_base_class_hierarchy.png" alt="security_internals_1" />
+  <figcaption class="drawlib-caption">The SecurityBase class hierarchy in fastapi/security/: every concrete extractor pairs an OpenAPI SecurityBaseModel with an HTTPConnection runtime callable.</figcaption>
+</figure>
+<h2>1. Dual-Role Design of <code>SecurityBase</code></h2>
+<p><code>fastapi/security/base.py</code> is intentionally minimal—just seven lines declaring <code>model: SecurityBaseModel</code> and <code>scheme_name: str</code>. That minimal contract bridges two distinct subsystems without coupling them directly:</p>
+<ol>
+<li><strong>Runtime DI Callable (<code>solve_dependencies</code>)</strong>: Every concrete subclass implements <code>async def __call__(self, request: HTTPConnection) -&gt; ...</code>. When an instance such as <code>oauth2_scheme = OAuth2PasswordBearer(tokenUrl=&quot;/token&quot;)</code> is passed to <code>Depends(oauth2_scheme)</code> or <code>Security(oauth2_scheme, scopes=[...])</code>, <code>get_dependant()</code> inspects <code>oauth2_scheme.__call__</code>, binds <code>http_connection_param_name = &quot;request&quot;</code>, and executes the extractor as a standard async dependency node.</li>
+<li><strong>Compile-Time OpenAPI Descriptor (<code>get_openapi</code>)</strong>: During OpenAPI schema generation (<code>fastapi/openapi/utils.py</code>), <code>_is_security_scheme(dependant=...)</code> unwraps <code>dependant.call</code> via <code>inspect.unwrap(_impartial(call))</code> and checks <code>isinstance(unwrapped, SecurityBase)</code>. For every matched node, <code>_get_openapi_security_definitions()</code> serializes <code>security_scheme.model</code> with <code>jsonable_encoder(..., by_alias=True, exclude_none=True)</code> into <code>components.securitySchemes[scheme_name]</code> and merges accumulated OAuth2 scopes into the operation's <code>security</code> array.</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Family &amp; Module</th>
+<th style="text-align:left">Concrete Extractors (<code>v0.162.2</code>)</th>
+<th style="text-align:left">OpenAPI <code>self.model</code> Type</th>
+<th style="text-align:left">Runtime Return Value &amp; <code>401</code> Challenge</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong><code>OAuth2</code></strong> (<code>oauth2.py</code>)</td>
+<td style="text-align:left"><code>OAuth2PasswordBearer</code>, <code>OAuth2AuthorizationCodeBearer</code></td>
+<td style="text-align:left"><code>OAuth2Model</code> (<code>flows.password</code> / <code>flows.authorizationCode</code>)</td>
+<td style="text-align:left">Raw bearer token <code>str</code> (from <code>Authorization: Bearer &lt;param&gt;</code>); <code>WWW-Authenticate: Bearer</code>.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>HTTPBase</code></strong> (<code>http.py</code>)</td>
+<td style="text-align:left"><code>HTTPBearer</code>, <code>HTTPBasic</code>, <code>HTTPDigest</code></td>
+<td style="text-align:left"><code>HTTPBearerModel</code> / <code>HTTPBaseModel</code> (<code>scheme=&quot;basic&quot; | &quot;digest&quot;</code>)</td>
+<td style="text-align:left"><code>HTTPAuthorizationCredentials</code> or decoded <code>HTTPBasicCredentials</code>; <code>Bearer</code>, <code>Basic</code> (+ <code>realm</code>), <code>Digest</code>.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>APIKeyBase</code></strong> (<code>api_key.py</code>)</td>
+<td style="text-align:left"><code>APIKeyHeader</code>, <code>APIKeyCookie</code>, <code>APIKeyQuery</code></td>
+<td style="text-align:left"><code>APIKey</code> (<code>in</code>: <code>header</code>, <code>cookie</code>, or <code>query</code>)</td>
+<td style="text-align:left">Extracted key <code>str</code> via <code>check_api_key()</code>; <code>WWW-Authenticate: APIKey</code> (per RFC 9110).</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>OpenIdConnect</code></strong> (<code>open_id_connect_url.py</code>)</td>
+<td style="text-align:left"><code>OpenIdConnect</code></td>
+<td style="text-align:left"><code>OpenIdConnectModel</code> (<code>openIdConnectUrl</code>)</td>
+<td style="text-align:left">Raw <code>Authorization</code> header <code>str</code> (OpenAPI integration stub); <code>WWW-Authenticate: Bearer</code>.</td>
+</tr>
+</tbody>
+</table>
+<p>Note that <code>OAuth2PasswordRequestForm</code> and <code>OAuth2PasswordRequestFormStrict</code> in <code>fastapi/security/oauth2.py</code> do <strong>not</strong> inherit from <code>SecurityBase</code>: they are regular class dependencies whose <code>__init__</code> signatures declare <code>Form()</code> fields (<code>grant_type</code>, <code>username</code>, <code>password</code>, space-delimited <code>scope</code>, <code>client_id</code>, and <code>client_secret</code>) for token-issuing endpoints rather than protected resource routes. Similarly, <code>HTTPDigest</code> and <code>OpenIdConnect</code> extract header strings and register OpenAPI definitions, leaving cryptographic digest or OIDC discovery verification to user subclasses.</p>
+<h2>2. Starlette <code>HTTPConnection</code> Unification (<code>Request</code> &amp; <code>WebSocket</code>)</h2>
+<p>A subtle detail across <code>oauth2.py</code>, <code>http.py</code>, <code>api_key.py</code>, and <code>open_id_connect_url.py</code> is the parameter annotation on every <code>__call__</code> method:</p>
+<ul>
+<li>Every extractor declares <code>async def __call__(self, request: HTTPConnection) -&gt; ...</code> using <code>starlette.requests.HTTPConnection</code> rather than <code>fastapi.Request</code>.</li>
+<li>In Starlette's class hierarchy, both <code>Request</code> (HTTP) and <code>WebSocket</code> (WS) subclass <code>HTTPConnection</code>, which provides uniform read-only access to <code>.headers</code>, <code>.query_params</code>, <code>.cookies</code>, <code>.path_params</code>, and <code>.scope</code>.</li>
+<li>During compile-time analysis, <code>add_non_field_param_to_dependency()</code> (<code>fastapi/dependencies/utils.py</code>) checks <code>Request</code>, then <code>WebSocket</code>, and then <code>HTTPConnection</code>, recording <code>dependant.http_connection_param_name = &quot;request&quot;</code>.</li>
+<li>At runtime, <code>solve_dependencies(request: Request | WebSocket, ...)</code> unconditionally binds <code>values[dependant.http_connection_param_name] = request</code> before checking <code>isinstance(request, Request)</code> or <code>isinstance(request, WebSocket)</code>. Consequently, <code>APIKeyCookie</code>, <code>HTTPBearer</code>, and <code>OAuth2PasswordBearer</code> work out of the box inside <code>@app.websocket(&quot;/ws&quot;)</code> routes during handshake dependency resolution without writing separate WebSocket extractors.</li>
+</ul>
+<h2>3. Top-Down <code>SecurityScopes</code> Propagation &amp; <code>auto_error=False</code> Chains</h2>
+<h3>3.1 <code>Security(..., scopes=[...])</code> &amp; <code>SecurityScopes</code></h3>
+<p><code>params.Security</code> is a frozen <code>@dataclass</code> subclass of <code>params.Depends</code> that adds <code>scopes: Sequence[str] | None = None</code>. Scope propagation flows <strong>top-down</strong> during <code>get_dependant()</code> compilation:</p>
+<ol>
+<li>At each <code>Dependant</code> node, <code>get_dependant()</code> computes <code>current_scopes = (parent_oauth_scopes or []) + (own_oauth_scopes or [])</code>.</li>
+<li>Whenever a parameter uses <code>Security(sub_call, scopes=[&quot;audit:read&quot;])</code>, FastAPI passes <code>own_oauth_scopes=[&quot;audit:read&quot;]</code> and <code>parent_oauth_scopes=current_scopes</code> into the child <code>get_dependant()</code> call.</li>
+<li>Any leaf or intermediate dependency that declares a <code>security_scopes: SecurityScopes</code> parameter has <code>dependant.security_scopes_param_name</code> populated. During <code>solve_dependencies()</code>, FastAPI instantiates <code>SecurityScopes(scopes=_get_oauth_scopes(dependant=dependant))</code>, deduplicating scopes in declaration order and pre-joining <code>security_scopes.scope_str = &quot; &quot;.join(self.scopes)</code> per RFC 6749.</li>
+<li>Because <code>_uses_scopes()</code> returns <code>True</code> for any node referencing <code>SecurityScopes</code>, <code>own_oauth_scopes</code>, or <code>SecurityBase</code>, <code>_get_cache_key()</code> embeds <code>tuple(sorted(set(scopes)))</code> into <code>DependencyCacheKey</code>, isolating cached evaluations if two branches within the same route demand different scope sets.</li>
+</ol>
+<h3>3.2 <code>auto_error=False</code> &amp; Logical-OR Authentication Composition</h3>
+<p>By default (<code>auto_error=True</code>), any missing header/cookie or mismatched scheme (such as <code>Basic</code> sent to <code>HTTPBearer</code>) immediately raises <code>HTTPException(status_code=401, detail=&quot;Not authenticated&quot;, headers={&quot;WWW-Authenticate&quot;: ...})</code>, short-circuiting <code>solve_dependencies()</code>. (Note one intentional exception in <code>HTTPBasic</code>: if an <code>Authorization: Basic ...</code> header <em>is</em> present, invalid Base64 or a payload missing the <code>:</code> separator always raises <code>401</code> even when <code>auto_error=False</code>, preventing malformed credentials from silently degrading to anonymous requests.)</p>
+<p>When <code>auto_error=False</code> is passed to multiple extractors—for example, pairing <code>OAuth2PasswordBearer(..., auto_error=False)</code> for API clients with a hardened <code>APIKeyCookie(name=&quot;__Host-session&quot;, auto_error=False)</code> for browser sessions—absent credentials return <code>None</code> instead of raising. A composite verifier dependency can then evaluate <code>token or session_id</code> in Python, enforce <code>SecurityScopes</code>, and raise a single <code>401</code>/<code>403</code> only when all authentication channels are empty, while <code>get_openapi()</code> automatically registers both schemes in <code>components.securitySchemes</code>.</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/03_di_and_security_engine/security_internals/http_connection_scope_propagation.png" alt="security_internals_2" />
+  <figcaption class="drawlib-caption">Unified HTTPConnection injection across HTTP and WebSocket routes, top-down SecurityScopes accumulation, and auto_error=False OR-auth composition.</figcaption>
+</figure>
+<h2>4. Verifying <code>SecurityBase.model</code> &amp; Nested <code>SecurityScopes</code> Propagation</h2>
+<p>The snippet below inspects <code>OAuth2PasswordBearer.model</code> for OpenAPI serialization, verifies <code>http_connection_param_name</code> binding on leaf extractors, and runs <code>solve_dependencies()</code> across a three-tier <code>Security()</code> chain using <code>auto_error=False</code> cookie fallback:</p>
+<pre><code class="language-python"><span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">contextlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncExitStack</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">secrets</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">Request</span><span class="p">,</span> <span class="n">Security</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.dependencies.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">_get_oauth_scopes</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.dependencies.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_dependant</span><span class="p">,</span> <span class="n">solve_dependencies</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.encoders</span><span class="w"> </span><span class="kn">import</span> <span class="n">jsonable_encoder</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.security</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIKeyCookie</span><span class="p">,</span> <span class="n">OAuth2PasswordBearer</span><span class="p">,</span> <span class="n">SecurityScopes</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.security.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">SecurityBase</span>
+
+<span class="n">bearer_auth</span> <span class="o">=</span> <span class="n">OAuth2PasswordBearer</span><span class="p">(</span>
+    <span class="n">tokenUrl</span><span class="o">=</span><span class="s2">"/oauth/token"</span><span class="p">,</span>
+    <span class="n">scopes</span><span class="o">=</span><span class="p">{</span><span class="s2">"items:read"</span><span class="p">:</span> <span class="s2">"Read items"</span><span class="p">},</span>
+    <span class="n">auto_error</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">cookie_auth</span> <span class="o">=</span> <span class="n">APIKeyCookie</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"__Host-session"</span><span class="p">,</span> <span class="n">auto_error</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bearer_auth</span><span class="p">,</span> <span class="n">SecurityBase</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">jsonable_encoder</span><span class="p">(</span><span class="n">bearer_auth</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">by_alias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exclude_none</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">==</span> <span class="p">{</span>
+    <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"oauth2"</span><span class="p">,</span>
+    <span class="s2">"flows"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"password"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"tokenUrl"</span><span class="p">:</span> <span class="s2">"/oauth/token"</span><span class="p">,</span>
+            <span class="s2">"scopes"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"items:read"</span><span class="p">:</span> <span class="s2">"Read items"</span><span class="p">},</span>
+        <span class="p">}</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">verify_credentials</span><span class="p">(</span>
+    <span class="n">security_scopes</span><span class="p">:</span> <span class="n">SecurityScopes</span><span class="p">,</span>
+    <span class="n">token</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Depends</span><span class="p">(</span><span class="n">bearer_auth</span><span class="p">)],</span>
+    <span class="n">session_id</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Depends</span><span class="p">(</span><span class="n">cookie_auth</span><span class="p">)],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"credential"</span><span class="p">:</span> <span class="n">token</span> <span class="ow">or</span> <span class="n">session_id</span><span class="p">,</span>
+        <span class="s2">"scope_str"</span><span class="p">:</span> <span class="n">security_scopes</span><span class="o">.</span><span class="n">scope_str</span><span class="p">,</span>
+    <span class="p">}</span>
+
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_active_principal</span><span class="p">(</span>
+    <span class="n">verified</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span>
+        <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">],</span>
+        <span class="n">Security</span><span class="p">(</span><span class="n">verify_credentials</span><span class="p">,</span> <span class="n">scopes</span><span class="o">=</span><span class="p">[</span><span class="s2">"users:me"</span><span class="p">]),</span>
+    <span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="n">verified</span>
+
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">read_audit_log</span><span class="p">(</span>
+    <span class="n">principal</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span>
+        <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">],</span>
+        <span class="n">Security</span><span class="p">(</span><span class="n">get_active_principal</span><span class="p">,</span> <span class="n">scopes</span><span class="o">=</span><span class="p">[</span><span class="s2">"audit:read"</span><span class="p">]),</span>
+    <span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="n">principal</span>
+
+
+<span class="n">root</span> <span class="o">=</span> <span class="n">get_dependant</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s2">"/audit"</span><span class="p">,</span> <span class="n">call</span><span class="o">=</span><span class="n">read_audit_log</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="s2">"function"</span><span class="p">)</span>
+<span class="n">verify_dep</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="n">dependencies</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">dependencies</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">bearer_dep</span><span class="p">,</span> <span class="n">cookie_dep</span> <span class="o">=</span> <span class="n">verify_dep</span><span class="o">.</span><span class="n">dependencies</span>
+
+<span class="k">assert</span> <span class="n">bearer_dep</span><span class="o">.</span><span class="n">http_connection_param_name</span> <span class="o">==</span> <span class="s2">"request"</span>
+<span class="k">assert</span> <span class="n">cookie_dep</span><span class="o">.</span><span class="n">http_connection_param_name</span> <span class="o">==</span> <span class="s2">"request"</span>
+<span class="k">assert</span> <span class="n">_get_oauth_scopes</span><span class="p">(</span><span class="n">dependant</span><span class="o">=</span><span class="n">verify_dep</span><span class="p">)</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"audit:read"</span><span class="p">,</span> <span class="s2">"users:me"</span><span class="p">]</span>
+
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_solve_with_cookie_fallback</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+    <span class="n">ephemeral_session</span> <span class="o">=</span> <span class="n">secrets</span><span class="o">.</span><span class="n">token_urlsafe</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>
+    <span class="k">async</span> <span class="k">with</span> <span class="n">AsyncExitStack</span><span class="p">()</span> <span class="k">as</span> <span class="n">inner_stack</span><span class="p">,</span> <span class="n">AsyncExitStack</span><span class="p">()</span> <span class="k">as</span> <span class="n">fn_stack</span><span class="p">:</span>
+        <span class="n">scope</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"http"</span><span class="p">,</span>
+            <span class="s2">"method"</span><span class="p">:</span> <span class="s2">"GET"</span><span class="p">,</span>
+            <span class="s2">"path"</span><span class="p">:</span> <span class="s2">"/audit"</span><span class="p">,</span>
+            <span class="s2">"headers"</span><span class="p">:</span> <span class="p">[</span>
+                <span class="p">(</span><span class="sa">b</span><span class="s2">"cookie"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"__Host-session=</span><span class="si">{</span><span class="n">ephemeral_session</span><span class="si">}</span><span class="s2">"</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"ascii"</span><span class="p">))</span>
+            <span class="p">],</span>
+            <span class="s2">"query_string"</span><span class="p">:</span> <span class="sa">b</span><span class="s2">""</span><span class="p">,</span>
+            <span class="s2">"path_params"</span><span class="p">:</span> <span class="p">{},</span>
+            <span class="s2">"fastapi_inner_astack"</span><span class="p">:</span> <span class="n">inner_stack</span><span class="p">,</span>
+            <span class="s2">"fastapi_function_astack"</span><span class="p">:</span> <span class="n">fn_stack</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="n">solved</span> <span class="o">=</span> <span class="k">await</span> <span class="n">solve_dependencies</span><span class="p">(</span>
+            <span class="n">request</span><span class="o">=</span><span class="n">Request</span><span class="p">(</span><span class="n">scope</span><span class="p">),</span>
+            <span class="n">dependant</span><span class="o">=</span><span class="n">root</span><span class="p">,</span>
+            <span class="n">async_exit_stack</span><span class="o">=</span><span class="n">inner_stack</span><span class="p">,</span>
+            <span class="n">embed_body_fields</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">solved</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="s2">"principal"</span><span class="p">]</span>
+
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">_solve_with_cookie_fallback</span><span class="p">())</span>
+<span class="k">assert</span> <span class="n">result</span><span class="p">[</span><span class="s2">"scope_str"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"audit:read users:me"</span>
+<span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s2">"credential"</span><span class="p">],</span> <span class="nb">str</span><span class="p">)</span>
+</code></pre>
+<p>For how <code>Dependant</code> nodes and per-request cache keys are compiled and cached, see <a href="dependant_and_solver.html">Dependant DAG &amp; solve_dependencies</a>; for how <code>_get_openapi_security_definitions()</code> emits OpenAPI 3.1 <code>securitySchemes</code>, see <a href="../06_openapi_and_docs/openapi_synthesis_engine.html">get_openapi(), $defs &amp; Docs UI</a>.</p>
+
+            </main>
+            <footer class="footer">
+                
+                FastAPI® is a registered trademark of Sebastián Ramírez (<a href="https://github.com/tiangolo" target="_blank" rel="noopener noreferrer">@tiangolo</a>). Unofficial internal architecture guide — not affiliated with or endorsed by the official FastAPI project (<a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">fastapi.tiangolo.com</a>).
+                
+            </footer>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeBtn = document.getElementById('theme-toggle');
+            if (themeBtn) {
+                themeBtn.addEventListener('click', function() {
+                    const current = document.documentElement.getAttribute('data-theme');
+                    const next = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    localStorage.setItem('drawlib-theme', next);
+                });
+            }
+
+            const langDropdowns = document.querySelectorAll('.lang-dropdown');
+            if (langDropdowns.length > 0) {
+                document.addEventListener('click', function(e) {
+                    langDropdowns.forEach(function(dd) {
+                        if (dd.hasAttribute('open') && !dd.contains(e.target)) {
+                            dd.removeAttribute('open');
+                        }
+                    });
+                });
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        langDropdowns.forEach(function(dd) {
+                            dd.removeAttribute('open');
+                        });
+                    }
+                });
+            }
+
+            const menuBtn = document.getElementById('menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            if (menuBtn && sidebar) {
+                function setMenuOpen(open) {
+                    sidebar.classList.toggle('is-open', open);
+                    menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    document.body.classList.toggle('menu-open', open);
+                    if (open) {
+                        const menu = sidebar.querySelector('.sidebar-menu');
+                        if (menu) {
+                            menu.scrollTop = 0;
+                        }
+                    }
+                }
+
+                menuBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const willOpen = !sidebar.classList.contains('is-open');
+                    setMenuOpen(willOpen);
+                });
+
+                document.addEventListener('click', function(e) {
+                    if (sidebar.classList.contains('is-open') && !sidebar.contains(e.target)) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                const navLinks = sidebar.querySelectorAll('.nav-item a');
+                navLinks.forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        setMenuOpen(false);
+                    });
+                });
+
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                window.addEventListener('resize', function() {
+                    if (window.innerWidth > 768 && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

@@ -2,7 +2,7 @@
 
 本ページでは、クリーンな Python `>=3.10` 環境から出発し、FastAPI `v0.162.2` で型安全な **Inventory API（在庫管理 API）** を構築します。境界での入力検証、複数箇所の違反を一括報告する `422 Unprocessable Content` エラー構造、自動生成される OpenAPI `3.1.0` 対話コンソール、そして `TestClient` によるインプロセステストまでを一気通貫で確認します。
 
-```drawlib align=center code=fold file=quickstart_request_anatomy.png caption="POST /items/{item_id}?currency=JPY の解剖図 — マルチソース抽出・Pydantic v2 検証・201 / 422 分岐"
+```drawlib align=center code=hide file=quickstart_request_anatomy.png caption="POST /items/{item_id}?currency=JPY の解剖図 — マルチソース抽出・Pydantic v2 検証・201 / 422 分岐"
 from drawlib.canvas import save, setup
 from drawlib.diagrams.architecture import ArchitectureDiagram, CodeIcon, Node, PhosphorIcon
 from drawlib.shapes import rectangle
@@ -232,7 +232,7 @@ async def read_item(
 
 YAML を 1 行も手書きすることなく、`app.openapi()` が登録済みの全 `APIRoute` を走査して OpenAPI `3.1.0` + JSON Schema `2020-12` ドキュメントを合成し、`app.openapi_schema` にキャッシュします。
 
-```drawlib align=center code=fold file=openapi_docs_ecosystem.png caption="単一エンドポイント定義からの自動展開 — /openapi.json・Swagger UI (/docs)・ReDoc (/redoc)・型付き SDK 生成"
+```drawlib align=center code=hide file=openapi_docs_ecosystem.png caption="単一エンドポイント定義からの自動展開 — /openapi.json・Swagger UI (/docs)・ReDoc (/redoc)・型付き SDK 生成"
 from drawlib.canvas import save, setup
 from drawlib.diagrams.architecture import (
     ArchitectureDiagram,

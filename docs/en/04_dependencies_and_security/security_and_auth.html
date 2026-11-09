@@ -13,7 +13,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Authentication, OAuth2 Scopes &amp; Credential Extractors — FastAPI Visual Guide (Unofficial · Drawlib Demo)</title>
+    <title>Authentication, OAuth2 Scopes &amp; Credential Extractors — FastAPI User Guide (Unofficial)</title>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
     <script>
@@ -47,15 +47,15 @@
     <meta name="description" content="FastAPI v0.162.2&#x27;s fastapi.security module unifies runtime credential extraction and OpenAPI 3.1 schema generation: every SecurityBase dependency parses…">
     <link rel="canonical" href="https://fastapi.drawlib.com/en/04_dependencies_and_security/security_and_auth.html">
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="FastAPI Visual Guide">
-    <meta property="og:title" content="Authentication, OAuth2 Scopes &amp; Credential Extractors — FastAPI Visual Guide">
+    <meta property="og:site_name" content="FastAPI User Guide">
+    <meta property="og:title" content="Authentication, OAuth2 Scopes &amp; Credential Extractors — FastAPI User Guide">
     <meta property="og:description" content="FastAPI v0.162.2&#x27;s fastapi.security module unifies runtime credential extraction and OpenAPI 3.1 schema generation: every SecurityBase dependency parses…">
     <meta property="og:url" content="https://fastapi.drawlib.com/en/04_dependencies_and_security/security_and_auth.html">
     <meta property="og:image" content="https://fastapi.drawlib.com/_assets/ogp.png">
     <meta property="og:locale" content="en_US">
     <meta property="og:locale:alternate" content="ja_JP">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Authentication, OAuth2 Scopes &amp; Credential Extractors — FastAPI Visual Guide">
+    <meta name="twitter:title" content="Authentication, OAuth2 Scopes &amp; Credential Extractors — FastAPI User Guide">
     <meta name="twitter:description" content="FastAPI v0.162.2&#x27;s fastapi.security module unifies runtime credential extraction and OpenAPI 3.1 schema generation: every SecurityBase dependency parses…">
     <meta name="twitter:image" content="https://fastapi.drawlib.com/_assets/ogp.png">
     
@@ -68,19 +68,23 @@
     
 </head>
 <body>
-    <div class="demo-banner" role="region" aria-label="Unofficial Showcase Notice">
+    <div class="demo-banner" role="region" aria-label="Portal Navigation">
         <div class="demo-banner-inner">
-            <span class="demo-banner-badge">UNOFFICIAL DEMO</span>
+            <span class="demo-banner-badge">UNOFFICIAL GUIDE</span>
             
             <span class="demo-banner-text">
-                Unofficial visual architecture showcase of <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a> (v0.162.2, MIT) illustrated as code with <a href="https://www.drawlib.com/" target="_blank" rel="noopener noreferrer">Drawlib</a> &amp; <a href="https://pypi.org/project/pni501/" target="_blank" rel="noopener noreferrer">PNI501</a>.
+                Unofficial Community User Guide for <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a> (v0.162.2)
             </span>
             <span class="demo-banner-links">
-                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Report →</a>
+                <strong style="color:#ffffff;">User Guide</strong>
                 <span class="demo-banner-sep">·</span>
-                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official FastAPI Docs ↗</a>
+                <a href="https://fastapi.drawlib.com/architecture/">Architecture</a>
                 <span class="demo-banner-sep">·</span>
-                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">Demo Source ↗</a>
+                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Audit</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official Docs ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
             </span>
             
         </div>
@@ -89,9 +93,9 @@
     <div class="doc-layout">
         <aside class="sidebar">
             <div class="sidebar-header">
-                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI Visual Guide">
+                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI User Guide">
                     
-                    FastAPI Visual Guide
+                    FastAPI User Guide
                     
                 </a>
                 <div class="sidebar-header-actions">
@@ -112,7 +116,7 @@
                         <ul class="nav-list">
                             
                             <li class="nav-item ">
-                                <a href="../index.html" >Overview &amp; Architecture Map</a>
+                                <a href="../index.html" >Guide Overview</a>
                             </li>
                             
                         </ul>
@@ -176,7 +180,7 @@
                         <ul class="nav-list">
                             
                             <li class="nav-item ">
-                                <a href="dependency_injection.html" >Dependant DAG, Caching &amp; Scopes</a>
+                                <a href="dependency_injection.html" >Dependency Graph, Caching &amp; Scopes</a>
                             </li>
                             
                             <li class="nav-item active">
@@ -250,12 +254,12 @@
                         </ul>
                     
                         
-                        <div class="sidebar-heading">Diagnostic &amp; Upstream Links</div>
+                        <div class="sidebar-heading">Companion Guides &amp; Links</div>
                         
                         <ul class="nav-list">
                             
                             <li class="nav-item ">
-                                <a href="https://fastapi.drawlib.com/reports/pni501/" target="_blank" rel="noopener noreferrer">PNI501 Diagnostic Report<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                                <a href="https://fastapi.drawlib.com/architecture/" target="_blank" rel="noopener noreferrer">FastAPI Internal Architecture<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
                             </li>
                             
                             <li class="nav-item ">
@@ -263,7 +267,7 @@
                             </li>
                             
                             <li class="nav-item ">
-                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">Demo Source (GitHub)<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub Repository<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
                             </li>
                             
                         </ul>
@@ -312,183 +316,6 @@
   <img src="../../images/04_dependencies_and_security/security_and_auth/security_schemes_architecture.png" alt="security_and_auth_1" />
   <figcaption class="drawlib-caption">Dual-Role Architecture of fastapi.security: Runtime DI Credential Extraction & OpenAPI 3.1 securitySchemes</figcaption>
 </figure>
-<details class="drawlib-code-details">
-<summary>Source Code</summary>
-<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.canvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">setup</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.diagrams.architecture</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArchitectureDiagram</span><span class="p">,</span> <span class="n">Node</span><span class="p">,</span> <span class="n">PhosphorIcon</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.icons</span><span class="w"> </span><span class="kn">import</span> <span class="n">phosphor</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.lines</span><span class="w"> </span><span class="kn">import</span> <span class="n">line</span><span class="p">,</span> <span class="n">lines</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.smartarts</span><span class="w"> </span><span class="kn">import</span> <span class="n">CardList</span><span class="p">,</span> <span class="n">Panel</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">Styles</span>
-
-<span class="n">setup</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">168</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">98</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
-
-<span class="c1"># Center Panel: fastapi.security SecurityBase Subclasses</span>
-<span class="n">sec_panel</span> <span class="o">=</span> <span class="n">Panel</span><span class="p">(</span>
-    <span class="s2">"fastapi.security (SecurityBase Classes)"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
-    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_line_width</span><span class="o">=</span><span class="mf">1.2</span><span class="p">),</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.5</span><span class="p">),</span>
-    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">shield_check</span><span class="p">,</span>
-    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">,</span>
-    <span class="n">header_variant</span><span class="o">=</span><span class="s2">"filled"</span><span class="p">,</span>
-    <span class="n">header_height</span><span class="o">=</span><span class="mf">9.5</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">sec_panel</span><span class="o">.</span><span class="n">draw</span><span class="p">((</span><span class="mf">38.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">68.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">88.0</span><span class="p">,</span> <span class="n">align</span><span class="o">=</span><span class="s2">"bottom_left"</span><span class="p">)</span>
-
-<span class="n">arch</span> <span class="o">=</span> <span class="n">ArchitectureDiagram</span><span class="p">(</span>
-    <span class="n">width</span><span class="o">=</span><span class="mf">106.0</span><span class="p">,</span>
-    <span class="n">height</span><span class="o">=</span><span class="mf">88.0</span><span class="p">,</span>
-    <span class="n">node_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Primary</span><span class="p">,</span>
-    <span class="n">node_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">edge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">,</span>
-    <span class="n">edge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">node_card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="n">http_req</span> <span class="o">=</span> <span class="n">arch</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span>
-        <span class="s2">"HTTP Request</span><span class="se">\n</span><span class="s2">Header / Cookie</span><span class="se">\n</span><span class="s2">/ Query"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">26</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">GLOBE</span><span class="p">,</span>
-        <span class="n">icon_size</span><span class="o">=</span><span class="mf">6.0</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
-    <span class="p">),</span>
-    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">17.0</span><span class="p">,</span> <span class="mf">46.0</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="n">oauth2_node</span> <span class="o">=</span> <span class="n">arch</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span>
-        <span class="s2">"OAuth2PasswordBearer &amp;</span><span class="se">\n</span><span class="s2">OAuth2AuthorizationCodeBearer"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">58</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mf">13.5</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">KEY</span><span class="p">,</span>
-        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.4</span><span class="p">,</span>
-        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
-        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="p">),</span>
-    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">72.0</span><span class="p">,</span> <span class="mf">72.5</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="n">http_node</span> <span class="o">=</span> <span class="n">arch</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span>
-        <span class="s2">"HTTPBearer, HTTPBasic</span><span class="se">\n</span><span class="s2">&amp; HTTPDigest"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">58</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mf">13.5</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">LOCK_KEY</span><span class="p">,</span>
-        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.4</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
-    <span class="p">),</span>
-    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">72.0</span><span class="p">,</span> <span class="mf">54.5</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="n">apikey_node</span> <span class="o">=</span> <span class="n">arch</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span>
-        <span class="s2">"APIKeyHeader, APIKeyCookie</span><span class="se">\n</span><span class="s2">&amp; APIKeyQuery"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">58</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mf">13.5</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">COOKIE</span><span class="p">,</span>
-        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.4</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span>
-    <span class="p">),</span>
-    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">72.0</span><span class="p">,</span> <span class="mf">36.5</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="n">oidc_node</span> <span class="o">=</span> <span class="n">arch</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span>
-        <span class="s2">"OpenIdConnect</span><span class="se">\n</span><span class="s2">(.well-known Discovery)"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">58</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mf">13.5</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">IDENTIFICATION_BADGE</span><span class="p">,</span>
-        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.4</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
-    <span class="p">),</span>
-    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">72.0</span><span class="p">,</span> <span class="mf">18.5</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="n">arch</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
-
-<span class="c1"># Left Fan-Out Bus from HTTP Request (x=30.0 -&gt; spine x=35.0 -&gt; nodes x=42.5)</span>
-<span class="n">line</span><span class="p">((</span><span class="mf">30.5</span><span class="p">,</span> <span class="mf">46.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">35.0</span><span class="p">,</span> <span class="mf">46.0</span><span class="p">),</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">)</span>
-<span class="n">line</span><span class="p">((</span><span class="mf">35.0</span><span class="p">,</span> <span class="mf">18.5</span><span class="p">),</span> <span class="p">(</span><span class="mf">35.0</span><span class="p">,</span> <span class="mf">72.5</span><span class="p">),</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">ny</span> <span class="ow">in</span> <span class="p">(</span><span class="mf">72.5</span><span class="p">,</span> <span class="mf">54.5</span><span class="p">,</span> <span class="mf">36.5</span><span class="p">,</span> <span class="mf">18.5</span><span class="p">):</span>
-    <span class="n">line</span><span class="p">((</span><span class="mf">35.0</span><span class="p">,</span> <span class="n">ny</span><span class="p">),</span> <span class="p">(</span><span class="mf">42.5</span><span class="p">,</span> <span class="n">ny</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">)</span>
-
-<span class="c1"># Right Dual-Output Panels: (1) Runtime DI &amp; (2) OpenAPI 3.1 Schema</span>
-<span class="n">rt_panel</span> <span class="o">=</span> <span class="n">Panel</span><span class="p">(</span>
-    <span class="s2">"1. Runtime DI (__call__)"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
-    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_line_width</span><span class="o">=</span><span class="mf">1.2</span><span class="p">),</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.0</span><span class="p">),</span>
-    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">user_check</span><span class="p">,</span>
-    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">,</span>
-    <span class="n">header_variant</span><span class="o">=</span><span class="s2">"filled"</span><span class="p">,</span>
-    <span class="n">header_height</span><span class="o">=</span><span class="mf">9.0</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">rt_panel</span><span class="o">.</span><span class="n">draw</span><span class="p">((</span><span class="mf">118.0</span><span class="p">,</span> <span class="mf">51.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">46.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">42.0</span><span class="p">,</span> <span class="n">align</span><span class="o">=</span><span class="s2">"bottom_left"</span><span class="p">)</span>
-<span class="n">rt_xy</span><span class="p">,</span> <span class="n">rt_w</span><span class="p">,</span> <span class="n">rt_h</span> <span class="o">=</span> <span class="n">rt_panel</span><span class="o">.</span><span class="n">get_content_box</span><span class="p">(</span>
-    <span class="p">(</span><span class="mf">118.0</span><span class="p">,</span> <span class="mf">51.0</span><span class="p">),</span>
-    <span class="n">width</span><span class="o">=</span><span class="mf">46.0</span><span class="p">,</span>
-    <span class="n">height</span><span class="o">=</span><span class="mf">42.0</span><span class="p">,</span>
-    <span class="n">padding</span><span class="o">=</span><span class="p">(</span><span class="mf">2.5</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">),</span>
-    <span class="n">align</span><span class="o">=</span><span class="s2">"bottom_left"</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="n">rt_cards</span> <span class="o">=</span> <span class="n">CardList</span><span class="p">(</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">description_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">badge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
-    <span class="n">badge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">spacing</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">rt_cards</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"Credential Parse"</span><span class="p">,</span> <span class="s2">"Extracts token/key or 401"</span><span class="p">,</span> <span class="n">badge_text</span><span class="o">=</span><span class="s2">"A"</span><span class="p">)</span>
-<span class="n">rt_cards</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"SecurityScopes"</span><span class="p">,</span> <span class="s2">"Merges DAG OAuth2 scopes"</span><span class="p">,</span> <span class="n">badge_text</span><span class="o">=</span><span class="s2">"B"</span><span class="p">)</span>
-<span class="n">rt_cards</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">rt_xy</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">rt_w</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">rt_h</span><span class="p">)</span>
-
-<span class="n">oa_panel</span> <span class="o">=</span> <span class="n">Panel</span><span class="p">(</span>
-    <span class="s2">"2. OpenAPI 3.1 (.model)"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
-    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_line_width</span><span class="o">=</span><span class="mf">1.2</span><span class="p">),</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.0</span><span class="p">),</span>
-    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">browser</span><span class="p">,</span>
-    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">,</span>
-    <span class="n">header_variant</span><span class="o">=</span><span class="s2">"filled"</span><span class="p">,</span>
-    <span class="n">header_height</span><span class="o">=</span><span class="mf">9.0</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">oa_panel</span><span class="o">.</span><span class="n">draw</span><span class="p">((</span><span class="mf">118.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">46.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">42.0</span><span class="p">,</span> <span class="n">align</span><span class="o">=</span><span class="s2">"bottom_left"</span><span class="p">)</span>
-<span class="n">oa_xy</span><span class="p">,</span> <span class="n">oa_w</span><span class="p">,</span> <span class="n">oa_h</span> <span class="o">=</span> <span class="n">oa_panel</span><span class="o">.</span><span class="n">get_content_box</span><span class="p">(</span>
-    <span class="p">(</span><span class="mf">118.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">),</span>
-    <span class="n">width</span><span class="o">=</span><span class="mf">46.0</span><span class="p">,</span>
-    <span class="n">height</span><span class="o">=</span><span class="mf">42.0</span><span class="p">,</span>
-    <span class="n">padding</span><span class="o">=</span><span class="p">(</span><span class="mf">2.5</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">),</span>
-    <span class="n">align</span><span class="o">=</span><span class="s2">"bottom_left"</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="n">oa_cards</span> <span class="o">=</span> <span class="n">CardList</span><span class="p">(</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">description_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">badge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span>
-    <span class="n">badge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">spacing</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">oa_cards</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"securitySchemes"</span><span class="p">,</span> <span class="s2">"Emits OpenAPI 3.1 JSON"</span><span class="p">,</span> <span class="n">badge_text</span><span class="o">=</span><span class="s2">"C"</span><span class="p">)</span>
-<span class="n">oa_cards</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"Swagger Authorize"</span><span class="p">,</span> <span class="s2">"Powers /docs login modal"</span><span class="p">,</span> <span class="n">badge_text</span><span class="o">=</span><span class="s2">"D"</span><span class="p">)</span>
-<span class="n">oa_cards</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">oa_xy</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">oa_w</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">oa_h</span><span class="p">)</span>
-
-<span class="c1"># Right Convergence Spine (nodes x=101.5 -&gt; spine x=110.5 -&gt; panels x=117.5)</span>
-<span class="k">for</span> <span class="n">ny</span> <span class="ow">in</span> <span class="p">(</span><span class="mf">72.5</span><span class="p">,</span> <span class="mf">54.5</span><span class="p">,</span> <span class="mf">36.5</span><span class="p">,</span> <span class="mf">18.5</span><span class="p">):</span>
-    <span class="n">line</span><span class="p">((</span><span class="mf">101.5</span><span class="p">,</span> <span class="n">ny</span><span class="p">),</span> <span class="p">(</span><span class="mf">110.5</span><span class="p">,</span> <span class="n">ny</span><span class="p">),</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">)</span>
-<span class="n">line</span><span class="p">((</span><span class="mf">110.5</span><span class="p">,</span> <span class="mf">18.5</span><span class="p">),</span> <span class="p">(</span><span class="mf">110.5</span><span class="p">,</span> <span class="mf">72.5</span><span class="p">),</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">)</span>
-<span class="n">line</span><span class="p">((</span><span class="mf">110.5</span><span class="p">,</span> <span class="mf">68.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">117.5</span><span class="p">,</span> <span class="mf">68.0</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">)</span>
-<span class="n">lines</span><span class="p">([(</span><span class="mf">110.5</span><span class="p">,</span> <span class="mf">26.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">117.5</span><span class="p">,</span> <span class="mf">26.0</span><span class="p">)],</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">)</span>
-
-<span class="n">save</span><span class="p">()</span>
-</code></pre>
-</details>
 <h2>1. Dual-Role Design of <code>fastapi.security</code></h2>
 <p>Unlike traditional middleware that intercepts every URL path indiscriminately, FastAPI integrates security directly into the <a href="dependency_injection.html">Dependant DAG</a>. Every security class in <code>fastapi/security/*</code> inherits from <code>SecurityBase</code> and fulfills two responsibilities from a single Python instance:</p>
 <ol>
@@ -549,132 +376,6 @@
   <img src="../../images/04_dependencies_and_security/security_and_auth/oauth2_security_scopes_flow.png" alt="security_and_auth_2" />
   <figcaption class="drawlib-caption">Hierarchical SecurityScopes Propagation & 401 vs 403 Challenge Semantics Across Nested Dependencies</figcaption>
 </figure>
-<details class="drawlib-code-details">
-<summary>Source Code</summary>
-<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.canvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">setup</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.diagrams.sequence</span><span class="w"> </span><span class="kn">import</span> <span class="n">Participant</span><span class="p">,</span> <span class="n">ParticipantGroup</span><span class="p">,</span> <span class="n">PhosphorIcon</span><span class="p">,</span> <span class="n">SequenceDiagram</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">Style</span><span class="p">,</span> <span class="n">Styles</span>
-
-<span class="n">setup</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">168</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">138</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
-
-<span class="n">seq</span> <span class="o">=</span> <span class="n">SequenceDiagram</span><span class="p">(</span>
-    <span class="n">node_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Primary</span><span class="p">,</span>
-    <span class="n">node_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">edge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">,</span>
-    <span class="n">edge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">node_card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
-    <span class="n">col_width</span><span class="o">=</span><span class="mf">38.0</span><span class="p">,</span>
-    <span class="n">step_y</span><span class="o">=</span><span class="mf">6.6</span><span class="p">,</span>
-    <span class="n">margin</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="n">client</span> <span class="o">=</span> <span class="n">seq</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Participant</span><span class="p">(</span>
-        <span class="s2">"API Client"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">22</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mf">13.5</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">GLOBE</span><span class="p">,</span>
-        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.8</span><span class="p">,</span>
-    <span class="p">)</span>
-<span class="p">)</span>
-
-<span class="n">chain</span> <span class="o">=</span> <span class="n">seq</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">ParticipantGroup</span><span class="p">(</span>
-        <span class="n">title</span><span class="o">=</span><span class="s2">"FastAPI Security() Scope Accumulation Chain"</span><span class="p">,</span>
-        <span class="n">padding</span><span class="o">=</span><span class="mf">4.5</span><span class="p">,</span>
-        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
-        <span class="n">text_style</span><span class="o">=</span><span class="n">Style</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.0</span><span class="p">),</span>
-    <span class="p">)</span>
-<span class="p">)</span>
-
-<span class="n">route_sec</span> <span class="o">=</span> <span class="n">chain</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Participant</span><span class="p">(</span>
-        <span class="s1">'POST /items</span><span class="se">\n</span><span class="s1">scopes=["items:write"]'</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">27</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">FILE_CODE</span><span class="p">,</span>
-        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.6</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
-    <span class="p">)</span>
-<span class="p">)</span>
-
-<span class="n">principal_dep</span> <span class="o">=</span> <span class="n">chain</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Participant</span><span class="p">(</span>
-        <span class="s1">'get_current_principal</span><span class="se">\n</span><span class="s1">scopes+=["me:read"]'</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">27</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">USER_CHECK</span><span class="p">,</span>
-        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.6</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
-    <span class="p">)</span>
-<span class="p">)</span>
-
-<span class="n">verifier</span> <span class="o">=</span> <span class="n">chain</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Participant</span><span class="p">(</span>
-        <span class="s2">"verify_bearer_claims</span><span class="se">\n</span><span class="s2">(SecurityScopes)"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">27</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">SHIELD_CHECK</span><span class="p">,</span>
-        <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.6</span><span class="p">,</span>
-        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
-        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="p">)</span>
-<span class="p">)</span>
-
-<span class="n">client</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">route_sec</span><span class="p">,</span> <span class="s2">"1. POST /items (Authorization: Bearer &lt;token&gt;)"</span><span class="p">)</span>
-<span class="n">route_sec</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">principal_dep</span><span class="p">,</span> <span class="s1">'2. Pass parent_oauth_scopes=["items:write"]'</span><span class="p">)</span>
-<span class="n">principal_dep</span><span class="o">.</span><span class="n">request</span><span class="p">(</span>
-    <span class="n">verifier</span><span class="p">,</span>
-    <span class="s1">'3. Inject SecurityScopes(["items:write", "me:read"])'</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="k">with</span> <span class="n">seq</span><span class="o">.</span><span class="n">alt</span><span class="p">(</span><span class="s2">"401 Invalid"</span><span class="p">)</span> <span class="k">as</span> <span class="n">blk_401</span><span class="p">:</span>
-    <span class="n">blk_401</span><span class="o">.</span><span class="n">style</span> <span class="o">=</span> <span class="n">Styles</span><span class="o">.</span><span class="n">MutedDashed</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_line_width</span><span class="o">=</span><span class="mf">1.2</span><span class="p">)</span>
-    <span class="n">blk_401</span><span class="o">.</span><span class="n">text_style</span> <span class="o">=</span> <span class="n">Style</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">)</span>
-    <span class="n">verifier</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span>
-        <span class="n">client</span><span class="p">,</span>
-        <span class="s1">'4a. 401 Unauthorized (WWW-Authenticate: Bearer scope="items:write me:read")'</span><span class="p">,</span>
-        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DangerBold</span><span class="p">,</span>
-        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DangerBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="p">)</span>
-
-<span class="k">with</span> <span class="n">seq</span><span class="o">.</span><span class="n">else_</span><span class="p">(</span><span class="s2">"403 Scope"</span><span class="p">)</span> <span class="k">as</span> <span class="n">blk_403</span><span class="p">:</span>
-    <span class="n">blk_403</span><span class="o">.</span><span class="n">style</span> <span class="o">=</span> <span class="n">Styles</span><span class="o">.</span><span class="n">MutedDashed</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_line_width</span><span class="o">=</span><span class="mf">1.2</span><span class="p">)</span>
-    <span class="n">blk_403</span><span class="o">.</span><span class="n">text_style</span> <span class="o">=</span> <span class="n">Style</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">)</span>
-    <span class="n">verifier</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span>
-        <span class="n">client</span><span class="p">,</span>
-        <span class="s1">'4b. 403 Forbidden — Missing items:write (WWW-Authenticate: Bearer scope=...)'</span><span class="p">,</span>
-        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WarningBold</span><span class="p">,</span>
-        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="p">)</span>
-
-<span class="k">with</span> <span class="n">seq</span><span class="o">.</span><span class="n">else_</span><span class="p">(</span><span class="s2">"200 Granted"</span><span class="p">)</span> <span class="k">as</span> <span class="n">blk_200</span><span class="p">:</span>
-    <span class="n">blk_200</span><span class="o">.</span><span class="n">style</span> <span class="o">=</span> <span class="n">Styles</span><span class="o">.</span><span class="n">MutedDashed</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_line_width</span><span class="o">=</span><span class="mf">1.2</span><span class="p">)</span>
-    <span class="n">blk_200</span><span class="o">.</span><span class="n">text_style</span> <span class="o">=</span> <span class="n">Style</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">)</span>
-    <span class="n">verifier</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span>
-        <span class="n">principal_dep</span><span class="p">,</span>
-        <span class="s2">"4c. Verified TokenRecord (exp &amp; scopes OK)"</span><span class="p">,</span>
-        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SuccessBold</span><span class="p">,</span>
-        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="p">)</span>
-    <span class="n">principal_dep</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span>
-        <span class="n">route_sec</span><span class="p">,</span>
-        <span class="s2">"5c. Principal(username, scopes)"</span><span class="p">,</span>
-        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SuccessBold</span><span class="p">,</span>
-        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="p">)</span>
-    <span class="n">route_sec</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span>
-        <span class="n">client</span><span class="p">,</span>
-        <span class="s2">"6c. 200 OK (Created Item JSON)"</span><span class="p">,</span>
-        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SuccessBold</span><span class="p">,</span>
-        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="p">)</span>
-
-<span class="n">seq</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">84.0</span><span class="p">,</span> <span class="mf">69.0</span><span class="p">),</span> <span class="n">align</span><span class="o">=</span><span class="s2">"center"</span><span class="p">)</span>
-<span class="n">save</span><span class="p">()</span>
-</code></pre>
-</details>
 <h3>2.1 Distinguishing <code>401 Unauthorized</code> vs <code>403 Forbidden</code></h3>
 <p>RFC 6750 and RFC 9110 define distinct status codes for authentication failure versus insufficient authorization scopes:</p>
 <ul>
@@ -900,6 +601,11 @@ When provisioning browser session cookies (<code>APIKeyCookie</code>), enforce <
 </blockquote>
 
             </main>
+            <footer class="footer">
+                
+                FastAPI® is a registered trademark of Sebastián Ramírez (<a href="https://github.com/tiangolo" target="_blank" rel="noopener noreferrer">@tiangolo</a>). Unofficial guide — not affiliated with or endorsed by the official FastAPI project (<a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">fastapi.tiangolo.com</a>).
+                
+            </footer>
         </div>
     </div>
     

@@ -2,7 +2,7 @@
 
 FastAPI `v0.162.2` enables sub-millisecond in-memory integration testing—either synchronously via `with TestClient(app) as client:` or natively on an async event loop via `httpx.ASGITransport`—and pairs cleanly with reverse-proxied ASGI workers, health probes, and graceful `lifespan` draining in production.
 
-```drawlib align=center code=fold file=testing_modes_architecture.png caption="In-Memory FastAPI Testing Architecture: Sync TestClient Portal vs Native Async httpx.ASGITransport"
+```drawlib align=center code=hide file=testing_modes_architecture.png caption="In-Memory FastAPI Testing Architecture: Sync TestClient Portal vs Native Async httpx.ASGITransport"
 from drawlib.canvas import save, setup
 from drawlib.icons import phosphor
 from drawlib.lines import line
@@ -198,7 +198,7 @@ async def test_async_readiness_transitions() -> None:
 
 In Kubernetes, Cloud Run, or systemd deployments, place single-process Uvicorn ASGI workers behind a TLS-terminating reverse proxy or load balancer and let the container orchestrator manage horizontal replica scaling:
 
-```drawlib align=center code=fold file=production_asgi_readiness.png caption="Production ASGI Deployment Topology: Reverse Proxy, Uvicorn Worker, Health Probes & Graceful Lifespan Drain"
+```drawlib align=center code=hide file=production_asgi_readiness.png caption="Production ASGI Deployment Topology: Reverse Proxy, Uvicorn Worker, Health Probes & Graceful Lifespan Drain"
 from drawlib.canvas import save, setup
 from drawlib.diagrams.architecture import ArchitectureDiagram, GcpIcon, Node, NodeGroup, PhosphorIcon
 from drawlib.styles import Styles

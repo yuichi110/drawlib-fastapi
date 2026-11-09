@@ -1,9 +1,9 @@
-# FastAPI ビジュアル解説
+# FastAPI ユーザーガイド
 
-- [ガイド概要と全体マップ](index.md)
+- [ガイド概要](index.md)
 
 ## 1. イントロ & クイックスタート
-- [FastAPI の設計思想と内部構造](01_getting_started/overview.md)
+- [FastAPI の設計思想と基本概念](01_getting_started/overview.md)
 - [クイックスタートと自動生成 Docs](01_getting_started/quickstart.md)
 
 ## 2. 10万行規模の設計ベストプラクティス
@@ -17,7 +17,7 @@
 - [カスタム Request と APIRoute 拡張](03_routing_and_models/custom_request_and_route.md)
 
 ## 4. 依存性注入（DI）とセキュリティ
-- [Dependant DAG・キャッシュ・yield スコープ](04_dependencies_and_security/dependency_injection.md)
+- [依存グラフ・キャッシュ・yield スコープ](04_dependencies_and_security/dependency_injection.md)
 - [認証・OAuth2 スコープ認可・抽出器](04_dependencies_and_security/security_and_auth.md)
 - [JWT (PyJWT + Argon2) と WS 認可](04_dependencies_and_security/jwt_and_websocket_security.md)
 
@@ -37,7 +37,7 @@
 - [pydantic-settings 設定管理と SQL DB](08_ecosystem_and_operations/settings_and_databases.md)
 - [FastAPI CLI・プロキシ・GraphQL・AI 連携](08_ecosystem_and_operations/cli_proxy_graphql_ai.md)
 
-## 診断レポート & 公式リンク
-- [PNI501 診断レポート](https://fastapi.drawlib.com/reports/pni501/)
+## 関連ガイド & 公式リンク
+- [FastAPI 内部アーキテクチャ解説](https://fastapi.drawlib.com/architecture/)
 - [FastAPI 公式ドキュメント](https://fastapi.tiangolo.com/)
-- [デモのリポジトリ (GitHub)](https://github.com/yuichi110/drawlib-fastapi)
+- [GitHub リポジトリ](https://github.com/yuichi110/drawlib-fastapi)

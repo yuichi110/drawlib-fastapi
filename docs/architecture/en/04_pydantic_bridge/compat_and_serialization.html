@@ -1,0 +1,521 @@
+<!--
+ Copyright (c) 2026 Yuichi Ito (yuichi@yuichi.com)
+
+ This software is licensed under the Apache License, Version 2.0.
+ For more information, please visit: https://github.com/yuichi110/drawlib
+
+ This software is provided "as is", without warranty of any kind,
+ express or implied, including but not limited to the warranties of
+ merchantability, fitness for a particular purpose and noninfringement.
+-->
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>`fastapi/_compat/v2.py`, `ModelField`, Body Slicing &amp; `serialize_response()` — FastAPI Architecture Guide (Unofficial)</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-S9N5BZ1VRC');
+    </script>
+    <script>
+        (function() {
+            const saved = localStorage.getItem('drawlib-theme');
+            if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    
+    
+    
+    <link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/architecture/en/04_pydantic_bridge/compat_and_serialization.html">
+    
+    <link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/architecture/ja/04_pydantic_bridge/compat_and_serialization.html">
+    
+    <link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/architecture/en/04_pydantic_bridge/compat_and_serialization.html">
+    
+    
+    
+    <meta name="description" content="FastAPI isolates Pydantic&#x27;s internal validation, schema generation, and Rust serialization APIs behind a dedicated adapter package: fastapi/_compat/…">
+    <link rel="canonical" href="https://fastapi.drawlib.com/architecture/en/04_pydantic_bridge/compat_and_serialization.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="FastAPI Architecture">
+    <meta property="og:title" content="fastapi/_compat/v2.py, ModelField, Body Slicing &amp; serialize_response() — FastAPI Architecture">
+    <meta property="og:description" content="FastAPI isolates Pydantic&#x27;s internal validation, schema generation, and Rust serialization APIs behind a dedicated adapter package: fastapi/_compat/…">
+    <meta property="og:url" content="https://fastapi.drawlib.com/architecture/en/04_pydantic_bridge/compat_and_serialization.html">
+    <meta property="og:image" content="https://fastapi.drawlib.com/architecture/_assets/ogp.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="ja_JP">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="fastapi/_compat/v2.py, ModelField, Body Slicing &amp; serialize_response() — FastAPI Architecture">
+    <meta name="twitter:description" content="FastAPI isolates Pydantic&#x27;s internal validation, schema generation, and Rust serialization APIs behind a dedicated adapter package: fastapi/_compat/…">
+    <meta name="twitter:image" content="https://fastapi.drawlib.com/architecture/_assets/ogp.png">
+    
+    
+    <link rel="icon" type="image/png" href="../../_assets/favicon.png">
+    
+    
+    <link rel="stylesheet" href="../style.css">
+    
+    
+</head>
+<body>
+    <div class="demo-banner" role="region" aria-label="Portal Navigation">
+        <div class="demo-banner-inner">
+            <span class="demo-banner-badge">INTERNAL ARCHITECTURE</span>
+            
+            <span class="demo-banner-text">
+                Unofficial Internal Architecture Guide to <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a> (v0.162.2)
+            </span>
+            <span class="demo-banner-links">
+                <a href="https://fastapi.drawlib.com/">User Guide</a>
+                <span class="demo-banner-sep">·</span>
+                <strong style="color:#ffffff;">Architecture</strong>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Audit</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official Docs ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+            </span>
+            
+        </div>
+    </div>
+    
+    <div class="doc-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI Architecture">
+                    
+                    FastAPI Architecture
+                    
+                </a>
+                <div class="sidebar-header-actions">
+                    <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">
+                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                    <button type="button" id="menu-toggle" class="menu-toggle-btn" aria-label="Toggle navigation" aria-expanded="false">
+                        <svg class="icon-hamburger" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        <svg class="icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="sidebar-menu">
+                
+                    
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../index.html" >Architecture Overview</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">1. Package Topology &amp; Layers</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../01_package_and_layers/module_hierarchy.html" >5-Tier Module Hierarchy &amp; Shims</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">2. Routing Compiler &amp; Closures</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../02_routing_compiler/apiroute_and_closures.html" >APIRouter, APIRoute &amp; Handler Closure</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../02_routing_compiler/streaming_and_spa_internals.html" >Generator Streaming &amp; SPA Internals</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">3. DI &amp; Security Engine</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../03_di_and_security_engine/dependant_and_solver.html" >Dependant DAG &amp; solve_dependencies</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../03_di_and_security_engine/security_internals.html" >SecurityBase &amp; HTTPConnection</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">4. Pydantic v2 Bridge</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item active">
+                                <a href="compat_and_serialization.html" >_compat/v2.py, ModelField &amp; Serialization</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">5. ASGI Stack &amp; Telemetry</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../05_asgi_and_telemetry/middleware_and_concurrency.html" >Middleware Onion &amp; Threadpool</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../05_asgi_and_telemetry/native_telemetry_internals.html" >NativeTelemetry &amp; Runtime Spans</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">6. OpenAPI 3.1 Synthesis</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../06_openapi_and_docs/openapi_synthesis_engine.html" >get_openapi(), $defs &amp; Docs UI</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">Companion Guides &amp; Links</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/" target="_blank" rel="noopener noreferrer">FastAPI User Guide<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/reports/pni501/" target="_blank" rel="noopener noreferrer">PNI501 Diagnostic Report<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official FastAPI Docs<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub Repository<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                        </ul>
+                    
+                
+            </div>
+        </aside>
+        <div class="content-wrapper">
+            <header class="top-bar">
+                <div class="breadcrumbs">
+                    <span class="crumb">Architecture</span>
+                    <span class="crumb-separator">&raquo;</span>
+                    <span class="crumb active">`fastapi/_compat/v2.py`, `ModelField`, Body Slicing &amp; `serialize_response()`</span>
+                </div>
+                
+                <div class="lang-switcher">
+                    <details class="lang-dropdown">
+                        <summary class="lang-dropdown-btn" aria-label="Select language">
+                            <svg class="lang-globe-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            <span class="lang-current-label">English</span>
+                            <svg class="lang-caret-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </summary>
+                        <div class="lang-dropdown-menu" role="menu">
+                            
+                            <a href="compat_and_serialization.html" class="lang-option active" lang="en" hreflang="en" aria-current="page">
+                                <span>English</span>
+                                
+                                <svg class="lang-check-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                
+                            </a>
+                            
+                            <a href="../../ja/04_pydantic_bridge/compat_and_serialization.html" class="lang-option" lang="ja" hreflang="ja" >
+                                <span>日本語</span>
+                                
+                            </a>
+                            
+                        </div>
+                    </details>
+                </div>
+                
+            </header>
+            <main class="main-content">
+                <h1><code>fastapi/_compat/v2.py</code>, <code>ModelField</code>, Body Slicing &amp; <code>serialize_response()</code></h1>
+<p>FastAPI isolates Pydantic's internal validation, schema generation, and Rust serialization APIs behind a dedicated adapter package: <code>fastapi/_compat/</code> (<code>__init__.py</code>, <code>shared.py</code>, and <code>v2.py</code>). In FastAPI <code>v0.162.2</code>, legacy <code>pydantic.v1</code> support has been retired (<code>PydanticV1NotSupportedError</code>), making <code>v2.py</code> the single active engine while preserving <code>ModelField</code> as the uniform abstraction representing every query parameter, header, request body, and response model across routing, dependency resolution, and OpenAPI 3.1 synthesis.</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/04_pydantic_bridge/compat_and_serialization/modelfield_typeadapter_bridge.png" alt="compat_and_serialization_1" />
+  <figcaption class="drawlib-caption">The fastapi/_compat/v2.py adapter boundary: wrapping FieldInfo and Pydantic v2 TypeAdapter inside ModelField for validation, Rust JSON serialization, and OpenAPI schema generation.</figcaption>
+</figure>
+<h2>1. Why <code>fastapi/_compat/</code> Isolates Pydantic Internals</h2>
+<p>Pydantic v2 replaced v1's per-field <code>ModelField</code> runtime with whole-type <code>TypeAdapter</code> instances backed by <code>pydantic-core</code> Rust validators and <code>CoreSchema</code> trees. Rather than scattering <code>TypeAdapter</code>, <code>FieldInfo</code> cloning, and private <code>pydantic._internal</code> calls throughout <code>routing.py</code>, <code>dependencies/utils.py</code>, and <code>openapi/utils.py</code>, FastAPI encapsulates all Pydantic interaction inside two modules:</p>
+<ul>
+<li><strong><code>fastapi/_compat/shared.py</code></strong>: Pure type-introspection predicates (<code>lenient_issubclass</code>, <code>field_annotation_is_scalar</code>, <code>field_annotation_is_sequence</code>, <code>field_annotation_is_scalar_sequence</code>, <code>is_uploadfile_or_nonable_uploadfile_annotation</code>, <code>is_bytes_or_nonable_bytes_annotation</code>) used during compile-time parameter classification.</li>
+<li><strong><code>fastapi/_compat/v2.py</code></strong>: Implements <code>ModelField</code>, custom <code>GenerateJsonSchema</code> (overriding <code>bytes_schema</code> to emit OpenAPI 3.1 <code>contentMediaType: &quot;application/octet-stream&quot;</code> and <code>contentEncoding: &quot;base64&quot;</code>), <code>get_definitions()</code> (separating <code>&quot;validation&quot;</code> and <code>&quot;serialization&quot;</code> <code>$defs</code> schemas when <code>separate_input_output_schemas=True</code>), <code>evaluate_forwardref()</code>, and <code>create_body_model()</code>.</li>
+</ul>
+<h3>1.1 Anatomy of <code>ModelField</code> (<code>v2.py</code>)</h3>
+<p><code>ModelField</code> is a <code>@dataclass</code> holding <code>field_info: FieldInfo</code>, <code>name: str</code>, <code>mode: Literal[&quot;validation&quot;, &quot;serialization&quot;] = &quot;validation&quot;</code>, and <code>config: ConfigDict | None = None</code> (with <code>__hash__</code> returning <code>id(self)</code> so instances can key schema dictionaries):</p>
+<ol>
+<li><strong>Startup <code>TypeAdapter</code> Compilation (<code>__post_init__</code>)</strong>: Extracts <code>(annotation, metadata, attributes)</code> from <code>self.field_info</code> via <code>asdict()</code>, suppresses Pydantic 2.12+ <code>UnsupportedFieldAttributeWarning</code> when standalone <code>Field(alias=...)</code> metadata is present, reconstructs <code>Annotated[annotation, *metadata, Field(**attributes)]</code>, and compiles <code>self._type_adapter = TypeAdapter(..., config=self.config)</code> once at route registration.</li>
+<li><strong>Location-Prefixed Validation (<code>validate</code>)</strong>: Calls <code>self._type_adapter.validate_python(value, from_attributes=True)</code> (enabling ORM object validation automatically). When <code>ValidationError</code> is raised, <code>_regenerate_error_with_loc()</code> strips Pydantic documentation URLs (<code>include_url=False</code>) and prepends FastAPI's contextual location tuple—such as <code>(&quot;query&quot;, &quot;limit&quot;)</code>, <code>(&quot;body&quot;, &quot;item&quot;)</code>, or <code>(&quot;response&quot;,)</code>—to every error's <code>&quot;loc&quot;</code> path.</li>
+<li><strong>Dual Serialization Modes (<code>serialize</code> vs <code>serialize_json</code>)</strong>: <code>serialize()</code> invokes <code>self._type_adapter.dump_python(value, mode=mode, ...)</code> to produce JSON-safe Python <code>dict</code>/<code>list</code> structures, whereas <code>serialize_json()</code> invokes <code>self._type_adapter.dump_json(value, ...)</code> to serialize <strong>directly into UTF-8 JSON <code>bytes</code> inside Rust</strong>, eliminating intermediate Python dictionary allocation and <code>json.dumps()</code> overhead.</li>
+</ol>
+<h2>2. Body Slicing, <code>embed=True</code> &amp; <code>create_body_model()</code></h2>
+<p>HTTP has only a single request payload stream, yet a FastAPI endpoint and its sub-dependencies may declare multiple <code>Body()</code>, <code>Form()</code>, or <code>File()</code> parameters simultaneously. FastAPI reconciles this through a two-stage compile-and-slice design:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Endpoint Body Declaration</th>
+<th style="text-align:left"><code>_should_embed_body_fields()</code></th>
+<th style="text-align:left"><code>APIRoute.body_field</code> (<code>_get_body_field</code>)</th>
+<th style="text-align:left">Runtime Validation in <code>request_body_to_args()</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>Single <code>BaseModel</code> (<code>item: Item</code>)</strong></td>
+<td style="text-align:left"><code>False</code></td>
+<td style="text-align:left">Unwrapped <code>body_params[0]</code> (<code>annotation is Item</code>)</td>
+<td style="text-align:left">Validates root JSON payload directly with <code>loc=(&quot;body&quot;,)</code>.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Single <code>BaseModel</code> with <code>Body(embed=True)</code></strong></td>
+<td style="text-align:left"><code>True</code></td>
+<td style="text-align:left">Synthesized <code>Body_&lt;unique_id&gt;</code> wrapping <code>{&quot;item&quot;: Item}</code></td>
+<td style="text-align:left">Extracts <code>body.get(&quot;item&quot;)</code> and validates with <code>loc=(&quot;body&quot;, &quot;item&quot;)</code>.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Multiple <code>Body()</code> / Sub-Dependency Bodies</strong></td>
+<td style="text-align:left"><code>True</code></td>
+<td style="text-align:left">Synthesized <code>Body_&lt;unique_id&gt;</code> merging all distinct fields</td>
+<td style="text-align:left">Each <code>Dependant</code> slices only its own declared <code>body_params</code> keys from <code>body</code>.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Scalar <code>Form()</code> or <code>File()</code> Parameters</strong></td>
+<td style="text-align:left"><code>True</code></td>
+<td style="text-align:left">Synthesized <code>Body_&lt;unique_id&gt;</code> (<code>File</code> &gt; <code>Form</code> &gt; <code>Body</code> priority)</td>
+<td style="text-align:left">Streams <code>FormData</code> via <code>_extract_form_body()</code>; seeks <code>UploadFile</code> back via <code>_read_file_bytes()</code>.</td>
+</tr>
+</tbody>
+</table>
+<p>Two subtle invariants in <code>fastapi/dependencies/utils.py</code> deserve particular attention:</p>
+<ul>
+<li><strong><code>APIRoute.body_field</code> Is for Media-Type Detection &amp; OpenAPI Only</strong>: As noted in <code>_get_body_field()</code>'s docstring, <code>create_body_model(fields=..., model_name=&quot;Body_&quot; + name)</code> (which delegates to <code>pydantic.create_model()</code>) is used to detect form/multipart encoding (<code>isinstance(body_field.field_info, params.Form)</code>) and to emit the unified OpenAPI <code>requestBody</code> schema. At runtime, <code>solve_dependencies()</code> does <strong>not</strong> instantiate <code>Body_&lt;unique_id&gt;</code>; instead, each <code>Dependant</code> validates its own <code>body_params</code> slice via <code>request_body_to_args()</code>, allowing sub-dependencies and endpoints to consume disjoint keys of the same JSON object or <code>FormData</code>.</li>
+<li><strong>Non-Destructive Shared File Reads (<code>_read_file_bytes</code>)</strong>: When a parameter annotates a <code>File()</code> upload as <code>bytes</code>, <code>_read_file_bytes()</code> records <code>position = file.file.tell()</code>, awaits <code>file.read()</code>, and restores <code>await file.seek(position)</code> inside a <code>finally</code> block so another dependency sharing the same <code>UploadFile</code> does not read an exhausted stream.</li>
+</ul>
+<h2>3. Response Pipeline: <code>serialize_response()</code> &amp; <code>jsonable_encoder()</code></h2>
+<p>After <code>run_endpoint_function()</code> returns <code>raw_response</code> inside <code>get_request_handler()</code> (<code>fastapi/routing.py</code>), FastAPI selects the fastest safe serialization path based on the return value and route configuration:</p>
+<ol>
+<li><strong>Raw <code>Response</code> Passthrough</strong>: If <code>isinstance(raw_response, Response)</code> is <code>True</code> (e.g., returning a custom <code>StreamingResponse</code>, <code>FileResponse</code>, or <code>JSONResponse</code>), FastAPI attaches <code>solved_result.background_tasks</code> if <code>raw_response.background is None</code> and returns it untouched—bypassing <code>serialize_response()</code> completely.</li>
+<li><strong>Typed <code>response_field</code> Validation (<code>field is not None</code>)</strong>: Unless <code>response_model=None</code> was explicitly set or the return annotation is a <code>Response</code> subclass, <code>APIRoute</code> compiles <code>route.response_field = create_model_field(..., mode=&quot;serialization&quot;)</code>. Inside <code>serialize_response()</code>:
+<ul>
+<li>Async endpoints call <code>field.validate(response_content, {}, loc=(&quot;response&quot;,))</code> inline; sync <code>def</code> endpoints offload validation via <code>await run_in_threadpool(field.validate, ...)</code> so CPU-heavy model coercion never blocks the event loop.</li>
+<li>Any validation failure raises <code>ResponseValidationError</code> (resulting in HTTP <code>500 Internal Server Error</code>), preventing accidental leakage of unvalidated internal attributes.</li>
+<li><strong>Rust One-Pass Fast Path (<code>use_dump_json=True</code>)</strong>: When <code>response_class</code> is the default <code>DefaultPlaceholder(JSONResponse)</code>, <code>get_request_handler()</code> passes <code>dump_json=True</code>. <code>serialize_response()</code> calls <code>field.serialize_json(...)</code> (respecting <code>include</code>, <code>exclude</code>, <code>by_alias</code>, <code>exclude_unset</code>, <code>exclude_defaults</code>, and <code>exclude_none</code>) and wraps the returned UTF-8 <code>bytes</code> directly in <code>Response(content=content, media_type=&quot;application/json&quot;)</code>.</li>
+<li><strong>Custom <code>response_class</code> Path (<code>use_dump_json=False</code>)</strong>: When a custom <code>response_class</code> (such as <code>ORJSONResponse</code> or a custom XML/YAML responder) is configured, <code>serialize_response()</code> calls <code>field.serialize(...)</code> (<code>dump_python(mode=&quot;json&quot;)</code>) and passes the Python object to <code>actual_response_class(content, **response_args)</code>.</li>
+</ul>
+</li>
+<li><strong>Untyped Fallback (<code>jsonable_encoder</code> in <code>fastapi/encoders.py</code>)</strong>: When <code>response_field is None</code>, <code>serialize_response()</code> delegates to <code>jsonable_encoder(response_content)</code>. It recursively converts <code>BaseModel</code> (<code>model_dump(mode=&quot;json&quot;)</code>), <code>dataclass</code> (<code>dataclasses.asdict</code>), <code>Enum</code> (<code>.value</code>), <code>PurePath</code>, <code>dict</code> (stripping SQLAlchemy internal <code>_sa*</code> keys when <code>sqlalchemy_safe=True</code>), iterables/generators, and <code>ENCODERS_BY_TYPE</code> entries (<code>datetime</code>/<code>date</code>/<code>time</code> $\rightarrow$ <code>isoformat()</code>, <code>timedelta</code> $\rightarrow$ <code>total_seconds()</code>, <code>Decimal</code> $\rightarrow$ <code>int</code> when exponent $\ge 0$ else <code>float</code>, <code>UUID</code> / <code>IPv4Address</code> / <code>Url</code> $\rightarrow$ <code>str</code>), finally falling back to <code>dict(obj)</code> and <code>vars(obj)</code>.</li>
+</ol>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/04_pydantic_bridge/compat_and_serialization/serialize_response_decision_tree.png" alt="compat_and_serialization_2" />
+  <figcaption class="drawlib-caption">Decision flow inside get_request_handler() and serialize_response(): raw Response bypass, response_field validation, Rust dump_json fast path, and jsonable_encoder() fallback.</figcaption>
+</figure>
+<h2>4. Inspecting <code>APIRoute.body_field</code> Synthesis &amp; <code>serialize_response()</code></h2>
+<p>The snippet below compares <code>APIRoute.body_field</code> on single-model vs multi-parameter endpoints and contrasts <code>serialize_response(dump_json=True)</code> (Rust <code>bytes</code> output) against the <code>jsonable_encoder()</code> untyped fallback:</p>
+<pre><code class="language-python"><span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">decimal</span><span class="w"> </span><span class="kn">import</span> <span class="n">Decimal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">Body</span><span class="p">,</span> <span class="n">FastAPI</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi._compat</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelField</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.encoders</span><span class="w"> </span><span class="kn">import</span> <span class="n">jsonable_encoder</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.routing</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRoute</span><span class="p">,</span> <span class="n">serialize_response</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_model_field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">ItemCreate</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">title</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">quantity</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">InvoiceOut</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">invoice_id</span><span class="p">:</span> <span class="n">UUID</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">serialization_alias</span><span class="o">=</span><span class="s2">"id"</span><span class="p">)</span>
+    <span class="n">amount</span><span class="p">:</span> <span class="n">Decimal</span>
+    <span class="n">note</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">()</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/single"</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">create_single</span><span class="p">(</span><span class="n">item</span><span class="p">:</span> <span class="n">ItemCreate</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"title"</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">title</span><span class="p">}</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/multi"</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">create_multi</span><span class="p">(</span>
+    <span class="n">item</span><span class="p">:</span> <span class="n">ItemCreate</span><span class="p">,</span>
+    <span class="n">priority</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Body</span><span class="p">(</span><span class="n">ge</span><span class="o">=</span><span class="mi">1</span><span class="p">)],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"title"</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="s2">"priority"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">priority</span><span class="p">)}</span>
+
+
+<span class="n">routes</span> <span class="o">=</span> <span class="p">{</span><span class="n">r</span><span class="o">.</span><span class="n">path</span><span class="p">:</span> <span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">app</span><span class="o">.</span><span class="n">routes</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">APIRoute</span><span class="p">)}</span>
+
+<span class="c1"># 1. Single BaseModel stays flat; multi-body synthesizes Body_&lt;unique_id&gt;</span>
+<span class="k">assert</span> <span class="n">routes</span><span class="p">[</span><span class="s2">"/single"</span><span class="p">]</span><span class="o">.</span><span class="n">_embed_body_fields</span> <span class="ow">is</span> <span class="kc">False</span>
+<span class="k">assert</span> <span class="n">routes</span><span class="p">[</span><span class="s2">"/single"</span><span class="p">]</span><span class="o">.</span><span class="n">body_field</span><span class="o">.</span><span class="n">field_info</span><span class="o">.</span><span class="n">annotation</span> <span class="ow">is</span> <span class="n">ItemCreate</span>
+
+<span class="k">assert</span> <span class="n">routes</span><span class="p">[</span><span class="s2">"/multi"</span><span class="p">]</span><span class="o">.</span><span class="n">_embed_body_fields</span> <span class="ow">is</span> <span class="kc">True</span>
+<span class="n">synthesized_cls</span> <span class="o">=</span> <span class="n">routes</span><span class="p">[</span><span class="s2">"/multi"</span><span class="p">]</span><span class="o">.</span><span class="n">body_field</span><span class="o">.</span><span class="n">field_info</span><span class="o">.</span><span class="n">annotation</span>
+<span class="k">assert</span> <span class="n">synthesized_cls</span><span class="o">.</span><span class="vm">__name__</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"Body_create_multi"</span><span class="p">)</span>
+<span class="k">assert</span> <span class="nb">set</span><span class="p">(</span><span class="n">synthesized_cls</span><span class="o">.</span><span class="n">model_fields</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">==</span> <span class="p">{</span><span class="s2">"item"</span><span class="p">,</span> <span class="s2">"priority"</span><span class="p">}</span>
+
+<span class="c1"># 2. Rust dump_json fast path vs jsonable_encoder() fallback</span>
+<span class="n">out_field</span><span class="p">:</span> <span class="n">ModelField</span> <span class="o">=</span> <span class="n">create_model_field</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"Response_Invoice"</span><span class="p">,</span>
+    <span class="n">type_</span><span class="o">=</span><span class="n">InvoiceOut</span><span class="p">,</span>
+    <span class="n">mode</span><span class="o">=</span><span class="s2">"serialization"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">sample_uuid</span> <span class="o">=</span> <span class="n">UUID</span><span class="p">(</span><span class="s2">"12345678-1234-5678-1234-567812345678"</span><span class="p">)</span>
+
+<span class="n">raw_bytes</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="n">serialize_response</span><span class="p">(</span>
+        <span class="n">field</span><span class="o">=</span><span class="n">out_field</span><span class="p">,</span>
+        <span class="n">response_content</span><span class="o">=</span><span class="p">{</span><span class="s2">"invoice_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">sample_uuid</span><span class="p">),</span> <span class="s2">"amount"</span><span class="p">:</span> <span class="s2">"19.95"</span><span class="p">},</span>
+        <span class="n">by_alias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">exclude_none</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">dump_json</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+<span class="k">assert</span> <span class="n">raw_bytes</span> <span class="o">==</span> <span class="sa">b</span><span class="s1">'{"id":"12345678-1234-5678-1234-567812345678","amount":"19.95"}'</span>
+
+<span class="n">fallback_dict</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="n">serialize_response</span><span class="p">(</span>
+        <span class="n">field</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">response_content</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"id"</span><span class="p">:</span> <span class="n">sample_uuid</span><span class="p">,</span>
+            <span class="s2">"total"</span><span class="p">:</span> <span class="n">Decimal</span><span class="p">(</span><span class="s2">"42"</span><span class="p">),</span>
+            <span class="s2">"_sa_instance_state"</span><span class="p">:</span> <span class="nb">object</span><span class="p">(),</span>
+        <span class="p">},</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+<span class="k">assert</span> <span class="n">fallback_dict</span> <span class="o">==</span> <span class="p">{</span>
+    <span class="s2">"id"</span><span class="p">:</span> <span class="s2">"12345678-1234-5678-1234-567812345678"</span><span class="p">,</span>
+    <span class="s2">"total"</span><span class="p">:</span> <span class="mi">42</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="k">assert</span> <span class="n">jsonable_encoder</span><span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">"42.50"</span><span class="p">))</span> <span class="o">==</span> <span class="mf">42.5</span>
+</code></pre>
+<p>For how <code>APIRoute</code> wires <code>body_field</code> and <code>response_field</code> into its per-route request closure, see <a href="../02_routing_compiler/apiroute_and_closures.html">APIRouter, APIRoute &amp; Handler Closure</a>; for how <code>get_definitions()</code> turns <code>ModelField</code> lists into OpenAPI 3.1 JSON Schemas, see <a href="../06_openapi_and_docs/openapi_synthesis_engine.html">get_openapi(), $defs &amp; Docs UI</a>.</p>
+
+            </main>
+            <footer class="footer">
+                
+                FastAPI® is a registered trademark of Sebastián Ramírez (<a href="https://github.com/tiangolo" target="_blank" rel="noopener noreferrer">@tiangolo</a>). Unofficial internal architecture guide — not affiliated with or endorsed by the official FastAPI project (<a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">fastapi.tiangolo.com</a>).
+                
+            </footer>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeBtn = document.getElementById('theme-toggle');
+            if (themeBtn) {
+                themeBtn.addEventListener('click', function() {
+                    const current = document.documentElement.getAttribute('data-theme');
+                    const next = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    localStorage.setItem('drawlib-theme', next);
+                });
+            }
+
+            const langDropdowns = document.querySelectorAll('.lang-dropdown');
+            if (langDropdowns.length > 0) {
+                document.addEventListener('click', function(e) {
+                    langDropdowns.forEach(function(dd) {
+                        if (dd.hasAttribute('open') && !dd.contains(e.target)) {
+                            dd.removeAttribute('open');
+                        }
+                    });
+                });
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        langDropdowns.forEach(function(dd) {
+                            dd.removeAttribute('open');
+                        });
+                    }
+                });
+            }
+
+            const menuBtn = document.getElementById('menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            if (menuBtn && sidebar) {
+                function setMenuOpen(open) {
+                    sidebar.classList.toggle('is-open', open);
+                    menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    document.body.classList.toggle('menu-open', open);
+                    if (open) {
+                        const menu = sidebar.querySelector('.sidebar-menu');
+                        if (menu) {
+                            menu.scrollTop = 0;
+                        }
+                    }
+                }
+
+                menuBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const willOpen = !sidebar.classList.contains('is-open');
+                    setMenuOpen(willOpen);
+                });
+
+                document.addEventListener('click', function(e) {
+                    if (sidebar.classList.contains('is-open') && !sidebar.contains(e.target)) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                const navLinks = sidebar.querySelectorAll('.nav-item a');
+                navLinks.forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        setMenuOpen(false);
+                    });
+                });
+
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                window.addEventListener('resize', function() {
+                    if (window.innerWidth > 768 && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

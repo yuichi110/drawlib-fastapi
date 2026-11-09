@@ -2,7 +2,7 @@
 
 Production FastAPI `v0.162.2` services pair memory-hard **`pwdlib` Argon2id** password hashing (with **`DUMMY_HASH`** anti-enumeration) and stateless **`PyJWT`** bearer verification for HTTP APIs, while extending the exact same `Security()` and `SecurityScopes` dependency graph to **`WebSocket`** handshakes via Starlette's shared `HTTPConnection` abstraction (`v0.144.0+`).
 
-```drawlib align=center code=fold file=jwt_argon2_auth_pipeline.png caption="End-to-End OAuth2 + pwdlib Argon2id (DUMMY_HASH) + PyJWT Signing & Stateless Verification Pipeline"
+```drawlib align=center code=hide file=jwt_argon2_auth_pipeline.png caption="End-to-End OAuth2 + pwdlib Argon2id (DUMMY_HASH) + PyJWT Signing & Stateless Verification Pipeline"
 from drawlib.canvas import save, setup
 from drawlib.diagrams.architecture import ArchitectureDiagram, Node, PhosphorIcon
 from drawlib.icons import phosphor
@@ -176,7 +176,7 @@ Modern FastAPI deployments standardize on **`pwdlib[argon2]`** (`PasswordHash.re
 | :--- | :--- | :--- |
 | **Memory-Hard Password KDF** | `PasswordHash.recommended()` (`pwdlib[argon2]`) | Defeats GPU/ASIC offline cracking with Argon2id memory-hardness and unique random per-user salts |
 | **Anti-Enumeration `DUMMY_HASH`** | Precompute `DUMMY_HASH = password_hash.hash(...)` at startup; run `password_hash.verify(pw, DUMMY_HASH)` when user is missing | Eliminates ~`50ms+` response-time discrepancy between unknown usernames and wrong passwords |
-| **Algorithm Pinning & Required Claims** | `jwt.decode(token, KEY, algorithms=["HS256"], options={"require": ["sub", "iat", "exp"]})` | Blocks `"alg": "none"` signature bypasses, RS256/HS256 public-key confusion, and Immortal tokens |
+| **Algorithm Pinning & Required Claims** | `jwt.decode(token, KEY, algorithms=["HS256"], options={"require": ["sub", "iat", "exp"]})` | Blocks `"alg": "none"` signature bypasses, RS256/HS256 public-key confusion, and immortal tokens |
 | **Key Entropy & Zero Hardcoding** | Load `256-bit+` keys from KMS / environment ([pydantic-settings](../08_ecosystem_and_operations/settings_and_databases.md)); never commit fallback literals | Prevents offline JWT forgery from leaked repository source code |
 
 ### 1.1 Production `/token` Issuance, `DUMMY_HASH` & `get_current_active_user`
@@ -206,7 +206,7 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 15
 
 password_hash = PasswordHash.recommended()
-DUMMY_HASH = password_hash.hash("dummypassword")
+DUMMY_HASH = password_hash.hash(secrets.token_urlsafe(16))
 
 
 class Token(BaseModel):
@@ -402,9 +402,9 @@ Because stateless JWTs remain valid until `exp`, keep access-token lifetimes sho
 
 ## 2. WebSocket Authentication & `v0.144.0+` `Security()` Support
 
-Prior to FastAPI `v0.144.0`, built-in `fastapi.security` extractors annotated their `__call__` parameter as `request: Request`, which prevented reusing `OAuth2PasswordBearer` or `APIKeyCookie` directly inside `@app.websocket(...)` routes. Starting in **`v0.144.0` through `v0.162.2`**, every `SecurityBase` subclass (`APIKeyCookie`, `APIKeyQuery`, `APIKeyHeader`, `OAuth2PasswordBearer`, `OAuth2AuthorizationCodeBearer`, `HTTPBearer`, `HTTPBasic`, `OpenIdConnect`) accepts Starlette's **`HTTPConnection`** base class—shared by both `Request` and `WebSocket` (`fastapi/dependencies/utils.py` injects `websocket` into `dependant.http_connection_param_name`).
+Prior to FastAPI `v0.144.0`, built-in `fastapi.security` extractors annotated their `__call__` parameter as `request: Request`, which prevented reusing `OAuth2PasswordBearer` or `APIKeyCookie` directly inside `@app.websocket(...)` routes. Starting in **`v0.144.0` through `v0.162.2`**, every built-in `fastapi.security` scheme (`APIKeyCookie`, `APIKeyQuery`, `APIKeyHeader`, `OAuth2PasswordBearer`, `OAuth2AuthorizationCodeBearer`, `HTTPBearer`, `HTTPBasic`, `OpenIdConnect`) accepts Starlette's **`HTTPConnection`** base class—shared seamlessly by both HTTP `Request` and `WebSocket` connections.
 
-```drawlib align=center code=fold file=websocket_security_handshake.png caption="WebSocket Authentication Handshake: Browser Cookie/Ticket vs SDK Bearer via SecurityBase(HTTPConnection)"
+```drawlib align=center code=hide file=websocket_security_handshake.png caption="WebSocket Authentication Handshake: Browser Cookie/Ticket vs SDK Bearer via Security() & HTTPConnection"
 from drawlib.canvas import save, setup
 from drawlib.diagrams.sequence import Participant, ParticipantGroup, PhosphorIcon, SequenceDiagram
 from drawlib.styles import Style, Styles
@@ -455,7 +455,7 @@ ws_group = seq.add(
 
 sec_dep = ws_group.add(
     Participant(
-        "SecurityBase\nCookie / Query / Bearer",
+        "Security() Schemes\nCookie / Query / Bearer",
         width=35,
         height=14,
         icon=PhosphorIcon.SHIELD_CHECK,
@@ -534,7 +534,7 @@ Even though FastAPI `v0.162.2` supports `OAuth2PasswordBearer` and `APIKeyHeader
 
 ### 2.2 Pre-Handshake Rejection (`WS_1008_POLICY_VIOLATION` vs `auto_error=True`)
 
-When `auto_error=True` on a `SecurityBase` extractor and the credential is absent, FastAPI raises `HTTPException(status_code=401)` inside `solve_dependencies()`, aborting the HTTP Upgrade with a `401` denial response (`WebSocketDenialResponse` in `TestClient`). For multi-transport WebSocket endpoints, set `auto_error=False` on each extractor, evaluate `Origin` and `SecurityScopes` inside a unified dependency *before* `await ws.accept()`, and raise `WebSocketException(code=status.WS_1008_POLICY_VIOLATION)` on any policy failure:
+When `auto_error=True` on a `fastapi.security` extractor and the credential is absent, FastAPI raises `HTTPException(status_code=401)` during dependency resolution before the WebSocket handler runs, aborting the HTTP Upgrade with a `401` denial response (`WebSocketDenialResponse` in `TestClient`). For multi-transport WebSocket endpoints, set `auto_error=False` on each extractor, evaluate `Origin` and `SecurityScopes` inside a unified dependency *before* `await ws.accept()`, and raise `WebSocketException(code=status.WS_1008_POLICY_VIOLATION)` on any policy failure:
 
 ```python
 import secrets

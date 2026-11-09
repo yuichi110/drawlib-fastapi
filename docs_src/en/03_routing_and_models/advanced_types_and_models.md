@@ -2,7 +2,7 @@
 
 FastAPI `v0.157.0`–`v0.162.2` elevates Pydantic parameter models (`Query()`, `Header()`, `Cookie()`, `Form()`) into composable, optional, and union-capable extractors while enforcing strict JSON `null` vs. omitted semantics, HTML checkbox `Form` defaults, rich standard-library/Pydantic data types, and multi-tier OpenAPI 3.1 examples.
 
-```drawlib align=center code=fold file=parameter_models_composition.png caption="FastAPI v0.157–v0.162 Parameter Model Composition: Multi-Model Extraction, Optional/Union Resolution & Sibling extra='forbid' Rule"
+```drawlib align=center code=hide file=parameter_models_composition.png caption="FastAPI v0.157–v0.162 Parameter Model Composition: Multi-Model Extraction, Optional/Union Resolution & Sibling extra='forbid' Rule"
 from drawlib.canvas import save, setup
 from drawlib.icons import code, phosphor
 from drawlib.lines import line
@@ -292,7 +292,7 @@ async def upsert_subscription(
 
 Beyond primitive `int`, `str`, and `bool` scalars, FastAPI and Pydantic v2 compile rich domain types directly into Rust validators and JSON Schema 2020-12 formats while enforcing unambiguous distinctions between **omitted inputs**, **explicit JSON `null`**, and **empty HTML form strings**.
 
-```drawlib align=center code=fold file=extra_types_and_null_semantics.png caption="Extra Types Matrix, v0.151 JSON null vs v0.162 Form Checkbox Semantics & 3-Tier OpenAPI 3.1 Examples"
+```drawlib align=center code=hide file=extra_types_and_null_semantics.png caption="Extra Types Matrix, v0.151 JSON null vs v0.162 Form Checkbox Semantics & 3-Tier OpenAPI 3.1 Examples"
 from drawlib.canvas import save, setup
 from drawlib.icons import code, phosphor
 from drawlib.shapes import rectangle

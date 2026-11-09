@@ -1,27 +1,20 @@
-# FastAPI Visual Architecture Guide & PNI501 Diagnostic Demo (`drawlib-fastapi`)
+# FastAPI User Guide, Internal Architecture & PNI501 Audit (`drawlib-fastapi`)
 
-> **Unofficial Technical Showcase — Built with [Drawlib](https://www.drawlib.com/) & [PNI501](https://pypi.org/project/pni501/)**
+> **Unofficial Multi-Portal Documentation & Diagnostic Suite — Built with [Drawlib](https://www.drawlib.com/) & [PNI501](https://pypi.org/project/pni501/)**
 >
-> This repository is an **independent, unofficial** visual documentation and automated software diagnostic demonstration honoring **[FastAPI](https://fastapi.tiangolo.com/)** (`v0.162.2`, tag `3adc94ef`).
+> This repository hosts an **independent, unofficial** three-portal documentation and software diagnostic site covering **[FastAPI](https://fastapi.tiangolo.com/)** (`v0.162.2`, tag `3adc94ef`).
 > For official FastAPI documentation, tutorials, and release notes, always visit **[https://fastapi.tiangolo.com/](https://fastapi.tiangolo.com/)**.
 
 ---
 
-## Live Demo
+## Live Portals (`https://fastapi.drawlib.com/`)
 
-- **FastAPI Visual Architecture Guide (`docs/`)**: [https://fastapi.drawlib.com/](https://fastapi.drawlib.com/) (English & 日本語)
-- **PNI501 Engineering & Architecture Diagnostic Report (`docs/reports/pni501/`)**: [https://fastapi.drawlib.com/reports/pni501/](https://fastapi.drawlib.com/reports/pni501/) ([PDF](https://fastapi.drawlib.com/reports/pni501/pni501.pdf))
-
----
-
-## What This Repository Demonstrates
-
-1. **Zero-Pollution Documentation & Audit via `uvx`**:
-   `fastapi/`, `tests/`, `pyproject.toml`, and `uv.lock` are kept unmodified from upstream FastAPI `v0.162.2`—neither `drawlib` nor `pni501` is added to `pyproject.toml`. Everything compiles cleanly via ephemeral `uvx` tool environments.
-2. **Deterministic Pre-Documentation Code Analysis (`pni501`)**:
-   Static Python AST semantics, module dependency DAGs, typing coverage, and complexity hotspots are extracted automatically via `uvx --from pni501 pni` (`reports_src/pni501_src/` -> `docs/reports/pni501/`).
-3. **Illustrated Documentation as Code (`drawlib`)**:
-   Bilingual (`en` / `ja`) visual architecture pages (`docs_src/` -> `docs/`) render high-DPI technical diagrams, sequence flows, DAG layouts, and APNG/GIF animations directly from version-controlled Markdown + Python blocks.
+1. **FastAPI User Guide (`docs_src/` -> `docs/`)**: [https://fastapi.drawlib.com/](https://fastapi.drawlib.com/) (English & 日本語)
+   - Distraction-free practical user guide, 100k+ LOC enterprise architecture patterns, and complete feature reference backed by `pytest`-verified `v0.162.2` examples.
+2. **FastAPI Internal Architecture Guide (`architecture_src/` -> `docs/architecture/`)**: [https://fastapi.drawlib.com/architecture/](https://fastapi.drawlib.com/architecture/) (English & 日本語)
+   - Source-level walkthrough of how FastAPI `v0.162.2` works internally: 5-tier package topology, `APIRoute` & `get_request_handler()` closure compilation, generator SSE/JSONL & `_FrontendRouteGroup` SPA engine, `Dependant` & `solve_dependencies()` dual `AsyncExitStack`s, `_compat/v2.py` `ModelField` bridge, 7-layer ASGI middleware & `NativeTelemetry`, and lazy `get_openapi()` synthesis.
+3. **PNI501 Engineering & Architecture Diagnostic Report (`reports_src/pni501_src/` -> `docs/reports/pni501/`)**: [https://fastapi.drawlib.com/reports/pni501/](https://fastapi.drawlib.com/reports/pni501/) ([PDF](https://fastapi.drawlib.com/reports/pni501/pni501.pdf))
+   - Deterministic 15-stage code, dependency DAG, test coverage, and complexity audit (`93/100 Grade S`).
 
 ---
 
@@ -29,32 +22,37 @@
 
 ```text
 drawlib-fastapi/
-├── fastapi/                  # Upstream FastAPI v0.162.2 framework source (MIT License)
-├── tests/                    # Upstream FastAPI v0.162.2 test suite (MIT License)
+├── fastapi/                  # Upstream FastAPI v0.162.2 framework source (MIT License, unmodified)
+├── tests/                    # Upstream FastAPI v0.162.2 test suite (MIT License, unmodified)
 ├── pyproject.toml            # Upstream FastAPI v0.162.2 PEP 621 manifest (unmodified)
 ├── uv.lock                   # Upstream FastAPI v0.162.2 lockfile (unmodified)
 ├── LICENSE-FASTAPI           # Upstream MIT License (Copyright (c) 2018 Sebastián Ramírez)
-├── LICENSE                   # Apache-2.0 License for original Drawlib/PNI501 showcase assets
+├── LICENSE                   # Apache-2.0 License for original documentation, diagrams & audit assets
 ├── .pni/                     # PNI501 workflow & audit configuration
+├── docs_src/                 # Portal 1: Pure FastAPI User Guide source (bilingual en/ja, type = "site")
+├── architecture_src/         # Portal 2: FastAPI Internal Architecture Guide source (bilingual en/ja, type = "site")
 ├── reports_src/
-│   └── pni501_src/           # PNI501 diagnostic report Drawlib source (type = "doc")
-├── docs_src/                 # FastAPI Visual Architecture Guide Drawlib source (type = "site")
-└── docs/                     # Compiled HTML portal & PNI501 report (GitHub Pages root)
-    ├── index.html
+│   └── pni501_src/           # Portal 3: PNI501 diagnostic report source (type = "doc")
+└── docs/                     # Unified compiled GitHub Pages output
+    ├── index.html            # User Guide root
+    ├── architecture/         # Internal Architecture Guide
     └── reports/
-        └── pni501/
+        └── pni501/           # PNI501 HTML & PDF report
 ```
 
 ---
 
 ## Reproducing Locally with `uvx`
 
+`fastapi/`, `tests/`, `pyproject.toml`, and `uv.lock` remain unmodified from upstream FastAPI `v0.162.2`; `drawlib` and `pni501` run ephemerally via `uvx`:
+
 ```bash
-# Build everything (Bilingual Visual Guide + PNI501 HTML/PDF Report + Link Check)
+# Build all 3 portals (User Guide + Internal Architecture + PNI501 HTML/PDF) & run link checks
 ./build.sh
 
 # Or build each portal individually:
 ./docs_src/build.sh
+./architecture_src/build.sh
 uvx --from pni501 pni report build pni501 \
   --src-dir reports_src \
   --html-output-dir docs/reports/pni501 \
@@ -72,7 +70,7 @@ uvx drawlib serve docs/
 
 - **Upstream FastAPI Snapshot (`fastapi/`, `tests/`, `pyproject.toml`, `uv.lock`)**:
   Copyright (c) 2018 Sebastián Ramírez. Distributed under the **MIT License** — see [`LICENSE-FASTAPI`](./LICENSE-FASTAPI).
-- **Original Visual Documentation, Diagrams & PNI501 Showcase (`docs_src/`, `reports_src/`, `docs/`, `.pni/`, build scripts)**:
+- **Original Documentation, Diagrams & PNI501 Audit (`docs_src/`, `architecture_src/`, `reports_src/`, `docs/`, `.pni/`, build scripts)**:
   Copyright (c) 2026 Yuichi Ito. Distributed under the **Apache License, Version 2.0** — see [`LICENSE`](./LICENSE).
 - **Trademark Attribution**:
-  FastAPI is a registered trademark of Sebastián Ramírez. This project is an independent technical showcase built with [Drawlib](https://www.drawlib.com/) and [PNI501](https://pypi.org/project/pni501/) and is not affiliated with, sponsored by, or endorsed by Sebastián Ramírez or the official FastAPI project.
+  FastAPI is a registered trademark of Sebastián Ramírez. This repository is an independent community documentation and architecture study built with [Drawlib](https://www.drawlib.com/) and [PNI501](https://pypi.org/project/pni501/) and is not affiliated with, sponsored by, or endorsed by Sebastián Ramírez or the official FastAPI project.

@@ -13,7 +13,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enterprise DI Aliases, Lifespan Management &amp; Test Pyramid — FastAPI Visual Guide (Unofficial · Drawlib Demo)</title>
+    <title>Enterprise DI Aliases, Lifespan Management &amp; Test Pyramid — FastAPI User Guide (Unofficial)</title>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
     <script>
@@ -47,15 +47,15 @@
     <meta name="description" content="Maintaining sub-second test feedback and deterministic resource cleanup across 500+ endpoints and 100,000+ LOC requires separating process-scoped…">
     <link rel="canonical" href="https://fastapi.drawlib.com/en/02_enterprise_architecture/di_lifespan_testing.html">
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="FastAPI Visual Guide">
-    <meta property="og:title" content="Enterprise DI Aliases, Lifespan Management &amp; Test Pyramid — FastAPI Visual Guide">
+    <meta property="og:site_name" content="FastAPI User Guide">
+    <meta property="og:title" content="Enterprise DI Aliases, Lifespan Management &amp; Test Pyramid — FastAPI User Guide">
     <meta property="og:description" content="Maintaining sub-second test feedback and deterministic resource cleanup across 500+ endpoints and 100,000+ LOC requires separating process-scoped…">
     <meta property="og:url" content="https://fastapi.drawlib.com/en/02_enterprise_architecture/di_lifespan_testing.html">
     <meta property="og:image" content="https://fastapi.drawlib.com/_assets/ogp.png">
     <meta property="og:locale" content="en_US">
     <meta property="og:locale:alternate" content="ja_JP">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Enterprise DI Aliases, Lifespan Management &amp; Test Pyramid — FastAPI Visual Guide">
+    <meta name="twitter:title" content="Enterprise DI Aliases, Lifespan Management &amp; Test Pyramid — FastAPI User Guide">
     <meta name="twitter:description" content="Maintaining sub-second test feedback and deterministic resource cleanup across 500+ endpoints and 100,000+ LOC requires separating process-scoped…">
     <meta name="twitter:image" content="https://fastapi.drawlib.com/_assets/ogp.png">
     
@@ -68,19 +68,23 @@
     
 </head>
 <body>
-    <div class="demo-banner" role="region" aria-label="Unofficial Showcase Notice">
+    <div class="demo-banner" role="region" aria-label="Portal Navigation">
         <div class="demo-banner-inner">
-            <span class="demo-banner-badge">UNOFFICIAL DEMO</span>
+            <span class="demo-banner-badge">UNOFFICIAL GUIDE</span>
             
             <span class="demo-banner-text">
-                Unofficial visual architecture showcase of <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a> (v0.162.2, MIT) illustrated as code with <a href="https://www.drawlib.com/" target="_blank" rel="noopener noreferrer">Drawlib</a> &amp; <a href="https://pypi.org/project/pni501/" target="_blank" rel="noopener noreferrer">PNI501</a>.
+                Unofficial Community User Guide for <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a> (v0.162.2)
             </span>
             <span class="demo-banner-links">
-                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Report →</a>
+                <strong style="color:#ffffff;">User Guide</strong>
                 <span class="demo-banner-sep">·</span>
-                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official FastAPI Docs ↗</a>
+                <a href="https://fastapi.drawlib.com/architecture/">Architecture</a>
                 <span class="demo-banner-sep">·</span>
-                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">Demo Source ↗</a>
+                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Audit</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official Docs ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
             </span>
             
         </div>
@@ -89,9 +93,9 @@
     <div class="doc-layout">
         <aside class="sidebar">
             <div class="sidebar-header">
-                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI Visual Guide">
+                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI User Guide">
                     
-                    FastAPI Visual Guide
+                    FastAPI User Guide
                     
                 </a>
                 <div class="sidebar-header-actions">
@@ -112,7 +116,7 @@
                         <ul class="nav-list">
                             
                             <li class="nav-item ">
-                                <a href="../index.html" >Overview &amp; Architecture Map</a>
+                                <a href="../index.html" >Guide Overview</a>
                             </li>
                             
                         </ul>
@@ -176,7 +180,7 @@
                         <ul class="nav-list">
                             
                             <li class="nav-item ">
-                                <a href="../04_dependencies_and_security/dependency_injection.html" >Dependant DAG, Caching &amp; Scopes</a>
+                                <a href="../04_dependencies_and_security/dependency_injection.html" >Dependency Graph, Caching &amp; Scopes</a>
                             </li>
                             
                             <li class="nav-item ">
@@ -250,12 +254,12 @@
                         </ul>
                     
                         
-                        <div class="sidebar-heading">Diagnostic &amp; Upstream Links</div>
+                        <div class="sidebar-heading">Companion Guides &amp; Links</div>
                         
                         <ul class="nav-list">
                             
                             <li class="nav-item ">
-                                <a href="https://fastapi.drawlib.com/reports/pni501/" target="_blank" rel="noopener noreferrer">PNI501 Diagnostic Report<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                                <a href="https://fastapi.drawlib.com/architecture/" target="_blank" rel="noopener noreferrer">FastAPI Internal Architecture<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
                             </li>
                             
                             <li class="nav-item ">
@@ -263,7 +267,7 @@
                             </li>
                             
                             <li class="nav-item ">
-                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">Demo Source (GitHub)<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub Repository<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
                             </li>
                             
                         </ul>
@@ -312,140 +316,6 @@
   <img src="../../images/02_enterprise_architecture/di_lifespan_testing/enterprise_di_lifespan_flow.png" alt="di_lifespan_testing_1" />
   <figcaption class="drawlib-caption">Two-Tier Lifespan & Request-Scoped Dependency Injection Flow with RFC 9457 Domain Error Translation</figcaption>
 </figure>
-<details class="drawlib-code-details">
-<summary>Source Code</summary>
-<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.canvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">setup</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.diagrams.architecture</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArchitectureDiagram</span><span class="p">,</span> <span class="n">Node</span><span class="p">,</span> <span class="n">NodeGroup</span><span class="p">,</span> <span class="n">PhosphorIcon</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">Styles</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.text</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span>
-
-<span class="n">setup</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">180</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">88</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
-
-<span class="n">text</span><span class="p">(</span>
-    <span class="p">(</span><span class="mi">90</span><span class="p">,</span> <span class="mf">82.5</span><span class="p">),</span>
-    <span class="s2">"Enterprise Lifespan, Scoped DI Wiring &amp; RFC 9457 Exception Boundary"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">13.5</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="n">diag</span> <span class="o">=</span> <span class="n">ArchitectureDiagram</span><span class="p">(</span>
-    <span class="n">node_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Primary</span><span class="p">,</span>
-    <span class="n">node_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.2</span><span class="p">),</span>
-    <span class="n">edge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">,</span>
-    <span class="n">edge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">node_card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="c1"># Zone 1: Process Lifespan (Once per Worker)</span>
-<span class="n">life_grp</span> <span class="o">=</span> <span class="n">diag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">NodeGroup</span><span class="p">(</span>
-        <span class="n">title</span><span class="o">=</span><span class="s2">"1. Process Lifespan (app.state)"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">46</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mi">65</span><span class="p">,</span>
-        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">2.0</span><span class="p">),</span>
-        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span> <span class="n">text_size</span><span class="o">=</span><span class="mf">10.8</span><span class="p">),</span>
-    <span class="p">),</span>
-    <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">life_node</span> <span class="o">=</span> <span class="n">life_grp</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span>
-        <span class="s2">"Lifespan Hook</span><span class="se">\n</span><span class="s2">(Startup / Shutdown)"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">36</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">STACK</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
-    <span class="p">),</span>
-    <span class="p">(</span><span class="mi">23</span><span class="p">,</span> <span class="mi">44</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">pool_node</span> <span class="o">=</span> <span class="n">life_grp</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span>
-        <span class="s2">"AppContainer</span><span class="se">\n</span><span class="s2">(DB Pool &amp; HTTPX)"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">36</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">DATABASE</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
-    <span class="p">),</span>
-    <span class="p">(</span><span class="mi">23</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="c1"># Zone 2: Per-Request DI Graph (Annotated Aliases)</span>
-<span class="n">di_grp</span> <span class="o">=</span> <span class="n">diag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">NodeGroup</span><span class="p">(</span>
-        <span class="n">title</span><span class="o">=</span><span class="s2">"2. Per-Request DI (Depends)"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">52</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mi">65</span><span class="p">,</span>
-        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">2.0</span><span class="p">),</span>
-        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span> <span class="n">text_size</span><span class="o">=</span><span class="mf">10.8</span><span class="p">),</span>
-    <span class="p">),</span>
-    <span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">uow_node</span> <span class="o">=</span> <span class="n">di_grp</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span>
-        <span class="s2">"DbSessionDep</span><span class="se">\n</span><span class="s2">(yield, scope='function')"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">ARROWS_CLOCKWISE</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
-    <span class="p">),</span>
-    <span class="p">(</span><span class="mi">26</span><span class="p">,</span> <span class="mi">44</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">route_node</span> <span class="o">=</span> <span class="n">di_grp</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span>
-        <span class="s2">"3-Line APIRouter</span><span class="se">\n</span><span class="s2">+ CurrentActorDep"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">PLUGS_CONNECTED</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
-        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.2</span><span class="p">),</span>
-        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="p">,</span>
-    <span class="p">),</span>
-    <span class="p">(</span><span class="mi">26</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="c1"># Zone 3: Pure Domain &amp; RFC 9457 Edge</span>
-<span class="n">dom_grp</span> <span class="o">=</span> <span class="n">diag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">NodeGroup</span><span class="p">(</span>
-        <span class="n">title</span><span class="o">=</span><span class="s2">"3. Domain &amp; ASGI Edge"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">46</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mi">65</span><span class="p">,</span>
-        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">2.0</span><span class="p">),</span>
-        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span> <span class="n">text_size</span><span class="o">=</span><span class="mf">10.8</span><span class="p">),</span>
-    <span class="p">),</span>
-    <span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">uc_node</span> <span class="o">=</span> <span class="n">dom_grp</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span>
-        <span class="s2">"OrderUseCase</span><span class="se">\n</span><span class="s2">(Pure Domain Logic)"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">36</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">CUBE</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
-    <span class="p">),</span>
-    <span class="p">(</span><span class="mi">23</span><span class="p">,</span> <span class="mi">44</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">err_node</span> <span class="o">=</span> <span class="n">dom_grp</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span>
-        <span class="s2">"DomainError -&gt;</span><span class="se">\n</span><span class="s2">RFC 9457 JSON"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">36</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">SHIELD_WARNING</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DangerNeutral</span><span class="p">,</span>
-        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DangerBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.2</span><span class="p">),</span>
-        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DangerBold</span><span class="p">,</span>
-    <span class="p">),</span>
-    <span class="p">(</span><span class="mi">23</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="c1"># Connections across lifecycle tiers</span>
-<span class="n">diag</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">life_node</span><span class="p">,</span> <span class="n">pool_node</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"owns"</span><span class="p">)</span>
-<span class="n">diag</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">pool_node</span><span class="p">,</span> <span class="n">uow_node</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"pool"</span><span class="p">,</span> <span class="n">routing</span><span class="o">=</span><span class="s2">"orthogonal"</span><span class="p">)</span>
-<span class="n">diag</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">uow_node</span><span class="p">,</span> <span class="n">route_node</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"injects"</span><span class="p">)</span>
-<span class="n">diag</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">route_node</span><span class="p">,</span> <span class="n">uc_node</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"calls"</span><span class="p">,</span> <span class="n">routing</span><span class="o">=</span><span class="s2">"orthogonal"</span><span class="p">)</span>
-<span class="n">diag</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">uc_node</span><span class="p">,</span> <span class="n">err_node</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"raises"</span><span class="p">)</span>
-
-<span class="n">diag</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
-<span class="n">save</span><span class="p">()</span>
-</code></pre>
-</details>
 <hr />
 <h2>1. Deterministic Process Lifespan vs. Import-Time Globals</h2>
 <p>One of the costliest anti-patterns in large Python backends is instantiating database engines, Redis clients, or <code>httpx.AsyncClient</code> pools as <strong>module-level globals</strong> executed the moment Python imports a file (<code>engine = create_async_engine(os.environ[&quot;DB_URL&quot;])</code>).</p>
@@ -668,93 +538,6 @@
   <img src="../../images/02_enterprise_architecture/di_lifespan_testing/enterprise_test_pyramid.png" alt="di_lifespan_testing_2" />
   <figcaption class="drawlib-caption">100k+ LOC Enterprise Test Pyramid: 70% Pure Domain Unit, 20% FastAPI Contract Overrides, 10% Containerized Integration</figcaption>
 </figure>
-<details class="drawlib-code-details">
-<summary>Source Code</summary>
-<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.canvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">setup</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.icons</span><span class="w"> </span><span class="kn">import</span> <span class="n">phosphor</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.smartarts</span><span class="w"> </span><span class="kn">import</span> <span class="n">CardList</span><span class="p">,</span> <span class="n">Pyramid</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">Styles</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.text</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span>
-
-<span class="n">setup</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">174</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">86</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
-
-<span class="n">text</span><span class="p">(</span>
-    <span class="p">(</span><span class="mi">87</span><span class="p">,</span> <span class="mf">80.5</span><span class="p">),</span>
-    <span class="s2">"Enterprise Test Pyramid for 100k+ LOC FastAPI Systems"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">13.5</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="c1"># Left: 3-Tier Testing Pyramid (Base at bottom, vertex_to_base: Top=10%, Mid=20%, Base=70%)</span>
-<span class="n">pyramid</span> <span class="o">=</span> <span class="n">Pyramid</span><span class="p">(</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.0</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">pyramid</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="s2">"10%</span><span class="se">\n</span><span class="s2">E2E"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">pyramid</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="s2">"20% HTTP Contract</span><span class="se">\n</span><span class="s2">&amp; DI Overrides"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.8</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">pyramid</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="s2">"70% Pure Domain &amp; UseCase Unit Tests"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.0</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">pyramid</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span>
-    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span>
-    <span class="n">width</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
-    <span class="n">height</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
-    <span class="n">margin</span><span class="o">=</span><span class="mf">2.2</span><span class="p">,</span>
-    <span class="n">direction</span><span class="o">=</span><span class="s2">"bottom"</span><span class="p">,</span>
-    <span class="n">order</span><span class="o">=</span><span class="s2">"vertex_to_base"</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="c1"># Right: Aligned Tier Specifications via CardList</span>
-<span class="n">cards</span> <span class="o">=</span> <span class="n">CardList</span><span class="p">(</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.8</span><span class="p">),</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.0</span><span class="p">),</span>
-    <span class="n">description_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">badge_shape</span><span class="o">=</span><span class="s2">"rounded_rect"</span><span class="p">,</span>
-    <span class="n">badge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span>
-    <span class="n">badge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryBold</span><span class="p">,</span>
-    <span class="n">direction</span><span class="o">=</span><span class="s2">"vertical"</span><span class="p">,</span>
-    <span class="n">spacing</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">cards</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="s2">"Containerized Lifespan &amp; DB (~50–200 ms)"</span><span class="p">,</span>
-    <span class="s2">"Real PostgreSQL/Redis via Testcontainers,</span><span class="se">\n</span><span class="s2">SQL migrations &amp; lifespan shutdown."</span><span class="p">,</span>
-    <span class="n">badge_text</span><span class="o">=</span><span class="s2">"10%"</span><span class="p">,</span>
-    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">database</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">cards</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="s2">"FastAPI Router &amp; Contract Tests (~2–8 ms)"</span><span class="p">,</span>
-    <span class="s2">"TestClient + app.dependency_overrides:</span><span class="se">\n</span><span class="s2">DTO 422s, Auth headers &amp; RFC 9457 JSON."</span><span class="p">,</span>
-    <span class="n">badge_text</span><span class="o">=</span><span class="s2">"20%"</span><span class="p">,</span>
-    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">plugs_connected</span><span class="p">,</span>
-    <span class="n">badge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
-    <span class="n">badge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">cards</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="s2">"Pure Domain &amp; UseCase Tests (&lt; 0.5 ms)"</span><span class="p">,</span>
-    <span class="s2">"In-memory Protocol fakes, zero ASGI/HTTP,</span><span class="se">\n</span><span class="s2">1,000+ deterministic cases/sec in CI."</span><span class="p">,</span>
-    <span class="n">badge_text</span><span class="o">=</span><span class="s2">"70%"</span><span class="p">,</span>
-    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">lightning</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.8</span><span class="p">),</span>
-    <span class="n">badge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
-    <span class="n">badge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">cards</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mi">76</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">92</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">64</span><span class="p">)</span>
-
-<span class="n">save</span><span class="p">()</span>
-</code></pre>
-</details>
 <h3>Applying FastAPI: Sub-Millisecond Unit Tests + <code>app.dependency_overrides</code></h3>
 <p>Because our <code>Domain</code> and <code>UseCase</code> layers depend only on <code>Protocol</code> ports, <strong>70% of tests execute directly in memory without touching ASGI or HTTP</strong>. For the <strong>20% HTTP Contract tier</strong>, FastAPI's <code>app.dependency_overrides</code> swaps callable dependency keys cleanly by reference—always wrapped in <code>try ... finally: app.dependency_overrides.clear()</code> so test state never leaks across cases (see <a href="../06_observability_and_testing/testing_and_deployment.html">Testing Patterns &amp; Production ASGI</a> for async <code>httpx.AsyncClient</code> and load-testing setups):</p>
 <pre><code class="language-python"><span class="c1"># tests/orders/test_order_contracts.py — Pure Unit Tier + Hermetic Override Tier</span>
@@ -824,6 +607,11 @@
 <p>Next, continue to Chapter 3 (<a href="../03_routing_and_models/parameters_and_validation.html">Path, Query, Header, Cookie &amp; Body</a>) to explore how FastAPI inspects <code>Annotated</code> parameter metadata and compiles high-throughput Pydantic v2 validators under the hood.</p>
 
             </main>
+            <footer class="footer">
+                
+                FastAPI® is a registered trademark of Sebastián Ramírez (<a href="https://github.com/tiangolo" target="_blank" rel="noopener noreferrer">@tiangolo</a>). Unofficial guide — not affiliated with or endorsed by the official FastAPI project (<a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">fastapi.tiangolo.com</a>).
+                
+            </footer>
         </div>
     </div>
     

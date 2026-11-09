@@ -2,7 +2,7 @@
 
 FastAPI `v0.162.2` ships three first-class real-time and streaming primitives out of the box—native Server-Sent Events (`EventSourceResponse`), typed JSON Lines (`AsyncIterator[Model]`), and full-duplex `WebSocket` endpoints—with automatic Pydantic serialization, proxy anti-buffering headers, and cooperative cancellation checkpoints.
 
-```drawlib align=center code=fold file=streaming_modes_comparison.png caption="FastAPI v0.162.2 Built-In Realtime & Generator Streaming Modes Compared"
+```drawlib align=center code=hide file=streaming_modes_comparison.png caption="FastAPI v0.162.2 Built-In Realtime & Generator Streaming Modes Compared"
 from drawlib.canvas import save, setup
 from drawlib.icons import phosphor
 from drawlib.smartarts import CardList, Panel
@@ -69,7 +69,7 @@ cl_jsonl = CardList(
     spacing=2.2,
 )
 cl_jsonl.add("AsyncIterator[Model]", "Zero response_class needed", badge_text="A")
-cl_jsonl.add("Per-Item Validation", "Rust serialize_json + \\n", badge_text="B")
+cl_jsonl.add("Per-Item Validation", "Pydantic Rust JSON + \\n", badge_text="B")
 cl_jsonl.add("Cancel Checkpoint", "await anyio.sleep(0) per row", badge_text="C")
 cl_jsonl.draw(xy2, width=w2, height=h2)
 
@@ -116,7 +116,7 @@ Before writing a streaming endpoint, match your client topology and framing guar
 | **Keep-Alive Pings** | Automatic `: ping` comment every `15s` | Chunk-driven | Protocol ping/pong frames |
 | **Ideal Workload** | LLM token streams, MCP over `POST`, live feeds | Bulk dataset exports, service-to-service pipelines | Collaborative rooms, live telemetry control |
 
-```drawlib align=center code=fold file=sse_and_websocket_sequence.png caption="Wire Lifecycle Contrast: Unidirectional Native SSE Resume vs Bidirectional WebSocket Session"
+```drawlib align=center code=hide file=sse_and_websocket_sequence.png caption="Wire Lifecycle Contrast: Unidirectional Native SSE Resume vs Bidirectional WebSocket Session"
 from drawlib.canvas import save, setup
 from drawlib.diagrams.sequence import Participant, PhosphorIcon, SequenceDiagram
 from drawlib.styles import Styles
@@ -188,7 +188,7 @@ save()
 FastAPI `v0.162.2` includes a dedicated `fastapi.sse` module (`EventSourceResponse` and `ServerSentEvent`) engineered directly into the routing layer:
 
 - **Works on `GET` and `POST`**: Unlike legacy `EventSource` wrappers restricted to `GET`, `response_class=EventSourceResponse` works on `POST` endpoints—essential for LLM prompt streaming and **MCP (Model Context Protocol)** transports.
-- **Proxy & Keep-Alive Hardening**: FastAPI automatically sets `Cache-Control: no-cache` and `X-Accel-Buffering: no` (disabling Nginx proxy buffering) and runs an isolated AnyIO memory-stream keepalive task on `fastapi_inner_astack` that emits `: ping` every `15` seconds without injecting `CancelledError` into your generator.
+- **Proxy & Keep-Alive Hardening**: FastAPI automatically sets `Cache-Control: no-cache` and `X-Accel-Buffering: no` (disabling Nginx proxy buffering) and runs an isolated AnyIO memory-stream keepalive task within the request-scoped cleanup lifecycle (torn down cleanly after the stream finishes) that emits `: ping` every `15` seconds without injecting `CancelledError` into your generator.
 - **Structured `ServerSentEvent` Validation**: `data` payloads (Pydantic models, dicts, or strings) are always JSON-encoded, while `raw_data` emits pre-formatted strings verbatim (`[DONE]`, HTML fragments). Single-line constraints on `event` and `id` prevent SSE wire-injection bugs.
 
 ```python
@@ -244,7 +244,7 @@ assert "id: 2\n" in res.text
 When streaming typed records between backend microservices, CLI tools, or data pipelines, simply annotate a generator path operation with `AsyncIterator[MyModel]` (or `Iterator[MyModel]`) without specifying any custom `response_class`:
 
 1. FastAPI automatically selects `media_type="application/jsonl"` and documents the item schema in [OpenAPI 3.1](../03_routing_and_models/responses_and_openapi.md).
-2. Each yielded item is validated and serialized directly to UTF-8 JSON bytes (`+ b"\n"`) through Pydantic's Rust `TypeAdapter` (`stream_item_field.serialize_json`). If an item violates the response contract mid-stream, FastAPI raises `ResponseValidationError`.
+2. Each yielded item is validated and serialized directly to UTF-8 JSON bytes (`+ b"\n"`) through Pydantic's Rust `TypeAdapter`. If an item violates the response contract mid-stream, FastAPI raises `ResponseValidationError`.
 3. After every yielded chunk on an async generator, FastAPI executes `await anyio.sleep(0)` so client disconnects immediately cancel fast in-memory producers instead of burning CPU until stream exhaustion.
 
 ```python

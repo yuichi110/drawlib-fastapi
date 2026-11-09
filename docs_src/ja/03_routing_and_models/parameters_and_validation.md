@@ -1,8 +1,8 @@
 # Path・Query・Header・Cookie・Body 検証パイプライン
 
-FastAPI はルート登録時に Python の型注釈・`Annotated[T, ...]` メタデータ・Pydantic v2 モデルを解析し、事前構築された `Dependant` ツリーおよび Rust 製 `ModelField` バリデータへとコンパイルすることで、リクエストごとの署名リフレクションを排除しつつ入力検証と OpenAPI 3.1 スキーマ生成を単一の定義に統合します。
+FastAPI はルート登録時に一度だけ Python の型注釈・`Annotated[T, ...]` メタデータ・Pydantic v2 モデルを解析し、事前構築された依存関係グラフおよび Rust ベースのバリデータへと構成することで、リクエストごとの署名リフレクションを排除しつつ入力検証と OpenAPI 3.1 スキーマ生成を単一の定義に統合します。
 
-```drawlib align=center code=fold file=param_classification_engine.png caption="get_dependant() および analyze_param() によるルート登録時のパラメータ分類パイプライン"
+```drawlib align=center code=hide file=param_classification_engine.png caption="ルート登録時における署名解析・パラメータ束縛ルール・Pydantic v2 バリデータ構成パイプライン"
 from drawlib.canvas import save, setup
 from drawlib.icons import code, phosphor
 from drawlib.lines import line, lines
@@ -17,7 +17,7 @@ setup(width=174, height=92, dpi=150)
 code.fastapi((11, 86.5), width=5.2, style=Styles.Primary)
 text(
     (16.5, 86.5),
-    "Registration-Time Parameter Classification: get_dependant() -> analyze_param()",
+    "Startup Parameter Binding: Signature Inspection & Source Resolution",
     style=Styles.DarkBold.patch(text_size=12.5, halign="left"),
 )
 
@@ -47,18 +47,18 @@ cl1 = CardList(
     arrow_style=Styles.DarkBold,
 )
 cl1.add(
-    "inspect.signature()",
-    "PEP 695 TypeAlias unwrap\nvia typing-inspection",
+    "Signature Inspection",
+    "Unwraps PEP 695 type\naliases & type hints",
     icon=phosphor.code,
 )
 cl1.add(
     "Annotated[T, ...]",
-    "Extracts Param, Body,\nDepends & PEP 727 Doc()",
+    "Extracts Query, Body,\nDepends & PEP 727 Doc()",
     icon=phosphor.code_block,
 )
 cl1.add(
-    "Non-Field Bypass",
-    "Depends -> Dependant DAG\nRequest -> direct slot",
+    "Framework & DI Bypass",
+    "Depends() -> sub-graph\nRequest -> direct param",
     icon=phosphor.git_branch,
     style=Styles.SecondaryNeutral,
 )
@@ -69,7 +69,7 @@ line((59, 43), (65, 43), arrow_head="->", style=Styles.DarkBold)
 
 # 2. Center Panel: 4-Stage Inference & Routing
 p2 = Panel(
-    "2. Source Resolution Rules",
+    "2. Parameter Binding Rules",
     style=Styles.Neutral,
     header_style=Styles.PrimaryFlat,
     text_style=Styles.WhiteBold.patch(text_size=11.0),
@@ -93,9 +93,9 @@ for idx, (gy, gtitle, gsub, gst) in enumerate(gates):
         next_gy = gates[idx + 1][0]
         line((90, gy - 5.8), (90, next_gy + 5.8), arrow_head="->", style=Styles.MutedBold)
 
-# 3. Right Panel: Compiled ModelField Targets
+# 3. Right Panel: Pydantic v2 Validators
 p3 = Panel(
-    "3. Compiled ModelField Slots",
+    "3. Pydantic v2 Validators",
     style=Styles.Neutral,
     header_style=Styles.SecondaryNeutral,
     text_style=Styles.DarkBold.patch(text_size=11.0),
@@ -106,10 +106,10 @@ p3 = Panel(
 p3.draw((121, 6), width=48, height=74)
 
 targets = [
-    (62.5, "dependant.path_params", "Required scalar TypeAdapter", Styles.White, False),
-    (46.5, "SpooledTemporaryFile", "Closed via AsyncExitStack", Styles.White, False),
-    (30.5, "dependant.body_params", "Body_<id> or Body(embed=True)", Styles.PrimaryFlat, True),
-    (14.5, "query / header / cookie", "Flattens BaseModel; _ -> -", Styles.White, False),
+    (62.5, "Path Validator", "Required scalar TypeAdapter", Styles.White, False),
+    (46.5, "Streamed UploadFile", "Spooled file & auto-cleanup", Styles.White, False),
+    (30.5, "Composite / JSON Body", "Direct or Body(embed=True)", Styles.PrimaryFlat, True),
+    (14.5, "Query / Header / Cookie", "Flattens BaseModel; _ -> -", Styles.White, False),
 ]
 for (ty, ttitle, tsub, tst, is_focal) in targets:
     rectangle((145, ty), width=42, height=11.5, style=tst.patch(shape_r=1.8))
@@ -122,28 +122,28 @@ for (ty, ttitle, tsub, tst, is_focal) in targets:
 save()
 ```
 
-FastAPI のすべての HTTP エンドポイントおよび依存関数は、ルーターへのパスオペレーション登録時に一度だけ `get_dependant()` を通過し、宣言的な型ヒントから決定論的な実行時抽出器へと変換されます。
+FastAPI のすべての HTTP エンドポイントおよび `Depends()` 関数は、ルーターへのパスオペレーション登録時に一度だけ関数シグネチャが解析され、宣言的な型ヒントから決定論的な実行時抽出器へと変換されます。
 
-## 1. ルート登録時のパラメータ分類エンジン（`analyze_param`）
+## 1. 関数シグネチャ解析とパラメータ束縛ルール
 
-`fastapi/dependencies/utils.py` 内の `get_dependant()` は、`get_typed_signature()` で前方参照を解決し、`get_path_param_names()` でパス内の `{param}` プレースホルダを抽出したうえで、各引数を `analyze_param()` に委譲します。
+ルート登録時、FastAPI は前方参照を解決して URL パステンプレート内の `{param}` プレースホルダを抽出し、以下の 4 つの決定論的ステップで各パラメータを分類します。
 
-1. **PEP 695 型エイリアスと `Annotated` の展開**: `typing-inspection` の `is_typealiastype(annotation)` を用いて Python 3.12+ の `type MyParam = Annotated[...]` 構文を展開した後、`Annotated[T, ...]` のメタデータを走査します。FastAPI 固有のマーカー（`Param`・`Body`・`Depends`・`Security`）は Pydantic の `Field` 制約や PEP 727 の `Doc()` ドキュメント文字列とともに `copy_field_info()` で複製されます。なお `Annotated` 使用時は、デフォルト値はマーカー内部ではなく通常の `= default` 構文で指定する規約が強制されます。
-2. **フレームワーク型と依存関数のバイパス**: `Depends` / `Security` は子 `Dependant` ノードとして再帰的に構築され、`Request`・`Response`・`BackgroundTasks`・`WebSocket`・`HTTPConnection`・`SecurityScopes` などのフレームワークオブジェクトは `add_non_field_param_to_dependency()` によって検証フィールドを作らず `Dependant` の専用スロットへ直接束縛されます。
-3. **4 段階の決定論的デフォルト推論**: 明示的な `Query()` や `Body()` マーカーが省略された場合、`analyze_param()` は引数の位置と型から以下の優先順位で抽出元を決定します。
+1. **PEP 695 型エイリアスと `Annotated` の展開**: Python 3.12+ の `type MyParam = Annotated[...]` エイリアスを展開したうえで、`Annotated[T, ...]` のメタデータを走査します。パラメータマーカー（`Path`・`Query`・`Header`・`Cookie`・`Body`・`Form`・`File`・`Depends`・`Security`）は Pydantic の `Field` 制約や PEP 727 の `Doc()` ドキュメント文字列とそのまま併用できます。なお `Annotated` 使用時は、デフォルト値はマーカー内部ではなく通常の `= default` 構文で指定します。
+2. **フレームワークオブジェクトとサブ依存の分離**: `Depends()` / `Security()` は入れ子の依存関係サブグラフとして再帰的に構成され、`Request`・`Response`・`BackgroundTasks`・`WebSocket`・`HTTPConnection`・`SecurityScopes` などのフレームワークオブジェクトは検証フィールドや OpenAPI パラメータを生成せず直接エンドポイントへ注入されます。
+3. **4 段階の決定論的デフォルト推論**: 明示的な `Query()`・`Body()`・`Depends()` マーカーが省略された場合、引数の名前と基底の型から以下の優先順位で抽出元が決定されます。
 
-| 優先度 | `analyze_param()` における一致条件 | 推論されるマーカー | 格納先の `Dependant` バケット |
+| 優先度 | シグネチャの一致条件 | 推論されるマーカー | リクエスト上の抽出元 |
 | :--- | :--- | :--- | :--- |
-| **1** | 引数名がルートパスの `{param}` と一致 | `Path()` | `dependant.path_params`（常時必須・スカラー型限定） |
-| **2** | 型が `UploadFile` または `UploadFile` のシーケンス | `File()` | `dependant.body_params`（`multipart/form-data`） |
-| **3** | 複合型（`BaseModel`・`Mapping`・`dataclass`・`list[Model]`） | `Body()` | `dependant.body_params`（`application/json`） |
-| **4** | スカラー型またはスカラーの配列（`int`・`str`・`UUID`・`list[str]`） | `Query()` | `dependant.query_params` |
+| **1** | 引数名がルートパスの `{param}` と一致 | `Path()` | URL パスセグメント（常時必須・スカラー型限定） |
+| **2** | 型が `UploadFile` または `UploadFile` のシーケンス | `File()` | マルチパートファイルストリーム（`multipart/form-data`） |
+| **3** | 複合型（`BaseModel`・`Mapping`・`dataclass`・`list[Model]`） | `Body()` | JSON リクエストペイロード（`application/json`） |
+| **4** | スカラー型またはスカラーの配列（`int`・`str`・`UUID`・`list[str]`） | `Query()` | URL クエリ文字列（`?key=value`） |
 
-4. **ヘッダ名の自動正規化と構造化 `Param` モデル**: `Header(convert_underscores=True)`（既定）は Python の `snake_case` 引数名（例: `x_trace_id`）を標準的な HTTP ハイフン区切り（`x-trace-id`）へ自動変換します。さらに Pydantic の `BaseModel` に `Query()`・`Header()`・`Cookie()` を付与（`Annotated[FilterModel, Query()]`）すると、`_get_param_model()` が OpenAPI 上では個別パラメータとして展開しつつ、実行時の `request_params_to_args()` では `ConfigDict(extra="forbid")` を含むモデル全体の検証を一括適用します。
+4. **ヘッダ名の自動正規化と構造化パラメータモデル**: `Header(convert_underscores=True)`（既定）は Python の `snake_case` 引数名（例: `x_trace_id`）を標準的な HTTP ハイフン区切り（`x-trace-id`）へ自動変換します。さらに Pydantic の `BaseModel` に `Query()`・`Header()`・`Cookie()` を付与（`Annotated[FilterModel, Query()]`）すると、OpenAPI 上では個別パラメータとして展開しつつ、実行時には `ConfigDict(extra="forbid")` や `@model_validator` を含むモデル全体の検証を一括適用できます。
 
 ### マルチソース抽出と構造化 Query フィルタモデル
 
-以下の検証済みエンドポイントは、`Path` 制約、未宣言クエリキーを拒否する Pydantic `Query()` フィルタモデル、`Header` のアンダースコア自動変換、および型付き `Cookie` デフォルト値を単一の署名で統合しています。
+以下の検証済みエンドポイントは、`Path` 制約、未宣言クエリキーを拒否する Pydantic `Query()` フィルタモデル、`Header` のアンダースコア自動変換、および型付き `Cookie` デフォルト値を単一のシグネチャで統合しています。
 
 ```python
 from typing import Annotated, Literal
@@ -194,16 +194,16 @@ async def get_catalog_item(
     }
 ```
 
-実行時には `solve_dependencies()` が Path・Query・Header・Cookie の検証結果とエラーを単一のリストへ集約します。`item_id=0` や未定義の `?debug=1` などが渡された場合でも、最初のエラーで中断せず発生箇所付きの全エラー（`("query", "debug")`、`("path", "item_id")`）を 1 つの `RequestValidationError`（`422 Unprocessable Content`）として返却します。
+実行時には Path・Query・Header・Cookie の検証が一括で評価されます。`item_id=0` や未定義の `?debug=1` などが同時に渡された場合でも、最初のエラーで中断せず発生箇所付きの全エラー（`("query", "debug")`、`("path", "item_id")`）を 1 つの `RequestValidationError`（`422 Unprocessable Content`）として返却します。
 
 ## 2. 複合 JSON Body・Form データ・Multipart ストリーム
 
-ルートまたは依存関数が 1 つ以上のボディ引数を宣言すると、`_populate_api_route_state()` は `_should_embed_body_fields()` と `_get_body_field()` を評価し、HTTP ペイロードのデコード方式および OpenAPI スキーマ構造を決定します。
+エンドポイントまたは依存関数が 1 つ以上のボディ引数を宣言すると、FastAPI は付与されたマーカーに応じて HTTP ペイロードのデコード方式および OpenAPI リクエストボディスキーマを構成します。
 
-- **単一モデル直結と合成 `Body` エンベロープ**: `embed=True` を指定しない単一の `BaseModel` 引数は JSON ルートオブジェクト（`loc=("body",)`）に直接対応します。一方、**複数の `Body` 引数**が存在する場合や単一引数に `Body(embed=True)` が指定された場合は、`_get_body_field()` が `create_body_model()` を呼び出して合成スキーマ `Body_<route.unique_id>` を自動生成し、引数名をトップレベル JSON キーとするエンベロープ構造を要求します。既定の `strict_content_type=True` により、`get_request_handler()` は JSON デコード前に `application/json`（または `application/*+json`）ヘッダを厳密に検証します。
-- **URL エンコード `Form()` と Multipart `UploadFile` のライフサイクル**: `Form()` や `File()` を使用すると起動時に `ensure_multipart_is_installed()`（`python-multipart > 0.0.12`）が検証されます。リクエスト処理時は `body = await request.form()` がフォーム項目を解析し、アップロードファイルを `SpooledTemporaryFile`（1 MiB までメモリ保持、超過分をディスクへスプール）で裏打ちされた Starlette の `UploadFile` にラップします。同時に `AsyncExitStackMiddleware`（`scope["fastapi_middleware_astack"]`）へ `file_stack.push_async_callback(body.close)` が登録されるため、正常応答時も例外送出時も一時ファイル記述子が確実にクローズされます。
+- **単一モデル直結と複合リクエストボディスキーマ**: `embed=True` を指定しない単一の `BaseModel` 引数は JSON ルートオブジェクト（`loc=("body",)`）に直接対応します。一方、**複数の `Body` 引数**が存在する場合や単一引数に `Body(embed=True)` が指定された場合は、各引数名をトップレベル JSON キーとする複合リクエストボディスキーマが自動生成されます。既定の `strict_content_type=True` により、JSON デコード前に `application/json`（または `application/*+json`）ヘッダが厳密に検証されます。
+- **URL エンコード `Form()` と Multipart `UploadFile` のライフサイクル**: `Form()` や `File()` を使用する場合は `python-multipart`（`> 0.0.12`、起動時に確認）が必要です。リクエスト処理時は `await request.form()` がフォーム項目を解析し、アップロードファイルを `SpooledTemporaryFile`（1 MiB までメモリ保持、超過分をディスクへスプール）で裏打ちされた `UploadFile` にラップします。レスポンス完了時または例外送出時には自動クリーンアップフックが実行され、一時ファイル記述子が確実にクローズされます。
 
-```drawlib align=center code=fold file=multipart_and_composite_body.png caption="ペイロード解析アーキテクチャと比較: 複合 JSON Body・URL エンコード Form・Multipart UploadFile"
+```drawlib align=center code=hide file=multipart_and_composite_body.png caption="ペイロード解析アーキテクチャと比較: 複合 JSON Body・URL エンコード Form・Multipart UploadFile"
 from drawlib.canvas import save, setup
 from drawlib.icons import code, phosphor
 from drawlib.lines import line
@@ -233,7 +233,7 @@ lanes = [
         Styles.White,
         "await request.json()",
         "strict_content_type=True",
-        "Body_<unique_id> Envelope",
+        "Composite Body Schema",
         "Multi-model or Body(embed=True)",
         Styles.PrimaryNeutral,
     ),
@@ -247,7 +247,7 @@ lanes = [
         "await request.form()",
         "python-multipart > 0.0.12",
         "Form() Scalar & BaseModel",
-        "_extract_form_body() mapping",
+        "Validates form keys & lists",
         Styles.SecondaryNeutral,
     ),
     (
@@ -259,8 +259,8 @@ lanes = [
         Styles.DarkBold,
         "UploadFile + SpooledTemp",
         "1 MiB RAM -> disk rollover",
-        "AsyncExitStackMiddleware",
-        "push_async_callback(body.close)",
+        "Automatic File Cleanup",
+        "Closes spooled files on exit",
         Styles.PrimaryNeutral,
     ),
 ]
@@ -316,8 +316,8 @@ matrix.draw_flexible(
     data=[
         ["Dimension", "JSON Body()", "URL-Encoded Form()", "Multipart File() / UploadFile"],
         ["Media Type", "application/json (+json)", "application/x-www-form-urlencoded", "multipart/form-data"],
-        ["OpenAPI Schema", "Direct T or Body_<route_id>", "Body_<route_id> (form props)", "Body_<route_id> (binary str)"],
-        ["Memory & Cleanup", "Buffered bytes -> JSON dict", "FormData ImmutableMultiDict", "1 MiB RAM spool + ExitStack"],
+        ["OpenAPI Schema", "Direct T or keyed object", "Object with form fields", "Object with binary fields"],
+        ["Memory & Cleanup", "Buffered bytes -> JSON dict", "Parsed form multi-dict", "1 MiB RAM spool + auto-close"],
     ],
     align="bottom_left",
 )
@@ -357,7 +357,7 @@ async def replace_order(
     priority: Annotated[
         int,
         Body(ge=1, le=5, description="Dispatch priority tier (1=low, 5=urgent)"),
-        Doc("Scalar body attribute merged into synthetic Body model"),
+        Doc("Scalar body attribute merged into composite JSON payload"),
     ] = 3,
 ) -> dict[str, object]:
     return {
@@ -431,4 +431,4 @@ async def upload_document(
     }
 ```
 
-入力パラメータとペイロードの検証が完了すると、エンドポイントの戻り値は出力シリアライズおよびスキーマ合成エンジンへと引き渡されます。続いて [レスポンス直列化と OpenAPI 3.1](responses_and_openapi.md) で出力契約の仕組みを、さらに [Dependant DAG・キャッシュ・yield スコープ](../04_dependencies_and_security/dependency_injection.md) で依存グラフの解決機構を解説します。
+入力パラメータとペイロードの検証が完了すると、エンドポイントの戻り値は出力シリアライズおよびスキーマ合成パイプラインへと引き渡されます。続いて [レスポンス直列化と OpenAPI 3.1](responses_and_openapi.md) で出力契約の仕組みを、さらに [依存グラフ・キャッシュ・yield スコープ](../04_dependencies_and_security/dependency_injection.md) で依存関係グラフの解決パターンを解説します。

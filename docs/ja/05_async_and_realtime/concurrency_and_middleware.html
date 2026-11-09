@@ -13,7 +13,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ASGI ミドルウェアとスレッドプール制御 — FastAPI Visual Guide (Unofficial · Drawlib Demo)</title>
+    <title>ASGI ミドルウェアとスレッドプール制御 — FastAPI User Guide (Unofficial)</title>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
     <script>
@@ -49,15 +49,15 @@
     <meta name="description" content="FastAPI v0.162.2 は、すべての HTTP リクエストおよび WebSocket 接続を決定論的な 7 層の ASGI ミドルウェアオニオン構造で処理しつつ、async def コルーチンはシングルスレッドの AnyIO イベントループ上で直接実行し、通常の def…">
     <link rel="canonical" href="https://fastapi.drawlib.com/ja/05_async_and_realtime/concurrency_and_middleware.html">
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="FastAPI ビジュアル解説">
-    <meta property="og:title" content="ASGI ミドルウェアとスレッドプール制御 — FastAPI ビジュアル解説">
+    <meta property="og:site_name" content="FastAPI ユーザーガイド">
+    <meta property="og:title" content="ASGI ミドルウェアとスレッドプール制御 — FastAPI ユーザーガイド">
     <meta property="og:description" content="FastAPI v0.162.2 は、すべての HTTP リクエストおよび WebSocket 接続を決定論的な 7 層の ASGI ミドルウェアオニオン構造で処理しつつ、async def コルーチンはシングルスレッドの AnyIO イベントループ上で直接実行し、通常の def…">
     <meta property="og:url" content="https://fastapi.drawlib.com/ja/05_async_and_realtime/concurrency_and_middleware.html">
     <meta property="og:image" content="https://fastapi.drawlib.com/_assets/ogp.png">
     <meta property="og:locale" content="ja_JP">
     <meta property="og:locale:alternate" content="en_US">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="ASGI ミドルウェアとスレッドプール制御 — FastAPI ビジュアル解説">
+    <meta name="twitter:title" content="ASGI ミドルウェアとスレッドプール制御 — FastAPI ユーザーガイド">
     <meta name="twitter:description" content="FastAPI v0.162.2 は、すべての HTTP リクエストおよび WebSocket 接続を決定論的な 7 層の ASGI ミドルウェアオニオン構造で処理しつつ、async def コルーチンはシングルスレッドの AnyIO イベントループ上で直接実行し、通常の def…">
     <meta name="twitter:image" content="https://fastapi.drawlib.com/_assets/ogp.png">
     
@@ -70,17 +70,21 @@
     
 </head>
 <body>
-    <div class="demo-banner" role="region" aria-label="非公式ショーケース案内">
+    <div class="demo-banner" role="region" aria-label="ポータルナビゲーション">
         <div class="demo-banner-inner">
-            <span class="demo-banner-badge">UNOFFICIAL DEMO</span>
+            <span class="demo-banner-badge">UNOFFICIAL GUIDE</span>
             
             <span class="demo-banner-text">
-                <a href="https://www.drawlib.com/" target="_blank" rel="noopener noreferrer">Drawlib</a> と <a href="https://pypi.org/project/pni501/" target="_blank" rel="noopener noreferrer">PNI501</a> で作成した <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a>（v0.162.2, MIT）の非公式ビジュアル解説ショーケースです。
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a>（v0.162.2）非公式ユーザーガイド
             </span>
             <span class="demo-banner-links">
-                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 診断レポート →</a>
+                <strong style="color:#ffffff;">User Guide</strong>
                 <span class="demo-banner-sep">·</span>
-                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI 公式 Docs ↗</a>
+                <a href="https://fastapi.drawlib.com/architecture/">Architecture</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Audit</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official Docs ↗</a>
                 <span class="demo-banner-sep">·</span>
                 <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
             </span>
@@ -91,9 +95,9 @@
     <div class="doc-layout">
         <aside class="sidebar">
             <div class="sidebar-header">
-                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI ビジュアル解説">
+                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI ユーザーガイド">
                     
-                    FastAPI ビジュアル解説
+                    FastAPI ユーザーガイド
                     
                 </a>
                 <div class="sidebar-header-actions">
@@ -114,7 +118,7 @@
                         <ul class="nav-list">
                             
                             <li class="nav-item ">
-                                <a href="../index.html" >ガイド概要と全体マップ</a>
+                                <a href="../index.html" >ガイド概要</a>
                             </li>
                             
                         </ul>
@@ -125,7 +129,7 @@
                         <ul class="nav-list">
                             
                             <li class="nav-item ">
-                                <a href="../01_getting_started/overview.html" >FastAPI の設計思想と内部構造</a>
+                                <a href="../01_getting_started/overview.html" >FastAPI の設計思想と基本概念</a>
                             </li>
                             
                             <li class="nav-item ">
@@ -178,7 +182,7 @@
                         <ul class="nav-list">
                             
                             <li class="nav-item ">
-                                <a href="../04_dependencies_and_security/dependency_injection.html" >Dependant DAG・キャッシュ・yield スコープ</a>
+                                <a href="../04_dependencies_and_security/dependency_injection.html" >依存グラフ・キャッシュ・yield スコープ</a>
                             </li>
                             
                             <li class="nav-item ">
@@ -252,12 +256,12 @@
                         </ul>
                     
                         
-                        <div class="sidebar-heading">診断レポート &amp; 公式リンク</div>
+                        <div class="sidebar-heading">関連ガイド &amp; 公式リンク</div>
                         
                         <ul class="nav-list">
                             
                             <li class="nav-item ">
-                                <a href="https://fastapi.drawlib.com/reports/pni501/" target="_blank" rel="noopener noreferrer">PNI501 診断レポート<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                                <a href="https://fastapi.drawlib.com/architecture/" target="_blank" rel="noopener noreferrer">FastAPI 内部アーキテクチャ解説<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
                             </li>
                             
                             <li class="nav-item ">
@@ -265,7 +269,7 @@
                             </li>
                             
                             <li class="nav-item ">
-                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">デモのリポジトリ (GitHub)<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub リポジトリ<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
                             </li>
                             
                         </ul>
@@ -312,111 +316,53 @@
 <p>FastAPI <code>v0.162.2</code> は、すべての HTTP リクエストおよび WebSocket 接続を決定論的な 7 層の ASGI ミドルウェアオニオン構造で処理しつつ、<code>async def</code> コルーチンはシングルスレッドの AnyIO イベントループ上で直接実行し、通常の <code>def</code> 関数は上限付きワーカースレッドプールへ安全にオフロードします。</p>
 <figure class="drawlib-image" style="text-align: center;">
   <img src="../../images/05_async_and_realtime/concurrency_and_middleware/asgi_middleware_onion.png" alt="concurrency_and_middleware_1" />
-  <figcaption class="drawlib-caption">FastAPI v0.162.2 の 7 層 ASGI ミドルウェアオニオン構造（NativeTelemetry から APIRoute まで）</figcaption>
+  <figcaption class="drawlib-caption">FastAPI v0.162.2 の 7 層 ASGI ミドルウェアオニオン構造（OpenTelemetry 外殻スパンからエンドポイント実行まで）</figcaption>
 </figure>
-<details class="drawlib-code-details">
-<summary>Source Code</summary>
-<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.canvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">setup</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.icons</span><span class="w"> </span><span class="kn">import</span> <span class="n">phosphor</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.lines</span><span class="w"> </span><span class="kn">import</span> <span class="n">line</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.shapes</span><span class="w"> </span><span class="kn">import</span> <span class="n">rectangle</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">Colors</span><span class="p">,</span> <span class="n">Styles</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.text</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span>
-
-<span class="n">setup</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">176</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">98</span><span class="p">)</span>
-
-<span class="n">text</span><span class="p">(</span>
-    <span class="p">(</span><span class="mf">88.0</span><span class="p">,</span> <span class="mf">93.0</span><span class="p">),</span>
-    <span class="s2">"FastAPI v0.162.2 ASGI Middleware Onion (FastAPI.__call__ + build_middleware_stack)"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">13.0</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="c1"># 7 Concentric ASGI Layers (outermost L1 -&gt; innermost L7 core)</span>
-<span class="n">layers</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="p">(</span><span class="mf">88.0</span><span class="p">,</span> <span class="mf">45.0</span><span class="p">,</span> <span class="mf">132.0</span><span class="p">,</span> <span class="mf">80.0</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">line_style</span><span class="o">=</span><span class="s2">"dashed"</span><span class="p">,</span> <span class="n">shape_r</span><span class="o">=</span><span class="mf">2.5</span><span class="p">),</span>
-     <span class="mf">81.0</span><span class="p">,</span> <span class="s2">"1. NativeTelemetry (FastAPI.__call__)  •  W3C Context, Root Span &amp; Metrics"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">),</span>
-    <span class="p">(</span><span class="mf">88.0</span><span class="p">,</span> <span class="mf">42.2</span><span class="p">,</span> <span class="mf">122.0</span><span class="p">,</span> <span class="mf">69.0</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">2.2</span><span class="p">,</span> <span class="n">shape_line_color</span><span class="o">=</span><span class="n">Colors</span><span class="o">.</span><span class="n">Gray5</span><span class="p">),</span>
-     <span class="mf">72.5</span><span class="p">,</span> <span class="s2">"2. ServerErrorMiddleware  •  Catches Unhandled Exception / 500 Fallback"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">),</span>
-    <span class="p">(</span><span class="mf">88.0</span><span class="p">,</span> <span class="mf">39.4</span><span class="p">,</span> <span class="mf">112.0</span><span class="p">,</span> <span class="mf">58.0</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">2.0</span><span class="p">),</span>
-     <span class="mf">64.0</span><span class="p">,</span> <span class="s2">"3. ExceptionTelemetryMiddleware  •  Emits OTel Error Logs Before 500"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">),</span>
-    <span class="p">(</span><span class="mf">88.0</span><span class="p">,</span> <span class="mf">36.6</span><span class="p">,</span> <span class="mf">102.0</span><span class="p">,</span> <span class="mf">47.0</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">2.0</span><span class="p">),</span>
-     <span class="mf">55.5</span><span class="p">,</span> <span class="s2">"4. User Middleware (LIFO)  •  TrustedHost, CORS &amp; Pure ASGI Wrappers"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryBold</span><span class="p">),</span>
-    <span class="p">(</span><span class="mf">88.0</span><span class="p">,</span> <span class="mf">33.8</span><span class="p">,</span> <span class="mf">92.0</span><span class="p">,</span> <span class="mf">36.0</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.8</span><span class="p">,</span> <span class="n">shape_line_color</span><span class="o">=</span><span class="n">Colors</span><span class="o">.</span><span class="n">Gray5</span><span class="p">),</span>
-     <span class="mf">47.0</span><span class="p">,</span> <span class="s2">"5. ExceptionMiddleware  •  HTTPException, 422 Validation &amp; Custom"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">),</span>
-    <span class="p">(</span><span class="mf">88.0</span><span class="p">,</span> <span class="mf">31.0</span><span class="p">,</span> <span class="mf">82.0</span><span class="p">,</span> <span class="mf">25.0</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.8</span><span class="p">),</span>
-     <span class="mf">38.5</span><span class="p">,</span> <span class="s2">"6. AsyncExitStackMiddleware  •  Closes Form &amp; UploadFile Handles"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">),</span>
-<span class="p">]</span>
-
-<span class="k">for</span> <span class="n">cx</span><span class="p">,</span> <span class="n">cy</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">box_style</span><span class="p">,</span> <span class="n">label_y</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">txt_style</span> <span class="ow">in</span> <span class="n">layers</span><span class="p">:</span>
-    <span class="n">rectangle</span><span class="p">((</span><span class="n">cx</span><span class="p">,</span> <span class="n">cy</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="n">w</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">h</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">box_style</span><span class="p">)</span>
-    <span class="n">text</span><span class="p">((</span><span class="n">cx</span><span class="p">,</span> <span class="n">label_y</span><span class="p">),</span> <span class="n">label</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">txt_style</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.2</span><span class="p">))</span>
-
-<span class="c1"># Core Layer 7: APIRouter &amp; APIRoute</span>
-<span class="n">rectangle</span><span class="p">((</span><span class="mf">88.0</span><span class="p">,</span> <span class="mf">26.5</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">66.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">13.0</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.8</span><span class="p">))</span>
-<span class="n">phosphor</span><span class="o">.</span><span class="n">cpu</span><span class="p">((</span><span class="mf">60.0</span><span class="p">,</span> <span class="mf">26.5</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">5.2</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="p">)</span>
-<span class="n">text</span><span class="p">(</span>
-    <span class="p">(</span><span class="mf">91.0</span><span class="p">,</span> <span class="mf">26.5</span><span class="p">),</span>
-    <span class="s2">"7. Router / APIRoute</span><span class="se">\n</span><span class="s2">DI DAG • Endpoint • Serialization"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="c1"># Inbound ASGI Request &amp; Outbound ASGI Response arrows piercing into the core</span>
-<span class="n">line</span><span class="p">((</span><span class="mf">3.5</span><span class="p">,</span> <span class="mf">26.5</span><span class="p">),</span> <span class="p">(</span><span class="mf">54.5</span><span class="p">,</span> <span class="mf">26.5</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">line_width</span><span class="o">=</span><span class="mf">2.0</span><span class="p">))</span>
-<span class="n">rectangle</span><span class="p">((</span><span class="mf">21.0</span><span class="p">,</span> <span class="mf">34.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">33.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">9.0</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span> <span class="n">shape_line_color</span><span class="o">=</span><span class="n">Colors</span><span class="o">.</span><span class="n">Gray5</span><span class="p">))</span>
-<span class="n">text</span><span class="p">((</span><span class="mf">21.0</span><span class="p">,</span> <span class="mf">34.0</span><span class="p">),</span> <span class="s2">"Inbound ASGI</span><span class="se">\n</span><span class="s2">scope + receive()"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">))</span>
-
-<span class="n">line</span><span class="p">((</span><span class="mf">121.5</span><span class="p">,</span> <span class="mf">26.5</span><span class="p">),</span> <span class="p">(</span><span class="mf">172.5</span><span class="p">,</span> <span class="mf">26.5</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">line_width</span><span class="o">=</span><span class="mf">2.0</span><span class="p">))</span>
-<span class="n">rectangle</span><span class="p">((</span><span class="mf">155.0</span><span class="p">,</span> <span class="mf">34.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">33.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">9.0</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span> <span class="n">shape_line_color</span><span class="o">=</span><span class="n">Colors</span><span class="o">.</span><span class="n">Gray5</span><span class="p">))</span>
-<span class="n">text</span><span class="p">((</span><span class="mf">155.0</span><span class="p">,</span> <span class="mf">34.0</span><span class="p">),</span> <span class="s2">"Outbound ASGI</span><span class="se">\n</span><span class="s2">send(start / body)"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">))</span>
-
-<span class="n">save</span><span class="p">()</span>
-</code></pre>
-</details>
 <h2>1. 7 層から成る ASGI ミドルウェアオニオン</h2>
-<p>Uvicorn などの ASGI サーバーが <code>await app(scope, receive, send)</code> を呼び出すと、FastAPI は最外殻の <code>FastAPI.__call__</code> から遅延構築された <code>build_middleware_stack()</code> パイプラインへと順番に処理を渡します。この正確なネスト順序を把握しておくことで、<code>500</code> エラー時の CORS ヘッダー欠落、OpenTelemetry の例外ログ相関、<code>contextvars</code> の伝播境界にまつわるバグを未然に防げます。</p>
+<p>Uvicorn などの ASGI サーバーが受信した HTTP リクエストや WebSocket ハンドシェイクを処理する際、FastAPI は決定論的な 7 層の ASGI ミドルウェアパイプラインへ順番に処理を渡します。この正確なネスト順序を把握しておくことで、<code>500</code> エラー時の CORS ヘッダー欠落、OpenTelemetry の例外ログ相関、<code>contextvars</code> の伝播境界にまつわるバグを未然に防げます。</p>
 <table>
 <thead>
 <tr>
 <th style="text-align:left">レイヤー（外側から内側）</th>
-<th style="text-align:left">クラス / ステージ</th>
+<th style="text-align:left">公開 API / 機構</th>
 <th style="text-align:left"><code>v0.162.2</code> における主な責務</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align:left"><strong>1. テレメトリ入口</strong></td>
-<td style="text-align:left"><code>NativeTelemetry</code> (<code>FastAPI.__call__</code>)</td>
-<td style="text-align:left">W3C <code>traceparent</code>/<code>baggage</code> の抽出、ルート HTTP/WebSocket スパンの開始、アクティブ接続数の計測、および <code>_RequestTelemetry</code> のコンテキスト登録を行います。</td>
+<td style="text-align:left"><strong>1. OpenTelemetry 外殻スパン</strong></td>
+<td style="text-align:left"><code>FastAPI(telemetry=...)</code></td>
+<td style="text-align:left">W3C <code>traceparent</code>/<code>baggage</code> の抽出、ルート HTTP/WebSocket スパンの開始、アクティブ接続数の計測、およびリクエストテレメトリコンテキスト（<code>get_telemetry_data()</code>）の保持を行います。</td>
 </tr>
 <tr>
-<td style="text-align:left"><strong>2. 最終 500 防衛線</strong></td>
-<td style="text-align:left"><code>ServerErrorMiddleware</code></td>
-<td style="text-align:left"><code>@app.exception_handler(500)</code> や <code>@app.exception_handler(Exception)</code> を実行し、内側の層から漏れた未処理例外に対して安全な <code>500 Internal Server Error</code> 応答を保証します。</td>
+<td style="text-align:left"><strong>2. 未処理 500 防衛境界</strong></td>
+<td style="text-align:left"><code>@app.exception_handler(500)</code> / <code>Exception</code></td>
+<td style="text-align:left">カスタム <code>500</code> ハンドラーを実行し、内側の層から漏れた予期せぬ例外に対して安全な <code>500 Internal Server Error</code> 応答を保証します。</td>
 </tr>
 <tr>
-<td style="text-align:left"><strong>3. 未処理例外の観測</strong></td>
-<td style="text-align:left"><code>ExceptionTelemetryMiddleware</code></td>
-<td style="text-align:left"><code>ServerErrorMiddleware</code> が <code>500</code> 応答へ変換する<strong>直前</strong>に未処理例外を観測し、構造化された OTel <code>ERROR</code> ログイベントを送出して再送出します。</td>
+<td style="text-align:left"><strong>3. 内側例外スパン記録</strong></td>
+<td style="text-align:left"><code>TelemetryConfig</code>（<code>logs=True</code>）</td>
+<td style="text-align:left">外側の <code>500</code> 境界が HTTP 応答へ変換する<strong>直前</strong>に未処理例外をアクティブスパンへ記録し、構造化された OTel <code>ERROR</code> ログイベントを送出します。</td>
 </tr>
 <tr>
 <td style="text-align:left"><strong>4. ユーザーミドルウェア群</strong></td>
-<td style="text-align:left"><code>self.user_middleware</code></td>
-<td style="text-align:left"><code>app.add_middleware(...)</code> で登録されたミドルウェアを <strong>LIFO（後入れ先出し）順</strong> で実行します（最後に追加したミドルウェアが最も外側を包みます）。</td>
+<td style="text-align:left"><code>app.add_middleware(...)</code> / <code>@app.middleware(&quot;http&quot;)</code></td>
+<td style="text-align:left"><code>CORSMiddleware</code>、<code>TrustedHostMiddleware</code>、<code>GZipMiddleware</code>、純粋 ASGI クラスなどを <strong>LIFO（後入れ先出し）順</strong> で実行します（最後に追加したミドルウェアが最も外側を包みます）。</td>
 </tr>
 <tr>
-<td style="text-align:left"><strong>5. 制御された例外処理</strong></td>
-<td style="text-align:left"><code>ExceptionMiddleware</code></td>
+<td style="text-align:left"><strong>5. 制御されたエラー境界</strong></td>
+<td style="text-align:left"><code>@app.exception_handler(...)</code></td>
 <td style="text-align:left"><code>HTTPException</code>、<code>RequestValidationError</code>（<code>422</code>）、<code>WebSocketRequestValidationError</code>（<code>1008</code>）、およびカスタムドメイン例外ハンドラーを捕捉します。</td>
 </tr>
 <tr>
-<td style="text-align:left"><strong>6. 一時ファイル解放</strong></td>
-<td style="text-align:left"><code>AsyncExitStackMiddleware</code></td>
-<td style="text-align:left">すべてのユーザーミドルウェアの<strong>内側</strong>で <code>fastapi_middleware_astack</code> を保持し、同一の <code>contextvars</code> スコープ内で <code>Form</code> や <code>UploadFile</code> の一時ファイルハンドルを確実にクローズします。</td>
+<td style="text-align:left"><strong>6. リクエストリソース解放</strong></td>
+<td style="text-align:left"><code>Form</code> / <code>UploadFile</code> ライフサイクル</td>
+<td style="text-align:left">すべてのユーザーミドルウェアの<strong>内側</strong>かつ同一の <code>contextvars</code> スコープ内で、<code>Form</code> や <code>UploadFile</code> の一時ファイルハンドルを確実にクローズします。</td>
 </tr>
 <tr>
-<td style="text-align:left"><strong>7. ルーティング &amp; DI 実行</strong></td>
-<td style="text-align:left"><code>APIRouter</code> / <code>APIRoute</code></td>
-<td style="text-align:left">ボディ読取、<code>fastapi_inner_astack</code> 上での <a href="../04_dependencies_and_security/dependency_injection.html">Dependant DAG 解決</a>、エンドポイント実行、レスポンス直列化、および <code>BackgroundTasks</code> の紐付けを行います。</td>
+<td style="text-align:left"><strong>7. ルーター &amp; エンドポイント実行</strong></td>
+<td style="text-align:left"><code>APIRouter</code> / <code>Depends()</code></td>
+<td style="text-align:left">ボディ読取、<a href="../04_dependencies_and_security/dependency_injection.html">依存性注入（DI）</a>の解決（ストリーム終了後のリクエストスコープ解放を含む）、エンドポイント実行、レスポンス検証、および <code>BackgroundTasks</code> の予約を行います。</td>
 </tr>
 </tbody>
 </table>
@@ -484,119 +430,19 @@
 <span class="k">assert</span> <span class="s2">"x-process-time-ms"</span> <span class="ow">in</span> <span class="n">res</span><span class="o">.</span><span class="n">headers</span>
 </code></pre>
 <blockquote>
-<p><strong>未処理 500 エラー時の CORS ヘッダー</strong>: <code>ServerErrorMiddleware</code>（第 2 層）は <code>self.user_middleware</code>（第 4 層）の<strong>外側</strong>に位置するため、第 2 層で生成されるデフォルトの <code>500</code> レスポンスは <code>CORSMiddleware</code> を通過しません。ブラウザ向けに一貫したオリジン制御が必要な場合は、<code>@app.exception_handler(Exception)</code> を定義するかリバースプロキシ側で許可オリジンを明示し、認証付き API で <code>allow_origins=[&quot;*&quot;]</code> を絶対に使用しないでください。</p>
+<p><strong>未処理 500 エラー時の CORS ヘッダー</strong>: 未処理 <code>500</code> 防衛境界（第 2 層）は <code>app.add_middleware(...)</code> で追加したユーザーミドルウェア群（第 4 層）の<strong>外側</strong>に位置するため、第 2 層で生成されるデフォルトの <code>500</code> レスポンスは <code>CORSMiddleware</code> を通過しません。ブラウザ向けに一貫したオリジン制御が必要な場合は、<code>@app.exception_handler(Exception)</code> を定義するかリバースプロキシ側で許可オリジンを明示し、認証付き API で <code>allow_origins=[&quot;*&quot;]</code> を絶対に使用しないでください。</p>
 </blockquote>
 <hr />
 <h2>2. イベントループ vs ワーカースレッドプールと <code>BackgroundTasks</code></h2>
-<p>FastAPI はルート登録時に関数シグネチャ（<code>_is_coroutine_callable</code>）を検査し、イベントループ上での直接実行と AnyIO ワーカースレッドプールへの委譲を自動的に振り分けます。</p>
+<p>FastAPI はルート登録時に関数シグネチャを検査し、イベントループ上での直接実行（<code>async def</code>）と AnyIO ワーカースレッドプールへの委譲（<code>def</code>）を自動的に振り分けます。</p>
 <figure class="drawlib-image" style="text-align: center;">
   <img src="../../images/05_async_and_realtime/concurrency_and_middleware/event_loop_vs_threadpool.png" alt="concurrency_and_middleware_2" />
   <figcaption class="drawlib-caption">実行経路の分岐：シングルスレッド イベントループ vs AnyIO ワーカースレッドプールと BackgroundTasks</figcaption>
 </figure>
-<details class="drawlib-code-details">
-<summary>Source Code</summary>
-<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.canvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">setup</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.diagrams.flow</span><span class="w"> </span><span class="kn">import</span> <span class="n">Decision</span><span class="p">,</span> <span class="n">End</span><span class="p">,</span> <span class="n">FlowDiagram</span><span class="p">,</span> <span class="n">Process</span><span class="p">,</span> <span class="n">Start</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">Styles</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.text</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span>
-
-<span class="n">setup</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">166</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">94</span><span class="p">)</span>
-
-<span class="n">text</span><span class="p">(</span>
-    <span class="p">(</span><span class="mf">83.0</span><span class="p">,</span> <span class="mf">89.5</span><span class="p">),</span>
-    <span class="s2">"FastAPI Concurrency Routing: async def vs plain def &amp; BackgroundTasks"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">13.0</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="n">node_txt</span> <span class="o">=</span> <span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.2</span><span class="p">)</span>
-
-<span class="n">flow</span> <span class="o">=</span> <span class="n">FlowDiagram</span><span class="p">(</span>
-    <span class="n">node_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.2</span><span class="p">),</span>
-    <span class="n">edge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">,</span>
-    <span class="n">edge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">width</span><span class="o">=</span><span class="mi">158</span><span class="p">,</span>
-    <span class="n">height</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span>
-    <span class="n">lane_orientation</span><span class="o">=</span><span class="s2">"vertical"</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="c1"># 3 Vertical Swimlanes: widths 54 + 54 + 50 = 158 (centerlines X = 27, 81, 133)</span>
-<span class="n">flow</span><span class="o">.</span><span class="n">add_lane</span><span class="p">(</span>
-    <span class="s2">"AnyIO Event Loop (1 Thread)"</span><span class="p">,</span>
-    <span class="n">width</span><span class="o">=</span><span class="mi">54</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
-    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
-    <span class="n">header_size</span><span class="o">=</span><span class="mf">7.0</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">flow</span><span class="o">.</span><span class="n">add_lane</span><span class="p">(</span>
-    <span class="s2">"Worker Threadpool (40 Tokens)"</span><span class="p">,</span>
-    <span class="n">width</span><span class="o">=</span><span class="mi">54</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
-    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
-    <span class="n">header_size</span><span class="o">=</span><span class="mf">7.0</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">flow</span><span class="o">.</span><span class="n">add_lane</span><span class="p">(</span>
-    <span class="s2">"Post-Response Lifecycle"</span><span class="p">,</span>
-    <span class="n">width</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
-    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
-    <span class="n">header_size</span><span class="o">=</span><span class="mf">7.0</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="n">start</span> <span class="o">=</span> <span class="n">flow</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Start</span><span class="p">(</span><span class="s2">"Incoming ASGI Request"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">38</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">8.5</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span> <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.2</span><span class="p">)),</span>
-    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mi">27</span><span class="p">,</span> <span class="mi">66</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">dispatch</span> <span class="o">=</span> <span class="n">flow</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Decision</span><span class="p">(</span><span class="s2">"Callable</span><span class="se">\n</span><span class="s2">Signature?"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">34</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">13.5</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span> <span class="n">text_style</span><span class="o">=</span><span class="n">node_txt</span><span class="p">),</span>
-    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mi">27</span><span class="p">,</span> <span class="mi">49</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">async_exec</span> <span class="o">=</span> <span class="n">flow</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Process</span><span class="p">(</span><span class="s2">"Await Coroutine Directly</span><span class="se">\n</span><span class="s2">(Non-Blocking Async I/O)"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">44</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">11.5</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span> <span class="n">text_style</span><span class="o">=</span><span class="n">node_txt</span><span class="p">),</span>
-    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mi">27</span><span class="p">,</span> <span class="mf">30.5</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">pool_enter</span> <span class="o">=</span> <span class="n">flow</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Process</span><span class="p">(</span><span class="s2">"run_in_threadpool /</span><span class="se">\n</span><span class="s2">contextmanager_in_threadpool"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">43</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">11.5</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span> <span class="n">text_style</span><span class="o">=</span><span class="n">node_txt</span><span class="p">),</span>
-    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mi">81</span><span class="p">,</span> <span class="mi">49</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">sync_exec</span> <span class="o">=</span> <span class="n">flow</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Process</span><span class="p">(</span><span class="s2">"Run Sync DB Driver /</span><span class="se">\n</span><span class="s2">Blocking File or CPU Helper"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">43</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">11.5</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span> <span class="n">text_style</span><span class="o">=</span><span class="n">node_txt</span><span class="p">),</span>
-    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mi">81</span><span class="p">,</span> <span class="mf">30.5</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">merge</span> <span class="o">=</span> <span class="n">flow</span><span class="o">.</span><span class="n">junction</span><span class="p">((</span><span class="mi">27</span><span class="p">,</span> <span class="mf">19.5</span><span class="p">))</span>
-<span class="n">send_resp</span> <span class="o">=</span> <span class="n">flow</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Process</span><span class="p">(</span><span class="s2">"Serialize &amp; Send Response</span><span class="se">\n</span><span class="s2">(http.response.body Done)"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">44</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">11.0</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span> <span class="n">text_style</span><span class="o">=</span><span class="n">node_txt</span><span class="p">),</span>
-    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mi">27</span><span class="p">,</span> <span class="mf">9.5</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">bg_tasks</span> <span class="o">=</span> <span class="n">flow</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Process</span><span class="p">(</span><span class="s2">"Run BackgroundTasks</span><span class="se">\n</span><span class="s2">(Traced Sequentially)"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">41</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">11.5</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span> <span class="n">text_style</span><span class="o">=</span><span class="n">node_txt</span><span class="p">),</span>
-    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mi">133</span><span class="p">,</span> <span class="mf">30.5</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">done</span> <span class="o">=</span> <span class="n">flow</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">End</span><span class="p">(</span><span class="s2">"ASGI Scope Closed"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">36</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">9.0</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryFlat</span><span class="p">,</span> <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.2</span><span class="p">)),</span>
-    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mi">133</span><span class="p">,</span> <span class="mf">9.5</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="n">start</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">dispatch</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
-<span class="n">dispatch</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">async_exec</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"async def"</span><span class="p">,</span> <span class="n">start_side</span><span class="o">=</span><span class="s2">"bottom"</span><span class="p">,</span> <span class="n">end_side</span><span class="o">=</span><span class="s2">"top"</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
-<span class="n">dispatch</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">pool_enter</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"plain def"</span><span class="p">,</span> <span class="n">start_side</span><span class="o">=</span><span class="s2">"right"</span><span class="p">,</span> <span class="n">end_side</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
-<span class="n">pool_enter</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">sync_exec</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
-<span class="n">async_exec</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">merge</span><span class="p">,</span> <span class="n">start_side</span><span class="o">=</span><span class="s2">"bottom"</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="p">(</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
-<span class="n">sync_exec</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">merge</span><span class="p">,</span> <span class="n">start_side</span><span class="o">=</span><span class="s2">"bottom"</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="p">(</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span><span class="o">.</span><span class="n">via</span><span class="p">((</span><span class="mi">81</span><span class="p">,</span> <span class="mf">19.5</span><span class="p">))</span>
-<span class="n">merge</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">send_resp</span><span class="p">,</span> <span class="n">end_side</span><span class="o">=</span><span class="s2">"top"</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">))</span>
-<span class="n">send_resp</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">bg_tasks</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"After send()"</span><span class="p">,</span> <span class="n">start_side</span><span class="o">=</span><span class="s2">"right"</span><span class="p">,</span> <span class="n">end_side</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span><span class="o">.</span><span class="n">via</span><span class="p">((</span><span class="mf">106.5</span><span class="p">,</span> <span class="mf">9.5</span><span class="p">),</span> <span class="p">(</span><span class="mf">106.5</span><span class="p">,</span> <span class="mf">30.5</span><span class="p">))</span>
-<span class="n">bg_tasks</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">done</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
-
-<span class="n">flow</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">4.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">))</span>
-<span class="n">save</span><span class="p">()</span>
-</code></pre>
-</details>
 <h3>FastAPI 並行実行の 3 原則</h3>
 <ol>
 <li><strong><code>async def</code> はイベントループ上で直接動作する</strong>: 非同期ネイティブドライバ（<code>httpx.AsyncClient</code>、<code>asyncpg</code>、<code>redis.asyncio</code>、<code>anyio</code> など）を <code>await</code> する場合は <code>async def</code> を使用します。<strong><code>async def</code> の内部で同期ブロッキング関数（<code>time.sleep()</code>、<code>requests.get()</code>、同期 ORM クエリ、重い CPU ループ）を直接呼び出してはなりません</strong>。呼び出すとワーカープロセス全体のイベントループが停止し、他の同時接続リクエストがすべてフリーズします。</li>
-<li><strong>通常の <code>def</code> と同期 <code>yield</code> 依存関係はスレッドプールで実行される</strong>: 通常の <code>def</code> エンドポイントや依存関数は、AnyIO のデフォルト <code>40</code> トークン（<code>CapacityLimiter</code>）で制御されたワーカースレッドプール上で <code>run_in_threadpool</code>（同期 <code>yield</code> 依存関係では <code>contextmanager_in_threadpool</code>）を通じて安全に実行されます。<code>async def</code> エンドポイント内から一部の同期ヘルパーだけを呼びたい場合は、<code>await run_in_threadpool(fn, *args)</code> で明示的にオフロードします。</li>
+<li><strong>通常の <code>def</code> と同期 <code>yield</code> 依存関係はスレッドプールで実行される</strong>: 通常の <code>def</code> エンドポイントや同期 <code>yield</code> 依存関数は、AnyIO のデフォルト <code>40</code> トークン（<code>CapacityLimiter</code>）で制御されたワーカースレッドプール上で前処理・後処理ともに安全に実行されます。<code>async def</code> エンドポイント内から一部の同期ヘルパーだけを呼びたい場合は、<code>await run_in_threadpool(fn, *args)</code> で明示的にオフロードします。</li>
 <li><strong><code>BackgroundTasks</code> はレスポンス送信完了後に順次実行される</strong>: <code>BackgroundTasks</code> に登録された処理は、クライアントへ HTTP レスポンスを返し終えた後に <code>fastapi.background_task</code> の <a href="../06_observability_and_testing/telemetry_and_errors.html">OpenTelemetry スパン</a> 付きで順次実行されます。監査ログ記録やキャッシュ更新などの軽量なベストエフォート処理に限定し、再試行保証や長時間ジョブには外部の永続ジョブキューを併用してください。</li>
 </ol>
 <pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterator</span>
@@ -616,7 +462,7 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">get_sync_session</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-    <span class="c1"># Entered &amp; exited safely via contextmanager_in_threadpool</span>
+    <span class="c1"># Entered &amp; exited safely on the worker threadpool</span>
     <span class="n">audit_log</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"session:open"</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="k">yield</span> <span class="s2">"tx-101"</span>
@@ -650,6 +496,11 @@
 <p>次節の <a href="sse_websockets_streaming.html">ネイティブ SSE・JSONL・WebSocket</a> では、この非同期実行基盤の上に構築された 3 つのリアルタイム配信・双方向通信プリミティブを詳しく解説します。</p>
 
             </main>
+            <footer class="footer">
+                
+                FastAPI® は Sebastián Ramírez（<a href="https://github.com/tiangolo" target="_blank" rel="noopener noreferrer">@tiangolo</a>）の登録商標です。本サイトは非公式ガイドであり、公式プロジェクトとは提携していません。公式ドキュメントは <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">fastapi.tiangolo.com</a> をご参照ください。
+                
+            </footer>
         </div>
     </div>
     

@@ -2,7 +2,7 @@
 
 FastAPI `v0.162.2` embeds zero-patch OpenTelemetry instrumentation directly inside `fastapi.telemetry` (`TelemetryConfig` and `get_telemetry_data()`) and pairs it with a two-tier exception boundary that separates client `4xx` / `422` errors from `500` server contract breaches.
 
-```drawlib align=center code=fold file=native_otel_architecture.png caption="FastAPI v0.162.2 Native OpenTelemetry Pipeline: Root Span, Child Operation Spans & Context Data"
+```drawlib align=center code=hide file=native_otel_architecture.png caption="FastAPI v0.162.2 Native OpenTelemetry Pipeline: Root Span, Child Operation Spans & Context Data"
 from drawlib.canvas import save, setup
 from drawlib.diagrams.architecture import ArchitectureDiagram, Node, NodeGroup, PhosphorIcon
 from drawlib.styles import Styles
@@ -128,13 +128,13 @@ save()
 Prior to native telemetry, instrumenting FastAPI required external monkey-patching middlewares that could only see raw ASGI messages—missing fine-grained visibility into dependency resolution, Pydantic response serialization, or validation failures. In FastAPI `v0.162.2`, `FastAPI(telemetry=TelemetryConfig(...))` instruments the request lifecycle natively against OpenTelemetry semantic conventions (`1.44.0`):
 
 1. **Root Server & WebSocket Spans (`tracing=True`)**: Extracts W3C `traceparent` and `baggage` headers, redacts sensitive query keys (`sig`, `X-Amz-Signature`, `X-Goog-Signature`), and updates the span name to `"{METHOD} {http.route}"` (e.g., `GET /orders/{order_id}`) once a route matches.
-2. **Four Granular Child Spans (`operation_spans=True`)**: Automatically wraps internal phases with `code.function.name` attributes:
-   - `fastapi.dependencies`: Total time spent resolving the `Dependant` DAG (`solve_dependencies`).
-   - `fastapi.endpoint`: Coroutine `await` or worker-thread execution time (`run_endpoint_function`).
-   - `fastapi.serialization`: Pydantic validation and Rust JSON serialization (`serialize_response`).
+2. **Four Granular Child Spans (`operation_spans=True`)**: Automatically wraps each request phase with dedicated operation spans:
+   - `fastapi.dependencies`: Total time spent resolving the `Depends()` dependency graph.
+   - `fastapi.endpoint`: Endpoint execution time (`async def` coroutine `await` or worker threadpool execution).
+   - `fastapi.serialization`: Response validation (`response_model`) and Pydantic Rust JSON serialization.
    - `fastapi.background_task`: Each post-response task inside [`BackgroundTasks`](../05_async_and_realtime/concurrency_and_middleware.md).
 3. **Metrics & Structured Logs (`metrics=True`, `logs=True`)**: Records `http.server.request.duration` histograms and `http.server.active_requests` counters, emits `WARN` log events (`fastapi.validation.failed`) on `422` errors, and emits `ERROR` log events (`http.server.request.exception`) on unhandled crashes.
-4. **Synchronous Context Inspection (`get_telemetry_data()`)**: Exposes a read-only `TelemetryData` object (`request`, `websocket`, `body`, `values`, `errors`) to custom span/log processors during active request execution without leaking payloads into exported spans by default, and clears references (`data = None`) immediately on teardown.
+4. **Synchronous Context Inspection (`get_telemetry_data()`)**: Exposes a read-only `TelemetryData` object (`request`, `websocket`, `body`, `values`, `errors`) to custom span/log processors during active request execution without leaking payloads into exported spans by default, and clears context references immediately on teardown.
 
 ```python
 from typing import Annotated
@@ -216,7 +216,7 @@ assert {
 
 FastAPI intentionally splits exception handling across **two distinct middleware boundaries** in the [ASGI middleware onion](../05_async_and_realtime/concurrency_and_middleware.md):
 
-```drawlib align=center code=fold file=exception_hierarchy_routing.png caption="Exception Routing Across ExceptionMiddleware (4xx), ExceptionTelemetryMiddleware, and ServerErrorMiddleware (500)"
+```drawlib align=center code=hide file=exception_hierarchy_routing.png caption="FastAPI Exception Routing: Handled Client Errors (4xx / 422) vs Inner Exception Span Recorder & Outer 500 Fallback"
 from drawlib.canvas import save, setup
 from drawlib.diagrams.flow import End, FlowDiagram, Process
 from drawlib.styles import Styles
@@ -243,15 +243,15 @@ flow = FlowDiagram(
 
 # 3 Swimlanes: 54 + 54 + 54 = 162 (centerlines X = 27, 81, 135)
 flow.add_lane(
-    "1. APIRoute Execution",
+    "1. Endpoint & Validation",
     width=54,
     style=Styles.Neutral,
     header_style=Styles.PrimaryNeutral,
-    text_style=Styles.PrimaryBold.patch(text_size=10.5, halign="left"),
+    text_style=Styles.PrimaryBold.patch(text_size=10.5),
     header_size=7.0,
 )
 flow.add_lane(
-    "2. ExceptionMiddleware",
+    "2. Handled Error Boundary",
     width=54,
     style=Styles.Neutral,
     header_style=Styles.SecondaryNeutral,
@@ -263,7 +263,7 @@ flow.add_lane(
     width=54,
     style=Styles.Neutral,
     header_style=Styles.PrimaryNeutral,
-    text_style=Styles.PrimaryBold.patch(text_size=10.5, halign="left"),
+    text_style=Styles.PrimaryBold.patch(text_size=10.5),
     header_size=7.0,
 )
 
@@ -290,11 +290,11 @@ h_4xx = flow.add(
 )
 
 otel_err = flow.add(
-    Process("ExceptionTelemetryMiddleware\n(OTel ERROR Log + Span Error)", width=45, height=14, style=Styles.PrimaryNeutral, text_style=node_txt),
+    Process("Inner Exception Recorder\n(OTel ERROR Log + Span Error)", width=45, height=14, style=Styles.PrimaryNeutral, text_style=node_txt),
     xy=(135, 42),
 )
 srv_500 = flow.add(
-    End("ServerErrorMiddleware\n500 Contract Breach Guard", width=45, height=13, style=Styles.PrimaryFlat, text_style=Styles.WhiteBold.patch(text_size=10.2)),
+    End("Outer 500 Fallback Guard\n(Safe 500 Response)", width=45, height=13, style=Styles.PrimaryFlat, text_style=Styles.WhiteBold.patch(text_size=10.2)),
     xy=(135, 15),
 )
 
@@ -309,8 +309,8 @@ save()
 
 ### Why `ResponseValidationError` Returns `500` (Not `422`)
 
-- **Client Mistakes (`RequestValidationError` -> `422`, `HTTPException` -> `4xx`)**: Caught inside `ExceptionMiddleware`. FastAPI deliberately leaves the root OpenTelemetry span status unset for `4xx` responses (since the server operated correctly) while emitting a `WARN` validation event.
-- **Server Contract Breaches (`ResponseValidationError` -> `500`)**: If your backend returns data missing a required field or containing an invalid type against `response_model`, FastAPI raises `ResponseValidationError`. Because it represents a **server bug** (never a client fault), it bypasses `ExceptionMiddleware`, triggers `ExceptionTelemetryMiddleware` (`StatusCode.ERROR` + stack trace log), and returns a generic `500 Internal Server Error` via `ServerErrorMiddleware`—preventing accidental data leaks while failing CI tests loudly!
+- **Client Mistakes (`RequestValidationError` -> `422`, `HTTPException` -> `4xx`)**: Caught inside the handled-error boundary (`@app.exception_handler(...)`). FastAPI deliberately leaves the root OpenTelemetry span status unset for `4xx` responses (since the server operated correctly) while emitting a `WARN` validation event.
+- **Server Contract Breaches (`ResponseValidationError` -> `500`)**: If your backend returns data missing a required field or containing an invalid type against `response_model`, FastAPI raises `ResponseValidationError`. Because it represents a **server bug** (never a client fault), it bypasses `4xx` exception handlers, triggers the inner exception span recorder (`StatusCode.ERROR` + stack trace log), and returns a generic `500 Internal Server Error` at the outer `500` fallback boundary—preventing accidental data leaks while failing CI tests loudly!
 
 ### Standardizing Errors with RFC 9457 (`application/problem+json`)
 

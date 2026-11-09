@@ -13,7 +13,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Native SSE, JSONL &amp; WebSockets — FastAPI Visual Guide (Unofficial · Drawlib Demo)</title>
+    <title>Native SSE, JSONL &amp; WebSockets — FastAPI User Guide (Unofficial)</title>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
     <script>
@@ -47,15 +47,15 @@
     <meta name="description" content="FastAPI v0.162.2 ships three first-class real-time and streaming primitives out of the box—native Server-Sent Events (EventSourceResponse), typed JSON Lines…">
     <link rel="canonical" href="https://fastapi.drawlib.com/en/05_async_and_realtime/sse_websockets_streaming.html">
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="FastAPI Visual Guide">
-    <meta property="og:title" content="Native SSE, JSONL &amp; WebSockets — FastAPI Visual Guide">
+    <meta property="og:site_name" content="FastAPI User Guide">
+    <meta property="og:title" content="Native SSE, JSONL &amp; WebSockets — FastAPI User Guide">
     <meta property="og:description" content="FastAPI v0.162.2 ships three first-class real-time and streaming primitives out of the box—native Server-Sent Events (EventSourceResponse), typed JSON Lines…">
     <meta property="og:url" content="https://fastapi.drawlib.com/en/05_async_and_realtime/sse_websockets_streaming.html">
     <meta property="og:image" content="https://fastapi.drawlib.com/_assets/ogp.png">
     <meta property="og:locale" content="en_US">
     <meta property="og:locale:alternate" content="ja_JP">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Native SSE, JSONL &amp; WebSockets — FastAPI Visual Guide">
+    <meta name="twitter:title" content="Native SSE, JSONL &amp; WebSockets — FastAPI User Guide">
     <meta name="twitter:description" content="FastAPI v0.162.2 ships three first-class real-time and streaming primitives out of the box—native Server-Sent Events (EventSourceResponse), typed JSON Lines…">
     <meta name="twitter:image" content="https://fastapi.drawlib.com/_assets/ogp.png">
     
@@ -68,19 +68,23 @@
     
 </head>
 <body>
-    <div class="demo-banner" role="region" aria-label="Unofficial Showcase Notice">
+    <div class="demo-banner" role="region" aria-label="Portal Navigation">
         <div class="demo-banner-inner">
-            <span class="demo-banner-badge">UNOFFICIAL DEMO</span>
+            <span class="demo-banner-badge">UNOFFICIAL GUIDE</span>
             
             <span class="demo-banner-text">
-                Unofficial visual architecture showcase of <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a> (v0.162.2, MIT) illustrated as code with <a href="https://www.drawlib.com/" target="_blank" rel="noopener noreferrer">Drawlib</a> &amp; <a href="https://pypi.org/project/pni501/" target="_blank" rel="noopener noreferrer">PNI501</a>.
+                Unofficial Community User Guide for <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a> (v0.162.2)
             </span>
             <span class="demo-banner-links">
-                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Report →</a>
+                <strong style="color:#ffffff;">User Guide</strong>
                 <span class="demo-banner-sep">·</span>
-                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official FastAPI Docs ↗</a>
+                <a href="https://fastapi.drawlib.com/architecture/">Architecture</a>
                 <span class="demo-banner-sep">·</span>
-                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">Demo Source ↗</a>
+                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Audit</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official Docs ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
             </span>
             
         </div>
@@ -89,9 +93,9 @@
     <div class="doc-layout">
         <aside class="sidebar">
             <div class="sidebar-header">
-                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI Visual Guide">
+                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI User Guide">
                     
-                    FastAPI Visual Guide
+                    FastAPI User Guide
                     
                 </a>
                 <div class="sidebar-header-actions">
@@ -112,7 +116,7 @@
                         <ul class="nav-list">
                             
                             <li class="nav-item ">
-                                <a href="../index.html" >Overview &amp; Architecture Map</a>
+                                <a href="../index.html" >Guide Overview</a>
                             </li>
                             
                         </ul>
@@ -176,7 +180,7 @@
                         <ul class="nav-list">
                             
                             <li class="nav-item ">
-                                <a href="../04_dependencies_and_security/dependency_injection.html" >Dependant DAG, Caching &amp; Scopes</a>
+                                <a href="../04_dependencies_and_security/dependency_injection.html" >Dependency Graph, Caching &amp; Scopes</a>
                             </li>
                             
                             <li class="nav-item ">
@@ -250,12 +254,12 @@
                         </ul>
                     
                         
-                        <div class="sidebar-heading">Diagnostic &amp; Upstream Links</div>
+                        <div class="sidebar-heading">Companion Guides &amp; Links</div>
                         
                         <ul class="nav-list">
                             
                             <li class="nav-item ">
-                                <a href="https://fastapi.drawlib.com/reports/pni501/" target="_blank" rel="noopener noreferrer">PNI501 Diagnostic Report<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                                <a href="https://fastapi.drawlib.com/architecture/" target="_blank" rel="noopener noreferrer">FastAPI Internal Architecture<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
                             </li>
                             
                             <li class="nav-item ">
@@ -263,7 +267,7 @@
                             </li>
                             
                             <li class="nav-item ">
-                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">Demo Source (GitHub)<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub Repository<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
                             </li>
                             
                         </ul>
@@ -312,109 +316,6 @@
   <img src="../../images/05_async_and_realtime/sse_websockets_streaming/streaming_modes_comparison.png" alt="sse_websockets_streaming_1" />
   <figcaption class="drawlib-caption">FastAPI v0.162.2 Built-In Realtime & Generator Streaming Modes Compared</figcaption>
 </figure>
-<details class="drawlib-code-details">
-<summary>Source Code</summary>
-<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.canvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">setup</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.icons</span><span class="w"> </span><span class="kn">import</span> <span class="n">phosphor</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.smartarts</span><span class="w"> </span><span class="kn">import</span> <span class="n">CardList</span><span class="p">,</span> <span class="n">Panel</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">Styles</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.text</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span>
-
-<span class="n">setup</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">174</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">78</span><span class="p">)</span>
-
-<span class="n">text</span><span class="p">(</span>
-    <span class="p">(</span><span class="mf">87.0</span><span class="p">,</span> <span class="mf">73.0</span><span class="p">),</span>
-    <span class="s2">"FastAPI v0.162.2 Native Streaming &amp; Realtime Protocols"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">13.5</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="c1"># Column 1: Native SSE (Focal Primary Panel)</span>
-<span class="n">p_sse</span> <span class="o">=</span> <span class="n">Panel</span><span class="p">(</span>
-    <span class="s2">"1. SSE"</span><span class="p">,</span>
-    <span class="s2">"text/event-stream"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
-    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.0</span><span class="p">),</span>
-    <span class="n">description_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">broadcast</span><span class="p">,</span>
-    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="p">,</span>
-    <span class="n">header_height</span><span class="o">=</span><span class="mf">9.0</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">p_sse</span><span class="o">.</span><span class="n">draw</span><span class="p">((</span><span class="mf">4.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">52.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">62.0</span><span class="p">)</span>
-<span class="n">xy1</span><span class="p">,</span> <span class="n">w1</span><span class="p">,</span> <span class="n">h1</span> <span class="o">=</span> <span class="n">p_sse</span><span class="o">.</span><span class="n">get_content_box</span><span class="p">((</span><span class="mf">4.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">52.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">62.0</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="p">(</span><span class="mf">3.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">))</span>
-
-<span class="n">cl_sse</span> <span class="o">=</span> <span class="n">CardList</span><span class="p">(</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
-    <span class="n">description_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">badge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
-    <span class="n">badge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">spacing</span><span class="o">=</span><span class="mf">2.2</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">cl_sse</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"EventSourceResponse"</span><span class="p">,</span> <span class="s2">"GET or POST for LLM &amp; MCP"</span><span class="p">,</span> <span class="n">badge_text</span><span class="o">=</span><span class="s2">"A"</span><span class="p">)</span>
-<span class="n">cl_sse</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"ServerSentEvent"</span><span class="p">,</span> <span class="s2">"JSON data, raw_data, id, retry"</span><span class="p">,</span> <span class="n">badge_text</span><span class="o">=</span><span class="s2">"B"</span><span class="p">)</span>
-<span class="n">cl_sse</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"Anti-Buffer &amp; Ping"</span><span class="p">,</span> <span class="s2">"no-cache, X-Accel + 15s ping"</span><span class="p">,</span> <span class="n">badge_text</span><span class="o">=</span><span class="s2">"C"</span><span class="p">)</span>
-<span class="n">cl_sse</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">xy1</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">w1</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">h1</span><span class="p">)</span>
-
-<span class="c1"># Column 2: Native JSON Lines (Neutral Panel)</span>
-<span class="n">p_jsonl</span> <span class="o">=</span> <span class="n">Panel</span><span class="p">(</span>
-    <span class="s2">"2. JSONL"</span><span class="p">,</span>
-    <span class="s2">"application/jsonl"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
-    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_line_width</span><span class="o">=</span><span class="mf">1.2</span><span class="p">),</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.0</span><span class="p">),</span>
-    <span class="n">description_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">list_numbers</span><span class="p">,</span>
-    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryBold</span><span class="p">,</span>
-    <span class="n">header_height</span><span class="o">=</span><span class="mf">9.0</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">p_jsonl</span><span class="o">.</span><span class="n">draw</span><span class="p">((</span><span class="mf">61.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">52.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">62.0</span><span class="p">)</span>
-<span class="n">xy2</span><span class="p">,</span> <span class="n">w2</span><span class="p">,</span> <span class="n">h2</span> <span class="o">=</span> <span class="n">p_jsonl</span><span class="o">.</span><span class="n">get_content_box</span><span class="p">((</span><span class="mf">61.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">52.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">62.0</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="p">(</span><span class="mf">3.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">))</span>
-
-<span class="n">cl_jsonl</span> <span class="o">=</span> <span class="n">CardList</span><span class="p">(</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
-    <span class="n">description_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">badge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span>
-    <span class="n">badge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">spacing</span><span class="o">=</span><span class="mf">2.2</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">cl_jsonl</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"AsyncIterator[Model]"</span><span class="p">,</span> <span class="s2">"Zero response_class needed"</span><span class="p">,</span> <span class="n">badge_text</span><span class="o">=</span><span class="s2">"A"</span><span class="p">)</span>
-<span class="n">cl_jsonl</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"Per-Item Validation"</span><span class="p">,</span> <span class="s2">"Rust serialize_json + </span><span class="se">\\</span><span class="s2">n"</span><span class="p">,</span> <span class="n">badge_text</span><span class="o">=</span><span class="s2">"B"</span><span class="p">)</span>
-<span class="n">cl_jsonl</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"Cancel Checkpoint"</span><span class="p">,</span> <span class="s2">"await anyio.sleep(0) per row"</span><span class="p">,</span> <span class="n">badge_text</span><span class="o">=</span><span class="s2">"C"</span><span class="p">)</span>
-<span class="n">cl_jsonl</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">xy2</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">w2</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">h2</span><span class="p">)</span>
-
-<span class="c1"># Column 3: Bidirectional WebSockets (Neutral Panel)</span>
-<span class="n">p_ws</span> <span class="o">=</span> <span class="n">Panel</span><span class="p">(</span>
-    <span class="s2">"3. WebSocket"</span><span class="p">,</span>
-    <span class="s2">"ws:// &amp; wss://"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
-    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_line_width</span><span class="o">=</span><span class="mf">1.2</span><span class="p">),</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.0</span><span class="p">),</span>
-    <span class="n">description_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">arrows_left_right</span><span class="p">,</span>
-    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryBold</span><span class="p">,</span>
-    <span class="n">header_height</span><span class="o">=</span><span class="mf">9.0</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">p_ws</span><span class="o">.</span><span class="n">draw</span><span class="p">((</span><span class="mf">118.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">52.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">62.0</span><span class="p">)</span>
-<span class="n">xy3</span><span class="p">,</span> <span class="n">w3</span><span class="p">,</span> <span class="n">h3</span> <span class="o">=</span> <span class="n">p_ws</span><span class="o">.</span><span class="n">get_content_box</span><span class="p">((</span><span class="mf">118.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">52.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">62.0</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="p">(</span><span class="mf">3.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">))</span>
-
-<span class="n">cl_ws</span> <span class="o">=</span> <span class="n">CardList</span><span class="p">(</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
-    <span class="n">description_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">badge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
-    <span class="n">badge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">spacing</span><span class="o">=</span><span class="mf">2.2</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">cl_ws</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"@app.websocket"</span><span class="p">,</span> <span class="s2">"Full-duplex text, bytes, JSON"</span><span class="p">,</span> <span class="n">badge_text</span><span class="o">=</span><span class="s2">"A"</span><span class="p">)</span>
-<span class="n">cl_ws</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"Handshake DI"</span><span class="p">,</span> <span class="s2">"Depends, Query &amp; Cookie auth"</span><span class="p">,</span> <span class="n">badge_text</span><span class="o">=</span><span class="s2">"B"</span><span class="p">)</span>
-<span class="n">cl_ws</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"Clean Teardown"</span><span class="p">,</span> <span class="s2">"WebSocketDisconnect (1000)"</span><span class="p">,</span> <span class="n">badge_text</span><span class="o">=</span><span class="s2">"C"</span><span class="p">)</span>
-<span class="n">cl_ws</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">xy3</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">w3</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">h3</span><span class="p">)</span>
-
-<span class="n">save</span><span class="p">()</span>
-</code></pre>
-</details>
 <h2>1. Choosing the Right Streaming Protocol</h2>
 <p>Before writing a streaming endpoint, match your client topology and framing guarantees to the simplest protocol that fits:</p>
 <table>
@@ -463,78 +364,12 @@
   <img src="../../images/05_async_and_realtime/sse_websockets_streaming/sse_and_websocket_sequence.png" alt="sse_websockets_streaming_2" />
   <figcaption class="drawlib-caption">Wire Lifecycle Contrast: Unidirectional Native SSE Resume vs Bidirectional WebSocket Session</figcaption>
 </figure>
-<details class="drawlib-code-details">
-<summary>Source Code</summary>
-<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.canvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">setup</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.diagrams.sequence</span><span class="w"> </span><span class="kn">import</span> <span class="n">Participant</span><span class="p">,</span> <span class="n">PhosphorIcon</span><span class="p">,</span> <span class="n">SequenceDiagram</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">Styles</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.text</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span>
-
-<span class="n">setup</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">172</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">144</span><span class="p">)</span>
-
-<span class="n">text</span><span class="p">(</span>
-    <span class="p">(</span><span class="mf">86.0</span><span class="p">,</span> <span class="mf">138.5</span><span class="p">),</span>
-    <span class="s2">"Native SSE (EventSourceResponse) vs Stateful WebSocket Lifecycle"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">13.2</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="n">d</span> <span class="o">=</span> <span class="n">SequenceDiagram</span><span class="p">(</span>
-    <span class="n">node_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Primary</span><span class="p">,</span>
-    <span class="n">node_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
-    <span class="n">edge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">,</span>
-    <span class="n">edge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">node_card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
-    <span class="n">autonumber</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">col_width</span><span class="o">=</span><span class="mf">56.0</span><span class="p">,</span>
-    <span class="n">step_y</span><span class="o">=</span><span class="mf">6.6</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="n">client</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Participant</span><span class="p">(</span><span class="s2">"Browser / SDK Client"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">36</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span> <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">MONITOR</span><span class="p">,</span> <span class="n">icon_size</span><span class="o">=</span><span class="mf">6.0</span><span class="p">)</span>
-<span class="p">)</span>
-<span class="n">router</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Participant</span><span class="p">(</span>
-        <span class="s2">"FastAPI Routing Layer"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mi">38</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">LIGHTNING</span><span class="p">,</span>
-        <span class="n">icon_size</span><span class="o">=</span><span class="mf">6.0</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span>
-    <span class="p">)</span>
-<span class="p">)</span>
-<span class="n">worker</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Participant</span><span class="p">(</span><span class="s2">"Async Generator / Room"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">38</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span> <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">BROADCAST</span><span class="p">,</span> <span class="n">icon_size</span><span class="o">=</span><span class="mf">6.0</span><span class="p">)</span>
-<span class="p">)</span>
-
-<span class="k">with</span> <span class="n">d</span><span class="o">.</span><span class="n">opt</span><span class="p">(</span><span class="s2">"SSE over POST"</span><span class="p">)</span> <span class="k">as</span> <span class="n">sse_blk</span><span class="p">:</span>
-    <span class="n">sse_blk</span><span class="o">.</span><span class="n">style</span> <span class="o">=</span> <span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">line_style</span><span class="o">=</span><span class="s2">"dashed"</span><span class="p">)</span>
-    <span class="n">sse_blk</span><span class="o">.</span><span class="n">text_style</span> <span class="o">=</span> <span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">)</span>
-    <span class="n">client</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">router</span><span class="p">,</span> <span class="s2">"POST /v1/chat/stream (Last-Event-ID: 1)"</span><span class="p">)</span>
-    <span class="n">router</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="s2">"200 text/event-stream (no-cache, X-Accel-Buffering: no)"</span><span class="p">)</span>
-    <span class="n">router</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">worker</span><span class="p">,</span> <span class="s2">"Iterate async generator from index 2"</span><span class="p">)</span>
-    <span class="n">worker</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span><span class="n">router</span><span class="p">,</span> <span class="s2">"yield ServerSentEvent(id='2', event='token', data=...)"</span><span class="p">)</span>
-    <span class="n">router</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="s2">"event: token | id: 2 | data: {...}"</span><span class="p">)</span>
-
-<span class="k">with</span> <span class="n">d</span><span class="o">.</span><span class="n">opt</span><span class="p">(</span><span class="s2">"WebSocket + DI"</span><span class="p">)</span> <span class="k">as</span> <span class="n">ws_blk</span><span class="p">:</span>
-    <span class="n">ws_blk</span><span class="o">.</span><span class="n">style</span> <span class="o">=</span> <span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">line_style</span><span class="o">=</span><span class="s2">"dashed"</span><span class="p">)</span>
-    <span class="n">ws_blk</span><span class="o">.</span><span class="n">text_style</span> <span class="o">=</span> <span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">)</span>
-    <span class="n">client</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">router</span><span class="p">,</span> <span class="s2">"GET /ws/rooms/ops?ticket=valid (Upgrade: websocket)"</span><span class="p">)</span>
-    <span class="n">router</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">worker</span><span class="p">,</span> <span class="s2">"Depends(verify_ws_ticket) + await ws.accept()"</span><span class="p">)</span>
-    <span class="n">router</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="s2">"101 Switching Protocols"</span><span class="p">)</span>
-    <span class="n">client</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">worker</span><span class="p">,</span> <span class="s2">"send_json({'text': 'deploy ready'})"</span><span class="p">)</span>
-    <span class="n">worker</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="s2">"send_json({'room': 'ops', 'sender': 'member-42'})"</span><span class="p">)</span>
-    <span class="n">client</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">worker</span><span class="p">,</span> <span class="s2">"Close Frame (1000) -&gt; except WebSocketDisconnect"</span><span class="p">)</span>
-
-<span class="n">d</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">86.0</span><span class="p">,</span> <span class="mf">67.0</span><span class="p">),</span> <span class="n">align</span><span class="o">=</span><span class="s2">"center"</span><span class="p">)</span>
-<span class="n">save</span><span class="p">()</span>
-</code></pre>
-</details>
 <hr />
 <h2>2. Native Server-Sent Events (<code>fastapi.sse</code>)</h2>
 <p>FastAPI <code>v0.162.2</code> includes a dedicated <code>fastapi.sse</code> module (<code>EventSourceResponse</code> and <code>ServerSentEvent</code>) engineered directly into the routing layer:</p>
 <ul>
 <li><strong>Works on <code>GET</code> and <code>POST</code></strong>: Unlike legacy <code>EventSource</code> wrappers restricted to <code>GET</code>, <code>response_class=EventSourceResponse</code> works on <code>POST</code> endpoints—essential for LLM prompt streaming and <strong>MCP (Model Context Protocol)</strong> transports.</li>
-<li><strong>Proxy &amp; Keep-Alive Hardening</strong>: FastAPI automatically sets <code>Cache-Control: no-cache</code> and <code>X-Accel-Buffering: no</code> (disabling Nginx proxy buffering) and runs an isolated AnyIO memory-stream keepalive task on <code>fastapi_inner_astack</code> that emits <code>: ping</code> every <code>15</code> seconds without injecting <code>CancelledError</code> into your generator.</li>
+<li><strong>Proxy &amp; Keep-Alive Hardening</strong>: FastAPI automatically sets <code>Cache-Control: no-cache</code> and <code>X-Accel-Buffering: no</code> (disabling Nginx proxy buffering) and runs an isolated AnyIO memory-stream keepalive task within the request-scoped cleanup lifecycle (torn down cleanly after the stream finishes) that emits <code>: ping</code> every <code>15</code> seconds without injecting <code>CancelledError</code> into your generator.</li>
 <li><strong>Structured <code>ServerSentEvent</code> Validation</strong>: <code>data</code> payloads (Pydantic models, dicts, or strings) are always JSON-encoded, while <code>raw_data</code> emits pre-formatted strings verbatim (<code>[DONE]</code>, HTML fragments). Single-line constraints on <code>event</code> and <code>id</code> prevent SSE wire-injection bugs.</li>
 </ul>
 <pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncIterator</span>
@@ -586,7 +421,7 @@
 <p>When streaming typed records between backend microservices, CLI tools, or data pipelines, simply annotate a generator path operation with <code>AsyncIterator[MyModel]</code> (or <code>Iterator[MyModel]</code>) without specifying any custom <code>response_class</code>:</p>
 <ol>
 <li>FastAPI automatically selects <code>media_type=&quot;application/jsonl&quot;</code> and documents the item schema in <a href="../03_routing_and_models/responses_and_openapi.html">OpenAPI 3.1</a>.</li>
-<li>Each yielded item is validated and serialized directly to UTF-8 JSON bytes (<code>+ b&quot;\n&quot;</code>) through Pydantic's Rust <code>TypeAdapter</code> (<code>stream_item_field.serialize_json</code>). If an item violates the response contract mid-stream, FastAPI raises <code>ResponseValidationError</code>.</li>
+<li>Each yielded item is validated and serialized directly to UTF-8 JSON bytes (<code>+ b&quot;\n&quot;</code>) through Pydantic's Rust <code>TypeAdapter</code>. If an item violates the response contract mid-stream, FastAPI raises <code>ResponseValidationError</code>.</li>
 <li>After every yielded chunk on an async generator, FastAPI executes <code>await anyio.sleep(0)</code> so client disconnects immediately cancel fast in-memory producers instead of burning CPU until stream exhaustion.</li>
 </ol>
 <pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncIterator</span>
@@ -682,6 +517,11 @@
 <p>Next, see how FastAPI traces every dependency, endpoint, stream, and exception in <a href="../06_observability_and_testing/telemetry_and_errors.html">Native OpenTelemetry &amp; Exceptions</a>.</p>
 
             </main>
+            <footer class="footer">
+                
+                FastAPI® is a registered trademark of Sebastián Ramírez (<a href="https://github.com/tiangolo" target="_blank" rel="noopener noreferrer">@tiangolo</a>). Unofficial guide — not affiliated with or endorsed by the official FastAPI project (<a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">fastapi.tiangolo.com</a>).
+                
+            </footer>
         </div>
     </div>
     

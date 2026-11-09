@@ -1,0 +1,468 @@
+<!--
+ Copyright (c) 2026 Yuichi Ito (yuichi@yuichi.com)
+
+ This software is licensed under the Apache License, Version 2.0.
+ For more information, please visit: https://github.com/yuichi110/drawlib
+
+ This software is provided "as is", without warranty of any kind,
+ express or implied, including but not limited to the warranties of
+ merchantability, fitness for a particular purpose and noninfringement.
+-->
+<!DOCTYPE html>
+<html lang="ja" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>遅延 `get_openapi()`・JSON Schema `$defs` 集約・Docs UI 生成 — FastAPI Architecture Guide (Unofficial)</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-S9N5BZ1VRC');
+    </script>
+    <script>
+        (function() {
+            const saved = localStorage.getItem('drawlib-theme');
+            if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    
+    <link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/architecture/en/06_openapi_and_docs/openapi_synthesis_engine.html">
+    
+    <link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/architecture/ja/06_openapi_and_docs/openapi_synthesis_engine.html">
+    
+    <link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/architecture/en/06_openapi_and_docs/openapi_synthesis_engine.html">
+    
+    
+    
+    <meta name="description" content="FastAPI は OpenAPI 3.1.0（JSON Schema Draft 2020-12 準拠）を手書きの YAML 資産ではなく、ルーティングと型注釈から自動導出される第一級のコンパイルターゲットとして扱います。Python モジュールのインポート時に JSON Schema…">
+    <link rel="canonical" href="https://fastapi.drawlib.com/architecture/ja/06_openapi_and_docs/openapi_synthesis_engine.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="FastAPI 内部構造">
+    <meta property="og:title" content="遅延 get_openapi()・JSON Schema $defs 集約・Docs UI 生成 — FastAPI 内部構造">
+    <meta property="og:description" content="FastAPI は OpenAPI 3.1.0（JSON Schema Draft 2020-12 準拠）を手書きの YAML 資産ではなく、ルーティングと型注釈から自動導出される第一級のコンパイルターゲットとして扱います。Python モジュールのインポート時に JSON Schema…">
+    <meta property="og:url" content="https://fastapi.drawlib.com/architecture/ja/06_openapi_and_docs/openapi_synthesis_engine.html">
+    <meta property="og:image" content="https://fastapi.drawlib.com/architecture/_assets/ogp.png">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:locale:alternate" content="en_US">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="遅延 get_openapi()・JSON Schema $defs 集約・Docs UI 生成 — FastAPI 内部構造">
+    <meta name="twitter:description" content="FastAPI は OpenAPI 3.1.0（JSON Schema Draft 2020-12 準拠）を手書きの YAML 資産ではなく、ルーティングと型注釈から自動導出される第一級のコンパイルターゲットとして扱います。Python モジュールのインポート時に JSON Schema…">
+    <meta name="twitter:image" content="https://fastapi.drawlib.com/architecture/_assets/ogp.png">
+    
+    
+    <link rel="icon" type="image/png" href="../../_assets/favicon.png">
+    
+    
+    <link rel="stylesheet" href="../style.css">
+    
+    
+</head>
+<body>
+    <div class="demo-banner" role="region" aria-label="ポータルナビゲーション">
+        <div class="demo-banner-inner">
+            <span class="demo-banner-badge">INTERNAL ARCHITECTURE</span>
+            
+            <span class="demo-banner-text">
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a>（v0.162.2）内部アーキテクチャ解説（非公式）
+            </span>
+            <span class="demo-banner-links">
+                <a href="https://fastapi.drawlib.com/">User Guide</a>
+                <span class="demo-banner-sep">·</span>
+                <strong style="color:#ffffff;">Architecture</strong>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Audit</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official Docs ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+            </span>
+            
+        </div>
+    </div>
+    
+    <div class="doc-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI 内部構造">
+                    
+                    FastAPI 内部構造
+                    
+                </a>
+                <div class="sidebar-header-actions">
+                    <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">
+                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                    <button type="button" id="menu-toggle" class="menu-toggle-btn" aria-label="Toggle navigation" aria-expanded="false">
+                        <svg class="icon-hamburger" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        <svg class="icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="sidebar-menu">
+                
+                    
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../index.html" >アーキテクチャ全体像</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">1. パッケージ階層と境界設計</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../01_package_and_layers/module_hierarchy.html" >5層モジュール構造と Starlette 再公開</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">2. ルーティングコンパイラとクロージャ</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../02_routing_compiler/apiroute_and_closures.html" >APIRouter・APIRoute とクロージャ合成</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../02_routing_compiler/streaming_and_spa_internals.html" >ジェネレータ配信と SPA ルータ内部実装</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">3. DI 解決エンジンと認証機構</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../03_di_and_security_engine/dependant_and_solver.html" >Dependant グラフと solve_dependencies</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../03_di_and_security_engine/security_internals.html" >SecurityBase 階層と HTTPConnection</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">4. Pydantic v2 ブリッジ層</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../04_pydantic_bridge/compat_and_serialization.html" >_compat/v2.py・ModelField・直列化</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">5. ASGI スタックとテレメトリ</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../05_asgi_and_telemetry/middleware_and_concurrency.html" >ミドルウェア7層構造とスレッドプール</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../05_asgi_and_telemetry/native_telemetry_internals.html" >NativeTelemetry と例外スパン記録</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">6. OpenAPI 3.1 合成エンジン</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item active">
+                                <a href="openapi_synthesis_engine.html" >get_openapi()・$defs 集約・Docs UI</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">関連ガイド &amp; 公式リンク</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/" target="_blank" rel="noopener noreferrer">FastAPI ユーザーガイド<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/reports/pni501/" target="_blank" rel="noopener noreferrer">PNI501 診断レポート<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI 公式ドキュメント<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub リポジトリ<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                        </ul>
+                    
+                
+            </div>
+        </aside>
+        <div class="content-wrapper">
+            <header class="top-bar">
+                <div class="breadcrumbs">
+                    <span class="crumb">Architecture</span>
+                    <span class="crumb-separator">&raquo;</span>
+                    <span class="crumb active">遅延 `get_openapi()`・JSON Schema `$defs` 集約・Docs UI 生成</span>
+                </div>
+                
+                <div class="lang-switcher">
+                    <details class="lang-dropdown">
+                        <summary class="lang-dropdown-btn" aria-label="Select language">
+                            <svg class="lang-globe-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            <span class="lang-current-label">日本語</span>
+                            <svg class="lang-caret-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </summary>
+                        <div class="lang-dropdown-menu" role="menu">
+                            
+                            <a href="../../en/06_openapi_and_docs/openapi_synthesis_engine.html" class="lang-option" lang="en" hreflang="en" >
+                                <span>English</span>
+                                
+                            </a>
+                            
+                            <a href="openapi_synthesis_engine.html" class="lang-option active" lang="ja" hreflang="ja" aria-current="page">
+                                <span>日本語</span>
+                                
+                                <svg class="lang-check-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                
+                            </a>
+                            
+                        </div>
+                    </details>
+                </div>
+                
+            </header>
+            <main class="main-content">
+                <h1>遅延 <code>get_openapi()</code>・JSON Schema <code>$defs</code> 集約・Docs UI 生成</h1>
+<p>FastAPI は OpenAPI <code>3.1.0</code>（JSON Schema Draft <code>2020-12</code> 準拠）を手書きの YAML 資産ではなく、ルーティングと型注釈から自動導出される第一級のコンパイルターゲットとして扱います。Python モジュールのインポート時に JSON Schema 生成コストを支払うのではなく、<code>FastAPI.openapi()</code> が初回アクセス時にスキーマ全体を遅延合成してメモ化し、ルートや組み込み済み <code>APIRouter</code> ツリーに変更が加わった際にのみキャッシュを自動的に無効化します。</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/06_openapi_and_docs/openapi_synthesis_engine/lazy_openapi_synthesis_pipeline.png" alt="openapi_synthesis_engine_1" />
+  <figcaption class="drawlib-caption">FastAPI.openapi() のバージョン連動キャッシュと5段階の get_openapi() 合成パイプライン</figcaption>
+</figure>
+<hr />
+<h2>1. 遅延メモ化と <code>_openapi_routes_version</code> によるキャッシュ無効化</h2>
+<p><code>fastapi/applications.py</code> の <code>FastAPI.__init__()</code> は、<code>self.openapi_version = &quot;3.1.0&quot;</code>、<code>self.openapi_schema = None</code>、<code>self._openapi_routes_version = None</code> を初期設定します。ルータやエンドポイントを登録している最中には、JSON Schema 生成処理は一切走りません。</p>
+<p>ユーザーコード・テストコード、あるいは <code>GET /openapi.json</code> リクエストから <code>app.openapi()</code> が呼ばれると、<code>self.openapi_schema</code> を返す前に 2 つの不変条件が検査されます。</p>
+<ol>
+<li><strong>コールドキャッシュ判定（<code>not self.openapi_schema</code>）</strong>: 初回呼び出し時に OpenAPI 辞書全体を合成し、<code>self.openapi_schema</code> に保存します。</li>
+<li><strong>再帰的ルート変更バージョン判定（<code>self._openapi_routes_version != routes_version</code>）</strong>: <code>fastapi/routing.py</code> の <code>self.router._get_routes_version()</code> を呼び出します。各 <code>APIRouter</code> は単調増加カウンタ <code>self._routes_version</code> を保持しており、<code>add_route()</code>・<code>add_api_route()</code>・<code>add_websocket_route()</code>・<code>include_router()</code>・<code>frontend()</code> の実行時に <code>_mark_routes_changed()</code> でインクリメントします。重要な点として、<code>_get_routes_version(seen)</code> は入れ子の <code>_IncludedRouter</code> を再帰的にたどって <code>_routes_version</code> を合算（<code>seen: set[int]</code> で循環参照も防止）するため、<code>app.include_router()</code> 済みの子ルータへ後から動的にルートを追加した場合でも、ルート <code>FastAPI</code> の OpenAPI キャッシュは自動的に再合成されます。</li>
+</ol>
+<hr />
+<h2>2. <code>get_openapi()</code> の内部構造：フィールド収集・<code>FieldMap</code>・<code>$defs</code> 重複排除</h2>
+<p><code>fastapi/openapi/utils.py</code> の <code>get_openapi()</code> は、<code>fastapi/_compat/v2.py</code> および <code>fastapi/openapi/constants.py</code> と連携し、5 つの確定的なパスでスキーマを組み立てます。</p>
+<ol>
+<li><strong>全 <code>ModelField</code> の収集（<code>get_fields_from_routes()</code>）</strong>: <code>routing.iter_route_contexts(list(routes) + list(webhooks or []))</code> を走査し、<code>include_in_schema=True</code> のすべての <code>APIRoute</code> から入力側フィールド（<code>body_field</code> と <code>get_flat_params(api_route.dependant)</code>、いずれも <code>mode=&quot;validation&quot;</code>）、出力側フィールド（<code>response_field</code>、追加ステータスの <code>response_fields.values()</code>、JSONL/SSE 配信用の <code>stream_item_field</code>、いずれも <code>mode=&quot;serialization&quot;</code>）、さらに <code>api_route.callbacks</code> のフィールドを再帰的に収集します。</li>
+<li><strong>入れ子モデルの平坦化（<code>get_flat_models_from_fields()</code> と <code>get_model_name_map()</code>）</strong>: ジェネリック型・Union・<code>BaseModel</code> フィールド・<code>Enum</code> サブクラスを再帰的に探索して <code>TypeModelSet</code> を構築し、<code>re.sub(r&quot;[^a-zA-Z0-9.\-_]&quot;, &quot;_&quot;, name)</code> でスキーマ名を正規化します。</li>
+<li><strong>単一パスでの <code>$defs</code> 一括生成（<code>get_definitions()</code> と <code>GenerateJsonSchema</code>）</strong>: <code>fastapi/_compat/v2.py</code> の <code>get_definitions()</code> は、<code>REF_TEMPLATE = &quot;#/components/schemas/{model}&quot;</code> を指定した FastAPI 独自の <code>GenerateJsonSchema</code> サブクラス（<code>bytes_schema()</code> で <code>contentMediaType: &quot;application/octet-stream&quot;</code> を出力）を生成します。<code>ModelField.__hash__</code> が <code>id(self)</code> を返すため、各 <code>(ModelField, mode)</code> ペアは一意の辞書キーとして機能します。全フィールドと入れ子モデルを <code>schema_generator.generate_definitions(inputs=inputs)</code> に一括投入することで、1 回の Pydantic パスで次の 2 構造を得ます。
+<ul>
+<li><strong><code>field_mapping</code>（<code>FieldMap</code>）</strong>: 各 <code>(ModelField, &quot;validation&quot; | &quot;serialization&quot;)</code> タプルをインライン JSON Schema または <code>{&quot;$ref&quot;: &quot;#/components/schemas/...&quot;}</code> 参照へ対応付けるマップ。</li>
+<li><strong><code>definitions</code></strong>: 重複排除済みのグローバルコンポーネントスキーマ辞書（モデル docstring 内のフォームフィード <code>\f</code> 以降は <code>description.split(&quot;\f&quot;)[0]</code> で切り詰められます）。</li>
+</ul>
+</li>
+<li><strong>オペレーション・Callback・Webhook・ストリーミング合成（<code>get_openapi_path()</code>）</strong>:
+<ul>
+<li><strong>依存関係 DAG とセキュリティ定義</strong>: <code>_get_openapi_dependency_data(route.dependant)</code> がルートごとに <code>Dependant</code> グラフを 1 度だけ走査（<code>_get_cache_key</code> で重複訪問を排除）し、<code>_get_openapi_security_definitions()</code> が同一 <code>scheme_name</code> の OAuth2 スコープをマージして <code>components[&quot;securitySchemes&quot;]</code> とオペレーション単位の <code>security</code> 配列を構築します。</li>
+<li><strong>パラメータ・リクエストボディ・<code>422</code> エラースキーマ</strong>: <code>_get_openapi_operation_parameters()</code> は同一 <code>(in, name)</code> で必須指定（<code>required=True</code>）が任意指定より優先されるよう統合します。<code>METHODS_WITH_BODY</code>（<code>GET</code>, <code>HEAD</code>, <code>POST</code>, <code>PUT</code>, <code>DELETE</code>, <code>PATCH</code>）では <code>requestBody</code> を生成し、パラメータまたはボディを持つすべてのオペレーションに <code>#/components/schemas/HTTPValidationError</code> および <code>ValidationError</code> を参照する <code>422</code> レスポンスを自動付与します。</li>
+<li><strong>ストリーミング・Callbacks・Webhooks</strong>: ジェネレータルートのうち <code>is_json_stream</code> は <code>application/jsonl</code> の <code>itemSchema</code> を、<code>is_sse_stream</code> は <code>text/event-stream</code> の <code>_SSE_EVENT_SCHEMA</code>（<code>contentMediaType: &quot;application/json&quot;</code>, <code>contentSchema</code>）を出力します。ルート単位の <code>callbacks</code> は <code>get_openapi_path()</code> を再帰呼び出しし、<code>app.webhooks.routes</code> は OpenAPI 3.1 トップレベルの <code>output[&quot;webhooks&quot;]</code> を形成します。</li>
+</ul>
+</li>
+<li><strong>Pydantic モデルによる自己検証（<code>OpenAPI(**output)</code>）</strong>: <code>components[&quot;schemas&quot;]</code> を辞書順ソートした後、<code>fastapi.openapi.models.OpenAPI</code>（<code>Schema</code>・<code>PathItem</code>・<code>Operation</code>・<code>Components</code>）で構造検証を行い、<code>jsonable_encoder(..., by_alias=True, exclude_none=True)</code> で最終辞書へ直列化します。</li>
+</ol>
+<hr />
+<h2>3. <code>separate_input_output_schemas</code> と対話型 Docs UI（<code>docs.py</code>）</h2>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/06_openapi_and_docs/openapi_synthesis_engine/defs_bundling_and_docs_ui.png" alt="openapi_synthesis_engine_2" />
+  <figcaption class="drawlib-caption">条件付きの Model-Input / Model-Output スキーマ分割と setup() による自動 Docs UI ルート群</figcaption>
+</figure>
+<h3><code>Model-Input</code> と <code>Model-Output</code> が分割される条件・統合される条件</h3>
+<p><code>separate_input_output_schemas=True</code>（デフォルト）のとき、<code>get_definitions()</code> はリクエスト側 <code>ModelField</code> を <code>mode=&quot;validation&quot;</code>、レスポンス側 <code>ModelField</code> を <code>mode=&quot;serialization&quot;</code> として <code>GenerateJsonSchema</code> に渡します。ここで重要なのは、<strong>両モードの JSON Schema が実際に異なるときにだけ <code>-Input</code> と <code>-Output</code> に分割される</strong> という点です。</p>
+<ul>
+<li><strong>単一スキーマへの統合（<code>#/components/schemas/Tag</code>）</strong>: すべてのフィールドで入力検証時と出力直列化時の JSON Schema が一致する場合、<code>GenerateJsonSchema</code> は両モードを単一の <code>&quot;Tag&quot;</code> コンポーネントに統合し、単純な DTO モデルでの不要なスキーマ倍増を防ぎます。</li>
+<li><strong>入出力スキーマの分割（<code>#/components/schemas/Item-Input</code> と <code>Item-Output</code>）</strong>: たとえば <code>Decimal</code>（入力は <code>number | string</code> を許容、出力は <code>string</code> に直列化）、<code>Field(exclude=True)</code>（入力では受け付け、出力からは除外）、戻り値型を変える <code>@field_serializer</code>、<code>@computed_field</code>（出力のみに存在）、あるいは <code>ConfigDict(json_schema_serialization_defaults_required=True)</code> などにより入出力表現が乖離すると、Pydantic は <code>Item-Input</code> と <code>Item-Output</code> を個別に生成し、自動生成されるクライアント SDK に厳密な型定義を提供します。</li>
+<li><strong><code>_has_computed_fields()</code> による保護</strong>: 仮に <code>FastAPI(separate_input_output_schemas=False)</code> を指定した場合でも、<code>fastapi/_compat/v2.py</code> の <code>_has_computed_fields(field)</code> が <code>field._type_adapter.core_schema</code> 内の <code>computed_fields</code> を検出し、該当モデルには引き続き <code>mode=&quot;serialization&quot;</code> を適用するため、レスポンススキーマから <code>@computed_field</code> が欠落することはありません。</li>
+</ul>
+<h3>自動 Docs UI ジェネレータ（<code>FastAPI.setup()</code> と <code>fastapi/openapi/docs.py</code>）</h3>
+<p><code>FastAPI.__init__()</code> の末尾で呼ばれる <code>self.setup()</code> は、<code>self.openapi_url</code> が有効な場合に最大 4 つの非公開ドキュメントルート（<code>include_in_schema=False</code>）を登録します（<code>openapi_url=None</code> に設定すると 4 ルートすべてが無効化されます）。</p>
+<ol>
+<li><strong><code>GET {openapi_url}</code>（<code>/openapi.json</code>）</strong>: <code>self.openapi()</code> を呼び出します。リバースプロキシや <code>Mount</code> 配下で <code>req.scope.get(&quot;root_path&quot;)</code> が空でなく、かつ <code>self.root_path_in_servers=True</code> の場合は、キャッシュ辞書を浅くコピーして <code>schema[&quot;servers&quot;]</code> の先頭に <code>{&quot;url&quot;: root_path}</code> を動的に追加します。</li>
+<li><strong><code>GET {docs_url}</code>（<code>/docs</code> — <code>get_swagger_ui_html()</code>）</strong>: <code>swagger_ui_default_parameters</code> に <code>self.swagger_ui_parameters</code> をマージし、<code>SwaggerUIBundle</code>（<code>swagger-ui-dist@5</code>）を起動する <code>HTMLResponse</code> を返します。埋め込まれる設定キー・パラメータ値・<code>init_oauth</code> JSON はすべて <code>_html_safe_json()</code> を通過し、<code>&lt;</code>・<code>&gt;</code>・<code>&amp;</code> が <code>\u003c</code>・<code>\u003e</code>・<code>\u0026</code> へエスケープされるため、インライン <code>&lt;script&gt;</code> タグからの XSS 脱出が防止されます。</li>
+<li><strong><code>GET {swagger_ui_oauth2_redirect_url}</code>（<code>/docs/oauth2-redirect</code> — <code>get_swagger_ui_oauth2_redirect_html()</code>）</strong>: OAuth2 ポップアップ認証後に <code>qp.state === sentState</code> を検証し、認可コードやトークンを親ウィンドウの <code>window.opener.swaggerUIRedirectOauth2</code> へ中継する HTML を返します。</li>
+<li><strong><code>GET {redoc_url}</code>（<code>/redoc</code> — <code>get_redoc_html()</code>）</strong>: <code>redoc@2</code> スタンドアロンバンドルと任意の Google Fonts（<code>Montserrat</code> / <code>Roboto</code>）を読み込み、<code>&lt;redoc spec-url=&quot;{openapi_url}&quot;&gt;&lt;/redoc&gt;</code> を描画します。</li>
+</ol>
+<hr />
+<h2>4. 遅延キャッシュ・ルータ変更検知・入出力スキーマ分割の検証</h2>
+<p>以下のスニペットは、初回呼び出しまでの遅延メモ化、組み込み済み <code>APIRouter</code> への動的ルート追加による自動キャッシュ再構築、および <code>Item-Input</code> / <code>Item-Output</code> の選択的分割と <code>Tag</code> の単一統合を検証します。</p>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">decimal</span><span class="w"> </span><span class="kn">import</span> <span class="n">Decimal</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">FastAPI</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Tag</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">label</span><span class="p">:</span> <span class="nb">str</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Item</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">price</span><span class="p">:</span> <span class="n">Decimal</span>
+    <span class="n">secret_token</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">""</span><span class="p">,</span> <span class="n">exclude</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">tags</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Tag</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">"Inventory API"</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s2">"1.0.0"</span><span class="p">)</span>
+<span class="n">sub_router</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">"/v1"</span><span class="p">)</span>
+
+
+<span class="nd">@sub_router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/items"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">Item</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">create_item</span><span class="p">(</span><span class="n">item</span><span class="p">:</span> <span class="n">Item</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Item</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">item</span>
+
+
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">sub_router</span><span class="p">)</span>
+
+<span class="c1"># 1. 遅延合成: 初回 app.openapi() 呼び出しまで openapi_schema は None</span>
+<span class="k">assert</span> <span class="n">app</span><span class="o">.</span><span class="n">openapi_schema</span> <span class="ow">is</span> <span class="kc">None</span>
+<span class="n">schema_v1</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">openapi</span><span class="p">()</span>
+<span class="k">assert</span> <span class="n">app</span><span class="o">.</span><span class="n">openapi_schema</span> <span class="ow">is</span> <span class="n">schema_v1</span>
+<span class="k">assert</span> <span class="n">app</span><span class="o">.</span><span class="n">openapi</span><span class="p">()</span> <span class="ow">is</span> <span class="n">schema_v1</span>
+
+<span class="c1"># 2. 入出力が乖離する Item は Input/Output に分割され、同一構造の Tag は単一統合</span>
+<span class="n">schemas</span> <span class="o">=</span> <span class="n">schema_v1</span><span class="p">[</span><span class="s2">"components"</span><span class="p">][</span><span class="s2">"schemas"</span><span class="p">]</span>
+<span class="k">assert</span> <span class="p">{</span><span class="s2">"Item-Input"</span><span class="p">,</span> <span class="s2">"Item-Output"</span><span class="p">,</span> <span class="s2">"Tag"</span><span class="p">}</span> <span class="o">&lt;=</span> <span class="nb">set</span><span class="p">(</span><span class="n">schemas</span><span class="p">)</span>
+<span class="k">assert</span> <span class="s2">"Tag-Input"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">schemas</span>
+<span class="k">assert</span> <span class="s2">"secret_token"</span> <span class="ow">in</span> <span class="n">schemas</span><span class="p">[</span><span class="s2">"Item-Input"</span><span class="p">][</span><span class="s2">"properties"</span><span class="p">]</span>
+<span class="k">assert</span> <span class="s2">"secret_token"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">schemas</span><span class="p">[</span><span class="s2">"Item-Output"</span><span class="p">][</span><span class="s2">"properties"</span><span class="p">]</span>
+<span class="k">assert</span> <span class="s2">"anyOf"</span> <span class="ow">in</span> <span class="n">schemas</span><span class="p">[</span><span class="s2">"Item-Input"</span><span class="p">][</span><span class="s2">"properties"</span><span class="p">][</span><span class="s2">"price"</span><span class="p">]</span>
+<span class="k">assert</span> <span class="n">schemas</span><span class="p">[</span><span class="s2">"Item-Output"</span><span class="p">][</span><span class="s2">"properties"</span><span class="p">][</span><span class="s2">"price"</span><span class="p">][</span><span class="s2">"type"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"string"</span>
+
+
+<span class="c1"># 3. 組み込み済み APIRouter へのルート追加で _get_routes_version() が更新され再合成</span>
+<span class="nd">@sub_router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/health"</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">health</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"status"</span><span class="p">:</span> <span class="s2">"ok"</span><span class="p">}</span>
+
+
+<span class="n">schema_v2</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">openapi</span><span class="p">()</span>
+<span class="k">assert</span> <span class="n">schema_v2</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">schema_v1</span>
+<span class="k">assert</span> <span class="s2">"/v1/health"</span> <span class="ow">in</span> <span class="n">schema_v2</span><span class="p">[</span><span class="s2">"paths"</span><span class="p">]</span>
+</code></pre>
+<p>各リクエスト実行時に <code>ModelField</code> と <code>TypeAdapter</code> がどのようにランタイム検証および Rust ベースの高速 JSON 直列化を行うかについては、<a href="../04_pydantic_bridge/compat_and_serialization.html">_compat/v2.py・ModelField・直列化</a>を参照してください。</p>
+
+            </main>
+            <footer class="footer">
+                
+                FastAPI® は Sebastián Ramírez（<a href="https://github.com/tiangolo" target="_blank" rel="noopener noreferrer">@tiangolo</a>）の登録商標です。本サイトは非公式の内部アーキテクチャ解説であり、公式プロジェクトとは提携していません。公式ドキュメントは <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">fastapi.tiangolo.com</a> をご参照ください。
+                
+            </footer>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeBtn = document.getElementById('theme-toggle');
+            if (themeBtn) {
+                themeBtn.addEventListener('click', function() {
+                    const current = document.documentElement.getAttribute('data-theme');
+                    const next = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    localStorage.setItem('drawlib-theme', next);
+                });
+            }
+
+            const langDropdowns = document.querySelectorAll('.lang-dropdown');
+            if (langDropdowns.length > 0) {
+                document.addEventListener('click', function(e) {
+                    langDropdowns.forEach(function(dd) {
+                        if (dd.hasAttribute('open') && !dd.contains(e.target)) {
+                            dd.removeAttribute('open');
+                        }
+                    });
+                });
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        langDropdowns.forEach(function(dd) {
+                            dd.removeAttribute('open');
+                        });
+                    }
+                });
+            }
+
+            const menuBtn = document.getElementById('menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            if (menuBtn && sidebar) {
+                function setMenuOpen(open) {
+                    sidebar.classList.toggle('is-open', open);
+                    menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    document.body.classList.toggle('menu-open', open);
+                    if (open) {
+                        const menu = sidebar.querySelector('.sidebar-menu');
+                        if (menu) {
+                            menu.scrollTop = 0;
+                        }
+                    }
+                }
+
+                menuBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const willOpen = !sidebar.classList.contains('is-open');
+                    setMenuOpen(willOpen);
+                });
+
+                document.addEventListener('click', function(e) {
+                    if (sidebar.classList.contains('is-open') && !sidebar.contains(e.target)) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                const navLinks = sidebar.querySelectorAll('.nav-item a');
+                navLinks.forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        setMenuOpen(false);
+                    });
+                });
+
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                window.addEventListener('resize', function() {
+                    if (window.innerWidth > 768 && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

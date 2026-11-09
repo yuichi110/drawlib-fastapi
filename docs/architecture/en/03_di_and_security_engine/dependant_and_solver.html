@@ -1,0 +1,505 @@
+<!--
+ Copyright (c) 2026 Yuichi Ito (yuichi@yuichi.com)
+
+ This software is licensed under the Apache License, Version 2.0.
+ For more information, please visit: https://github.com/yuichi110/drawlib
+
+ This software is provided "as is", without warranty of any kind,
+ express or implied, including but not limited to the warranties of
+ merchantability, fitness for a particular purpose and noninfringement.
+-->
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dependant DAG Compilation &amp; `solve_dependencies()` — FastAPI Architecture Guide (Unofficial)</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-S9N5BZ1VRC');
+    </script>
+    <script>
+        (function() {
+            const saved = localStorage.getItem('drawlib-theme');
+            if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    
+    
+    
+    <link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/architecture/en/03_di_and_security_engine/dependant_and_solver.html">
+    
+    <link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/architecture/ja/03_di_and_security_engine/dependant_and_solver.html">
+    
+    <link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/architecture/en/03_di_and_security_engine/dependant_and_solver.html">
+    
+    
+    
+    <meta name="description" content="FastAPI&#x27;s dependency injection (DI) engine separates signature reflection from request execution across two phases: route-registration compilation…">
+    <link rel="canonical" href="https://fastapi.drawlib.com/architecture/en/03_di_and_security_engine/dependant_and_solver.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="FastAPI Architecture">
+    <meta property="og:title" content="Dependant DAG Compilation &amp; solve_dependencies() — FastAPI Architecture">
+    <meta property="og:description" content="FastAPI&#x27;s dependency injection (DI) engine separates signature reflection from request execution across two phases: route-registration compilation…">
+    <meta property="og:url" content="https://fastapi.drawlib.com/architecture/en/03_di_and_security_engine/dependant_and_solver.html">
+    <meta property="og:image" content="https://fastapi.drawlib.com/architecture/_assets/ogp.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="ja_JP">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Dependant DAG Compilation &amp; solve_dependencies() — FastAPI Architecture">
+    <meta name="twitter:description" content="FastAPI&#x27;s dependency injection (DI) engine separates signature reflection from request execution across two phases: route-registration compilation…">
+    <meta name="twitter:image" content="https://fastapi.drawlib.com/architecture/_assets/ogp.png">
+    
+    
+    <link rel="icon" type="image/png" href="../../_assets/favicon.png">
+    
+    
+    <link rel="stylesheet" href="../style.css">
+    
+    
+</head>
+<body>
+    <div class="demo-banner" role="region" aria-label="Portal Navigation">
+        <div class="demo-banner-inner">
+            <span class="demo-banner-badge">INTERNAL ARCHITECTURE</span>
+            
+            <span class="demo-banner-text">
+                Unofficial Internal Architecture Guide to <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a> (v0.162.2)
+            </span>
+            <span class="demo-banner-links">
+                <a href="https://fastapi.drawlib.com/">User Guide</a>
+                <span class="demo-banner-sep">·</span>
+                <strong style="color:#ffffff;">Architecture</strong>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Audit</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official Docs ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+            </span>
+            
+        </div>
+    </div>
+    
+    <div class="doc-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI Architecture">
+                    
+                    FastAPI Architecture
+                    
+                </a>
+                <div class="sidebar-header-actions">
+                    <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">
+                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                    <button type="button" id="menu-toggle" class="menu-toggle-btn" aria-label="Toggle navigation" aria-expanded="false">
+                        <svg class="icon-hamburger" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        <svg class="icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="sidebar-menu">
+                
+                    
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../index.html" >Architecture Overview</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">1. Package Topology &amp; Layers</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../01_package_and_layers/module_hierarchy.html" >5-Tier Module Hierarchy &amp; Shims</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">2. Routing Compiler &amp; Closures</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../02_routing_compiler/apiroute_and_closures.html" >APIRouter, APIRoute &amp; Handler Closure</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../02_routing_compiler/streaming_and_spa_internals.html" >Generator Streaming &amp; SPA Internals</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">3. DI &amp; Security Engine</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item active">
+                                <a href="dependant_and_solver.html" >Dependant DAG &amp; solve_dependencies</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="security_internals.html" >SecurityBase &amp; HTTPConnection</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">4. Pydantic v2 Bridge</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../04_pydantic_bridge/compat_and_serialization.html" >_compat/v2.py, ModelField &amp; Serialization</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">5. ASGI Stack &amp; Telemetry</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../05_asgi_and_telemetry/middleware_and_concurrency.html" >Middleware Onion &amp; Threadpool</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../05_asgi_and_telemetry/native_telemetry_internals.html" >NativeTelemetry &amp; Runtime Spans</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">6. OpenAPI 3.1 Synthesis</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../06_openapi_and_docs/openapi_synthesis_engine.html" >get_openapi(), $defs &amp; Docs UI</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">Companion Guides &amp; Links</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/" target="_blank" rel="noopener noreferrer">FastAPI User Guide<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/reports/pni501/" target="_blank" rel="noopener noreferrer">PNI501 Diagnostic Report<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official FastAPI Docs<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub Repository<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                        </ul>
+                    
+                
+            </div>
+        </aside>
+        <div class="content-wrapper">
+            <header class="top-bar">
+                <div class="breadcrumbs">
+                    <span class="crumb">Architecture</span>
+                    <span class="crumb-separator">&raquo;</span>
+                    <span class="crumb active">Dependant DAG Compilation &amp; `solve_dependencies()`</span>
+                </div>
+                
+                <div class="lang-switcher">
+                    <details class="lang-dropdown">
+                        <summary class="lang-dropdown-btn" aria-label="Select language">
+                            <svg class="lang-globe-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            <span class="lang-current-label">English</span>
+                            <svg class="lang-caret-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </summary>
+                        <div class="lang-dropdown-menu" role="menu">
+                            
+                            <a href="dependant_and_solver.html" class="lang-option active" lang="en" hreflang="en" aria-current="page">
+                                <span>English</span>
+                                
+                                <svg class="lang-check-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                
+                            </a>
+                            
+                            <a href="../../ja/03_di_and_security_engine/dependant_and_solver.html" class="lang-option" lang="ja" hreflang="ja" >
+                                <span>日本語</span>
+                                
+                            </a>
+                            
+                        </div>
+                    </details>
+                </div>
+                
+            </header>
+            <main class="main-content">
+                <h1>Dependant DAG Compilation &amp; <code>solve_dependencies()</code></h1>
+<p>FastAPI's dependency injection (DI) engine separates signature reflection from request execution across two phases: <strong>route-registration compilation</strong> (<code>get_dependant()</code> and <code>analyze_param()</code> in <code>fastapi/dependencies/utils.py</code>) and <strong>per-request recursive resolution</strong> (<code>solve_dependencies()</code> paired with <code>Dependant</code> in <code>fastapi/dependencies/models.py</code>). Every endpoint and sub-dependency is compiled once at startup into a memory-compact <code>Dependant</code> directed acyclic graph (DAG), enabling runtime execution to traverse pre-classified <code>ModelField</code> buckets, memoize results by a 3-tuple cache key, accumulate validation errors across the entire tree, and deterministically unwind generator lifetimes across nested <code>AsyncExitStack</code> scopes.</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/03_di_and_security_engine/dependant_and_solver/dependant_compilation_dag.png" alt="dependant_and_solver_1" />
+  <figcaption class="drawlib-caption">Compile-time transformation from Python signature annotations into a slotted Dependant DAG and 3-tuple DependencyCacheKey.</figcaption>
+</figure>
+<h2>1. The <code>Dependant</code> Dataclass &amp; Field Slots</h2>
+<p>In <code>fastapi/dependencies/models.py</code>, <code>Dependant</code> is defined with <code>@dataclass(slots=True)</code>. Eliminating per-instance <code>__dict__</code> dictionaries keeps memory overhead low even when large applications mount hundreds of routes with deep router- and operation-level sub-dependency chains. Each <code>Dependant</code> node partitions a callable's inputs into five <code>ModelField</code> validation lists, a child <code>dependencies</code> edge list, six framework object injection slots, and OAuth2 scope metadata:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Field Group</th>
+<th style="text-align:left"><code>Dependant</code> Attributes (<code>v0.162.2</code>)</th>
+<th style="text-align:left">Runtime Role in <code>solve_dependencies()</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>Validated Request Params</strong></td>
+<td style="text-align:left"><code>path_params</code>, <code>query_params</code>, <code>header_params</code>, <code>cookie_params</code> (<code>list[ModelField]</code>)</td>
+<td style="text-align:left">Validated via <code>request_params_to_args()</code> against <code>request.path_params</code>, <code>query_params</code>, <code>headers</code>, and <code>cookies</code>.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Validated Body Params</strong></td>
+<td style="text-align:left"><code>body_params</code> (<code>list[ModelField]</code>)</td>
+<td style="text-align:left">Validated via <code>request_body_to_args()</code> against parsed JSON or <code>FormData</code> (<code>Body</code>, <code>Form</code>, <code>File</code>).</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Sub-Dependency Edges</strong></td>
+<td style="text-align:left"><code>dependencies</code> (<code>list[Dependant]</code>)</td>
+<td style="text-align:left">Traversed depth-first before invoking <code>self.call</code>; prepended with parameterless <code>dependencies=[Depends(...)]</code> on routes.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Connection Injection Slots</strong></td>
+<td style="text-align:left"><code>request_param_name</code>, <code>websocket_param_name</code>, <code>http_connection_param_name</code> (<code>str | None</code>)</td>
+<td style="text-align:left">Injects <code>Request</code> (HTTP only), <code>WebSocket</code> (WS only), or Starlette's unified <code>HTTPConnection</code> (both HTTP and WS).</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Framework Context Slots</strong></td>
+<td style="text-align:left"><code>response_param_name</code>, <code>background_tasks_param_name</code>, <code>security_scopes_param_name</code> (<code>str | None</code>)</td>
+<td style="text-align:left">Injects a shared <code>Response</code> header/status collector, <code>BackgroundTasks</code> queue, or <code>SecurityScopes</code> scope list.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Callable &amp; Scope Metadata</strong></td>
+<td style="text-align:left"><code>name</code>, <code>call</code>, <code>use_cache</code>, <code>path</code>, <code>scope</code>, <code>own_oauth_scopes</code>, <code>parent_oauth_scopes</code></td>
+<td style="text-align:left">Controls parameter binding key, memoization policy, generator exit-stack lifetime, and top-down OAuth2 scope inheritance.</td>
+</tr>
+</tbody>
+</table>
+<h3>1.1 Computed Scope &amp; the 3-Tuple <code>DependencyCacheKey</code></h3>
+<p>Because <code>Dependant</code> uses <code>slots=True</code>, FastAPI computes lifetime scope and cache keys through pure helper functions in <code>fastapi/dependencies/models.py</code> backed by an identity-hashed <code>@lru_cache(maxsize=4096)</code> (<code>_CallIdentity</code>, which hashes <code>id(call)</code> so callable objects that do not implement <code>__hash__</code> are still classified in $O(1)$ time):</p>
+<ul>
+<li><strong><code>_get_computed_scope(*, dependant: Dependant) -&gt; str | None</code></strong>: Returns <code>dependant.scope</code> (<code>&quot;function&quot;</code> or <code>&quot;request&quot;</code>) when explicitly configured; otherwise inspects <code>_is_gen_callable(dependant.call)</code> and <code>_is_async_gen_callable(dependant.call)</code> (unwrapping <code>functools.partial</code> and <code>__wrapped__</code> chains plus callable <code>__call__</code> methods) and defaults generator dependencies to <code>&quot;request&quot;</code>, returning <code>None</code> for non-generator callables.</li>
+<li><strong><code>_get_cache_key(*, dependant: Dependant, uses_scopes_cache: _UsesScopesCache | None = None) -&gt; DependencyCacheKey</code></strong>: Produces the 3-tuple <code>(dependant.call, scopes_for_cache, _get_computed_scope(dependant=dependant) or &quot;&quot;)</code> (<code>DependencyCacheKey = tuple[Callable[..., Any] | None, tuple[str, ...], str]</code> in <code>fastapi/types.py</code>).</li>
+<li><strong>Scope Pruning via <code>_uses_scopes()</code></strong>: Crucially, <code>scopes_for_cache</code> evaluates to <code>tuple(sorted(set(_get_oauth_scopes(dependant=dependant))))</code> <strong>only</strong> when <code>_uses_scopes()</code> is <code>True</code>—meaning the node declares <code>own_oauth_scopes</code>, injects <code>SecurityScopes</code>, wraps a <code>SecurityBase</code> instance, or has a descendant that uses scopes. For non-security dependencies such as a database session generator (<code>get_db</code>), <code>_uses_scopes()</code> returns <code>False</code> and <code>scopes_for_cache</code> collapses to <code>()</code>, guaranteeing a single shared DB session per request even when <code>get_db</code> is called both directly by an endpoint and nested inside <code>Security(..., scopes=[&quot;projects:read&quot;])</code>.</li>
+</ul>
+<h2>2. Compile-Time Graph Construction (<code>get_dependant</code> &amp; <code>analyze_param</code>)</h2>
+<p>When an <code>APIRoute</code> or <code>APIWebSocketRoute</code> is instantiated, <code>_build_dependant_with_parameterless_dependencies()</code> invokes <code>get_dependant(path=path, call=call, scope=&quot;function&quot;)</code> and prepends any decorator-level <code>dependencies=[Depends(...)]</code> in reverse order via <code>get_parameterless_sub_dependant()</code> so declaration order is preserved. Inside <code>get_dependant()</code>:</p>
+<ol>
+<li><strong>Typed Signature Extraction (<code>get_typed_signature</code>)</strong>: Calls <code>inspect.signature(call, eval_str=True)</code> (falling back to PEP 649 <code>annotationlib.Format.FORWARDREF</code> on Python 3.14+ when <code>TYPE_CHECKING</code>-only names raise <code>NameError</code>) and resolves string <code>ForwardRef</code> annotations against the unwrapped function's <code>__globals__</code> via <code>evaluate_forwardref()</code>.</li>
+<li><strong><code>Annotated</code> &amp; Default Unpacking (<code>analyze_param</code>)</strong>: Unwraps PEP 695 <code>type</code> aliases (<code>is_typealiastype</code>), extracts <code>Annotated[T, ...]</code> metadata, and selects the last FastAPI marker (<code>Param</code>, <code>Body</code>, or <code>Depends</code>). When a <code>FieldInfo</code> marker resides inside <code>Annotated</code>, <code>copy_field_info()</code> clones it before assigning <code>param.default</code> (or <code>RequiredParam</code>) so reusable <code>Annotated</code> type aliases are never mutated across endpoints. Passing FastAPI markers in both <code>Annotated</code> and <code>=</code> raises an <code>AssertionError</code> at startup.</li>
+<li><strong>Class-Dependency Shorthand</strong>: When <code>Depends()</code> is written with <code>dependency=None</code> (e.g., <code>Annotated[CommonQueryParams, Depends()]</code>), <code>analyze_param()</code> clones the frozen <code>Depends</code> dataclass with <code>dataclasses.replace(depends, dependency=type_annotation)</code>.</li>
+<li><strong>Implicit Parameter Classification</strong>: If a parameter carries neither <code>Depends</code>, a framework injection type (<code>Request</code>, <code>WebSocket</code>, <code>HTTPConnection</code>, <code>Response</code>, <code>BackgroundTasks</code>, <code>SecurityScopes</code>), nor an explicit <code>Query</code>/<code>Path</code>/<code>Header</code>/<code>Cookie</code>/<code>Body</code> marker, <code>analyze_param()</code> classifies it deterministically:
+<ul>
+<li><code>param_name in path_param_names</code> (parsed from <code>{...}</code> placeholders in <code>path</code>) $\rightarrow$ <code>params.Path</code> (asserted to be a scalar type).</li>
+<li><code>UploadFile</code> or sequence of <code>UploadFile</code> $\rightarrow$ <code>params.File</code>.</li>
+<li>Non-scalar type (<code>not field_annotation_is_scalar()</code>, covering <code>BaseModel</code>, <code>Mapping</code>, non-bytes <code>Sequence</code>, <code>dataclass</code>, or custom Pydantic schema types) $\rightarrow$ <code>params.Body</code>.</li>
+<li>Any remaining scalar annotation $\rightarrow$ <code>params.Query</code>.</li>
+</ul>
+</li>
+<li><strong>Startup Scope Hierarchy Guard (<code>DependencyScopeError</code>)</strong>: Before recursing into a child <code>Depends</code>, <code>get_dependant()</code> checks whether the parent is a generator with <code>_get_computed_scope(dependant) == &quot;request&quot;</code> while the child explicitly requests <code>scope=&quot;function&quot;</code>. Because a <code>&quot;function&quot;</code>-scoped resource tears down before response streaming while a <code>&quot;request&quot;</code>-scoped parent generator outlives streaming, FastAPI rejects this inverted lifetime at startup with <code>DependencyScopeError</code>.</li>
+</ol>
+<h2>3. Runtime Execution in <code>solve_dependencies()</code></h2>
+<p>On each incoming HTTP request (<code>get_request_handler</code>) or WebSocket handshake (<code>get_websocket_app</code>), <code>solve_dependencies()</code> executes a recursive depth-first post-order walk over <code>dependant</code>:</p>
+<ul>
+<li><strong>Dynamic Dependency Overrides</strong>: For every <code>sub_dependant</code> in <code>dependant.dependencies</code>, FastAPI checks <code>dependency_overrides_provider.dependency_overrides</code> (<code>app.dependency_overrides</code>). If <code>sub_dependant.call</code> is mapped to a test/mock callable, <code>solve_dependencies()</code> dynamically compiles <code>use_sub_dependant = get_dependant(...)</code> inheriting <code>_get_oauth_scopes(sub_dependant)</code> and <code>sub_dependant.scope</code>, while still keying <code>dependency_cache</code> by the original <code>sub_dependant</code> cache key.</li>
+<li><strong>Execution Dispatch &amp; Memoization</strong>: After awaiting <code>solve_dependencies()</code> for a child's own inputs, if <code>sub_dependant.use_cache</code> is <code>True</code> and <code>sub_dependant_cache_key</code> exists in <code>dependency_cache</code>, the cached value is reused immediately. Otherwise FastAPI dispatches by callable kind:
+<ul>
+<li><strong>Generators (<code>yield</code>)</strong>: Routed to <code>_solve_generator()</code>, which wraps async generators with <code>asynccontextmanager(call)(**sub_values)</code> and sync generators with <code>contextmanager_in_threadpool(contextmanager(call)(**sub_values))</code> before entering the selected <code>AsyncExitStack</code>.</li>
+<li><strong>Async Coroutines (<code>async def</code>)</strong>: Awaited directly on the event loop via <code>await call(**solved_result.values)</code>.</li>
+<li><strong>Sync Functions &amp; Classes (<code>def</code> / <code>class</code>)</strong>: Offloaded via Starlette's <code>await run_in_threadpool(call, **solved_result.values)</code> so blocking I/O does not stall the ASGI loop.</li>
+</ul>
+</li>
+<li><strong>Full-Tree Error Accumulation (No Fail-Fast)</strong>: When a child <code>Dependant</code> produces validation errors (<code>solved_result.errors</code>), <code>solve_dependencies()</code> appends those errors, skips invoking that broken child's <code>call</code>, and <strong>continues</strong> evaluating remaining sibling dependencies plus all local <code>path_params</code>, <code>query_params</code>, <code>header_params</code>, <code>cookie_params</code>, and <code>body_params</code>. Only after the entire <code>Dependant</code> tree finishes does <code>get_request_handler</code> raise <code>RequestValidationError(errors)</code> (HTTP 422) or <code>WebSocketRequestValidationError</code>, returning every invalid parameter across headers, query strings, sub-dependencies, and JSON body fields in a single round-trip.</li>
+</ul>
+<h3>3.1 The Dual <code>AsyncExitStack</code> Lifetime Architecture</h3>
+<p>FastAPI <code>v0.162.2</code> manages <code>yield</code> dependency teardown using <strong>two nested <code>AsyncExitStack</code> instances</strong> created inside <code>request_response()</code> (<code>fastapi/routing.py</code>)—alongside an outer <code>fastapi_middleware_astack</code> created by <code>AsyncExitStackMiddleware</code> (<code>fastapi/middleware/asyncexitstack.py</code>) exclusively to close multipart <code>FormData</code> temporary files after the full middleware chain completes:</p>
+<ol>
+<li><strong><code>fastapi_function_astack</code> (<code>scope=&quot;function&quot;</code>)</strong>: Enters just before <code>response = await f(request)</code> and <strong>exits immediately after <code>f(request)</code> returns the constructed <code>Response</code></strong>, <em>prior</em> to <code>await response(scope, receive, send)</code>. Generator dependencies configured with <code>Depends(dep, scope=&quot;function&quot;)</code> run their post-<code>yield</code> cleanup after <code>run_endpoint_function()</code> and <code>serialize_response()</code> finish, while HTTP headers have not yet been sent over the socket.</li>
+<li><strong><code>fastapi_inner_astack</code> (<code>scope=&quot;request&quot;</code>, default for <code>yield</code> dependencies)</strong>: Wraps both <code>f(request)</code> and <code>await response(scope, receive, send)</code>, exiting <strong>only after the ASGI response body finishes streaming</strong> (including <code>StreamingResponse</code>, JSONL/SSE generators, and response-attached <code>BackgroundTasks</code>). If an exception occurs inside the endpoint and a <code>yield</code> dependency swallows it with a bare <code>except:</code> without re-raising, <code>response_awaited</code> remains <code>False</code> and <code>request_response()</code> raises <code>FastAPIError(&quot;Response not awaited...&quot;)</code> to surface the bug immediately.</li>
+</ol>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/03_di_and_security_engine/dependant_and_solver/dual_exitstack_lifetimes.png" alt="dependant_and_solver_2" />
+  <figcaption class="drawlib-caption">Nested AsyncExitStack lifetimes in request_response(): function-scoped generators close before ASGI streaming, whereas request-scoped generators outlive streaming.</figcaption>
+</figure>
+<h2>4. Inspecting Compiled <code>Dependant</code> Trees &amp; Cache Keys</h2>
+<p>You can call <code>get_dependant()</code> together with <code>_get_computed_scope()</code> and <code>_get_cache_key()</code> directly in Python to inspect how FastAPI classifies parameters and prunes unused OAuth2 scopes from shared generator cache keys:</p>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span><span class="p">,</span> <span class="n">AsyncIterator</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">Request</span><span class="p">,</span> <span class="n">Security</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.dependencies.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">_get_cache_key</span><span class="p">,</span> <span class="n">_get_computed_scope</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.dependencies.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_dependant</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.security</span><span class="w"> </span><span class="kn">import</span> <span class="n">SecurityScopes</span>
+
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_db</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="k">yield</span> <span class="s2">"db_conn"</span>
+
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">require_actor</span><span class="p">(</span>
+    <span class="n">scopes</span><span class="p">:</span> <span class="n">SecurityScopes</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">)],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"db"</span><span class="p">:</span> <span class="n">db</span><span class="p">,</span> <span class="s2">"scopes"</span><span class="p">:</span> <span class="n">scopes</span><span class="o">.</span><span class="n">scopes</span><span class="p">}</span>
+
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">list_projects</span><span class="p">(</span>
+    <span class="n">org_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">)],</span>
+    <span class="n">actor</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span>
+        <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">],</span>
+        <span class="n">Security</span><span class="p">(</span><span class="n">require_actor</span><span class="p">,</span> <span class="n">scopes</span><span class="o">=</span><span class="p">[</span><span class="s2">"projects:read"</span><span class="p">]),</span>
+    <span class="p">],</span>
+    <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"org_id"</span><span class="p">:</span> <span class="n">org_id</span><span class="p">,</span> <span class="s2">"limit"</span><span class="p">:</span> <span class="n">limit</span><span class="p">,</span> <span class="s2">"db"</span><span class="p">:</span> <span class="n">db</span><span class="p">,</span> <span class="s2">"actor"</span><span class="p">:</span> <span class="n">actor</span><span class="p">}</span>
+
+
+<span class="n">root</span> <span class="o">=</span> <span class="n">get_dependant</span><span class="p">(</span>
+    <span class="n">path</span><span class="o">=</span><span class="s2">"/orgs/</span><span class="si">{org_id}</span><span class="s2">/projects"</span><span class="p">,</span>
+    <span class="n">call</span><span class="o">=</span><span class="n">list_projects</span><span class="p">,</span>
+    <span class="n">scope</span><span class="o">=</span><span class="s2">"function"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="k">assert</span> <span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">root</span><span class="o">.</span><span class="n">path_params</span><span class="p">]</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"org_id"</span><span class="p">]</span>
+<span class="k">assert</span> <span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">root</span><span class="o">.</span><span class="n">query_params</span><span class="p">]</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"limit"</span><span class="p">]</span>
+<span class="k">assert</span> <span class="n">root</span><span class="o">.</span><span class="n">request_param_name</span> <span class="o">==</span> <span class="s2">"request"</span>
+
+<span class="n">db_direct</span><span class="p">,</span> <span class="n">actor_dep</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="n">dependencies</span>
+<span class="n">db_nested</span> <span class="o">=</span> <span class="n">actor_dep</span><span class="o">.</span><span class="n">dependencies</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="k">assert</span> <span class="n">_get_computed_scope</span><span class="p">(</span><span class="n">dependant</span><span class="o">=</span><span class="n">db_direct</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"request"</span>
+<span class="c1"># Non-security sub-dependency collapses scopes_for_cache to () in both branches:</span>
+<span class="k">assert</span> <span class="n">_get_cache_key</span><span class="p">(</span><span class="n">dependant</span><span class="o">=</span><span class="n">db_direct</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="n">get_db</span><span class="p">,</span> <span class="p">(),</span> <span class="s2">"request"</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">_get_cache_key</span><span class="p">(</span><span class="n">dependant</span><span class="o">=</span><span class="n">db_nested</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="n">get_db</span><span class="p">,</span> <span class="p">(),</span> <span class="s2">"request"</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">_get_cache_key</span><span class="p">(</span><span class="n">dependant</span><span class="o">=</span><span class="n">actor_dep</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span>
+    <span class="n">require_actor</span><span class="p">,</span>
+    <span class="p">(</span><span class="s2">"projects:read"</span><span class="p">,),</span>
+    <span class="s2">""</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre>
+<p>Next, see <a href="security_internals.html">SecurityBase &amp; HTTPConnection</a> for how authentication schemes plug into <code>Dependant</code> and OpenAPI, and <a href="../04_pydantic_bridge/compat_and_serialization.html">_compat/v2.py, ModelField &amp; Serialization</a> for how <code>ModelField</code> validates each extracted parameter.</p>
+
+            </main>
+            <footer class="footer">
+                
+                FastAPI® is a registered trademark of Sebastián Ramírez (<a href="https://github.com/tiangolo" target="_blank" rel="noopener noreferrer">@tiangolo</a>). Unofficial internal architecture guide — not affiliated with or endorsed by the official FastAPI project (<a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">fastapi.tiangolo.com</a>).
+                
+            </footer>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeBtn = document.getElementById('theme-toggle');
+            if (themeBtn) {
+                themeBtn.addEventListener('click', function() {
+                    const current = document.documentElement.getAttribute('data-theme');
+                    const next = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    localStorage.setItem('drawlib-theme', next);
+                });
+            }
+
+            const langDropdowns = document.querySelectorAll('.lang-dropdown');
+            if (langDropdowns.length > 0) {
+                document.addEventListener('click', function(e) {
+                    langDropdowns.forEach(function(dd) {
+                        if (dd.hasAttribute('open') && !dd.contains(e.target)) {
+                            dd.removeAttribute('open');
+                        }
+                    });
+                });
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        langDropdowns.forEach(function(dd) {
+                            dd.removeAttribute('open');
+                        });
+                    }
+                });
+            }
+
+            const menuBtn = document.getElementById('menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            if (menuBtn && sidebar) {
+                function setMenuOpen(open) {
+                    sidebar.classList.toggle('is-open', open);
+                    menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    document.body.classList.toggle('menu-open', open);
+                    if (open) {
+                        const menu = sidebar.querySelector('.sidebar-menu');
+                        if (menu) {
+                            menu.scrollTop = 0;
+                        }
+                    }
+                }
+
+                menuBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const willOpen = !sidebar.classList.contains('is-open');
+                    setMenuOpen(willOpen);
+                });
+
+                document.addEventListener('click', function(e) {
+                    if (sidebar.classList.contains('is-open') && !sidebar.contains(e.target)) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                const navLinks = sidebar.querySelectorAll('.nav-item a');
+                navLinks.forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        setMenuOpen(false);
+                    });
+                });
+
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                window.addEventListener('resize', function() {
+                    if (window.innerWidth > 768 && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

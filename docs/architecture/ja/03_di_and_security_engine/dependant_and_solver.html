@@ -1,0 +1,507 @@
+<!--
+ Copyright (c) 2026 Yuichi Ito (yuichi@yuichi.com)
+
+ This software is licensed under the Apache License, Version 2.0.
+ For more information, please visit: https://github.com/yuichi110/drawlib
+
+ This software is provided "as is", without warranty of any kind,
+ express or implied, including but not limited to the warranties of
+ merchantability, fitness for a particular purpose and noninfringement.
+-->
+<!DOCTYPE html>
+<html lang="ja" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dependant DAG コンパイルと `solve_dependencies()` — FastAPI Architecture Guide (Unofficial)</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-S9N5BZ1VRC');
+    </script>
+    <script>
+        (function() {
+            const saved = localStorage.getItem('drawlib-theme');
+            if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    
+    <link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/architecture/en/03_di_and_security_engine/dependant_and_solver.html">
+    
+    <link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/architecture/ja/03_di_and_security_engine/dependant_and_solver.html">
+    
+    <link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/architecture/en/03_di_and_security_engine/dependant_and_solver.html">
+    
+    
+    
+    <meta name="description" content="FastAPI の依存性注入（DI）エンジンは、シグネチャのリフレクション処理とリクエスト実行処理を ルート登録時のコンパイルフェーズ（fastapi/dependencies/utils.py の get_dependant() と analyze_param()）と…">
+    <link rel="canonical" href="https://fastapi.drawlib.com/architecture/ja/03_di_and_security_engine/dependant_and_solver.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="FastAPI 内部構造">
+    <meta property="og:title" content="Dependant DAG コンパイルと solve_dependencies() — FastAPI 内部構造">
+    <meta property="og:description" content="FastAPI の依存性注入（DI）エンジンは、シグネチャのリフレクション処理とリクエスト実行処理を ルート登録時のコンパイルフェーズ（fastapi/dependencies/utils.py の get_dependant() と analyze_param()）と…">
+    <meta property="og:url" content="https://fastapi.drawlib.com/architecture/ja/03_di_and_security_engine/dependant_and_solver.html">
+    <meta property="og:image" content="https://fastapi.drawlib.com/architecture/_assets/ogp.png">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:locale:alternate" content="en_US">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Dependant DAG コンパイルと solve_dependencies() — FastAPI 内部構造">
+    <meta name="twitter:description" content="FastAPI の依存性注入（DI）エンジンは、シグネチャのリフレクション処理とリクエスト実行処理を ルート登録時のコンパイルフェーズ（fastapi/dependencies/utils.py の get_dependant() と analyze_param()）と…">
+    <meta name="twitter:image" content="https://fastapi.drawlib.com/architecture/_assets/ogp.png">
+    
+    
+    <link rel="icon" type="image/png" href="../../_assets/favicon.png">
+    
+    
+    <link rel="stylesheet" href="../style.css">
+    
+    
+</head>
+<body>
+    <div class="demo-banner" role="region" aria-label="ポータルナビゲーション">
+        <div class="demo-banner-inner">
+            <span class="demo-banner-badge">INTERNAL ARCHITECTURE</span>
+            
+            <span class="demo-banner-text">
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a>（v0.162.2）内部アーキテクチャ解説（非公式）
+            </span>
+            <span class="demo-banner-links">
+                <a href="https://fastapi.drawlib.com/">User Guide</a>
+                <span class="demo-banner-sep">·</span>
+                <strong style="color:#ffffff;">Architecture</strong>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Audit</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official Docs ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+            </span>
+            
+        </div>
+    </div>
+    
+    <div class="doc-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI 内部構造">
+                    
+                    FastAPI 内部構造
+                    
+                </a>
+                <div class="sidebar-header-actions">
+                    <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">
+                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                    <button type="button" id="menu-toggle" class="menu-toggle-btn" aria-label="Toggle navigation" aria-expanded="false">
+                        <svg class="icon-hamburger" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        <svg class="icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="sidebar-menu">
+                
+                    
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../index.html" >アーキテクチャ全体像</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">1. パッケージ階層と境界設計</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../01_package_and_layers/module_hierarchy.html" >5層モジュール構造と Starlette 再公開</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">2. ルーティングコンパイラとクロージャ</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../02_routing_compiler/apiroute_and_closures.html" >APIRouter・APIRoute とクロージャ合成</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../02_routing_compiler/streaming_and_spa_internals.html" >ジェネレータ配信と SPA ルータ内部実装</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">3. DI 解決エンジンと認証機構</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item active">
+                                <a href="dependant_and_solver.html" >Dependant グラフと solve_dependencies</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="security_internals.html" >SecurityBase 階層と HTTPConnection</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">4. Pydantic v2 ブリッジ層</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../04_pydantic_bridge/compat_and_serialization.html" >_compat/v2.py・ModelField・直列化</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">5. ASGI スタックとテレメトリ</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../05_asgi_and_telemetry/middleware_and_concurrency.html" >ミドルウェア7層構造とスレッドプール</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../05_asgi_and_telemetry/native_telemetry_internals.html" >NativeTelemetry と例外スパン記録</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">6. OpenAPI 3.1 合成エンジン</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../06_openapi_and_docs/openapi_synthesis_engine.html" >get_openapi()・$defs 集約・Docs UI</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">関連ガイド &amp; 公式リンク</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/" target="_blank" rel="noopener noreferrer">FastAPI ユーザーガイド<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/reports/pni501/" target="_blank" rel="noopener noreferrer">PNI501 診断レポート<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI 公式ドキュメント<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub リポジトリ<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                        </ul>
+                    
+                
+            </div>
+        </aside>
+        <div class="content-wrapper">
+            <header class="top-bar">
+                <div class="breadcrumbs">
+                    <span class="crumb">Architecture</span>
+                    <span class="crumb-separator">&raquo;</span>
+                    <span class="crumb active">Dependant DAG コンパイルと `solve_dependencies()`</span>
+                </div>
+                
+                <div class="lang-switcher">
+                    <details class="lang-dropdown">
+                        <summary class="lang-dropdown-btn" aria-label="Select language">
+                            <svg class="lang-globe-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            <span class="lang-current-label">日本語</span>
+                            <svg class="lang-caret-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </summary>
+                        <div class="lang-dropdown-menu" role="menu">
+                            
+                            <a href="../../en/03_di_and_security_engine/dependant_and_solver.html" class="lang-option" lang="en" hreflang="en" >
+                                <span>English</span>
+                                
+                            </a>
+                            
+                            <a href="dependant_and_solver.html" class="lang-option active" lang="ja" hreflang="ja" aria-current="page">
+                                <span>日本語</span>
+                                
+                                <svg class="lang-check-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                
+                            </a>
+                            
+                        </div>
+                    </details>
+                </div>
+                
+            </header>
+            <main class="main-content">
+                <h1>Dependant DAG コンパイルと <code>solve_dependencies()</code></h1>
+<p>FastAPI の依存性注入（DI）エンジンは、シグネチャのリフレクション処理とリクエスト実行処理を <strong>ルート登録時のコンパイルフェーズ</strong>（<code>fastapi/dependencies/utils.py</code> の <code>get_dependant()</code> と <code>analyze_param()</code>）と <strong>リクエスト単位の再帰解決フェーズ</strong>（<code>fastapi/dependencies/models.py</code> の <code>Dependant</code> と <code>solve_dependencies()</code>）の 2 段階に分離しています。すべてのエンドポイントとサブ依存関係は起動時に一度だけ省メモリな有向非巡回グラフ（<code>Dependant</code> DAG）へとコンパイルされるため、実行時には事前分類済みの <code>ModelField</code> バケットの走査、3 要素タプルによるキャッシュ再利用、ツリー全体のバリデーションエラー集約、そして 2 階層の <code>AsyncExitStack</code> によるジェネレータ終了制御を決定論的に高速実行できます。</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/03_di_and_security_engine/dependant_and_solver/dependant_compilation_dag.png" alt="dependant_and_solver_1" />
+  <figcaption class="drawlib-caption">Python 関数シグネチャから slots=True の Dependant DAG および 3 要素タプル DependencyCacheKey へのコンパイル時変換構造。</figcaption>
+</figure>
+<h2>1. <code>Dependant</code> データクラスとフィールド構成</h2>
+<p><code>fastapi/dependencies/models.py</code> の <code>Dependant</code> は <code>@dataclass(slots=True)</code> として定義されています。インスタンスごとの <code>__dict__</code> を排除することで、数百のルートや多段のルータ依存チェーンを持つ大規模アプリケーションでもメモリフットプリントを最小限に抑えます。各 <code>Dependant</code> ノードは、呼び出し対象の入力を 5 つの <code>ModelField</code> バケット、子 <code>dependencies</code> リスト、6 つのフレームワーク注入スロット、および OAuth2 スコープ属性に分割して保持します。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">フィールド分類</th>
+<th style="text-align:left"><code>Dependant</code> の属性（<code>v0.162.2</code>）</th>
+<th style="text-align:left"><code>solve_dependencies()</code> における実行時の役割</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>検証対象リクエスト引数</strong></td>
+<td style="text-align:left"><code>path_params</code>, <code>query_params</code>, <code>header_params</code>, <code>cookie_params</code> (<code>list[ModelField]</code>)</td>
+<td style="text-align:left"><code>request_params_to_args()</code> により <code>request.path_params</code>, <code>query_params</code>, <code>headers</code>, <code>cookies</code> から抽出・検証。</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>検証対象ボディ引数</strong></td>
+<td style="text-align:left"><code>body_params</code> (<code>list[ModelField]</code>)</td>
+<td style="text-align:left"><code>request_body_to_args()</code> により解析済み JSON または <code>FormData</code>（<code>Body</code>, <code>Form</code>, <code>File</code>）を検証。</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>サブ依存関係エッジ</strong></td>
+<td style="text-align:left"><code>dependencies</code> (<code>list[Dependant]</code>)</td>
+<td style="text-align:left"><code>self.call</code> 実行前に深さ優先（DFS）で解決。ルートデコレータの <code>dependencies=[Depends(...)]</code> も先頭に挿入される。</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>コネクション注入スロット</strong></td>
+<td style="text-align:left"><code>request_param_name</code>, <code>websocket_param_name</code>, <code>http_connection_param_name</code> (<code>str | None</code>)</td>
+<td style="text-align:left"><code>Request</code>（HTTP 専用）、<code>WebSocket</code>（WS 専用）、または両者を統合する Starlette の <code>HTTPConnection</code> を直接注入。</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>フレームワーク文脈スロット</strong></td>
+<td style="text-align:left"><code>response_param_name</code>, <code>background_tasks_param_name</code>, <code>security_scopes_param_name</code> (<code>str | None</code>)</td>
+<td style="text-align:left">ヘッダ・ステータス集約用の共有 <code>Response</code>、<code>BackgroundTasks</code> キュー、または <code>SecurityScopes</code> を注入。</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>呼び出し・スコープメタ情報</strong></td>
+<td style="text-align:left"><code>name</code>, <code>call</code>, <code>use_cache</code>, <code>path</code>, <code>scope</code>, <code>own_oauth_scopes</code>, <code>parent_oauth_scopes</code></td>
+<td style="text-align:left">引数バインド名、キャッシュ可否、ジェネレータ終了スタックの寿命境界、および上位からの OAuth2 スコープ継承を制御。</td>
+</tr>
+</tbody>
+</table>
+<h3>1.1 <code>computed_scope</code> と 3 要素タプル <code>DependencyCacheKey</code></h3>
+<p><code>Dependant</code> が <code>slots=True</code> を採用しているため、FastAPI は寿命スコープとキャッシュキーを <code>fastapi/dependencies/models.py</code> 内の純粋ヘルパー関数で算出します。呼び出し可能オブジェクトの種別判定は、<code>id(call)</code> でハッシュ化するラッパー <code>_CallIdentity</code> と <code>@lru_cache(maxsize=4096)</code> によって、<code>__hash__</code> を実装しない呼び出し可能インスタンスに対しても $O(1)$ で動作します。</p>
+<ul>
+<li><strong><code>_get_computed_scope(*, dependant: Dependant) -&gt; str | None</code></strong>: <code>dependant.scope</code>（<code>&quot;function&quot;</code> または <code>&quot;request&quot;</code>）が明示指定されていればその値を返し、未指定の場合は <code>_is_gen_callable(dependant.call)</code> と <code>_is_async_gen_callable(dependant.call)</code>（<code>functools.partial</code> や <code>__wrapped__</code> チェーン、および <code>__call__</code> メソッドを再帰アンラップして検査）に基づき、ジェネレータ依存関係ならデフォルトで <code>&quot;request&quot;</code>、通常の関数・コルーチンなら <code>None</code> を返します。</li>
+<li><strong><code>_get_cache_key(*, dependant: Dependant, uses_scopes_cache: _UsesScopesCache | None = None) -&gt; DependencyCacheKey</code></strong>: <code>(dependant.call, scopes_for_cache, _get_computed_scope(dependant=dependant) or &quot;&quot;)</code> という <strong>3 要素タプル</strong>（<code>fastapi/types.py</code> の <code>DependencyCacheKey = tuple[Callable[..., Any] | None, tuple[str, ...], str]</code>）を生成します。</li>
+<li><strong><code>_uses_scopes()</code> によるスコープ枝刈り最適化</strong>: <code>scopes_for_cache</code> が <code>tuple(sorted(set(_get_oauth_scopes(dependant=dependant))))</code> になるのは、<code>_uses_scopes()</code> が <code>True</code>（<code>own_oauth_scopes</code> の宣言、<code>SecurityScopes</code> の注入、<code>SecurityBase</code> インスタンスの呼び出し、または子孫ノードでのスコープ利用のいずれかに該当）の場合 <strong>のみ</strong> です。DB セッション生成ジェネレータ（<code>get_db</code>）のような非セキュリティ依存関係では <code>_uses_scopes()</code> が <code>False</code> となり <code>scopes_for_cache</code> が <code>()</code> に畳み込まれるため、エンドポイント直下と <code>Security(..., scopes=[&quot;projects:read&quot;])</code> 配下の両方から呼ばれても同一リクエスト内で確実に 1 つの DB セッションが共有されます。</li>
+</ul>
+<h2>2. コンパイル時の DAG 構築（<code>get_dependant</code> と <code>analyze_param</code>）</h2>
+<p><code>APIRoute</code> や <code>APIWebSocketRoute</code> の初期化時、<code>_build_dependant_with_parameterless_dependencies()</code> は <code>get_dependant(path=path, call=call, scope=&quot;function&quot;)</code> を呼び出し、デコレータ引数の <code>dependencies=[Depends(...)]</code> を宣言順が保たれるよう逆順で <code>get_parameterless_sub_dependant()</code> により先頭へ挿入します。<code>get_dependant()</code> 内部は以下の手順で進行します。</p>
+<ol>
+<li><strong>型解決済みシグネチャ抽出（<code>get_typed_signature</code>）</strong>: <code>inspect.signature(call, eval_str=True)</code> を実行し（<code>TYPE_CHECKING</code> 限定の型により <code>NameError</code> が発生した場合、Python 3.14 以降では PEP 649 の <code>annotationlib.Format.FORWARDREF</code> へフォールバック）、アンラップした関数の <code>__globals__</code> を用いて文字列 <code>ForwardRef</code> を <code>evaluate_forwardref()</code> で実体型へ解決します。</li>
+<li><strong><code>Annotated</code> とデフォルト値の展開（<code>analyze_param</code>）</strong>: PEP 695 の <code>type</code> エイリアス（<code>is_typealiastype</code>）を展開した上で <code>Annotated[T, ...]</code> のメタデータを走査し、末尾の FastAPI マーカー（<code>Param</code>, <code>Body</code>, <code>Depends</code>）を採用します。<code>Annotated</code> 内に <code>FieldInfo</code> がある場合、再利用可能な型エイリアスを破壊しないよう <code>copy_field_info()</code> で複製してから <code>param.default</code>（または <code>RequiredParam</code>）を代入します。<code>Annotated</code> 内と <code>=</code> の両方に FastAPI マーカーを重ねて指定した場合は起動時に <code>AssertionError</code> で拒否されます。</li>
+<li><strong>クラス依存関係の省略記法解決</strong>: <code>Depends()</code> のように <code>dependency=None</code> で宣言された場合（例: <code>Annotated[CommonQueryParams, Depends()]</code>）、frozen データクラスである <code>Depends</code> を <code>dataclasses.replace(depends, dependency=type_annotation)</code> で複製し、型アノテーション自身を呼び出し対象に設定します。</li>
+<li><strong>暗黙的なパラメータ分類規則</strong>: <code>Depends</code> でもフレームワーク注入型（<code>Request</code>, <code>WebSocket</code>, <code>HTTPConnection</code>, <code>Response</code>, <code>BackgroundTasks</code>, <code>SecurityScopes</code>）でもなく、明示的な <code>Query</code>/<code>Path</code>/<code>Header</code>/<code>Cookie</code>/<code>Body</code> も付与されていない引数は、次の優先順で自動分類されます。
+<ul>
+<li><code>param_name in path_param_names</code>（パステンプレートの <code>{...}</code> から抽出） $\rightarrow$ <code>params.Path</code>（スカラー型であることを検証）。</li>
+<li><code>UploadFile</code> またはそのシーケンス型 $\rightarrow$ <code>params.File</code>。</li>
+<li>非スカラー型（<code>not field_annotation_is_scalar()</code>：<code>BaseModel</code>, <code>Mapping</code>, <code>bytes</code> 以外の <code>Sequence</code>, <code>dataclass</code>, カスタム Pydantic スキーマ型） $\rightarrow$ <code>params.Body</code>。</li>
+<li>上記以外のすべてのスカラー型 $\rightarrow$ <code>params.Query</code>。</li>
+</ul>
+</li>
+<li><strong>起動時のスコープ逆転ガード（<code>DependencyScopeError</code>）</strong>: 子 <code>Depends</code> へ再帰する直前に、親ジェネレータの <code>_get_computed_scope(dependant)</code> が <code>&quot;request&quot;</code> であるにもかかわらず子が <code>scope=&quot;function&quot;</code> を要求していないかを検査します。レスポンス配信前に閉じられる <code>&quot;function&quot;</code> スコープのリソースに、配信完了まで生存する <code>&quot;request&quot;</code> スコープの親ジェネレータが依存する寿命逆転バグを起動時に <code>DependencyScopeError</code> として即座に検出します。</li>
+</ol>
+<h2>3. <code>solve_dependencies()</code> による実行時解決</h2>
+<p>HTTP リクエスト（<code>get_request_handler</code>）または WebSocket ハンドシェイク（<code>get_websocket_app</code>）が到着するたび、<code>solve_dependencies()</code> は <code>dependant</code> ツリーを深さ優先・帰りがけ順（post-order DFS）で再帰走査します。</p>
+<ul>
+<li><strong>動的な依存関係オーバーライド</strong>: <code>dependant.dependencies</code> 内の各 <code>sub_dependant</code> に対し、<code>dependency_overrides_provider.dependency_overrides</code>（<code>app.dependency_overrides</code>）に差し替え関数が登録されていれば、<code>_get_oauth_scopes(sub_dependant)</code> と <code>sub_dependant.scope</code> を引き継いだ <code>use_sub_dependant = get_dependant(...)</code> を動的に構築して解決しつつ、<code>dependency_cache</code> のキーには元の <code>sub_dependant</code> のキーを維持します。</li>
+<li><strong>呼び出しディスパッチとリクエスト内メモ化</strong>: 子ノード自身の依存解決が完了した後、<code>sub_dependant.use_cache</code> が <code>True</code> かつ <code>sub_dependant_cache_key</code> が <code>dependency_cache</code> に存在すればキャッシュ値を即座に返します。未キャッシュの場合は呼び出し種別に応じて実行します。
+<ul>
+<li><strong>ジェネレータ（<code>yield</code>）</strong>: <code>_solve_generator()</code> へ委譲し、非同期ジェネレータは <code>asynccontextmanager(call)(**sub_values)</code>、同期ジェネレータは <code>contextmanager_in_threadpool(contextmanager(call)(**sub_values))</code> でラップして対象の <code>AsyncExitStack</code> へ登録します。</li>
+<li><strong>非同期コルーチン（<code>async def</code>）</strong>: イベントループ上で直接 <code>await call(**solved_result.values)</code> を実行します。</li>
+<li><strong>同期関数・クラス（<code>def</code> / <code>class</code>）</strong>: ブロッキング処理でイベントループを止めないよう Starlette の <code>await run_in_threadpool(call, **solved_result.values)</code> でワーカースレッドへオフロードします。</li>
+</ul>
+</li>
+<li><strong>ツリー全体のエラー集約（Fail-Fast しない設計）</strong>: 子 <code>Dependant</code> で検証エラー（<code>solved_result.errors</code>）が発生した場合、<code>solve_dependencies()</code> はその子関数の呼び出しをスキップしてエラーを追記し、<strong>残りの兄弟依存関係および自身の <code>path_params</code>, <code>query_params</code>, <code>header_params</code>, <code>cookie_params</code>, <code>body_params</code> の検証を最後まで続行</strong> します。ツリー全体の走査が完了した後に初めて <code>RequestValidationError(errors)</code>（HTTP 422）または <code>WebSocketRequestValidationError</code> が送出されるため、クライアントは 1 回のレスポンスですべての不正箇所を一括把握できます。</li>
+</ul>
+<h3>3.1 二重 <code>AsyncExitStack</code> によるライフタイム制御アーキテクチャ</h3>
+<p>FastAPI <code>v0.162.2</code> は、<code>fastapi/routing.py</code> の <code>request_response()</code> 内で生成される <strong>入れ子構造の 2 つの <code>AsyncExitStack</code></strong> によって <code>yield</code> 依存関係のクリーンアップ時期を制御します（なおマルチパート <code>FormData</code> の一時ファイルをミドルウェア完了後に閉じる用途には、<code>fastapi/middleware/asyncexitstack.py</code> の <code>AsyncExitStackMiddleware</code> が設ける最外殻の <code>fastapi_middleware_astack</code> が別途使われます）。</p>
+<ol>
+<li><strong><code>fastapi_function_astack</code>（<code>scope=&quot;function&quot;</code>）</strong>: <code>response = await f(request)</code> の直前で開始し、<code>f(request)</code> がシリアライズ済みの <code>Response</code> オブジェクトを返した <strong>直後</strong>、すなわち <code>await response(scope, receive, send)</code> がソケットへ送信を始める <strong>前</strong> に <code>__aexit__</code> を実行します。<code>Depends(dep, scope=&quot;function&quot;)</code> を指定したジェネレータでは、エンドポイント実行と <code>serialize_response()</code> が終わった段階（レスポンスヘッダ送出前）で確実に <code>yield</code> 後の後処理が走ります。</li>
+<li><strong><code>fastapi_inner_astack</code>（<code>scope=&quot;request&quot;</code>、<code>yield</code> 依存関係の既定値）</strong>: <code>f(request)</code> と <code>await response(scope, receive, send)</code> の双方を包んでおり、<strong>ASGI レスポンス本体のストリーミング配信および <code>BackgroundTasks</code> がすべて完了した後</strong> に <code>__aexit__</code> を実行します。もしエンドポイント内で例外が発生した際に <code>yield</code> 依存関係が裸の <code>except:</code> 等で例外を握り潰して再送出しなかった場合、<code>response_awaited</code> フラグが <code>False</code> のまま残るため、<code>request_response()</code> が <code>FastAPIError(&quot;Response not awaited...&quot;)</code> を送出して不具合を即座に検知します。</li>
+</ol>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/03_di_and_security_engine/dependant_and_solver/dual_exitstack_lifetimes.png" alt="dependant_and_solver_2" />
+  <figcaption class="drawlib-caption">request_response() における二重 AsyncExitStack の寿命境界：function スコープは ASGI 配信前に閉じ、request スコープはストリーミング完了後に閉じる。</figcaption>
+</figure>
+<h2>4. コンパイル済み <code>Dependant</code> ツリーとキャッシュキーの検証</h2>
+<p>Python コードから <code>get_dependant()</code>、<code>_get_computed_scope()</code>、<code>_get_cache_key()</code> を直接呼び出すことで、パラメータの自動分類や共有ジェネレータにおける OAuth2 スコープ枝刈り挙動を確認できます。</p>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span><span class="p">,</span> <span class="n">AsyncIterator</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">Request</span><span class="p">,</span> <span class="n">Security</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.dependencies.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">_get_cache_key</span><span class="p">,</span> <span class="n">_get_computed_scope</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.dependencies.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_dependant</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.security</span><span class="w"> </span><span class="kn">import</span> <span class="n">SecurityScopes</span>
+
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_db</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="k">yield</span> <span class="s2">"db_conn"</span>
+
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">require_actor</span><span class="p">(</span>
+    <span class="n">scopes</span><span class="p">:</span> <span class="n">SecurityScopes</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">)],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"db"</span><span class="p">:</span> <span class="n">db</span><span class="p">,</span> <span class="s2">"scopes"</span><span class="p">:</span> <span class="n">scopes</span><span class="o">.</span><span class="n">scopes</span><span class="p">}</span>
+
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">list_projects</span><span class="p">(</span>
+    <span class="n">org_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">)],</span>
+    <span class="n">actor</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span>
+        <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">],</span>
+        <span class="n">Security</span><span class="p">(</span><span class="n">require_actor</span><span class="p">,</span> <span class="n">scopes</span><span class="o">=</span><span class="p">[</span><span class="s2">"projects:read"</span><span class="p">]),</span>
+    <span class="p">],</span>
+    <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"org_id"</span><span class="p">:</span> <span class="n">org_id</span><span class="p">,</span> <span class="s2">"limit"</span><span class="p">:</span> <span class="n">limit</span><span class="p">,</span> <span class="s2">"db"</span><span class="p">:</span> <span class="n">db</span><span class="p">,</span> <span class="s2">"actor"</span><span class="p">:</span> <span class="n">actor</span><span class="p">}</span>
+
+
+<span class="n">root</span> <span class="o">=</span> <span class="n">get_dependant</span><span class="p">(</span>
+    <span class="n">path</span><span class="o">=</span><span class="s2">"/orgs/</span><span class="si">{org_id}</span><span class="s2">/projects"</span><span class="p">,</span>
+    <span class="n">call</span><span class="o">=</span><span class="n">list_projects</span><span class="p">,</span>
+    <span class="n">scope</span><span class="o">=</span><span class="s2">"function"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="k">assert</span> <span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">root</span><span class="o">.</span><span class="n">path_params</span><span class="p">]</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"org_id"</span><span class="p">]</span>
+<span class="k">assert</span> <span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">root</span><span class="o">.</span><span class="n">query_params</span><span class="p">]</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"limit"</span><span class="p">]</span>
+<span class="k">assert</span> <span class="n">root</span><span class="o">.</span><span class="n">request_param_name</span> <span class="o">==</span> <span class="s2">"request"</span>
+
+<span class="n">db_direct</span><span class="p">,</span> <span class="n">actor_dep</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="n">dependencies</span>
+<span class="n">db_nested</span> <span class="o">=</span> <span class="n">actor_dep</span><span class="o">.</span><span class="n">dependencies</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="k">assert</span> <span class="n">_get_computed_scope</span><span class="p">(</span><span class="n">dependant</span><span class="o">=</span><span class="n">db_direct</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"request"</span>
+<span class="c1"># Non-security sub-dependency collapses scopes_for_cache to () in both branches:</span>
+<span class="k">assert</span> <span class="n">_get_cache_key</span><span class="p">(</span><span class="n">dependant</span><span class="o">=</span><span class="n">db_direct</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="n">get_db</span><span class="p">,</span> <span class="p">(),</span> <span class="s2">"request"</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">_get_cache_key</span><span class="p">(</span><span class="n">dependant</span><span class="o">=</span><span class="n">db_nested</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="n">get_db</span><span class="p">,</span> <span class="p">(),</span> <span class="s2">"request"</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">_get_cache_key</span><span class="p">(</span><span class="n">dependant</span><span class="o">=</span><span class="n">actor_dep</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span>
+    <span class="n">require_actor</span><span class="p">,</span>
+    <span class="p">(</span><span class="s2">"projects:read"</span><span class="p">,),</span>
+    <span class="s2">""</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre>
+<p>続いて、認証スキームが <code>Dependant</code> と OpenAPI スキーマ生成の双方に統合される仕組みは <a href="security_internals.html">SecurityBase 階層と HTTPConnection</a> を、抽出された各引数を <code>ModelField</code> が検証・変換する内部実装は <a href="../04_pydantic_bridge/compat_and_serialization.html">_compat/v2.py・ModelField・直列化</a> を参照してください。</p>
+
+            </main>
+            <footer class="footer">
+                
+                FastAPI® は Sebastián Ramírez（<a href="https://github.com/tiangolo" target="_blank" rel="noopener noreferrer">@tiangolo</a>）の登録商標です。本サイトは非公式の内部アーキテクチャ解説であり、公式プロジェクトとは提携していません。公式ドキュメントは <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">fastapi.tiangolo.com</a> をご参照ください。
+                
+            </footer>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeBtn = document.getElementById('theme-toggle');
+            if (themeBtn) {
+                themeBtn.addEventListener('click', function() {
+                    const current = document.documentElement.getAttribute('data-theme');
+                    const next = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    localStorage.setItem('drawlib-theme', next);
+                });
+            }
+
+            const langDropdowns = document.querySelectorAll('.lang-dropdown');
+            if (langDropdowns.length > 0) {
+                document.addEventListener('click', function(e) {
+                    langDropdowns.forEach(function(dd) {
+                        if (dd.hasAttribute('open') && !dd.contains(e.target)) {
+                            dd.removeAttribute('open');
+                        }
+                    });
+                });
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        langDropdowns.forEach(function(dd) {
+                            dd.removeAttribute('open');
+                        });
+                    }
+                });
+            }
+
+            const menuBtn = document.getElementById('menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            if (menuBtn && sidebar) {
+                function setMenuOpen(open) {
+                    sidebar.classList.toggle('is-open', open);
+                    menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    document.body.classList.toggle('menu-open', open);
+                    if (open) {
+                        const menu = sidebar.querySelector('.sidebar-menu');
+                        if (menu) {
+                            menu.scrollTop = 0;
+                        }
+                    }
+                }
+
+                menuBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const willOpen = !sidebar.classList.contains('is-open');
+                    setMenuOpen(willOpen);
+                });
+
+                document.addEventListener('click', function(e) {
+                    if (sidebar.classList.contains('is-open') && !sidebar.contains(e.target)) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                const navLinks = sidebar.querySelectorAll('.nav-item a');
+                navLinks.forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        setMenuOpen(false);
+                    });
+                });
+
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                window.addEventListener('resize', function() {
+                    if (window.innerWidth > 768 && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

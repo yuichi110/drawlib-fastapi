@@ -1,0 +1,515 @@
+<!--
+ Copyright (c) 2026 Yuichi Ito (yuichi@yuichi.com)
+
+ This software is licensed under the Apache License, Version 2.0.
+ For more information, please visit: https://github.com/yuichi110/drawlib
+
+ This software is provided "as is", without warranty of any kind,
+ express or implied, including but not limited to the warranties of
+ merchantability, fitness for a particular purpose and noninfringement.
+-->
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastAPI v0.162.2 — Internal Architecture Guide — FastAPI Architecture Guide (Unofficial)</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-S9N5BZ1VRC');
+    </script>
+    <script>
+        (function() {
+            const saved = localStorage.getItem('drawlib-theme');
+            if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    
+    
+    
+    <link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/architecture/en/">
+    
+    <link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/architecture/ja/">
+    
+    <link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/architecture/">
+    
+    
+    
+    <meta name="description" content="Source-level internal architecture guide to FastAPI v0.162.2: routing closure compilation, Dependant &amp; solve_dependencies, Pydantic v2 bridge, ASGI…">
+    <link rel="canonical" href="https://fastapi.drawlib.com/architecture/en/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="FastAPI Architecture">
+    <meta property="og:title" content="FastAPI v0.162.2 — Internal Architecture Guide — FastAPI Architecture">
+    <meta property="og:description" content="Source-level internal architecture guide to FastAPI v0.162.2: routing closure compilation, Dependant &amp; solve_dependencies, Pydantic v2 bridge, ASGI…">
+    <meta property="og:url" content="https://fastapi.drawlib.com/architecture/en/">
+    <meta property="og:image" content="https://fastapi.drawlib.com/architecture/_assets/ogp.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="ja_JP">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="FastAPI v0.162.2 — Internal Architecture Guide — FastAPI Architecture">
+    <meta name="twitter:description" content="Source-level internal architecture guide to FastAPI v0.162.2: routing closure compilation, Dependant &amp; solve_dependencies, Pydantic v2 bridge, ASGI…">
+    <meta name="twitter:image" content="https://fastapi.drawlib.com/architecture/_assets/ogp.png">
+    
+    
+    <link rel="icon" type="image/png" href="../_assets/favicon.png">
+    
+    
+    <link rel="stylesheet" href="style.css">
+    
+    
+</head>
+<body>
+    <div class="demo-banner" role="region" aria-label="Portal Navigation">
+        <div class="demo-banner-inner">
+            <span class="demo-banner-badge">INTERNAL ARCHITECTURE</span>
+            
+            <span class="demo-banner-text">
+                Unofficial Internal Architecture Guide to <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a> (v0.162.2)
+            </span>
+            <span class="demo-banner-links">
+                <a href="https://fastapi.drawlib.com/">User Guide</a>
+                <span class="demo-banner-sep">·</span>
+                <strong style="color:#ffffff;">Architecture</strong>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Audit</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official Docs ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+            </span>
+            
+        </div>
+    </div>
+    
+    <div class="doc-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="index.html" class="sidebar-brand" aria-label="FastAPI Architecture">
+                    
+                    FastAPI Architecture
+                    
+                </a>
+                <div class="sidebar-header-actions">
+                    <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">
+                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                    <button type="button" id="menu-toggle" class="menu-toggle-btn" aria-label="Toggle navigation" aria-expanded="false">
+                        <svg class="icon-hamburger" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        <svg class="icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="sidebar-menu">
+                
+                    
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item active">
+                                <a href="index.html" >Architecture Overview</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">1. Package Topology &amp; Layers</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="01_package_and_layers/module_hierarchy.html" >5-Tier Module Hierarchy &amp; Shims</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">2. Routing Compiler &amp; Closures</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="02_routing_compiler/apiroute_and_closures.html" >APIRouter, APIRoute &amp; Handler Closure</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="02_routing_compiler/streaming_and_spa_internals.html" >Generator Streaming &amp; SPA Internals</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">3. DI &amp; Security Engine</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="03_di_and_security_engine/dependant_and_solver.html" >Dependant DAG &amp; solve_dependencies</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="03_di_and_security_engine/security_internals.html" >SecurityBase &amp; HTTPConnection</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">4. Pydantic v2 Bridge</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="04_pydantic_bridge/compat_and_serialization.html" >_compat/v2.py, ModelField &amp; Serialization</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">5. ASGI Stack &amp; Telemetry</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="05_asgi_and_telemetry/middleware_and_concurrency.html" >Middleware Onion &amp; Threadpool</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="05_asgi_and_telemetry/native_telemetry_internals.html" >NativeTelemetry &amp; Runtime Spans</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">6. OpenAPI 3.1 Synthesis</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="06_openapi_and_docs/openapi_synthesis_engine.html" >get_openapi(), $defs &amp; Docs UI</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">Companion Guides &amp; Links</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/" target="_blank" rel="noopener noreferrer">FastAPI User Guide<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/reports/pni501/" target="_blank" rel="noopener noreferrer">PNI501 Diagnostic Report<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official FastAPI Docs<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub Repository<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                        </ul>
+                    
+                
+            </div>
+        </aside>
+        <div class="content-wrapper">
+            <header class="top-bar">
+                <div class="breadcrumbs">
+                    <span class="crumb">Architecture</span>
+                    <span class="crumb-separator">&raquo;</span>
+                    <span class="crumb active">FastAPI v0.162.2 — Internal Architecture Guide</span>
+                </div>
+                
+                <div class="lang-switcher">
+                    <details class="lang-dropdown">
+                        <summary class="lang-dropdown-btn" aria-label="Select language">
+                            <svg class="lang-globe-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            <span class="lang-current-label">English</span>
+                            <svg class="lang-caret-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </summary>
+                        <div class="lang-dropdown-menu" role="menu">
+                            
+                            <a href="index.html" class="lang-option active" lang="en" hreflang="en" aria-current="page">
+                                <span>English</span>
+                                
+                                <svg class="lang-check-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                
+                            </a>
+                            
+                            <a href="../ja/index.html" class="lang-option" lang="ja" hreflang="ja" >
+                                <span>日本語</span>
+                                
+                            </a>
+                            
+                        </div>
+                    </details>
+                </div>
+                
+            </header>
+            <main class="main-content">
+                <h1>FastAPI v0.162.2 — Internal Architecture Guide</h1>
+<p>FastAPI (<code>v0.162.2</code> · <code>52</code> Python modules · <code>19,837</code> LOC · <code>0</code> circular imports) achieves near-raw ASGI throughput while providing rich dependency injection, Pydantic v2 validation, and OpenAPI <code>3.1.0</code> synthesis through one central engineering invariant: <strong>compile reflection-heavy metadata once at import/startup time, and dispatch lightweight pre-bound closures on every request</strong>. This unofficial source-level guide dissects how FastAPI's internal compiler, solver, and ASGI stack work under the hood, complementing the application-focused <a href="https://fastapi.drawlib.com/">FastAPI User Guide</a>.</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../images/index/arch_compile_dispatch_anim.png" alt="index_1" />
+  <figcaption class="drawlib-caption">FastAPI v0.162.2 Compile-Once Startup Pipeline vs Per-Request Zero-Reflection ASGI Hot Path</figcaption>
+</figure>
+<h2>Core Architectural Insight: Compile-Once, Dispatch Closures</h2>
+<p>A naive Python web framework that calls <code>inspect.signature()</code>, resolves stringified <code>ForwardRef</code> annotations, parses <code>Annotated[...]</code> metadata, and constructs validators on every incoming HTTP request would burn CPU cycles on reflection rather than I/O. FastAPI eliminates per-request reflection by treating <strong>route registration (<code>@app.get</code>, <code>@router.post</code>, <code>include_router</code>) as an ahead-of-time compilation pass</strong>.</p>
+<p>When <code>APIRoute.__init__</code> executes <code>_populate_api_route_state()</code> in <code>fastapi/routing.py</code>, it eagerly compiles the endpoint's Python type hints into static data structures and seals them inside a two-layer lexical ASGI closure (<code>self.app = request_response(self.get_route_handler())</code>):</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Lifecycle Stage</th>
+<th style="text-align:left">Primary Source Functions (<code>v0.162.2</code>)</th>
+<th style="text-align:left">Compiled / Runtime Artifacts</th>
+<th style="text-align:left">Why It Matters for Latency &amp; Correctness</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>1. Signature &amp; DI Graph Compilation (Startup)</strong></td>
+<td style="text-align:left"><code>get_dependant()</code>, <code>get_typed_signature()</code>, <code>analyze_param()</code> (<code>dependencies/utils.py</code>)</td>
+<td style="text-align:left"><code>APIRoute.dependant</code> (<code>Dependant</code> tree of <code>path_params</code>, <code>query_params</code>, <code>header_params</code>, <code>cookie_params</code>, <code>body_params</code>, <code>dependencies</code>)</td>
+<td style="text-align:left">Runs <code>inspect.signature()</code> and <code>evaluate_forwardref()</code> <strong>once</strong>; validates <code>DependencyScopeError</code> (<code>&quot;request&quot;</code> vs <code>&quot;function&quot;</code>) before traffic arrives.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>2. Validator &amp; Serializer Synthesis (Startup)</strong></td>
+<td style="text-align:left"><code>create_model_field()</code> (<code>utils.py</code>), <code>_get_body_field()</code>, <code>ModelField.__post_init__()</code> (<code>_compat/v2.py</code>)</td>
+<td style="text-align:left"><code>body_field</code> (<code>mode=&quot;validation&quot;</code>), <code>response_field</code> (<code>mode=&quot;serialization&quot;</code>), <code>stream_item_field</code></td>
+<td style="text-align:left">Pre-compiles Rust-backed <code>pydantic.TypeAdapter</code> state machines for request bodies, responses, and SSE/JSONL stream items.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>3. Closure Binding (Startup)</strong></td>
+<td style="text-align:left"><code>APIRoute.get_route_handler()</code>, <code>get_request_handler()</code>, <code>request_response()</code> (<code>routing.py</code>)</td>
+<td style="text-align:left"><code>APIRoute.app</code> (<code>ASGIApp</code> coroutine closure)</td>
+<td style="text-align:left">Pre-computes booleans (<code>is_coroutine</code>, <code>is_body_form</code>, <code>is_sse_stream</code>, <code>is_json_stream</code>) as lexical cell variables inside <code>app</code>.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>4. Scoped DI &amp; Body Resolution (Per Request)</strong></td>
+<td style="text-align:left"><code>request_response()</code>, <code>solve_dependencies()</code> (<code>dependencies/utils.py</code>)</td>
+<td style="text-align:left"><code>SolvedDependency</code> (<code>values</code>, <code>errors</code>, <code>background_tasks</code>, <code>response</code>, <code>dependency_cache</code>)</td>
+<td style="text-align:left">Enters <code>fastapi_inner_astack</code> (<code>&quot;request&quot;</code> scope) and <code>fastapi_function_astack</code> (<code>&quot;function&quot;</code> scope); memoizes sub-dependencies by <code>(call, scopes, computed_scope)</code>.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>5. Dispatch &amp; One-Pass Rust Serialization (Per Request)</strong></td>
+<td style="text-align:left"><code>run_endpoint_function()</code>, <code>serialize_response()</code>, <code>ModelField.serialize_json()</code></td>
+<td style="text-align:left">Raw UTF-8 <code>bytes</code> wrapped in Starlette <code>Response(media_type=&quot;application/json&quot;)</code></td>
+<td style="text-align:left">When <code>response_class</code> is <code>DefaultPlaceholder(JSONResponse)</code> and <code>response_field</code> exists, <code>use_dump_json=True</code> calls <code>TypeAdapter.dump_json()</code>, skipping <code>dict</code> + <code>json.dumps()</code>.</td>
+</tr>
+</tbody>
+</table>
+<h3>Introspecting Compiled Route State &amp; Closures</h3>
+<p>Because FastAPI materializes these artifacts eagerly during <code>@app.&lt;method&gt;()</code> decoration, you can inspect the compiled <code>Dependant</code> DAG, <code>ModelField</code> <code>TypeAdapter</code> instances, and nested ASGI closures directly on any <code>APIRoute</code> before starting an ASGI server:</p>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">Body</span><span class="p">,</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">Header</span><span class="p">,</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi._compat</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelField</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.dependencies.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dependant</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.routing</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRoute</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">TypeAdapter</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">OrderCreate</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">sku</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">quantity</span><span class="p">:</span> <span class="nb">int</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">OrderOut</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">order_id</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">sku</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">tenant</span><span class="p">:</span> <span class="nb">str</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">resolve_tenant</span><span class="p">(</span><span class="n">x_tenant</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Header</span><span class="p">()])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">x_tenant</span>
+
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">"Compile-Once Inspector"</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s2">"0.162.2"</span><span class="p">)</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/orders/</span><span class="si">{order_id}</span><span class="s2">"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">OrderOut</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">create_order</span><span class="p">(</span>
+    <span class="n">order_id</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="n">ge</span><span class="o">=</span><span class="mi">1</span><span class="p">)],</span>
+    <span class="n">payload</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">OrderCreate</span><span class="p">,</span> <span class="n">Body</span><span class="p">()],</span>
+    <span class="n">tenant</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Depends</span><span class="p">(</span><span class="n">resolve_tenant</span><span class="p">)],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OrderOut</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">OrderOut</span><span class="p">(</span><span class="n">order_id</span><span class="o">=</span><span class="n">order_id</span><span class="p">,</span> <span class="n">sku</span><span class="o">=</span><span class="n">payload</span><span class="o">.</span><span class="n">sku</span><span class="p">,</span> <span class="n">tenant</span><span class="o">=</span><span class="n">tenant</span><span class="p">)</span>
+
+
+<span class="n">route</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+    <span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">app</span><span class="o">.</span><span class="n">routes</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">APIRoute</span><span class="p">)</span> <span class="ow">and</span> <span class="n">r</span><span class="o">.</span><span class="n">path</span> <span class="o">==</span> <span class="s2">"/orders/</span><span class="si">{order_id}</span><span class="s2">"</span>
+<span class="p">)</span>
+
+<span class="c1"># 1. Pre-built Dependant DAG (zero inspect.signature() calls at request time)</span>
+<span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">route</span><span class="o">.</span><span class="n">dependant</span><span class="p">,</span> <span class="n">Dependant</span><span class="p">)</span>
+<span class="k">assert</span> <span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">route</span><span class="o">.</span><span class="n">dependant</span><span class="o">.</span><span class="n">path_params</span><span class="p">]</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"order_id"</span><span class="p">]</span>
+<span class="k">assert</span> <span class="n">route</span><span class="o">.</span><span class="n">dependant</span><span class="o">.</span><span class="n">dependencies</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header_params</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">alias</span> <span class="o">==</span> <span class="s2">"x-tenant"</span>
+
+<span class="c1"># 2. Pre-compiled Pydantic v2 ModelField + Rust TypeAdapter instances</span>
+<span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">route</span><span class="o">.</span><span class="n">body_field</span><span class="p">,</span> <span class="n">ModelField</span><span class="p">)</span> <span class="ow">and</span> <span class="n">route</span><span class="o">.</span><span class="n">body_field</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"validation"</span>
+<span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">route</span><span class="o">.</span><span class="n">body_field</span><span class="o">.</span><span class="n">_type_adapter</span><span class="p">,</span> <span class="n">TypeAdapter</span><span class="p">)</span>
+<span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">route</span><span class="o">.</span><span class="n">response_field</span><span class="p">,</span> <span class="n">ModelField</span><span class="p">)</span> <span class="ow">and</span> <span class="n">route</span><span class="o">.</span><span class="n">response_field</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"serialization"</span>
+
+<span class="c1"># 3. Lexical ASGI closure chain: request_response -&gt; get_request_handler</span>
+<span class="k">assert</span> <span class="n">route</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="vm">__qualname__</span> <span class="o">==</span> <span class="s2">"request_response.&lt;locals&gt;.app"</span>
+<span class="n">closure_objs</span> <span class="o">=</span> <span class="p">[</span><span class="n">cell</span><span class="o">.</span><span class="n">cell_contents</span> <span class="k">for</span> <span class="n">cell</span> <span class="ow">in</span> <span class="p">(</span><span class="n">route</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="vm">__closure__</span> <span class="ow">or</span> <span class="p">())]</span>
+<span class="k">assert</span> <span class="nb">any</span><span class="p">(</span>
+    <span class="nb">getattr</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="s2">"__qualname__"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"get_request_handler.&lt;locals&gt;.app"</span>
+    <span class="k">for</span> <span class="n">fn</span> <span class="ow">in</span> <span class="n">closure_objs</span>
+<span class="p">)</span>
+</code></pre>
+<h2>Six Internal Subsystems &amp; 9-Page Architecture Map</h2>
+<p>Across its <code>52</code> source files, FastAPI <code>v0.162.2</code> decomposes cleanly into <strong>six internal subsystems</strong>, explored across <strong>6 chapters and 9 deep-dive pages</strong> in this portal:</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../images/index/arch_subsystem_map.png" alt="index_2" />
+  <figcaption class="drawlib-caption">FastAPI v0.162.2 Internal Subsystem Map — Six Core Subsystems Mapped to Chapters 1–6</figcaption>
+</figure>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Chapter</th>
+<th style="text-align:left">Internal Architecture Pages</th>
+<th style="text-align:left">Upstream Modules Dissected (<code>./fastapi/</code>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>1. Package Topology &amp; Layers</strong></td>
+<td style="text-align:left"><a href="01_package_and_layers/module_hierarchy.html">5-Tier Module Hierarchy &amp; Shims</a></td>
+<td style="text-align:left"><code>__init__.py</code>, <code>types.py</code>, <code>params.py</code>, <code>param_functions.py</code>, <code>requests.py</code>, <code>responses.py</code>, <code>websockets.py</code>, <code>background.py</code>, <code>concurrency.py</code>, <code>middleware/*</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>2. Routing Compiler &amp; Closures</strong></td>
+<td style="text-align:left"><a href="02_routing_compiler/apiroute_and_closures.html">APIRouter, APIRoute &amp; Handler Closure</a> · <a href="02_routing_compiler/streaming_and_spa_internals.html">Generator Streaming &amp; SPA Internals</a></td>
+<td style="text-align:left"><code>routing.py</code> (<code>APIRouter</code>, <code>APIRoute</code>, <code>APIWebSocketRoute</code>, <code>get_request_handler</code>, <code>request_response</code>, <code>_RouterIncludeContext</code>), <code>sse.py</code>, <code>applications.py</code> (<code>frontend()</code>)</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>3. DI &amp; Security Engine</strong></td>
+<td style="text-align:left"><a href="03_di_and_security_engine/dependant_and_solver.html">Dependant DAG &amp; solve_dependencies</a> · <a href="03_di_and_security_engine/security_internals.html">SecurityBase &amp; HTTPConnection</a></td>
+<td style="text-align:left"><code>dependencies/models.py</code>, <code>dependencies/utils.py</code>, <code>security/base.py</code>, <code>security/oauth2.py</code>, <code>security/http.py</code>, <code>security/api_key.py</code>, <code>security/open_id_connect_url.py</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>4. Pydantic v2 Bridge</strong></td>
+<td style="text-align:left"><a href="04_pydantic_bridge/compat_and_serialization.html">_compat/v2.py, ModelField &amp; Serialization</a></td>
+<td style="text-align:left"><code>_compat/__init__.py</code>, <code>_compat/v2.py</code>, <code>_compat/shared.py</code>, <code>encoders.py</code>, <code>utils.py</code> (<code>create_model_field</code>)</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>5. ASGI Stack &amp; Telemetry</strong></td>
+<td style="text-align:left"><a href="05_asgi_and_telemetry/middleware_and_concurrency.html">Middleware Onion &amp; Threadpool</a> · <a href="05_asgi_and_telemetry/native_telemetry_internals.html">NativeTelemetry &amp; Runtime Spans</a></td>
+<td style="text-align:left"><code>applications.py</code> (<code>build_middleware_stack</code>, <code>__call__</code>), <code>middleware/asyncexitstack.py</code>, <code>concurrency.py</code>, <code>exception_handlers.py</code>, <code>telemetry/_asgi.py</code>, <code>telemetry/_api.py</code>, <code>telemetry/_runtime.py</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>6. OpenAPI 3.1 Synthesis</strong></td>
+<td style="text-align:left"><a href="06_openapi_and_docs/openapi_synthesis_engine.html">get_openapi(), $defs &amp; Docs UI</a></td>
+<td style="text-align:left"><code>openapi/utils.py</code>, <code>openapi/models.py</code>, <code>openapi/docs.py</code>, <code>openapi/constants.py</code></td>
+</tr>
+</tbody>
+</table>
+<h2>Companion Portals &amp; Upstream Attribution</h2>
+<ul>
+<li><strong>Companion Engineering Guides</strong>: For production application patterns (<code>100,000+</code> LOC modular monoliths, OAuth2/JWT, SQL sessions, and deployment), visit the <strong><a href="https://fastapi.drawlib.com/">FastAPI User Guide</a></strong>. For static AST, dependency health, and security metrics (<code>93 / 100</code>, Grade <code>S</code>), consult the <strong><a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Diagnostic Report</a></strong>.</li>
+<li><strong>Upstream Attribution</strong>: FastAPI was created and is maintained by <strong>Sebastián Ramírez (<code>@tiangolo</code>)</strong> and the FastAPI community under the MIT License. Always refer to <strong><a href="https://fastapi.tiangolo.com/">https://fastapi.tiangolo.com/</a></strong> for official release notes and normative framework documentation. Continue to <strong><a href="01_package_and_layers/module_hierarchy.html">Chapter 1: 5-Tier Module Hierarchy &amp; Shims</a></strong> to trace FastAPI's acyclic module graph from leaf types up to <code>FastAPI()</code>.</li>
+</ul>
+
+            </main>
+            <footer class="footer">
+                
+                FastAPI® is a registered trademark of Sebastián Ramírez (<a href="https://github.com/tiangolo" target="_blank" rel="noopener noreferrer">@tiangolo</a>). Unofficial internal architecture guide — not affiliated with or endorsed by the official FastAPI project (<a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">fastapi.tiangolo.com</a>).
+                
+            </footer>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeBtn = document.getElementById('theme-toggle');
+            if (themeBtn) {
+                themeBtn.addEventListener('click', function() {
+                    const current = document.documentElement.getAttribute('data-theme');
+                    const next = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    localStorage.setItem('drawlib-theme', next);
+                });
+            }
+
+            const langDropdowns = document.querySelectorAll('.lang-dropdown');
+            if (langDropdowns.length > 0) {
+                document.addEventListener('click', function(e) {
+                    langDropdowns.forEach(function(dd) {
+                        if (dd.hasAttribute('open') && !dd.contains(e.target)) {
+                            dd.removeAttribute('open');
+                        }
+                    });
+                });
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        langDropdowns.forEach(function(dd) {
+                            dd.removeAttribute('open');
+                        });
+                    }
+                });
+            }
+
+            const menuBtn = document.getElementById('menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            if (menuBtn && sidebar) {
+                function setMenuOpen(open) {
+                    sidebar.classList.toggle('is-open', open);
+                    menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    document.body.classList.toggle('menu-open', open);
+                    if (open) {
+                        const menu = sidebar.querySelector('.sidebar-menu');
+                        if (menu) {
+                            menu.scrollTop = 0;
+                        }
+                    }
+                }
+
+                menuBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const willOpen = !sidebar.classList.contains('is-open');
+                    setMenuOpen(willOpen);
+                });
+
+                document.addEventListener('click', function(e) {
+                    if (sidebar.classList.contains('is-open') && !sidebar.contains(e.target)) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                const navLinks = sidebar.querySelectorAll('.nav-item a');
+                navLinks.forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        setMenuOpen(false);
+                    });
+                });
+
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                window.addEventListener('resize', function() {
+                    if (window.innerWidth > 768 && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

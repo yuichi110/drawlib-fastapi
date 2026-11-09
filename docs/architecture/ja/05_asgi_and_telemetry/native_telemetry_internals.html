@@ -1,0 +1,449 @@
+<!--
+ Copyright (c) 2026 Yuichi Ito (yuichi@yuichi.com)
+
+ This software is licensed under the Apache License, Version 2.0.
+ For more information, please visit: https://github.com/yuichi110/drawlib
+
+ This software is provided "as is", without warranty of any kind,
+ express or implied, including but not limited to the warranties of
+ merchantability, fitness for a particular purpose and noninfringement.
+-->
+<!DOCTYPE html>
+<html lang="ja" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NativeTelemetry・遅延ランタイム・例外スパン記録 — FastAPI Architecture Guide (Unofficial)</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-S9N5BZ1VRC');
+    </script>
+    <script>
+        (function() {
+            const saved = localStorage.getItem('drawlib-theme');
+            if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    
+    <link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/architecture/en/05_asgi_and_telemetry/native_telemetry_internals.html">
+    
+    <link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/architecture/ja/05_asgi_and_telemetry/native_telemetry_internals.html">
+    
+    <link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/architecture/en/05_asgi_and_telemetry/native_telemetry_internals.html">
+    
+    
+    
+    <meta name="description" content="FastAPI v0.162.2 は、fastapi/telemetry/（init.py・_api.py・_asgi.py・_runtime.py）に組み込みの OpenTelemetry サブシステムを備えています。コア依存パッケージを軽量な opentelemetry-api のみに限定することで、SDK…">
+    <link rel="canonical" href="https://fastapi.drawlib.com/architecture/ja/05_asgi_and_telemetry/native_telemetry_internals.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="FastAPI 内部構造">
+    <meta property="og:title" content="NativeTelemetry・遅延ランタイム・例外スパン記録 — FastAPI 内部構造">
+    <meta property="og:description" content="FastAPI v0.162.2 は、fastapi/telemetry/（init.py・_api.py・_asgi.py・_runtime.py）に組み込みの OpenTelemetry サブシステムを備えています。コア依存パッケージを軽量な opentelemetry-api のみに限定することで、SDK…">
+    <meta property="og:url" content="https://fastapi.drawlib.com/architecture/ja/05_asgi_and_telemetry/native_telemetry_internals.html">
+    <meta property="og:image" content="https://fastapi.drawlib.com/architecture/_assets/ogp.png">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:locale:alternate" content="en_US">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="NativeTelemetry・遅延ランタイム・例外スパン記録 — FastAPI 内部構造">
+    <meta name="twitter:description" content="FastAPI v0.162.2 は、fastapi/telemetry/（init.py・_api.py・_asgi.py・_runtime.py）に組み込みの OpenTelemetry サブシステムを備えています。コア依存パッケージを軽量な opentelemetry-api のみに限定することで、SDK…">
+    <meta name="twitter:image" content="https://fastapi.drawlib.com/architecture/_assets/ogp.png">
+    
+    
+    <link rel="icon" type="image/png" href="../../_assets/favicon.png">
+    
+    
+    <link rel="stylesheet" href="../style.css">
+    
+    
+</head>
+<body>
+    <div class="demo-banner" role="region" aria-label="ポータルナビゲーション">
+        <div class="demo-banner-inner">
+            <span class="demo-banner-badge">INTERNAL ARCHITECTURE</span>
+            
+            <span class="demo-banner-text">
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a>（v0.162.2）内部アーキテクチャ解説（非公式）
+            </span>
+            <span class="demo-banner-links">
+                <a href="https://fastapi.drawlib.com/">User Guide</a>
+                <span class="demo-banner-sep">·</span>
+                <strong style="color:#ffffff;">Architecture</strong>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Audit</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official Docs ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+            </span>
+            
+        </div>
+    </div>
+    
+    <div class="doc-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI 内部構造">
+                    
+                    FastAPI 内部構造
+                    
+                </a>
+                <div class="sidebar-header-actions">
+                    <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">
+                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                    <button type="button" id="menu-toggle" class="menu-toggle-btn" aria-label="Toggle navigation" aria-expanded="false">
+                        <svg class="icon-hamburger" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        <svg class="icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="sidebar-menu">
+                
+                    
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../index.html" >アーキテクチャ全体像</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">1. パッケージ階層と境界設計</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../01_package_and_layers/module_hierarchy.html" >5層モジュール構造と Starlette 再公開</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">2. ルーティングコンパイラとクロージャ</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../02_routing_compiler/apiroute_and_closures.html" >APIRouter・APIRoute とクロージャ合成</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../02_routing_compiler/streaming_and_spa_internals.html" >ジェネレータ配信と SPA ルータ内部実装</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">3. DI 解決エンジンと認証機構</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../03_di_and_security_engine/dependant_and_solver.html" >Dependant グラフと solve_dependencies</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../03_di_and_security_engine/security_internals.html" >SecurityBase 階層と HTTPConnection</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">4. Pydantic v2 ブリッジ層</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../04_pydantic_bridge/compat_and_serialization.html" >_compat/v2.py・ModelField・直列化</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">5. ASGI スタックとテレメトリ</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="middleware_and_concurrency.html" >ミドルウェア7層構造とスレッドプール</a>
+                            </li>
+                            
+                            <li class="nav-item active">
+                                <a href="native_telemetry_internals.html" >NativeTelemetry と例外スパン記録</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">6. OpenAPI 3.1 合成エンジン</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../06_openapi_and_docs/openapi_synthesis_engine.html" >get_openapi()・$defs 集約・Docs UI</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">関連ガイド &amp; 公式リンク</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/" target="_blank" rel="noopener noreferrer">FastAPI ユーザーガイド<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/reports/pni501/" target="_blank" rel="noopener noreferrer">PNI501 診断レポート<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI 公式ドキュメント<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub リポジトリ<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                        </ul>
+                    
+                
+            </div>
+        </aside>
+        <div class="content-wrapper">
+            <header class="top-bar">
+                <div class="breadcrumbs">
+                    <span class="crumb">Architecture</span>
+                    <span class="crumb-separator">&raquo;</span>
+                    <span class="crumb active">NativeTelemetry・遅延ランタイム・例外スパン記録</span>
+                </div>
+                
+                <div class="lang-switcher">
+                    <details class="lang-dropdown">
+                        <summary class="lang-dropdown-btn" aria-label="Select language">
+                            <svg class="lang-globe-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            <span class="lang-current-label">日本語</span>
+                            <svg class="lang-caret-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </summary>
+                        <div class="lang-dropdown-menu" role="menu">
+                            
+                            <a href="../../en/05_asgi_and_telemetry/native_telemetry_internals.html" class="lang-option" lang="en" hreflang="en" >
+                                <span>English</span>
+                                
+                            </a>
+                            
+                            <a href="native_telemetry_internals.html" class="lang-option active" lang="ja" hreflang="ja" aria-current="page">
+                                <span>日本語</span>
+                                
+                                <svg class="lang-check-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                
+                            </a>
+                            
+                        </div>
+                    </details>
+                </div>
+                
+            </header>
+            <main class="main-content">
+                <h1>NativeTelemetry・遅延ランタイム・例外スパン記録</h1>
+<p>FastAPI <code>v0.162.2</code> は、<code>fastapi/telemetry/</code>（<code>__init__.py</code>・<code>_api.py</code>・<code>_asgi.py</code>・<code>_runtime.py</code>）に組み込みの OpenTelemetry サブシステムを備えています。コア依存パッケージを軽量な <code>opentelemetry-api</code> のみに限定することで、SDK 未設定時にはオーバーヘッドゼロの no-op として振る舞う一方、OpenTelemetry SDK プロバイダが有効化されると W3C トレース伝播・低カーディナリティなルートスパン・子オペレーションスパン・HTTP サーバーメトリクス・重複排除された例外テレメトリを自動的に計測します。</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/05_asgi_and_telemetry/native_telemetry_internals/native_telemetry_dual_middleware.png" alt="native_telemetry_internals_1" />
+  <figcaption class="drawlib-caption">NativeTelemetry（L1）と ExceptionTelemetryMiddleware（L3）の二層連携アーキテクチャ</figcaption>
+</figure>
+<hr />
+<h2>1. SDK 非依存コア設計と遅延ランタイム結合（<code>_runtime.py</code>）</h2>
+<p><code>fastapi/telemetry/</code> の設計上の最重要方針は、テレメトリを送信しないアプリケーションに対して重い SDK インポートやリクエスト単位のオーバーヘッドを一切課さないことです。FastAPI は <strong>API レベルの計装</strong>と <strong>SDK・エクスポータ初期化</strong>を明確に分離することでこれを実現しています。</p>
+<ul>
+<li><strong>遅延プロキシプロバイダの判定（<code>_api.py</code>）</strong>: <code>fastapi</code> 本体が依存するのは <code>opentelemetry-api&gt;=1.44.0</code> のみであり、その初期グローバルプロバイダは <code>_DEFERRED_PROVIDERS</code> に列挙された軽量な no-op プロキシ（<code>ProxyTracerProvider</code>・<code>_ProxyMeterProvider</code>・<code>ProxyLoggerProvider</code>）です。<code>_unconfigured(provider)</code> は <code>(type(provider).__module__, type(provider).__name__) in _DEFERRED_PROVIDERS</code> で未設定状態を判定します。</li>
+<li><strong>ホットパスのゲート判定（<code>NativeTelemetry.enabled()</code>）</strong>: <code>self._telemetry</code> の明示プロバイダがすべて <code>None</code> であり、かつ 3 シグナルのグローバルプロバイダがすべて <code>_unconfigured(...)</code> を満たす場合、<code>NativeTelemetry.enabled()</code> は <code>False</code> を返します。このとき <code>FastAPI.__call__</code> は <code>_RequestTelemetry</code> の生成もヘッダ解析も <code>send</code>/<code>receive</code> のラップも行わず、即座に <code>await super().__call__(scope, receive, send)</code> へ短絡します。</li>
+<li><strong>Lifespan 起動時の SDK・OTLP 遅延インポート（<code>_runtime.py</code>）</strong>: オプションパッケージ <code>opentelemetry-sdk</code> と <code>opentelemetry-exporter-otlp-proto-http</code>（<code>fastapi[opentelemetry]</code> または <code>fastapi[standard]</code> で導入）は、モジュール読み込み時にはインポートされません。<code>lifespan.startup</code> イベント時に呼ばれる <code>_configure_from_environment(config)</code> の内部で、<code>auto_configure=True</code>（または <code>FASTAPI_OTEL_AUTO_CONFIGURE=true</code>）かつ <code>OTEL_SDK_DISABLED != &quot;true&quot;</code> かつ有効な <code>http</code>/<code>https</code> の <code>OTEL_EXPORTER_OTLP_*</code>（<code>http/protobuf</code>）エンドポイントが存在するときに限り、遅延インポートされます。</li>
+<li><strong>プロバイダ所有権の保護（<code>_owned</code> と <code>_configured</code>）</strong>: 再入ロック <code>_lock</code> の保護下で、<code>_configure_from_environment()</code> は <code>(signal, provider)</code> の組ごとに 1 度だけ <code>BatchSpanProcessor(OTLPSpanExporter(...))</code>・<code>PeriodicExportingMetricReader(OTLPMetricExporter(...))</code>・<code>BatchLogRecordProcessor(OTLPLogExporter(...))</code> を登録します。FastAPI 自身が生成したコンポーネントのみが <code>_owned</code> に記録され、<code>lifespan.shutdown.complete</code>（および起動・終了失敗時）に <code>await run_sync(_flush)</code> でフラッシュされ、プロセス終了時に <code>atexit.register(_shutdown)</code> で閉じられます。アプリケーション側から渡されたプロバイダを FastAPI が勝手にシャットダウンすることはありません。</li>
+</ul>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/05_asgi_and_telemetry/native_telemetry_internals/lazy_otel_runtime_binding.png" alt="native_telemetry_internals_2" />
+  <figcaption class="drawlib-caption">_runtime.py におけるデフォルトのゼロオーバーヘッド経路と Lifespan 遅延 OTLP 自動構成の対比</figcaption>
+</figure>
+<hr />
+<h2>2. <code>NativeTelemetry</code> のスパン・コンテキスト・メトリクス機構（<code>_asgi.py</code>）</h2>
+<p>アクティブな HTTP または WebSocket スコープで <code>NativeTelemetry.__call__</code> が実行されると（<code>config[&quot;exclude&quot;](scope)</code> で除外されておらず、かつ <code>_legacy_otel()</code> が既存の <code>OpenTelemetryMiddleware</code> を検出しない場合）、リクエストライフサイクル全体にわたって以下の 5 段階を制御します。</p>
+<ol>
+<li><strong>W3C コンテキスト抽出とクエリサニタイズ</strong>: <code>propagate.extract(Headers(scope=scope), getter=_HEADERS_GETTER)</code> により受信ヘッダから <code>traceparent</code>・<code>tracestate</code>・複数行 <code>baggage</code> を <code>parent</code> として抽出し、<code>otel_context.attach(parent)</code> でアタッチします。<code>_HTTP_METHODS</code>（または <code>OTEL_INSTRUMENTATION_HTTP_KNOWN_METHODS</code>）に含まれない未知の HTTP メソッドは <code>&quot;_OTHER&quot;</code> に正規化（元の値は <code>http.request.method_original</code> に保持）し、<code>_SENSITIVE_QUERY_PARAMETERS</code>（<code>X-Amz-Signature</code>・<code>X-Amz-Credential</code>・<code>X-Amz-Security-Token</code>・<code>sig</code>・<code>X-Goog-Signature</code>）は <code>url.query</code> 上で <code>&quot;REDACTED&quot;</code> にマスクします。</li>
+<li><strong>ルート <code>SpanKind.SERVER</code> スパン開始と <code>_RequestTelemetry</code> 格納</strong>: スキーマ URL <code>https://opentelemetry.io/schemas/1.44.0</code> のもとで <code>tracer.start_span(span_method, context=parent, kind=SpanKind.SERVER, attributes=span_attributes)</code> を開始します。未一致の <code>404</code> スキャンアクセスでスパン名のカーディナリティが爆発しないよう、初期スパン名はメソッド名のみ（<code>&quot;GET&quot;</code>・<code>&quot;POST&quot;</code>・<code>&quot;WS&quot;</code>）とします。生成された <code>_RequestTelemetry</code> は ASGI ルーティング層から参照する <code>scope[&quot;fastapi.telemetry&quot;]</code> と、ワーカースレッドからも <code>get_telemetry_data()</code> で参照可能な <code>otel_context</code>（キー <code>_REQUEST_TELEMETRY_KEY = &quot;fastapi.request&quot;</code>）の双方へ同時に格納されます。</li>
+<li><strong>低カーディナリティなルート名更新（<code>_route_selected()</code>）</strong>: <code>APIRouter.app</code> がルートに一致すると（<code>Mount</code> 経由時は <code>_mount_prefix</code> を連結しながら）、<code>_route_selected(scope=scope, path=route.path_format, mount=...)</code> が呼ばれます。ここでスパン属性 <code>http.route</code> が設定され、<code>span.update_name(f&quot;{span_method} {route}&quot;)</code> によって <code>&quot;GET /items/{item_id}&quot;</code> のようなルートテンプレート名へと更新されます。</li>
+<li><strong>細粒度な子オペレーションスパン（<code>_operation()</code>）</strong>: <code>operation_spans=True</code>（デフォルト）のとき、<code>_traced_operation()</code> は <code>code.function.name = f&quot;{module}.{qualname}&quot;</code> 属性付きで <code>fastapi.dependencies</code>・<code>fastapi.endpoint</code>・<code>fastapi.serialization</code>・<code>fastapi.background_task</code> の子スパンを生成します。</li>
+<li><strong>Exemplar 相関メトリクスとゼロ保持クリーンアップ</strong>: <code>NativeTelemetry._instruments()</code> は <code>http.server.request.duration</code>（秒単位の <code>Histogram</code>、境界 <code>_DURATION_BUCKETS</code> は <code>0.005</code>〜<code>10.0</code>）と <code>http.server.active_requests</code>（<code>UpDownCounter</code>）を生成します。<code>finish()</code> 内では、<code>SERVER</code> スパンがまだカレントである間に <code>duration.record(...)</code> を記録してから <code>span.end()</code> を呼ぶため、メトリクス Exemplar とトレース ID が正確に紐づきます。最後に外側の <code>finally:</code> ブロックで <code>request_telemetry.data = None</code> および <code>_exceptions.clear()</code> を実行し、保持されたコンテキストからリクエスト本文や引数がリークしないよう消去します。</li>
+</ol>
+<hr />
+<h2>3. <code>ExceptionTelemetryMiddleware</code> が <code>ExceptionMiddleware</code>・<code>ServerErrorMiddleware</code> と協調する理由</h2>
+<p>ASGI スタックでは、想定内の HTTP エラー、カスタム例外ハンドラ、未処理の <code>500</code> クラッシュがそれぞれ異なる層で処理されるため、例外テレメトリの配置には厳密な順序設計が求められます。</p>
+<ul>
+<li><strong>制御された <code>4xx</code> / <code>422</code> 例外は <code>ExceptionMiddleware</code>（L5）内側で完結</strong>: エンドポイントや依存関数が <code>HTTPException(404)</code> や <code>RequestValidationError</code>（<code>422</code>）を送出した場合、<strong>L5</strong> の <code>ExceptionMiddleware</code>（および <code>request_response()</code> 内の <code>wrap_app_handling_exceptions</code>）がそれを捕捉して通常の HTTP レスポンスへ変換するため、外側の <code>ExceptionTelemetryMiddleware</code>（<strong>L3</strong>）へ例外が伝播することはありません。<code>status_code &lt; 500</code> の応答に対して <code>finish()</code> は <code>failed = False</code> と判定し、<code>SERVER</code> スパンのステータスを <code>StatusCode.UNSET</code>（<code>error.type</code> なし）に保ちます（なお <code>logs=True</code> の場合、<code>_validation_failed()</code> が <code>fastapi.validation.error_count</code> 属性付きの <code>WARN</code> ログイベント <code>fastapi.validation.failed</code> を出力します）。同様に、子スパン用の <code>_traced_operation()</code> も <code>HTTPException</code>・<code>RequestValidationError</code>・<code>WebSocketException</code>・<code>WebSocketRequestValidationError</code>・正常な WebSocket 切断（<code>1000</code>, <code>1001</code>）をエラーステータス対象から除外します（カスタム例外ハンドラが <code>5xx</code> ステータスを返した場合のみ、<code>finish()</code> が <code>error.type = str(status_code)</code> と <code>StatusCode.ERROR</code> を付与します）。</li>
+<li><strong>未処理クラッシュと <code>ServerErrorMiddleware</code> の <code>wrapped_send</code> 順序問題（L2 の内側に L3 を置く理由）</strong>: 未処理の <code>ZeroDivisionError</code> が <code>user_middleware</code> を突き抜けると、<strong>L2</strong> の <code>ServerErrorMiddleware</code> に到達します。ここで重要なのは、<code>ServerErrorMiddleware</code> は <strong>例外を再送出する前に <code>send()</code> を呼んで HTTP <code>500</code> レスポンス本文を最後まで送信し終える</strong> という点です。最終チャンク <code>send({&quot;type&quot;: &quot;http.response.body&quot;, &quot;more_body&quot;: False})</code> が <code>NativeTelemetry.wrapped_send()</code> を通過した瞬間、<code>NativeTelemetry</code> は即座に <code>finish()</code> を呼んで <code>SERVER</code> スパンを終了させます。この時点ではまだ <code>ServerErrorMiddleware</code> から <code>NativeTelemetry</code> の <code>except BaseException:</code> 節へ例外が戻ってきていません。そこで <code>ExceptionTelemetryMiddleware</code> を <strong>L3</strong>（<code>ServerErrorMiddleware</code> の直下）に配置することで、<strong>L2</strong> が <code>500</code> 応答を送信するよりも先に <code>_exception(scope=scope, exc=exc)</code> を実行して <code>request_telemetry._exceptions</code> への追加と <code>http.server.request.exception</code> <code>ERROR</code> ログ出力を完了させ、直後の <code>finish()</code> で <code>error.type = &quot;ZeroDivisionError&quot;</code> と <code>StatusCode.ERROR</code> を確実に記録できます。</li>
+<li><strong>オブジェクト同一性による二重記録の防止</strong>: <code>ServerErrorMiddleware</code> が <code>500</code> 応答を送信した後に例外を再送出すると、最外層 <code>NativeTelemetry</code>（<strong>L1</strong>）の <code>except BaseException as exc:</code> 節も <code>_exception(scope=scope, exc=exc)</code> と <code>finish(exc)</code> を呼び出します（これは <code>CancelledError</code> などの <code>BaseException</code> や <strong>L2</strong> 自身のクラッシュも漏らさないためです）。<code>_exception()</code> 内部では <code>if not any(previous is exc for previous in seen):</code> によってオブジェクト同一性（<code>is</code>）で重複判定を行い、<code>finish()</code> も <code>if finished: return</code> で冪等性を保証しているため、未処理例外が二重にログ記録されたり二重に終了処理されたりすることはありません。</li>
+</ul>
+<hr />
+<h2>4. <code>InMemorySpanExporter</code> による出力スパン・属性の検証</h2>
+<p>以下のスニペットは、OpenTelemetry SDK の <code>TracerProvider</code> と <code>InMemorySpanExporter</code> を <code>FastAPI(telemetry=...)</code> に接続し、W3C <code>traceparent</code> の継承、低カーディナリティな <code>http.route</code> スパン名更新、<code>404</code> 時の <code>UNSET</code> ステータス維持、および <code>500</code> クラッシュ時の <code>error.type</code> 記録を検証します。</p>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">HTTPException</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.testclient</span><span class="w"> </span><span class="kn">import</span> <span class="n">TestClient</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">opentelemetry.sdk.trace</span><span class="w"> </span><span class="kn">import</span> <span class="n">TracerProvider</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">opentelemetry.sdk.trace.export</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimpleSpanProcessor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">opentelemetry.sdk.trace.export.in_memory_span_exporter</span><span class="w"> </span><span class="kn">import</span> <span class="n">InMemorySpanExporter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">opentelemetry.trace</span><span class="w"> </span><span class="kn">import</span> <span class="n">SpanKind</span><span class="p">,</span> <span class="n">StatusCode</span>
+
+<span class="n">exporter</span> <span class="o">=</span> <span class="n">InMemorySpanExporter</span><span class="p">()</span>
+<span class="n">provider</span> <span class="o">=</span> <span class="n">TracerProvider</span><span class="p">()</span>
+<span class="n">provider</span><span class="o">.</span><span class="n">add_span_processor</span><span class="p">(</span><span class="n">SimpleSpanProcessor</span><span class="p">(</span><span class="n">exporter</span><span class="p">))</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">(</span><span class="n">telemetry</span><span class="o">=</span><span class="p">{</span><span class="s2">"tracer_provider"</span><span class="p">:</span> <span class="n">provider</span><span class="p">})</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/items/</span><span class="si">{item_id}</span><span class="s2">"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_item</span><span class="p">(</span><span class="n">item_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="n">item_id</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Item not found"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">item_id</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ZeroDivisionError</span><span class="p">(</span><span class="s2">"negative item crash"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"item_id"</span><span class="p">:</span> <span class="n">item_id</span><span class="p">}</span>
+
+
+<span class="n">trace_id_hex</span> <span class="o">=</span> <span class="s2">"4bf92f3577b34da6a3ce929d0e0e4736"</span>
+<span class="n">traceparent</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"00-</span><span class="si">{</span><span class="n">trace_id_hex</span><span class="si">}</span><span class="s2">-00f067aa0ba902b7-01"</span>
+
+<span class="k">with</span> <span class="n">TestClient</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">raise_server_exceptions</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
+    <span class="c1"># 1. 200 OK: W3C traceparent 継承、子オペレーションスパン + 低カーディナリティ名</span>
+    <span class="k">assert</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/items/7"</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">"traceparent"</span><span class="p">:</span> <span class="n">traceparent</span><span class="p">})</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span>
+    <span class="n">spans</span> <span class="o">=</span> <span class="n">exporter</span><span class="o">.</span><span class="n">get_finished_spans</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="p">{</span><span class="s2">"fastapi.dependencies"</span><span class="p">,</span> <span class="s2">"fastapi.endpoint"</span><span class="p">,</span> <span class="s2">"GET /items/</span><span class="si">{item_id}</span><span class="s2">"</span><span class="p">}</span> <span class="o">&lt;=</span> <span class="p">{</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">spans</span>
+    <span class="p">}</span>
+    <span class="n">server_span</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">spans</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="n">SpanKind</span><span class="o">.</span><span class="n">SERVER</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">server_span</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">trace_id</span><span class="si">:</span><span class="s2">032x</span><span class="si">}</span><span class="s2">"</span> <span class="o">==</span> <span class="n">trace_id_hex</span>
+    <span class="k">assert</span> <span class="n">server_span</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s2">"http.route"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"/items/</span><span class="si">{item_id}</span><span class="s2">"</span>
+    <span class="k">assert</span> <span class="n">server_span</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s2">"http.response.status_code"</span><span class="p">]</span> <span class="o">==</span> <span class="mi">200</span>
+    <span class="k">assert</span> <span class="n">server_span</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="n">StatusCode</span><span class="o">.</span><span class="n">UNSET</span>
+    <span class="n">exporter</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+    <span class="c1"># 2. 制御された 404 HTTPException: L5 で吸収 -&gt; UNSET 維持・error.type なし</span>
+    <span class="k">assert</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/items/0"</span><span class="p">)</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">404</span>
+    <span class="n">span_404</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">exporter</span><span class="o">.</span><span class="n">get_finished_spans</span><span class="p">()</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="n">SpanKind</span><span class="o">.</span><span class="n">SERVER</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">span_404</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="n">StatusCode</span><span class="o">.</span><span class="n">UNSET</span>
+    <span class="k">assert</span> <span class="s2">"error.type"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">span_404</span><span class="o">.</span><span class="n">attributes</span>
+    <span class="n">exporter</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+    <span class="c1"># 3. 未処理の 500 クラッシュ: L2 の 500 送信前に L3 が ZeroDivisionError を記録</span>
+    <span class="k">assert</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/items/-1"</span><span class="p">)</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">500</span>
+    <span class="n">span_500</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">exporter</span><span class="o">.</span><span class="n">get_finished_spans</span><span class="p">()</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="n">SpanKind</span><span class="o">.</span><span class="n">SERVER</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">span_500</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s2">"http.response.status_code"</span><span class="p">]</span> <span class="o">==</span> <span class="mi">500</span>
+    <span class="k">assert</span> <span class="n">span_500</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s2">"error.type"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"ZeroDivisionError"</span>
+    <span class="k">assert</span> <span class="n">span_500</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="n">StatusCode</span><span class="o">.</span><span class="n">ERROR</span>
+</code></pre>
+<p>コンパイル済みの <code>APIRoute</code> 定義と <code>ModelField</code> スキーマから OpenAPI 3.1.0 ドキュメントおよび対話型 UI エンドポイントがどのように合成されるかについては、次章の <a href="../06_openapi_and_docs/openapi_synthesis_engine.html">get_openapi()・$defs 集約・Docs UI</a>へ進んでください。</p>
+
+            </main>
+            <footer class="footer">
+                
+                FastAPI® は Sebastián Ramírez（<a href="https://github.com/tiangolo" target="_blank" rel="noopener noreferrer">@tiangolo</a>）の登録商標です。本サイトは非公式の内部アーキテクチャ解説であり、公式プロジェクトとは提携していません。公式ドキュメントは <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">fastapi.tiangolo.com</a> をご参照ください。
+                
+            </footer>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeBtn = document.getElementById('theme-toggle');
+            if (themeBtn) {
+                themeBtn.addEventListener('click', function() {
+                    const current = document.documentElement.getAttribute('data-theme');
+                    const next = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    localStorage.setItem('drawlib-theme', next);
+                });
+            }
+
+            const langDropdowns = document.querySelectorAll('.lang-dropdown');
+            if (langDropdowns.length > 0) {
+                document.addEventListener('click', function(e) {
+                    langDropdowns.forEach(function(dd) {
+                        if (dd.hasAttribute('open') && !dd.contains(e.target)) {
+                            dd.removeAttribute('open');
+                        }
+                    });
+                });
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        langDropdowns.forEach(function(dd) {
+                            dd.removeAttribute('open');
+                        });
+                    }
+                });
+            }
+
+            const menuBtn = document.getElementById('menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            if (menuBtn && sidebar) {
+                function setMenuOpen(open) {
+                    sidebar.classList.toggle('is-open', open);
+                    menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    document.body.classList.toggle('menu-open', open);
+                    if (open) {
+                        const menu = sidebar.querySelector('.sidebar-menu');
+                        if (menu) {
+                            menu.scrollTop = 0;
+                        }
+                    }
+                }
+
+                menuBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const willOpen = !sidebar.classList.contains('is-open');
+                    setMenuOpen(willOpen);
+                });
+
+                document.addEventListener('click', function(e) {
+                    if (sidebar.classList.contains('is-open') && !sidebar.contains(e.target)) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                const navLinks = sidebar.querySelectorAll('.nav-item a');
+                navLinks.forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        setMenuOpen(false);
+                    });
+                });
+
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                window.addEventListener('resize', function() {
+                    if (window.innerWidth > 768 && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

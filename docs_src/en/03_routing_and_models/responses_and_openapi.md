@@ -1,8 +1,8 @@
 # Response Serialization, Status Codes & OpenAPI 3.1
 
-FastAPI enforces outbound API contracts through `serialize_response()`—filtering sensitive fields and emitting UTF-8 JSON bytes in a single Pydantic v2 Rust pass—while lazily synthesizing OpenAPI 3.1.0 specifications with split input/output JSON Schema 2020-12 definitions.
+FastAPI enforces outbound API contracts through automatic response validation and filtering—stripping sensitive fields and emitting UTF-8 JSON bytes in a single Pydantic v2 Rust pass—while lazily synthesizing OpenAPI 3.1.0 specifications with split input/output JSON Schema 2020-12 definitions.
 
-```drawlib align=center code=fold file=response_serialization_pipeline.png caption="Outbound Execution & Serialization Pipeline inside get_request_handler() and serialize_response()"
+```drawlib align=center code=hide file=response_serialization_pipeline.png caption="Outbound Response Validation, Filtering & Rust TypeAdapter Serialization Pipeline"
 from drawlib.canvas import save, setup
 from drawlib.icons import code, phosphor
 from drawlib.lines import line, lines
@@ -17,7 +17,7 @@ setup(width=168, height=92, dpi=150)
 code.fastapi((11, 86.5), width=5.2, style=Styles.Primary)
 text(
     (16.5, 86.5),
-    "Outbound Response Pipeline: serialize_response() & Rust TypeAdapter Fast Path",
+    "Outbound Response Pipeline: Validation, Filtering & TypeAdapter Fast Path",
     style=Styles.DarkBold.patch(text_size=12.5, halign="left"),
 )
 
@@ -31,9 +31,9 @@ macro = ChevronProcess(
     flat_left_end=True,
 )
 macro.add("1. Endpoint Return", description="ORM / Model / dict")
-macro.add("2. Branch Check", description="Response vs Field", style=Styles.PrimaryNeutral)
+macro.add("2. Route Contract", description="Model vs Response", style=Styles.PrimaryNeutral)
 macro.add(
-    "3. Validate & Strip",
+    "3. Validate & Filter",
     description="Drop secret fields",
     style=Styles.PrimaryFlat,
     text_style=Styles.WhiteBold.patch(text_size=10.3),
@@ -50,7 +50,7 @@ phosphor.code((21, 52.5), width=6.0, style=Styles.PrimaryBold)
 text((21, 44.5), "Endpoint Result", style=Styles.DarkBold.patch(text_size=11.0))
 text(
     (21, 26.5),
-    "• async def: inline\n• def: threadpool\n• Captures mutated\n  response.headers\n• Attaches solved\n  BackgroundTasks",
+    "• async def: inline\n• def: threadpool\n• Captures mutated\n  response.headers\n• Attaches injected\n  BackgroundTasks",
     style=Styles.Dark.patch(text_size=10.0),
 )
 
@@ -60,19 +60,19 @@ text(
 tracks = [
     (
         53,
-        ("route.response_field", "field.validate() + strip", Styles.White, False),
+        ("response_model / -> T", "Validate & filter fields", Styles.White, False),
         ("TypeAdapter.dump_json()", "exclude_unset / by_alias", Styles.PrimaryFlat, True),
         ("Response(bytes)", "Merges response.headers", Styles.SecondaryNeutral, False),
     ),
     (
         34,
-        ("response_field is None", "Unconstrained return", Styles.Neutral, False),
+        ("response_model=None", "Unconstrained return", Styles.Neutral, False),
         ("jsonable_encoder()", "Python dict conversion", Styles.White, False),
         ("JSONResponse", "Merges response.headers", Styles.SecondaryNeutral, False),
     ),
     (
         15,
-        ("isinstance(Response)", "304 / File / Custom", Styles.Neutral, False),
+        ("Return Response", "304 / File / Custom", Styles.Neutral, False),
         ("Bypass Serialization", "Skips response_model", Styles.PrimaryNeutral, False),
         ("Direct ASGI Send", "Keeps BackgroundTasks", Styles.White, False),
     ),
@@ -113,22 +113,22 @@ save()
 
 Decoupling internal persistence models from outbound DTOs prevents accidental credential leaks while maximizing serialization throughput via Pydantic's compiled Rust core.
 
-## 1. Outbound Serialization Pipeline (`serialize_response`)
+## 1. Response Validation, Filtering & Serialization
 
-During route initialization (`_populate_api_route_state()` in `fastapi/routing.py`), FastAPI determines `route.response_field` according to a strict precedence chain:
+When registering a path operation, FastAPI resolves the outbound response contract according to a strict precedence chain:
 
-| Declaration Pattern | `route.response_field` | Runtime Serialization Path in `get_request_handler()` |
+| Declaration Pattern | Active Response Contract | Runtime Serialization Path |
 | :--- | :--- | :--- |
-| `@app.get(..., response_model=PublicDTO)` | `ModelField(mode="serialization")` | Overrides return annotation; validates & runs Rust `TypeAdapter.dump_json()` |
-| `async def ep(...) -> PublicDTO:` (no `response_model`) | `ModelField(mode="serialization")` | Return annotation promoted automatically to `response_model` |
-| `@app.get(..., response_model=None)` or `-> Response` | `None` | Skips `ModelField` creation; allows `Response | dict` unions |
-| Endpoint returns `isinstance(val, Response)` at runtime | *(Bypassed)* | Sends `Response` directly; skips `serialize_response()` |
+| `@app.get(..., response_model=PublicDTO)` | `PublicDTO` (overrides return hint) | Validates & strips fields, then emits UTF-8 bytes via Rust `TypeAdapter.dump_json()` |
+| `async def ep(...) -> PublicDTO:` (no `response_model`) | `PublicDTO` (from return annotation) | Return annotation automatically acts as the response validation & OpenAPI contract |
+| `@app.get(..., response_model=None)` or `-> Response` | Disabled | Skips response schema validation; allows `Response \| dict` unions and uses `jsonable_encoder()` for plain objects |
+| Endpoint returns a `Response` instance at runtime | *(Bypassed for that call)* | Sends the `Response` instance directly without `response_model` filtering |
 
-When `route.response_field` exists and `response_class` remains the default `JSONResponse` (`DefaultPlaceholder`), `get_request_handler()` activates `use_dump_json = True`:
+Whenever a response contract is active and `response_class` remains the default `JSONResponse`, FastAPI executes a streamlined three-step outbound pass:
 
-1. **Contract Validation & Security Filtering**: `serialize_response()` validates the returned object (`ORM` entity, `BaseModel`, or `dict`) via `field.validate(..., loc=("response",))` using `from_attributes=True` (executed inline for `async def` routes or via `run_in_threadpool` for sync `def` routes). Unlisted fields—such as `hashed_password` or `totp_secret`—are stripped, and contract mismatches raise a server-side `ResponseValidationError` (`500`) rather than leaking malformed payloads.
-2. **One-Pass Rust JSON Bytes (`dump_json`)**: Instead of converting models to intermediate Python dictionaries and calling `json.dumps()`, `field.serialize_json()` invokes `TypeAdapter.dump_json()` with `include`, `exclude`, `by_alias`, `exclude_unset`, `exclude_defaults`, and `exclude_none`, wrapping the resulting UTF-8 `bytes` directly in `Response(media_type="application/json")`.
-3. **Status-Code Body Rules & Header Merging**: Any headers or cookies recorded on an injected `response: Response` dependency parameter (`solved_result.response.headers.raw`) are appended onto the final response, and bodyless HTTP statuses (`204`, `205`, `304`, `1xx`) enforce `response.body = b""`.
+1. **Contract Validation & Security Filtering**: FastAPI validates the returned object (`ORM` entity, `BaseModel`, or `dict`) against the response model using `from_attributes=True` (inline on the event loop for `async def` routes, or in a worker threadpool for sync `def` routes). Unlisted attributes—such as `hashed_password` or `totp_secret`—are stripped automatically, and contract mismatches raise a server-side `ResponseValidationError` (`500`) rather than leaking malformed payloads.
+2. **One-Pass Rust JSON Bytes (`TypeAdapter.dump_json`)**: Instead of building intermediate Python dictionaries and calling `json.dumps()`, FastAPI serializes the validated value directly through Pydantic v2's `TypeAdapter.dump_json()`—applying `response_model_include`, `response_model_exclude`, `response_model_by_alias`, `response_model_exclude_unset`, `response_model_exclude_defaults`, and `response_model_exclude_none`—and wraps the UTF-8 `bytes` directly in `Response(media_type="application/json")`.
+3. **Status-Code Body Rules & Header Merging**: Any headers or `Set-Cookie` directives recorded on an injected `response: Response` parameter are merged onto the final response, while bodyless HTTP status codes (`204`, `205`, `304`, `1xx`) always emit an empty body (`b""`).
 
 ### Security Field Stripping & Sparse PATCH (`exclude_unset`)
 
@@ -231,15 +231,15 @@ async def raw_probe(etag_match: Annotated[str | None, Header()] = None) -> Respo
 
 ## 2. Lazy OpenAPI 3.1.0 Synthesis & Split Input/Output Schemas
 
-Rather than slowing down process boot, `FastAPI.openapi()` (`fastapi/applications.py`) synthesizes the OpenAPI `3.1.0` specification lazily on the first `/openapi.json` or `app.openapi()` call and caches it against `router._get_routes_version()` (`_openapi_routes_version`). If dynamic routers or webhooks are mounted later, the route version counter increments and automatically invalidates the cached dictionary.
+Rather than slowing down application startup, `app.openapi()` synthesizes the OpenAPI `3.1.0` specification lazily on the first `/openapi.json` request (or direct `app.openapi()` call) and caches the generated dictionary in memory. If dynamic routers or webhooks are added later, FastAPI automatically invalidates and rebuilds the cached schema on the next access.
 
-Inside `get_openapi()` (`fastapi/openapi/utils.py`):
+OpenAPI synthesis proceeds through three stages:
 
-1. **Field Harvesting (`get_fields_from_routes`)**: Walks every included `APIRoute` and webhook context, collecting `body_field` (`mode="validation"`), `response_field`, status-keyed `response_fields` from `responses={...}`, `stream_item_field` (`mode="serialization"`), callbacks, and flattened `Dependant` parameters.
-2. **Split Input/Output JSON Schema 2020-12 (`get_definitions`)**: With `separate_input_output_schemas=True` (default), FastAPI feeds both `"validation"` and `"serialization"` `CoreSchema` entries into Pydantic's `GenerateJsonSchema(ref_template="#/components/schemas/{model}")`. Whenever a model's input and output representations differ—such as `Decimal` fields (accepting `number | string` on input, emitting exact `string` on output), `@computed_field` properties, or `serialization_alias`—OpenAPI automatically emits distinct `<Model>-Input` and `<Model>-Output` component schemas.
-3. **Operation & Error Merging (`get_openapi_path`)**: Deduplicates parameters across shared dependencies, binds `operationId`, merges custom `responses={404: ..., 409: ...}` via `deep_dict_update()`, and auto-injects `422` (`HTTPValidationError`) whenever parameters or request bodies exist.
+1. **Schema Cache & Route Discovery**: FastAPI walks every included `APIRoute` and `@app.webhooks` operation, collecting request body models, primary `response_model` contracts, custom status-code models from `responses={...}`, streaming item schemas, callbacks, and all parameters declared across nested `Depends()` and `Security()` functions.
+2. **Split Input/Output JSON Schema 2020-12**: With `separate_input_output_schemas=True` (the default on `FastAPI`), Pydantic v2 generates separate validation and serialization JSON Schemas under `#/components/schemas/`. Whenever a model's input and output representations differ—such as `Decimal` fields (accepting `number | string` on input, emitting exact `string` on output), `@computed_field` properties, or `serialization_alias`—OpenAPI automatically emits distinct `<Model>-Input` and `<Model>-Output` component schemas.
+3. **Operation & Error Contract Merging**: FastAPI deduplicates shared dependency parameters, assigns each route's `operationId`, merges custom `responses={404: ..., 409: ...}` definitions alongside the default success `status_code`, and automatically adds `422` (`HTTPValidationError`) whenever parameters or request bodies exist.
 
-```drawlib align=center code=fold file=openapi_31_synthesis_flow.png caption="Lazy OpenAPI 3.1.0 Synthesis: _openapi_routes_version Cache, Split Input/Output Schemas & Path Assembly"
+```drawlib align=center code=hide file=openapi_31_synthesis_flow.png caption="Lazy OpenAPI 3.1.0 Synthesis: Schema Cache, Route Discovery, Split Input/Output Schemas & Operation Assembly"
 from drawlib.canvas import save, setup
 from drawlib.icons import code, phosphor
 from drawlib.lines import line
@@ -267,16 +267,16 @@ flow = ChevronProcess(
     spacing=1.5,
     flat_left_end=True,
 )
-flow.add("1. Version Cache", description="_openapi_routes_version")
-flow.add("2. Field Harvest", description="get_fields_from_routes()", style=Styles.PrimaryNeutral)
+flow.add("1. Schema Cache", description="Lazy build & refresh")
+flow.add("2. Route Discovery", description="Params, body & status", style=Styles.PrimaryNeutral)
 flow.add(
     "3. Split Schemas",
-    description="GenerateJsonSchema 2020-12",
+    description="JSON Schema 2020-12",
     style=Styles.PrimaryFlat,
     text_style=Styles.WhiteBold.patch(text_size=10.5),
     description_style=Styles.White.patch(text_size=10.0),
 )
-flow.add("4. Path Assembly", description="get_openapi_path() -> 3.1.0", style=Styles.SecondaryNeutral)
+flow.add("4. Path Operations", description="Merge -> OpenAPI 3.1.0", style=Styles.SecondaryNeutral)
 flow.draw((6, 68), width=156, height=13)
 
 # Bottom-Left Panel: Split Input/Output Schema Generation
@@ -292,8 +292,8 @@ left_p = Panel(
 left_p.draw((6, 6), width=78, height=57)
 
 rectangle((45, 46.5), width=68, height=10.5, style=Styles.White.patch(shape_r=1.8))
-text((45, 48.7), "Pydantic v2 GenerateJsonSchema", style=Styles.DarkBold.patch(text_size=10.5))
-text((45, 44.2), "Evaluates mode='validation' vs mode='serialization'", style=Styles.Dark.patch(text_size=10.0))
+text((45, 48.7), "Pydantic v2 JSON Schema 2020-12", style=Styles.DarkBold.patch(text_size=10.5))
+text((45, 44.2), "Compares validation input vs serialization output", style=Styles.Dark.patch(text_size=10.0))
 
 # Arrows down from y=41.2 to y=33.0 (8.2 units gap)
 line((26.5, 41.2), (26.5, 33.0), arrow_head="->", style=Styles.DarkBold)
@@ -317,7 +317,7 @@ text(
 
 # Bottom-Right Panel: Operation & Custom Status Code Assembly
 right_p = Panel(
-    "Operation Assembly (get_openapi_path)",
+    "Operation & Error Contract Assembly",
     style=Styles.Neutral,
     header_style=Styles.SecondaryNeutral,
     text_style=Styles.DarkBold.patch(text_size=10.8),
@@ -339,13 +339,13 @@ ops = CardList(
     spacing=2.4,
 )
 ops.add(
-    "Versioned Schema Cache",
-    "O(1) hit; invalidates on\n_get_routes_version() bump",
+    "Lazy Schema Cache",
+    "Cached after first request;\nrefreshes if routes change",
     badge_text="O(1)",
 )
 ops.add(
     "Custom Status Merging",
-    "responses={404, 409} merged\nvia deep_dict_update()",
+    "Merges status_code=201\nwith responses={404, 409}",
     badge_text="4xx",
     style=Styles.SecondaryNeutral,
 )
@@ -412,4 +412,4 @@ assert "SkuSpec-Output" in openapi_doc["components"]["schemas"]
 assert set(openapi_doc["paths"]["/skus"]["post"]["responses"]) >= {"201", "404", "409", "422"}
 ```
 
-For inbound parameter and multipart body classification, revisit [Path, Query, Header, Cookie & Body](parameters_and_validation.md). Next, explore how FastAPI resolves hierarchical `Depends()` graphs in [Dependant DAG, Caching & Scopes](../04_dependencies_and_security/dependency_injection.md), or how `itemSchema` powers streaming OpenAPI contracts in [Native SSE, JSONL & WebSockets](../05_async_and_realtime/sse_websockets_streaming.md).
+For inbound parameter and multipart body binding rules, revisit [Path, Query, Header, Cookie & Body](parameters_and_validation.md). Next, explore how FastAPI resolves hierarchical `Depends()` graphs in [Dependency Graph, Caching & Scopes](../04_dependencies_and_security/dependency_injection.md), or how `itemSchema` powers streaming OpenAPI contracts in [Native SSE, JSONL & WebSockets](../05_async_and_realtime/sse_websockets_streaming.md).

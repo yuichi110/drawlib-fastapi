@@ -1,6 +1,6 @@
-# FastAPI Visual Guide
+# FastAPI User Guide
 
-- [Overview & Architecture Map](index.md)
+- [Guide Overview](index.md)
 
 ## 1. Introduction & Quickstart
 - [Why FastAPI & Design Philosophy](01_getting_started/overview.md)
@@ -17,7 +17,7 @@
 - [Custom Request & APIRoute Classes](03_routing_and_models/custom_request_and_route.md)
 
 ## 4. Dependency Injection & Security
-- [Dependant DAG, Caching & Scopes](04_dependencies_and_security/dependency_injection.md)
+- [Dependency Graph, Caching & Scopes](04_dependencies_and_security/dependency_injection.md)
 - [Authentication & OAuth2 Scopes](04_dependencies_and_security/security_and_auth.md)
 - [JWT (PyJWT + Argon2) & WS Security](04_dependencies_and_security/jwt_and_websocket_security.md)
 
@@ -37,7 +37,7 @@
 - [pydantic-settings & SQL Databases](08_ecosystem_and_operations/settings_and_databases.md)
 - [FastAPI CLI, Proxies, GraphQL & AI](08_ecosystem_and_operations/cli_proxy_graphql_ai.md)
 
-## Diagnostic & Upstream Links
-- [PNI501 Diagnostic Report](https://fastapi.drawlib.com/reports/pni501/)
+## Companion Guides & Links
+- [FastAPI Internal Architecture](https://fastapi.drawlib.com/architecture/)
 - [Official FastAPI Docs](https://fastapi.tiangolo.com/)
-- [Demo Source (GitHub)](https://github.com/yuichi110/drawlib-fastapi)
+- [GitHub Repository](https://github.com/yuichi110/drawlib-fastapi)

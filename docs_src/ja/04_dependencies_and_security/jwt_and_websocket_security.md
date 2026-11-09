@@ -2,7 +2,7 @@
 
 本番環境の FastAPI `v0.162.2` アプリケーションでは、HTTP API に対してメモリハードな **`pwdlib` Argon2id** パスワードハッシュ（および **`DUMMY_HASH`** によるユーザー列挙攻撃対策）とステートレスな **`PyJWT`** ベアラートークン検証を組み合わせ、さらに Starlette 共通基底クラス `HTTPConnection`（`v0.144.0` 以降）を介して同じ `Security()`・`SecurityScopes` 依存関係グラフを **`WebSocket`** ハンドシェイクへそのまま拡張します。
 
-```drawlib align=center code=fold file=jwt_argon2_auth_pipeline.png caption="OAuth2 + pwdlib Argon2id（DUMMY_HASH）+ PyJWT による署名発行とステートレス検証パイプライン"
+```drawlib align=center code=hide file=jwt_argon2_auth_pipeline.png caption="OAuth2 + pwdlib Argon2id（DUMMY_HASH）+ PyJWT による署名発行とステートレス検証パイプライン"
 from drawlib.canvas import save, setup
 from drawlib.diagrams.architecture import ArchitectureDiagram, Node, PhosphorIcon
 from drawlib.icons import phosphor
@@ -206,7 +206,7 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 15
 
 password_hash = PasswordHash.recommended()
-DUMMY_HASH = password_hash.hash("dummypassword")
+DUMMY_HASH = password_hash.hash(secrets.token_urlsafe(16))
 
 
 class Token(BaseModel):
@@ -402,9 +402,9 @@ assert client.get("/reports/export", headers={"Authorization": f"Bearer {narrow_
 
 ## 2. WebSocket 認証と `v0.144.0+` の `Security()` ネイティブ対応
 
-FastAPI `v0.144.0` より前は、組み込みの `fastapi.security` 抽出器が `__call__` 引数を `request: Request` と型付けしていたため、`@app.websocket(...)` ルートで `OAuth2PasswordBearer` や `APIKeyCookie` をそのまま流用できませんでした。**`v0.144.0` から `v0.162.2` 現在**では、すべての `SecurityBase` サブクラス（`APIKeyCookie`・`APIKeyQuery`・`APIKeyHeader`・`OAuth2PasswordBearer`・`OAuth2AuthorizationCodeBearer`・`HTTPBearer`・`HTTPBasic`・`OpenIdConnect`）が `Request` と `WebSocket` の共通基底クラスである Starlette の **`HTTPConnection`** を受け取る設計に刷新されています（`fastapi/dependencies/utils.py` が `websocket` を `dependant.http_connection_param_name` へ注入します）。
+FastAPI `v0.144.0` より前は、組み込みの `fastapi.security` 抽出器が `__call__` 引数を `request: Request` と型付けしていたため、`@app.websocket(...)` ルートで `OAuth2PasswordBearer` や `APIKeyCookie` をそのまま流用できませんでした。**`v0.144.0` から `v0.162.2` 現在**では、すべての標準 `fastapi.security` スキーム（`APIKeyCookie`・`APIKeyQuery`・`APIKeyHeader`・`OAuth2PasswordBearer`・`OAuth2AuthorizationCodeBearer`・`HTTPBearer`・`HTTPBasic`・`OpenIdConnect`）が HTTP `Request` と `WebSocket` の共通基底クラスである Starlette の **`HTTPConnection`** を受け取る設計に統一されています。
 
-```drawlib align=center code=fold file=websocket_security_handshake.png caption="WebSocket ハンドシェイク認証フロー：ブラウザ Cookie/ワンタイムチケットと SDK Bearer の SecurityBase(HTTPConnection) 統合"
+```drawlib align=center code=hide file=websocket_security_handshake.png caption="WebSocket ハンドシェイク認証フロー：ブラウザ Cookie/ワンタイムチケットと SDK Bearer の Security()・HTTPConnection 統合"
 from drawlib.canvas import save, setup
 from drawlib.diagrams.sequence import Participant, ParticipantGroup, PhosphorIcon, SequenceDiagram
 from drawlib.styles import Style, Styles
@@ -455,7 +455,7 @@ ws_group = seq.add(
 
 sec_dep = ws_group.add(
     Participant(
-        "SecurityBase\nCookie / Query / Bearer",
+        "Security() Schemes\nCookie / Query / Bearer",
         width=35,
         height=14,
         icon=PhosphorIcon.SHIELD_CHECK,
@@ -534,7 +534,7 @@ save()
 
 ### 2.2 ハンドシェイク前の拒否制御（`WS_1008_POLICY_VIOLATION` と `auto_error=True`）
 
-`SecurityBase` 抽出器で `auto_error=True` のまま資格情報が欠落すると、`solve_dependencies()` 内で `HTTPException(status_code=401)` が送出され、HTTP Upgrade 自体が `401` 応答（`TestClient` では `WebSocketDenialResponse`）として拒否されます。複数トランスポートを受け付けるエンドポイントでは、各抽出器を `auto_error=False` に設定し、`await ws.accept()` を呼ぶ前に統合依存関数内で `Origin` 検査と `SecurityScopes` 照合を行い、違反時は `WebSocketException(code=status.WS_1008_POLICY_VIOLATION)` でクリーンに切断します。
+`fastapi.security` の抽出器で `auto_error=True` のまま資格情報が欠落すると、WebSocket ハンドラ実行前の依存解決フェーズで `HTTPException(status_code=401)` が送出され、HTTP Upgrade 自体が `401` 応答（`TestClient` では `WebSocketDenialResponse`）として拒否されます。複数トランスポートを受け付けるエンドポイントでは、各抽出器を `auto_error=False` に設定し、`await ws.accept()` を呼ぶ前に統合依存関数内で `Origin` 検査と `SecurityScopes` 照合を行い、違反時は `WebSocketException(code=status.WS_1008_POLICY_VIOLATION)` でクリーンに切断します。
 
 ```python
 import secrets

@@ -1,0 +1,517 @@
+<!--
+ Copyright (c) 2026 Yuichi Ito (yuichi@yuichi.com)
+
+ This software is licensed under the Apache License, Version 2.0.
+ For more information, please visit: https://github.com/yuichi110/drawlib
+
+ This software is provided "as is", without warranty of any kind,
+ express or implied, including but not limited to the warranties of
+ merchantability, fitness for a particular purpose and noninfringement.
+-->
+<!DOCTYPE html>
+<html lang="ja" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastAPI v0.162.2 — 内部アーキテクチャガイド — FastAPI Architecture Guide (Unofficial)</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-S9N5BZ1VRC');
+    </script>
+    <script>
+        (function() {
+            const saved = localStorage.getItem('drawlib-theme');
+            if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    
+    <link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/architecture/en/">
+    
+    <link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/architecture/ja/">
+    
+    <link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/architecture/">
+    
+    
+    
+    <meta name="description" content="FastAPI v0.162.2 の内部アーキテクチャ解説（非公式）：ルーティングクロージャ生成、Dependant 解決エンジン、Pydantic v2 ブリッジ、ASGI ミドルウェア階層、ネイティブ OpenTelemetry、OpenAPI 3.1 合成の仕組み。">
+    <link rel="canonical" href="https://fastapi.drawlib.com/architecture/ja/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="FastAPI 内部構造">
+    <meta property="og:title" content="FastAPI v0.162.2 — 内部アーキテクチャガイド — FastAPI 内部構造">
+    <meta property="og:description" content="FastAPI v0.162.2 の内部アーキテクチャ解説（非公式）：ルーティングクロージャ生成、Dependant 解決エンジン、Pydantic v2 ブリッジ、ASGI ミドルウェア階層、ネイティブ OpenTelemetry、OpenAPI 3.1 合成の仕組み。">
+    <meta property="og:url" content="https://fastapi.drawlib.com/architecture/ja/">
+    <meta property="og:image" content="https://fastapi.drawlib.com/architecture/_assets/ogp.png">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:locale:alternate" content="en_US">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="FastAPI v0.162.2 — 内部アーキテクチャガイド — FastAPI 内部構造">
+    <meta name="twitter:description" content="FastAPI v0.162.2 の内部アーキテクチャ解説（非公式）：ルーティングクロージャ生成、Dependant 解決エンジン、Pydantic v2 ブリッジ、ASGI ミドルウェア階層、ネイティブ OpenTelemetry、OpenAPI 3.1 合成の仕組み。">
+    <meta name="twitter:image" content="https://fastapi.drawlib.com/architecture/_assets/ogp.png">
+    
+    
+    <link rel="icon" type="image/png" href="../_assets/favicon.png">
+    
+    
+    <link rel="stylesheet" href="style.css">
+    
+    
+</head>
+<body>
+    <div class="demo-banner" role="region" aria-label="ポータルナビゲーション">
+        <div class="demo-banner-inner">
+            <span class="demo-banner-badge">INTERNAL ARCHITECTURE</span>
+            
+            <span class="demo-banner-text">
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a>（v0.162.2）内部アーキテクチャ解説（非公式）
+            </span>
+            <span class="demo-banner-links">
+                <a href="https://fastapi.drawlib.com/">User Guide</a>
+                <span class="demo-banner-sep">·</span>
+                <strong style="color:#ffffff;">Architecture</strong>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Audit</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official Docs ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+            </span>
+            
+        </div>
+    </div>
+    
+    <div class="doc-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="index.html" class="sidebar-brand" aria-label="FastAPI 内部構造">
+                    
+                    FastAPI 内部構造
+                    
+                </a>
+                <div class="sidebar-header-actions">
+                    <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">
+                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                    <button type="button" id="menu-toggle" class="menu-toggle-btn" aria-label="Toggle navigation" aria-expanded="false">
+                        <svg class="icon-hamburger" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        <svg class="icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="sidebar-menu">
+                
+                    
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item active">
+                                <a href="index.html" >アーキテクチャ全体像</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">1. パッケージ階層と境界設計</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="01_package_and_layers/module_hierarchy.html" >5層モジュール構造と Starlette 再公開</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">2. ルーティングコンパイラとクロージャ</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="02_routing_compiler/apiroute_and_closures.html" >APIRouter・APIRoute とクロージャ合成</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="02_routing_compiler/streaming_and_spa_internals.html" >ジェネレータ配信と SPA ルータ内部実装</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">3. DI 解決エンジンと認証機構</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="03_di_and_security_engine/dependant_and_solver.html" >Dependant グラフと solve_dependencies</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="03_di_and_security_engine/security_internals.html" >SecurityBase 階層と HTTPConnection</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">4. Pydantic v2 ブリッジ層</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="04_pydantic_bridge/compat_and_serialization.html" >_compat/v2.py・ModelField・直列化</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">5. ASGI スタックとテレメトリ</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="05_asgi_and_telemetry/middleware_and_concurrency.html" >ミドルウェア7層構造とスレッドプール</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="05_asgi_and_telemetry/native_telemetry_internals.html" >NativeTelemetry と例外スパン記録</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">6. OpenAPI 3.1 合成エンジン</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="06_openapi_and_docs/openapi_synthesis_engine.html" >get_openapi()・$defs 集約・Docs UI</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">関連ガイド &amp; 公式リンク</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/" target="_blank" rel="noopener noreferrer">FastAPI ユーザーガイド<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/reports/pni501/" target="_blank" rel="noopener noreferrer">PNI501 診断レポート<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI 公式ドキュメント<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub リポジトリ<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                        </ul>
+                    
+                
+            </div>
+        </aside>
+        <div class="content-wrapper">
+            <header class="top-bar">
+                <div class="breadcrumbs">
+                    <span class="crumb">Architecture</span>
+                    <span class="crumb-separator">&raquo;</span>
+                    <span class="crumb active">FastAPI v0.162.2 — 内部アーキテクチャガイド</span>
+                </div>
+                
+                <div class="lang-switcher">
+                    <details class="lang-dropdown">
+                        <summary class="lang-dropdown-btn" aria-label="Select language">
+                            <svg class="lang-globe-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            <span class="lang-current-label">日本語</span>
+                            <svg class="lang-caret-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </summary>
+                        <div class="lang-dropdown-menu" role="menu">
+                            
+                            <a href="../en/index.html" class="lang-option" lang="en" hreflang="en" >
+                                <span>English</span>
+                                
+                            </a>
+                            
+                            <a href="index.html" class="lang-option active" lang="ja" hreflang="ja" aria-current="page">
+                                <span>日本語</span>
+                                
+                                <svg class="lang-check-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                
+                            </a>
+                            
+                        </div>
+                    </details>
+                </div>
+                
+            </header>
+            <main class="main-content">
+                <h1>FastAPI v0.162.2 — 内部アーキテクチャガイド</h1>
+<p>FastAPI（<code>v0.162.2</code> · Python モジュール <code>52</code> 個 · <code>19,837</code> 行 · 循環 import <code>0</code> 件）は、再帰的な依存関係解決（DI）、Pydantic v2 による型検証・直列化、そして OpenAPI <code>3.1.0</code> 自動合成を備えながら、素の ASGI サーバに迫るスループットを実現しています。その中核にある設計原則が <strong>「起動時・import 時にリフレクション処理を 1 回だけコンパイルし、リクエスト実行時は軽量な束縛済みクロージャのみをディスパッチする（Compile-Once, Dispatch Closures）」</strong> というアーキテクチャ不変条件です。本サイトは、アプリケーション設計パターンを扱う姉妹編 <a href="https://fastapi.drawlib.com/">FastAPI ユーザーガイド</a> と対をなし、FastAPI 本体のコンパイラ・解決エンジン・ASGI スタックの内部実装をソースコードレベルで解剖する非公式リファレンスです。</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../images/index/arch_compile_dispatch_anim.png" alt="index_1" />
+  <figcaption class="drawlib-caption">FastAPI v0.162.2 起動時コンパイルパイプラインとリクエスト単位のゼロリフレクション ASGI ホットパス</figcaption>
+</figure>
+<h2>中核設計思想：起動時 1 回コンパイルと軽量クロージャ実行</h2>
+<p>HTTP リクエストのたびに <code>inspect.signature()</code> を呼び出し、文字列化された <code>ForwardRef</code> 型ヒントを評価し、<code>Annotated[...]</code> メタデータを走査してバリデータを生成する素朴なフレームワークでは、I/O ではなく Python の動的リフレクションで CPU 時間を消費してしまいます。FastAPI は <strong>ルート登録処理（<code>@app.get</code>、<code>@router.post</code>、<code>include_router</code>）を事前コンパイルパス（Ahead-of-Time Compilation）として扱う</strong> ことで、リクエスト処理中のリフレクションを完全に排除しています。</p>
+<p><code>fastapi/routing.py</code> の <code>APIRoute.__init__</code> が <code>_populate_api_route_state()</code> を実行すると、エンドポイント関数の型ヒント群は静的なデータ構造へと即座に変換され、2 層のレキシカル ASGI クロージャ（<code>self.app = request_response(self.get_route_handler())</code>）の自由変数として封じ込められます。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">ライフサイクル段階</th>
+<th style="text-align:left">主要ソース関数（<code>v0.162.2</code>）</th>
+<th style="text-align:left">生成・保持される内部オブジェクト</th>
+<th style="text-align:left">レイテンシと安全性への寄与</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>1. シグネチャ解析と DI グラフ構築（起動時）</strong></td>
+<td style="text-align:left"><code>get_dependant()</code>, <code>get_typed_signature()</code>, <code>analyze_param()</code>（<code>dependencies/utils.py</code>）</td>
+<td style="text-align:left"><code>APIRoute.dependant</code>（<code>path_params</code>, <code>query_params</code>, <code>header_params</code>, <code>cookie_params</code>, <code>body_params</code>, <code>dependencies</code> を持つ <code>Dependant</code> 木）</td>
+<td style="text-align:left"><code>inspect.signature()</code> と <code>evaluate_forwardref()</code> を <strong>1 回だけ</strong> 実行し、トラフィック受信前に <code>DependencyScopeError</code>（<code>&quot;request&quot;</code> 対 <code>&quot;function&quot;</code>）を検証。</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>2. 検証器・直列化器の事前合成（起動時）</strong></td>
+<td style="text-align:left"><code>create_model_field()</code>（<code>utils.py</code>）, <code>_get_body_field()</code>, <code>ModelField.__post_init__()</code>（<code>_compat/v2.py</code>）</td>
+<td style="text-align:left"><code>body_field</code>（<code>mode=&quot;validation&quot;</code>）, <code>response_field</code>（<code>mode=&quot;serialization&quot;</code>）, <code>stream_item_field</code></td>
+<td style="text-align:left">リクエストボディ・レスポンス・SSE/JSONL ストリーム要素向けに Rust 製 <code>pydantic.TypeAdapter</code> を事前構築。</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>3. ASGI クロージャ束縛（起動時）</strong></td>
+<td style="text-align:left"><code>APIRoute.get_route_handler()</code>, <code>get_request_handler()</code>, <code>request_response()</code>（<code>routing.py</code>）</td>
+<td style="text-align:left"><code>APIRoute.app</code>（<code>ASGIApp</code> 非同期コルーチンクロージャ）</td>
+<td style="text-align:left"><code>is_coroutine</code>, <code>is_body_form</code>, <code>is_sse_stream</code>, <code>is_json_stream</code> などの分岐フラグをクロージャセル変数として事前確定。</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>4. スコープ付き DI 解決とボディ読取（リクエスト時）</strong></td>
+<td style="text-align:left"><code>request_response()</code>, <code>solve_dependencies()</code>（<code>dependencies/utils.py</code>）</td>
+<td style="text-align:left"><code>SolvedDependency</code>（<code>values</code>, <code>errors</code>, <code>background_tasks</code>, <code>response</code>, <code>dependency_cache</code>）</td>
+<td style="text-align:left"><code>fastapi_inner_astack</code>（<code>&quot;request&quot;</code> スコープ）と <code>fastapi_function_astack</code>（<code>&quot;function&quot;</code> スコープ）を展開し、<code>(call, scopes, computed_scope)</code> キーで依存関数をメモ化。</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>5. 関数ディスパッチと Rust 一括 JSON 直列化（リクエスト時）</strong></td>
+<td style="text-align:left"><code>run_endpoint_function()</code>, <code>serialize_response()</code>, <code>ModelField.serialize_json()</code></td>
+<td style="text-align:left">UTF-8 JSON <code>bytes</code> を直接格納した <code>Response(media_type=&quot;application/json&quot;)</code></td>
+<td style="text-align:left"><code>response_class</code> が <code>DefaultPlaceholder(JSONResponse)</code> かつ <code>response_field</code> が存在する場合、<code>use_dump_json=True</code> により中間 <code>dict</code> と <code>json.dumps()</code> を省略して <code>TypeAdapter.dump_json()</code> で一括バイト出力。</td>
+</tr>
+</tbody>
+</table>
+<h3>コンパイル済みルート状態とクロージャ階層の実行時検査</h3>
+<p>FastAPI は <code>@app.&lt;method&gt;()</code> デコレータ評価時点で上記すべての構造体を実体化するため、ASGI サーバを起動しなくても <code>APIRoute</code> インスタンスからコンパイル済みの <code>Dependant</code> DAG、<code>ModelField</code> 内の <code>TypeAdapter</code>、および入れ子になった ASGI クロージャセルを直接検査できます。</p>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">Body</span><span class="p">,</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">Header</span><span class="p">,</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi._compat</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelField</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.dependencies.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dependant</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.routing</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRoute</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">TypeAdapter</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">OrderCreate</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">sku</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">quantity</span><span class="p">:</span> <span class="nb">int</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">OrderOut</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">order_id</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">sku</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">tenant</span><span class="p">:</span> <span class="nb">str</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">resolve_tenant</span><span class="p">(</span><span class="n">x_tenant</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Header</span><span class="p">()])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">x_tenant</span>
+
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">"Compile-Once Inspector"</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s2">"0.162.2"</span><span class="p">)</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/orders/</span><span class="si">{order_id}</span><span class="s2">"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">OrderOut</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">create_order</span><span class="p">(</span>
+    <span class="n">order_id</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="n">ge</span><span class="o">=</span><span class="mi">1</span><span class="p">)],</span>
+    <span class="n">payload</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">OrderCreate</span><span class="p">,</span> <span class="n">Body</span><span class="p">()],</span>
+    <span class="n">tenant</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Depends</span><span class="p">(</span><span class="n">resolve_tenant</span><span class="p">)],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OrderOut</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">OrderOut</span><span class="p">(</span><span class="n">order_id</span><span class="o">=</span><span class="n">order_id</span><span class="p">,</span> <span class="n">sku</span><span class="o">=</span><span class="n">payload</span><span class="o">.</span><span class="n">sku</span><span class="p">,</span> <span class="n">tenant</span><span class="o">=</span><span class="n">tenant</span><span class="p">)</span>
+
+
+<span class="n">route</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+    <span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">app</span><span class="o">.</span><span class="n">routes</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">APIRoute</span><span class="p">)</span> <span class="ow">and</span> <span class="n">r</span><span class="o">.</span><span class="n">path</span> <span class="o">==</span> <span class="s2">"/orders/</span><span class="si">{order_id}</span><span class="s2">"</span>
+<span class="p">)</span>
+
+<span class="c1"># 1. Pre-built Dependant DAG (zero inspect.signature() calls at request time)</span>
+<span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">route</span><span class="o">.</span><span class="n">dependant</span><span class="p">,</span> <span class="n">Dependant</span><span class="p">)</span>
+<span class="k">assert</span> <span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">route</span><span class="o">.</span><span class="n">dependant</span><span class="o">.</span><span class="n">path_params</span><span class="p">]</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"order_id"</span><span class="p">]</span>
+<span class="k">assert</span> <span class="n">route</span><span class="o">.</span><span class="n">dependant</span><span class="o">.</span><span class="n">dependencies</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header_params</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">alias</span> <span class="o">==</span> <span class="s2">"x-tenant"</span>
+
+<span class="c1"># 2. Pre-compiled Pydantic v2 ModelField + Rust TypeAdapter instances</span>
+<span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">route</span><span class="o">.</span><span class="n">body_field</span><span class="p">,</span> <span class="n">ModelField</span><span class="p">)</span> <span class="ow">and</span> <span class="n">route</span><span class="o">.</span><span class="n">body_field</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"validation"</span>
+<span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">route</span><span class="o">.</span><span class="n">body_field</span><span class="o">.</span><span class="n">_type_adapter</span><span class="p">,</span> <span class="n">TypeAdapter</span><span class="p">)</span>
+<span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">route</span><span class="o">.</span><span class="n">response_field</span><span class="p">,</span> <span class="n">ModelField</span><span class="p">)</span> <span class="ow">and</span> <span class="n">route</span><span class="o">.</span><span class="n">response_field</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"serialization"</span>
+
+<span class="c1"># 3. Lexical ASGI closure chain: request_response -&gt; get_request_handler</span>
+<span class="k">assert</span> <span class="n">route</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="vm">__qualname__</span> <span class="o">==</span> <span class="s2">"request_response.&lt;locals&gt;.app"</span>
+<span class="n">closure_objs</span> <span class="o">=</span> <span class="p">[</span><span class="n">cell</span><span class="o">.</span><span class="n">cell_contents</span> <span class="k">for</span> <span class="n">cell</span> <span class="ow">in</span> <span class="p">(</span><span class="n">route</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="vm">__closure__</span> <span class="ow">or</span> <span class="p">())]</span>
+<span class="k">assert</span> <span class="nb">any</span><span class="p">(</span>
+    <span class="nb">getattr</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="s2">"__qualname__"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"get_request_handler.&lt;locals&gt;.app"</span>
+    <span class="k">for</span> <span class="n">fn</span> <span class="ow">in</span> <span class="n">closure_objs</span>
+<span class="p">)</span>
+</code></pre>
+<h2>6大内部サブシステムと全9ページの構成マップ</h2>
+<p>全 <code>52</code> ファイルからなる FastAPI <code>v0.162.2</code> のコードベースは、責務の明確な <strong>6 つの内部サブシステム</strong> に分割されており、本ガイドでは <strong>全 6 章・9 ページ</strong> にわたって順次詳解します。</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../images/index/arch_subsystem_map.png" alt="index_2" />
+  <figcaption class="drawlib-caption">FastAPI v0.162.2 内部サブシステム構成図 — 6大コアサブシステムと第1章〜第6章の対応</figcaption>
+</figure>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">章</th>
+<th style="text-align:left">内部アーキテクチャ解説ページ</th>
+<th style="text-align:left">解析対象モジュール（<code>./fastapi/</code>）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>1. パッケージ階層と境界設計</strong></td>
+<td style="text-align:left"><a href="01_package_and_layers/module_hierarchy.html">5層モジュール構造と Starlette 再公開</a></td>
+<td style="text-align:left"><code>__init__.py</code>, <code>types.py</code>, <code>params.py</code>, <code>param_functions.py</code>, <code>requests.py</code>, <code>responses.py</code>, <code>websockets.py</code>, <code>background.py</code>, <code>concurrency.py</code>, <code>middleware/*</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>2. ルーティングコンパイラとクロージャ</strong></td>
+<td style="text-align:left"><a href="02_routing_compiler/apiroute_and_closures.html">APIRouter・APIRoute とクロージャ合成</a> · <a href="02_routing_compiler/streaming_and_spa_internals.html">ジェネレータ配信と SPA ルータ内部実装</a></td>
+<td style="text-align:left"><code>routing.py</code>（<code>APIRouter</code>, <code>APIRoute</code>, <code>APIWebSocketRoute</code>, <code>get_request_handler</code>, <code>request_response</code>, <code>_RouterIncludeContext</code>）, <code>sse.py</code>, <code>applications.py</code>（<code>frontend()</code>）</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>3. DI 解決エンジンと認証機構</strong></td>
+<td style="text-align:left"><a href="03_di_and_security_engine/dependant_and_solver.html">Dependant グラフと solve_dependencies</a> · <a href="03_di_and_security_engine/security_internals.html">SecurityBase 階層と HTTPConnection</a></td>
+<td style="text-align:left"><code>dependencies/models.py</code>, <code>dependencies/utils.py</code>, <code>security/base.py</code>, <code>security/oauth2.py</code>, <code>security/http.py</code>, <code>security/api_key.py</code>, <code>security/open_id_connect_url.py</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>4. Pydantic v2 ブリッジ層</strong></td>
+<td style="text-align:left"><a href="04_pydantic_bridge/compat_and_serialization.html">_compat/v2.py・ModelField・直列化</a></td>
+<td style="text-align:left"><code>_compat/__init__.py</code>, <code>_compat/v2.py</code>, <code>_compat/shared.py</code>, <code>encoders.py</code>, <code>utils.py</code>（<code>create_model_field</code>）</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>5. ASGI スタックとテレメトリ</strong></td>
+<td style="text-align:left"><a href="05_asgi_and_telemetry/middleware_and_concurrency.html">ミドルウェア7層構造とスレッドプール</a> · <a href="05_asgi_and_telemetry/native_telemetry_internals.html">NativeTelemetry と例外スパン記録</a></td>
+<td style="text-align:left"><code>applications.py</code>（<code>build_middleware_stack</code>, <code>__call__</code>）, <code>middleware/asyncexitstack.py</code>, <code>concurrency.py</code>, <code>exception_handlers.py</code>, <code>telemetry/_asgi.py</code>, <code>telemetry/_api.py</code>, <code>telemetry/_runtime.py</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>6. OpenAPI 3.1 合成エンジン</strong></td>
+<td style="text-align:left"><a href="06_openapi_and_docs/openapi_synthesis_engine.html">get_openapi()・$defs 集約・Docs UI</a></td>
+<td style="text-align:left"><code>openapi/utils.py</code>, <code>openapi/models.py</code>, <code>openapi/docs.py</code>, <code>openapi/constants.py</code></td>
+</tr>
+</tbody>
+</table>
+<h2>関連ポータルと上流プロジェクトへの謝辞</h2>
+<ul>
+<li><strong>姉妹ポータルとの連携</strong>: 大規模モジュラーモノリス（<code>100,000+</code> LOC）、OAuth2/JWT 実装、SQL セッション管理、本番運用パターンについては <strong><a href="https://fastapi.drawlib.com/">FastAPI ユーザーガイド</a></strong> を参照してください。また、静的 AST 解析・依存関係・セキュリティ品質評価（総合スコア <code>93 / 100</code>、評価 <code>Grade S</code>）については <strong><a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 診断レポート</a></strong> を併せて確認できます。</li>
+<li><strong>上流プロジェクトへの敬意と帰属表示</strong>: FastAPI は <strong>Sebastián Ramírez（<code>@tiangolo</code>）</strong> 氏および FastAPI コミュニティによって MIT ライセンスの下で開発・保守されています。公式ドキュメントおよびリリースノートについては必ず <strong><a href="https://fastapi.tiangolo.com/">https://fastapi.tiangolo.com/</a></strong> を参照してください。まずは <strong><a href="01_package_and_layers/module_hierarchy.html">第1章：5層モジュール構造と Starlette 再公開</a></strong> から、循環参照ゼロのパッケージ設計を読み進めましょう。</li>
+</ul>
+
+            </main>
+            <footer class="footer">
+                
+                FastAPI® は Sebastián Ramírez（<a href="https://github.com/tiangolo" target="_blank" rel="noopener noreferrer">@tiangolo</a>）の登録商標です。本サイトは非公式の内部アーキテクチャ解説であり、公式プロジェクトとは提携していません。公式ドキュメントは <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">fastapi.tiangolo.com</a> をご参照ください。
+                
+            </footer>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeBtn = document.getElementById('theme-toggle');
+            if (themeBtn) {
+                themeBtn.addEventListener('click', function() {
+                    const current = document.documentElement.getAttribute('data-theme');
+                    const next = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    localStorage.setItem('drawlib-theme', next);
+                });
+            }
+
+            const langDropdowns = document.querySelectorAll('.lang-dropdown');
+            if (langDropdowns.length > 0) {
+                document.addEventListener('click', function(e) {
+                    langDropdowns.forEach(function(dd) {
+                        if (dd.hasAttribute('open') && !dd.contains(e.target)) {
+                            dd.removeAttribute('open');
+                        }
+                    });
+                });
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        langDropdowns.forEach(function(dd) {
+                            dd.removeAttribute('open');
+                        });
+                    }
+                });
+            }
+
+            const menuBtn = document.getElementById('menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            if (menuBtn && sidebar) {
+                function setMenuOpen(open) {
+                    sidebar.classList.toggle('is-open', open);
+                    menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    document.body.classList.toggle('menu-open', open);
+                    if (open) {
+                        const menu = sidebar.querySelector('.sidebar-menu');
+                        if (menu) {
+                            menu.scrollTop = 0;
+                        }
+                    }
+                }
+
+                menuBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const willOpen = !sidebar.classList.contains('is-open');
+                    setMenuOpen(willOpen);
+                });
+
+                document.addEventListener('click', function(e) {
+                    if (sidebar.classList.contains('is-open') && !sidebar.contains(e.target)) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                const navLinks = sidebar.querySelectorAll('.nav-item a');
+                navLinks.forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        setMenuOpen(false);
+                    });
+                });
+
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                window.addEventListener('resize', function() {
+                    if (window.innerWidth > 768 && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

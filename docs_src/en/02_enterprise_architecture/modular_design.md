@@ -2,7 +2,7 @@
 
 Scaling a Python backend past **100,000 lines of code (LOC)** and dozens of engineers requires shifting from horizontal technical folders (`routers/`, `models/`, `schemas/`) to **domain-aligned Bounded Contexts** governed by strict inward dependency rules. FastAPI `v0.162.2` supports this transition natively through composable `APIRouter` trees, `Protocol`-friendly dependency injection, and strict Pydantic v2 boundary contracts.
 
-```drawlib align=center code=fold file=enterprise_bounded_contexts.png caption="Anti-Pattern Horizontal Layer Sprawl vs. 100k+ LOC Modular Monolith by Bounded Context"
+```drawlib align=center code=hide file=enterprise_bounded_contexts.png caption="Anti-Pattern Horizontal Layer Sprawl vs. 100k+ LOC Modular Monolith by Bounded Context"
 from drawlib.canvas import save, setup
 from drawlib.icons import phosphor
 from drawlib.lines import line
@@ -146,7 +146,7 @@ src/
 
 Organizing folders by domain is only half of the battle. Inside each bounded context (`src/orders/`), dependencies must point **strictly inward** toward business rules—never outward toward HTTP transport details or database drivers.
 
-```drawlib align=center code=fold file=clean_layering_fastapi_mapping.png caption="Clean/Hexagonal Inward Dependency Rule Mapped to FastAPI v0.162.2 Constructs"
+```drawlib align=center code=hide file=clean_layering_fastapi_mapping.png caption="Clean/Hexagonal Inward Dependency Rule Mapped to FastAPI v0.162.2 Constructs"
 from drawlib.canvas import save, setup
 from drawlib.diagrams.architecture import ArchitectureDiagram, Node, NodeGroup, PhosphorIcon
 from drawlib.shapes import rectangle
@@ -395,7 +395,7 @@ class PlaceOrderUseCase:
 
 In rapid prototypes, teams sometimes reuse a single model class (for example, one shared model representing the JSON request body, domain state, database table, and JSON response). In an enterprise system, collapsing those four boundaries creates severe security and schema-evolution hazards.
 
-```drawlib align=center code=fold file=schema_separation_matrix.png caption="Four-Model Boundary Separation Preventing Mass-Assignment (CWE-915) and Internal Column Leakage"
+```drawlib align=center code=hide file=schema_separation_matrix.png caption="Four-Model Boundary Separation Preventing Mass-Assignment (CWE-915) and Internal Column Leakage"
 from drawlib.canvas import save, setup
 from drawlib.smartarts import ChevronProcess, Table
 from drawlib.styles import Colors, Styles

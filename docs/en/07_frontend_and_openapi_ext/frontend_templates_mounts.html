@@ -13,7 +13,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SPA frontend(), StaticFiles, Templates &amp; Sub-Apps — FastAPI Visual Guide (Unofficial · Drawlib Demo)</title>
+    <title>SPA frontend(), StaticFiles, Templates &amp; Sub-Apps — FastAPI User Guide (Unofficial)</title>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
     <script>
@@ -47,15 +47,15 @@
     <meta name="description" content="FastAPI v0.162.2 unifies modern Single-Page Application (SPA) delivery, server-rendered HTML templates, isolated ASGI sub-applications, and incremental WSGI…">
     <link rel="canonical" href="https://fastapi.drawlib.com/en/07_frontend_and_openapi_ext/frontend_templates_mounts.html">
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="FastAPI Visual Guide">
-    <meta property="og:title" content="SPA frontend(), StaticFiles, Templates &amp; Sub-Apps — FastAPI Visual Guide">
+    <meta property="og:site_name" content="FastAPI User Guide">
+    <meta property="og:title" content="SPA frontend(), StaticFiles, Templates &amp; Sub-Apps — FastAPI User Guide">
     <meta property="og:description" content="FastAPI v0.162.2 unifies modern Single-Page Application (SPA) delivery, server-rendered HTML templates, isolated ASGI sub-applications, and incremental WSGI…">
     <meta property="og:url" content="https://fastapi.drawlib.com/en/07_frontend_and_openapi_ext/frontend_templates_mounts.html">
     <meta property="og:image" content="https://fastapi.drawlib.com/_assets/ogp.png">
     <meta property="og:locale" content="en_US">
     <meta property="og:locale:alternate" content="ja_JP">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="SPA frontend(), StaticFiles, Templates &amp; Sub-Apps — FastAPI Visual Guide">
+    <meta name="twitter:title" content="SPA frontend(), StaticFiles, Templates &amp; Sub-Apps — FastAPI User Guide">
     <meta name="twitter:description" content="FastAPI v0.162.2 unifies modern Single-Page Application (SPA) delivery, server-rendered HTML templates, isolated ASGI sub-applications, and incremental WSGI…">
     <meta name="twitter:image" content="https://fastapi.drawlib.com/_assets/ogp.png">
     
@@ -68,19 +68,23 @@
     
 </head>
 <body>
-    <div class="demo-banner" role="region" aria-label="Unofficial Showcase Notice">
+    <div class="demo-banner" role="region" aria-label="Portal Navigation">
         <div class="demo-banner-inner">
-            <span class="demo-banner-badge">UNOFFICIAL DEMO</span>
+            <span class="demo-banner-badge">UNOFFICIAL GUIDE</span>
             
             <span class="demo-banner-text">
-                Unofficial visual architecture showcase of <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a> (v0.162.2, MIT) illustrated as code with <a href="https://www.drawlib.com/" target="_blank" rel="noopener noreferrer">Drawlib</a> &amp; <a href="https://pypi.org/project/pni501/" target="_blank" rel="noopener noreferrer">PNI501</a>.
+                Unofficial Community User Guide for <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a> (v0.162.2)
             </span>
             <span class="demo-banner-links">
-                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Report →</a>
+                <strong style="color:#ffffff;">User Guide</strong>
                 <span class="demo-banner-sep">·</span>
-                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official FastAPI Docs ↗</a>
+                <a href="https://fastapi.drawlib.com/architecture/">Architecture</a>
                 <span class="demo-banner-sep">·</span>
-                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">Demo Source ↗</a>
+                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Audit</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official Docs ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
             </span>
             
         </div>
@@ -89,9 +93,9 @@
     <div class="doc-layout">
         <aside class="sidebar">
             <div class="sidebar-header">
-                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI Visual Guide">
+                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI User Guide">
                     
-                    FastAPI Visual Guide
+                    FastAPI User Guide
                     
                 </a>
                 <div class="sidebar-header-actions">
@@ -112,7 +116,7 @@
                         <ul class="nav-list">
                             
                             <li class="nav-item ">
-                                <a href="../index.html" >Overview &amp; Architecture Map</a>
+                                <a href="../index.html" >Guide Overview</a>
                             </li>
                             
                         </ul>
@@ -176,7 +180,7 @@
                         <ul class="nav-list">
                             
                             <li class="nav-item ">
-                                <a href="../04_dependencies_and_security/dependency_injection.html" >Dependant DAG, Caching &amp; Scopes</a>
+                                <a href="../04_dependencies_and_security/dependency_injection.html" >Dependency Graph, Caching &amp; Scopes</a>
                             </li>
                             
                             <li class="nav-item ">
@@ -250,12 +254,12 @@
                         </ul>
                     
                         
-                        <div class="sidebar-heading">Diagnostic &amp; Upstream Links</div>
+                        <div class="sidebar-heading">Companion Guides &amp; Links</div>
                         
                         <ul class="nav-list">
                             
                             <li class="nav-item ">
-                                <a href="https://fastapi.drawlib.com/reports/pni501/" target="_blank" rel="noopener noreferrer">PNI501 Diagnostic Report<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                                <a href="https://fastapi.drawlib.com/architecture/" target="_blank" rel="noopener noreferrer">FastAPI Internal Architecture<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
                             </li>
                             
                             <li class="nav-item ">
@@ -263,7 +267,7 @@
                             </li>
                             
                             <li class="nav-item ">
-                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">Demo Source (GitHub)<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub Repository<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
                             </li>
                             
                         </ul>
@@ -312,136 +316,15 @@
   <img src="../../images/07_frontend_and_openapi_ext/frontend_templates_mounts/spa_frontend_routing_priority.png" alt="frontend_templates_mounts_1" />
   <figcaption class="drawlib-caption">FastAPI v0.162.2 app.frontend() & router.frontend() Dispatch Flow — Global API Route Priority & Browser HTML Fallback</figcaption>
 </figure>
-<details class="drawlib-code-details">
-<summary>Source Code</summary>
-<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.canvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">setup</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.icons</span><span class="w"> </span><span class="kn">import</span> <span class="n">code</span><span class="p">,</span> <span class="n">phosphor</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.lines</span><span class="w"> </span><span class="kn">import</span> <span class="n">line</span><span class="p">,</span> <span class="n">lines</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.shapes</span><span class="w"> </span><span class="kn">import</span> <span class="n">rectangle</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.smartarts</span><span class="w"> </span><span class="kn">import</span> <span class="n">ChevronProcess</span><span class="p">,</span> <span class="n">Panel</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">Styles</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.text</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span>
-
-<span class="n">setup</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">188</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">98</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
-
-<span class="n">outer</span> <span class="o">=</span> <span class="n">Panel</span><span class="p">(</span>
-    <span class="s2">"FastAPI v0.162.2 — app.frontend() &amp; router.frontend() Low-Priority Dispatch"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">2.0</span><span class="p">),</span>
-    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_line_width</span><span class="o">=</span><span class="mf">1.2</span><span class="p">),</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">12.0</span><span class="p">),</span>
-    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">compass</span><span class="p">,</span>
-    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">,</span>
-    <span class="n">header_variant</span><span class="o">=</span><span class="s2">"filled"</span><span class="p">,</span>
-    <span class="n">header_height</span><span class="o">=</span><span class="mf">8.5</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">outer</span><span class="o">.</span><span class="n">draw</span><span class="p">((</span><span class="mf">4.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">180.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">90.0</span><span class="p">)</span>
-
-<span class="c1"># Top 4-Stage Evaluation Order inside APIRouter.app()</span>
-<span class="n">stages</span> <span class="o">=</span> <span class="n">ChevronProcess</span><span class="p">(</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
-    <span class="n">description_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">corner_angle</span><span class="o">=</span><span class="mf">60.0</span><span class="p">,</span>
-    <span class="n">spacing</span><span class="o">=</span><span class="mf">1.6</span><span class="p">,</span>
-    <span class="n">flat_left_end</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">stages</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"1. Normal Routes"</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"APIRoute, WS &amp; Mount"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">)</span>
-<span class="n">stages</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"2. Router DI Gate"</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Depends() &amp; Longest Path"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">)</span>
-<span class="n">stages</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"3. Static Lookup"</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"dist/ File &amp; Dir Index"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">)</span>
-<span class="n">stages</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="s2">"4. Fallback Gate"</span><span class="p">,</span>
-    <span class="n">description</span><span class="o">=</span><span class="s2">"404.html / Accept HTML"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.5</span><span class="p">),</span>
-    <span class="n">description_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">stages</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">8.0</span><span class="p">,</span> <span class="mf">70.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">172.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">12.5</span><span class="p">)</span>
-
-<span class="c1"># Left Ingress Card (cx=23, cy=36.5, w=30, h=53 -&gt; x=8..38, y=10..63)</span>
-<span class="n">rectangle</span><span class="p">((</span><span class="mf">23.0</span><span class="p">,</span> <span class="mf">36.5</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">30.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">53.0</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">2.0</span><span class="p">))</span>
-<span class="n">code</span><span class="o">.</span><span class="n">fastapi</span><span class="p">((</span><span class="mf">23.0</span><span class="p">,</span> <span class="mf">55.5</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">5.6</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Primary</span><span class="p">)</span>
-<span class="n">text</span><span class="p">((</span><span class="mf">23.0</span><span class="p">,</span> <span class="mf">47.5</span><span class="p">),</span> <span class="s2">"ASGI Request"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">11.0</span><span class="p">))</span>
-<span class="n">text</span><span class="p">(</span>
-    <span class="p">(</span><span class="mf">10.2</span><span class="p">,</span> <span class="mf">27.5</span><span class="p">),</span>
-    <span class="s2">"• GET /api/items</span><span class="se">\n</span><span class="s2">• GET /assets/app.js</span><span class="se">\n</span><span class="s2">• GET /dashboard</span><span class="se">\n</span><span class="s2">   Accept: text/html</span><span class="se">\n</span><span class="s2">• GET /missing.js</span><span class="se">\n</span><span class="s2">   Accept: */*"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="c1"># 4 Outcome Tracks (y = 56.5, 43.2, 29.9, 16.6)</span>
-<span class="n">tracks</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="p">(</span>
-        <span class="mf">56.5</span><span class="p">,</span>
-        <span class="p">(</span><span class="s2">"1. self.routes Match?"</span><span class="p">,</span> <span class="s2">"@app.get / WS / Mount"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
-        <span class="p">(</span><span class="s2">"Execute API Route"</span><span class="p">,</span> <span class="s2">"Never shadowed by '/'"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
-        <span class="p">(</span><span class="s2">"200 / API JSON 404"</span><span class="p">,</span> <span class="s2">"API 404s stay JSON"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
-        <span class="kc">False</span><span class="p">,</span>
-    <span class="p">),</span>
-    <span class="p">(</span>
-        <span class="mf">43.2</span><span class="p">,</span>
-        <span class="p">(</span><span class="s2">"2. File in dist/?"</span><span class="p">,</span> <span class="s2">"_lookup_static_resource"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
-        <span class="p">(</span><span class="s2">"Direct FileResponse"</span><span class="p">,</span> <span class="s2">"Threadpool stat + ETag"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
-        <span class="p">(</span><span class="s2">"200 OK Static Asset"</span><span class="p">,</span> <span class="s2">"dist/assets/app.js"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
-        <span class="kc">False</span><span class="p">,</span>
-    <span class="p">),</span>
-    <span class="p">(</span>
-        <span class="mf">29.9</span><span class="p">,</span>
-        <span class="p">(</span><span class="s2">"3. Accept: text/html?"</span><span class="p">,</span> <span class="s2">"_is_frontend_navigation"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
-        <span class="p">(</span><span class="s2">"SPA Shell Fallback"</span><span class="p">,</span> <span class="s2">"Serves dist/index.html"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
-        <span class="p">(</span><span class="s2">"200 OK Client Router"</span><span class="p">,</span> <span class="s2">"React / Vue / Svelte"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
-        <span class="kc">True</span><span class="p">,</span>
-    <span class="p">),</span>
-    <span class="p">(</span>
-        <span class="mf">16.6</span><span class="p">,</span>
-        <span class="p">(</span><span class="s2">"4. Non-HTML / Missing"</span><span class="p">,</span> <span class="s2">"Accept: */* or q=0"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
-        <span class="p">(</span><span class="s2">"Skip index.html"</span><span class="p">,</span> <span class="s2">"Or serve dist/404.html"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
-        <span class="p">(</span><span class="s2">"404 Not Found"</span><span class="p">,</span> <span class="s2">"Prevents '&lt;' JS syntax bug"</span><span class="p">,</span> <span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
-        <span class="kc">False</span><span class="p">,</span>
-    <span class="p">),</span>
-<span class="p">]</span>
-
-<span class="c1"># Orthogonal trunk x=38 -&gt; x=44 -&gt; 4 tracks entering x=50 (6.0u arrow gap)</span>
-<span class="n">line</span><span class="p">((</span><span class="mf">38.0</span><span class="p">,</span> <span class="mf">36.5</span><span class="p">),</span> <span class="p">(</span><span class="mf">44.0</span><span class="p">,</span> <span class="mf">36.5</span><span class="p">),</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">)</span>
-<span class="n">lines</span><span class="p">([(</span><span class="mf">44.0</span><span class="p">,</span> <span class="mf">16.6</span><span class="p">),</span> <span class="p">(</span><span class="mf">44.0</span><span class="p">,</span> <span class="mf">56.5</span><span class="p">)],</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">)</span>
-
-<span class="k">for</span> <span class="n">ty</span><span class="p">,</span> <span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">,</span> <span class="n">c3</span><span class="p">,</span> <span class="n">is_focal</span> <span class="ow">in</span> <span class="n">tracks</span><span class="p">:</span>
-    <span class="n">arr_style</span> <span class="o">=</span> <span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span> <span class="k">if</span> <span class="n">is_focal</span> <span class="k">else</span> <span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span>
-    <span class="n">line</span><span class="p">((</span><span class="mf">44.0</span><span class="p">,</span> <span class="n">ty</span><span class="p">),</span> <span class="p">(</span><span class="mf">50.0</span><span class="p">,</span> <span class="n">ty</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">arr_style</span><span class="p">)</span>
-
-    <span class="c1"># Column 1: cx=68.5, w=37 -&gt; x=50..87</span>
-    <span class="n">rectangle</span><span class="p">((</span><span class="mf">68.5</span><span class="p">,</span> <span class="n">ty</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">37.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">11.0</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">c1</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.6</span><span class="p">))</span>
-    <span class="n">text</span><span class="p">((</span><span class="mf">68.5</span><span class="p">,</span> <span class="n">ty</span> <span class="o">+</span> <span class="mf">2.2</span><span class="p">),</span> <span class="n">c1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.2</span><span class="p">))</span>
-    <span class="n">text</span><span class="p">((</span><span class="mf">68.5</span><span class="p">,</span> <span class="n">ty</span> <span class="o">-</span> <span class="mf">2.4</span><span class="p">),</span> <span class="n">c1</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">))</span>
-
-    <span class="c1"># Gap 87 -&gt; 94 (7.0u)</span>
-    <span class="n">line</span><span class="p">((</span><span class="mf">87.0</span><span class="p">,</span> <span class="n">ty</span><span class="p">),</span> <span class="p">(</span><span class="mf">94.0</span><span class="p">,</span> <span class="n">ty</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">arr_style</span><span class="p">)</span>
-
-    <span class="c1"># Column 2: cx=113.5, w=39 -&gt; x=94..133</span>
-    <span class="n">rectangle</span><span class="p">((</span><span class="mf">113.5</span><span class="p">,</span> <span class="n">ty</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">39.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">11.0</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">c2</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.6</span><span class="p">))</span>
-    <span class="n">h_st</span> <span class="o">=</span> <span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span> <span class="k">if</span> <span class="n">c2</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="k">else</span> <span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span>
-    <span class="n">b_st</span> <span class="o">=</span> <span class="n">Styles</span><span class="o">.</span><span class="n">White</span> <span class="k">if</span> <span class="n">c2</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="k">else</span> <span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span>
-    <span class="n">text</span><span class="p">((</span><span class="mf">113.5</span><span class="p">,</span> <span class="n">ty</span> <span class="o">+</span> <span class="mf">2.2</span><span class="p">),</span> <span class="n">c2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">style</span><span class="o">=</span><span class="n">h_st</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.2</span><span class="p">))</span>
-    <span class="n">text</span><span class="p">((</span><span class="mf">113.5</span><span class="p">,</span> <span class="n">ty</span> <span class="o">-</span> <span class="mf">2.4</span><span class="p">),</span> <span class="n">c2</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">style</span><span class="o">=</span><span class="n">b_st</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">))</span>
-
-    <span class="c1"># Gap 133 -&gt; 140 (7.0u)</span>
-    <span class="n">line</span><span class="p">((</span><span class="mf">133.0</span><span class="p">,</span> <span class="n">ty</span><span class="p">),</span> <span class="p">(</span><span class="mf">140.0</span><span class="p">,</span> <span class="n">ty</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">arr_style</span><span class="p">)</span>
-
-    <span class="c1"># Column 3: cx=160.0, w=40 -&gt; x=140..180</span>
-    <span class="n">rectangle</span><span class="p">((</span><span class="mf">160.0</span><span class="p">,</span> <span class="n">ty</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">40.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">11.0</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">c3</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.6</span><span class="p">))</span>
-    <span class="n">text</span><span class="p">((</span><span class="mf">160.0</span><span class="p">,</span> <span class="n">ty</span> <span class="o">+</span> <span class="mf">2.2</span><span class="p">),</span> <span class="n">c3</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.2</span><span class="p">))</span>
-    <span class="n">text</span><span class="p">((</span><span class="mf">160.0</span><span class="p">,</span> <span class="n">ty</span> <span class="o">-</span> <span class="mf">2.4</span><span class="p">),</span> <span class="n">c3</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">))</span>
-
-<span class="n">save</span><span class="p">()</span>
-</code></pre>
-</details>
 <h2>1. Native SPA Serving with <code>app.frontend()</code> &amp; <code>router.frontend()</code></h2>
 <p>Historically, serving a React, Vue, or Svelte build at <code>&quot;/&quot;</code> via <code>app.mount(&quot;/&quot;, StaticFiles(directory=&quot;dist&quot;, html=True))</code> forced awkward registration ordering—mounting <code>&quot;/&quot;</code> too early shadowed <code>@app.get(&quot;/api/...&quot;)</code>, and <code>StaticFiles(html=True)</code> returned <code>404</code> whenever a user refreshed a client-side route like <code>/dashboard/analytics</code>.</p>
-<p>FastAPI <code>v0.162.2</code> solves both problems natively with <code>app.frontend()</code> and <code>router.frontend()</code>. Instead of appending a greedy ASGI <code>Mount</code> onto <code>router.routes</code>, FastAPI registers a <code>_FrontendRouteGroup</code> inside <code>router._low_priority_routes</code>, which <code>APIRouter.app()</code> evaluates <strong>only after</strong> all normal routes, WebSocket endpoints, and slash redirects across the entire router tree fail to match.</p>
+<p>FastAPI <code>v0.162.2</code> solves both problems natively with <code>app.frontend()</code> (and <code>app.router.frontend()</code> / <code>router.frontend()</code>). Instead of appending a greedy ASGI <code>Mount</code> at <code>&quot;/&quot;</code>, FastAPI registers a dedicated <strong>low-priority SPA frontend router</strong> that evaluates <strong>only after</strong> all API routes, WebSocket endpoints, mounts, and trailing-slash redirects across the entire router tree fail to match.</p>
 <table>
 <thead>
 <tr>
 <th style="text-align:left">Parameter &amp; Option</th>
 <th style="text-align:left">Default</th>
-<th style="text-align:left">Runtime Behavior in <code>_FrontendStaticFiles</code> (<code>fastapi/routing.py</code>)</th>
+<th style="text-align:left">Runtime Behavior in <code>app.frontend()</code> / <code>router.frontend()</code></th>
 </tr>
 </thead>
 <tbody>
@@ -473,10 +356,10 @@
 </tbody>
 </table>
 <h3>Global Route Precedence, Segment Specificity &amp; Router Dependencies</h3>
-<p>Under the hood, <code>_FrontendRoute</code> and <code>_FrontendRouteGroup</code> enforce four production safeguards that hand-rolled catch-all <code>@app.get(&quot;/{full_path:path}&quot;)</code> handlers routinely get wrong:</p>
+<p>The built-in SPA frontend router enforces four production safeguards that hand-rolled catch-all <code>@app.get(&quot;/{full_path:path}&quot;)</code> handlers routinely get wrong:</p>
 <ol>
-<li><strong>Global API Precedence &amp; Preserved API <code>404</code>s</strong>: Normal <code>APIRoute</code> and <code>WebSocket</code> handlers win regardless of <code>include_router()</code> registration order. If <code>@app.get(&quot;/api/items/{item_id}&quot;)</code> matches the path and raises <code>HTTPException(404)</code>, FastAPI returns that JSON <code>404</code>—it never masks backend errors with <code>dist/index.html</code>.</li>
-<li><strong>Content-Negotiated Browser Navigation (<code>_is_frontend_navigation_request</code>)</strong>: When falling back to <code>index.html</code>, FastAPI parses the <code>Accept</code> header's media types and quality weights (<code>q</code>). Only <code>GET</code>/<code>HEAD</code> requests explicitly accepting <code>text/html</code> or <code>application/xhtml+xml</code> (<code>q != 0</code>) receive <code>index.html</code> (<code>200 OK</code>). Missing scripts (<code>GET /assets/missing.js</code> with <code>Accept: */*</code>) or mistyped API fetches (<code>Accept: application/json</code>) receive a clean <code>404</code>, preventing browsers from choking on <code>Uncaught SyntaxError: Unexpected token '&lt;'</code>.</li>
+<li><strong>Global API Precedence &amp; Preserved API <code>404</code>s</strong>: Standard API routes (<code>@app.get</code>, <code>@app.post</code>, etc.) and <code>WebSocket</code> handlers always win regardless of <code>include_router()</code> registration order. If <code>@app.get(&quot;/api/items/{item_id}&quot;)</code> matches the path and raises <code>HTTPException(404)</code>, FastAPI returns that JSON <code>404</code>—it never masks backend errors with <code>dist/index.html</code>.</li>
+<li><strong>Browser HTML Navigation Check (<code>Accept</code> Header Negotiation)</strong>: When falling back to <code>index.html</code>, FastAPI parses the <code>Accept</code> header's media types and quality weights (<code>q</code>). Only <code>GET</code>/<code>HEAD</code> requests explicitly accepting <code>text/html</code> or <code>application/xhtml+xml</code> (<code>q != 0</code>) receive <code>index.html</code> (<code>200 OK</code>). Missing scripts (<code>GET /assets/missing.js</code> with <code>Accept: */*</code>) or mistyped API fetches (<code>Accept: application/json</code>) receive a clean <code>404</code>, preventing browsers from choking on <code>Uncaught SyntaxError: Unexpected token '&lt;'</code>.</li>
 <li><strong>Longest Segment-Boundary Prefix</strong>: Registering both <code>app.frontend(&quot;/&quot;, directory=&quot;site&quot;)</code> and <code>router.frontend(&quot;/admin&quot;, directory=&quot;admin_dist&quot;)</code> matches on strict path segments (<code>/admin</code> never intercepts <code>/administration</code>) and selects the highest-specificity prefix.</li>
 <li><strong>Full Dependency Injection on Protected Frontends</strong>: <code>router.frontend()</code> executes app-level, <code>include_router()</code>-level, and <code>APIRouter(dependencies=[Depends(...)])</code> dependencies in outer-to-inner order—supporting cookie session gates, custom <code>Response</code> headers, <code>BackgroundTasks</code>, and <code>app.dependency_overrides</code> in tests.</li>
 </ol>
@@ -512,146 +395,6 @@
   <img src="../../images/07_frontend_and_openapi_ext/frontend_templates_mounts/mounts_templates_wsgi_topology.png" alt="frontend_templates_mounts_2" />
   <figcaption class="drawlib-caption">Unified ASGI Host Topology — Comparing app.frontend(), Jinja2Templates + StaticFiles, Sub-Apps & a2wsgi</figcaption>
 </figure>
-<details class="drawlib-code-details">
-<summary>Source Code</summary>
-<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.canvas</span><span class="w"> </span><span class="kn">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">setup</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.diagrams.architecture</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">ArchitectureDiagram</span><span class="p">,</span>
-    <span class="n">CodeIcon</span><span class="p">,</span>
-    <span class="n">Node</span><span class="p">,</span>
-    <span class="n">NodeGroup</span><span class="p">,</span>
-    <span class="n">PhosphorIcon</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.icons</span><span class="w"> </span><span class="kn">import</span> <span class="n">phosphor</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.lines</span><span class="w"> </span><span class="kn">import</span> <span class="n">line</span><span class="p">,</span> <span class="n">lines</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.smartarts</span><span class="w"> </span><span class="kn">import</span> <span class="n">Panel</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">drawlib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">Styles</span>
-
-<span class="n">setup</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">188</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">98</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
-
-<span class="n">outer</span> <span class="o">=</span> <span class="n">Panel</span><span class="p">(</span>
-    <span class="s2">"Unified ASGI Host Process  (Uvicorn / Hypercorn  ·  app = FastAPI())"</span><span class="p">,</span>
-    <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">2.0</span><span class="p">),</span>
-    <span class="n">header_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_line_width</span><span class="o">=</span><span class="mf">1.2</span><span class="p">),</span>
-    <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">12.0</span><span class="p">),</span>
-    <span class="n">icon</span><span class="o">=</span><span class="n">phosphor</span><span class="o">.</span><span class="n">plugs</span><span class="p">,</span>
-    <span class="n">icon_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">,</span>
-    <span class="n">header_variant</span><span class="o">=</span><span class="s2">"filled"</span><span class="p">,</span>
-    <span class="n">header_height</span><span class="o">=</span><span class="mf">8.5</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">outer</span><span class="o">.</span><span class="n">draw</span><span class="p">((</span><span class="mf">4.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">180.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">90.0</span><span class="p">)</span>
-
-<span class="n">diag</span> <span class="o">=</span> <span class="n">ArchitectureDiagram</span><span class="p">(</span>
-    <span class="n">node_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span><span class="p">,</span>
-    <span class="n">node_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.3</span><span class="p">),</span>
-    <span class="n">edge_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">,</span>
-    <span class="n">edge_text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Dark</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-    <span class="n">node_card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">White</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.5</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="c1"># Top Focal Dispatcher Node (center at y=75.0 -&gt; bottom=68.0)</span>
-<span class="n">diag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span>
-        <span class="s2">"Root FastAPI Router &amp; Middleware Stack</span><span class="se">\n</span><span class="s2">self.routes  -&gt;  app.mount()  -&gt;  _low_priority_routes"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mf">86.0</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mf">14.0</span><span class="p">,</span>
-        <span class="n">icon</span><span class="o">=</span><span class="n">CodeIcon</span><span class="o">.</span><span class="n">FASTAPI</span><span class="p">,</span>
-        <span class="n">icon_size</span><span class="o">=</span><span class="mf">6.0</span><span class="p">,</span>
-        <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryFlat</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.8</span><span class="p">),</span>
-        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">text_size</span><span class="o">=</span><span class="mf">10.8</span><span class="p">),</span>
-        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">WhiteBold</span><span class="p">,</span>
-    <span class="p">),</span>
-    <span class="p">(</span><span class="mf">94.0</span><span class="p">,</span> <span class="mf">75.0</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="c1"># 4 Strategy Columns: x = 8, 52, 96, 140 (width=40, height=48, y=8..56, centers cx=28, 72, 116, 160)</span>
-<span class="n">g_spa</span> <span class="o">=</span> <span class="n">diag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">NodeGroup</span><span class="p">(</span>
-        <span class="n">title</span><span class="o">=</span><span class="s2">"1. SPA frontend()"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mf">40.0</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mf">48.0</span><span class="p">,</span>
-        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.8</span><span class="p">),</span>
-        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span> <span class="n">text_size</span><span class="o">=</span><span class="mf">10.8</span><span class="p">),</span>
-    <span class="p">),</span>
-    <span class="p">(</span><span class="mf">8.0</span><span class="p">,</span> <span class="mf">8.0</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">g_spa</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span><span class="s2">"dist/ Static Build</span><span class="se">\n</span><span class="s2">&amp; index.html Shell"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">34.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">14.0</span><span class="p">,</span> <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">GLOBE</span><span class="p">,</span> <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.2</span><span class="p">),</span>
-    <span class="p">(</span><span class="mf">20.0</span><span class="p">,</span> <span class="mf">32.0</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">g_spa</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span><span class="s2">"Accept: text/html</span><span class="se">\n</span><span class="s2">+ Router Depends()"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">34.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">14.0</span><span class="p">,</span> <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">SHIELD_CHECK</span><span class="p">,</span> <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.2</span><span class="p">),</span>
-    <span class="p">(</span><span class="mf">20.0</span><span class="p">,</span> <span class="mf">13.0</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="n">g_ssr</span> <span class="o">=</span> <span class="n">diag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">NodeGroup</span><span class="p">(</span>
-        <span class="n">title</span><span class="o">=</span><span class="s2">"2. SSR + Static"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mf">40.0</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mf">48.0</span><span class="p">,</span>
-        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.8</span><span class="p">),</span>
-        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span> <span class="n">text_size</span><span class="o">=</span><span class="mf">10.8</span><span class="p">),</span>
-    <span class="p">),</span>
-    <span class="p">(</span><span class="mf">52.0</span><span class="p">,</span> <span class="mf">8.0</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">g_ssr</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span><span class="s2">"Jinja2Templates</span><span class="se">\n</span><span class="s2">TemplateResponse"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">34.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">14.0</span><span class="p">,</span> <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">CODE</span><span class="p">,</span> <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.2</span><span class="p">),</span>
-    <span class="p">(</span><span class="mf">20.0</span><span class="p">,</span> <span class="mf">32.0</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">g_ssr</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span><span class="s2">"/static Mount</span><span class="se">\n</span><span class="s2">url_for('static')"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">34.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">14.0</span><span class="p">,</span> <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">FILE_DOC</span><span class="p">,</span> <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.2</span><span class="p">,</span> <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">),</span>
-    <span class="p">(</span><span class="mf">20.0</span><span class="p">,</span> <span class="mf">13.0</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="n">g_sub</span> <span class="o">=</span> <span class="n">diag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">NodeGroup</span><span class="p">(</span>
-        <span class="n">title</span><span class="o">=</span><span class="s2">"3. Sub-App Mount"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mf">40.0</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mf">48.0</span><span class="p">,</span>
-        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.8</span><span class="p">),</span>
-        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span> <span class="n">text_size</span><span class="o">=</span><span class="mf">10.8</span><span class="p">),</span>
-    <span class="p">),</span>
-    <span class="p">(</span><span class="mf">96.0</span><span class="p">,</span> <span class="mf">8.0</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">g_sub</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span><span class="s2">"subapi = FastAPI()</span><span class="se">\n</span><span class="s2">root_path='/subapi'"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">34.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">14.0</span><span class="p">,</span> <span class="n">icon</span><span class="o">=</span><span class="n">CodeIcon</span><span class="o">.</span><span class="n">FASTAPI</span><span class="p">,</span> <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.2</span><span class="p">),</span>
-    <span class="p">(</span><span class="mf">20.0</span><span class="p">,</span> <span class="mf">32.0</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">g_sub</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span><span class="s2">"Isolated OpenAPI</span><span class="se">\n</span><span class="s2">/subapi/docs"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">34.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">14.0</span><span class="p">,</span> <span class="n">icon</span><span class="o">=</span><span class="n">CodeIcon</span><span class="o">.</span><span class="n">OPENAPI</span><span class="p">,</span> <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.2</span><span class="p">,</span> <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryNeutral</span><span class="p">),</span>
-    <span class="p">(</span><span class="mf">20.0</span><span class="p">,</span> <span class="mf">13.0</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="n">g_wsgi</span> <span class="o">=</span> <span class="n">diag</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">NodeGroup</span><span class="p">(</span>
-        <span class="n">title</span><span class="o">=</span><span class="s2">"4. Legacy WSGI"</span><span class="p">,</span>
-        <span class="n">width</span><span class="o">=</span><span class="mf">40.0</span><span class="p">,</span>
-        <span class="n">height</span><span class="o">=</span><span class="mf">48.0</span><span class="p">,</span>
-        <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">Neutral</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">shape_r</span><span class="o">=</span><span class="mf">1.8</span><span class="p">),</span>
-        <span class="n">text_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">halign</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span> <span class="n">text_size</span><span class="o">=</span><span class="mf">10.8</span><span class="p">),</span>
-    <span class="p">),</span>
-    <span class="p">(</span><span class="mf">140.0</span><span class="p">,</span> <span class="mf">8.0</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">g_wsgi</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span><span class="s2">"a2wsgi Bridge</span><span class="se">\n</span><span class="s2">WSGIMiddleware"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">34.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">14.0</span><span class="p">,</span> <span class="n">icon</span><span class="o">=</span><span class="n">PhosphorIcon</span><span class="o">.</span><span class="n">LIGHTNING</span><span class="p">,</span> <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.2</span><span class="p">),</span>
-    <span class="p">(</span><span class="mf">20.0</span><span class="p">,</span> <span class="mf">32.0</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">g_wsgi</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
-    <span class="n">Node</span><span class="p">(</span><span class="s2">"Flask / Django</span><span class="se">\n</span><span class="s2">Worker Threadpool"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">34.0</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">14.0</span><span class="p">,</span> <span class="n">icon</span><span class="o">=</span><span class="n">CodeIcon</span><span class="o">.</span><span class="n">PYTHON</span><span class="p">,</span> <span class="n">icon_size</span><span class="o">=</span><span class="mf">5.2</span><span class="p">,</span> <span class="n">card_style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">SecondaryNeutral</span><span class="p">),</span>
-    <span class="p">(</span><span class="mf">20.0</span><span class="p">,</span> <span class="mf">13.0</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="n">diag</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
-
-<span class="c1"># Orthogonal fan-out bus from Root Node bottom (y=68.0) -&gt; bus (y=62.5) -&gt; group tops (y=56.0, 6.3u terminal gap)</span>
-<span class="n">line</span><span class="p">((</span><span class="mf">94.0</span><span class="p">,</span> <span class="mf">68.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">94.0</span><span class="p">,</span> <span class="mf">62.5</span><span class="p">),</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">)</span>
-<span class="n">lines</span><span class="p">([(</span><span class="mf">28.0</span><span class="p">,</span> <span class="mf">62.5</span><span class="p">),</span> <span class="p">(</span><span class="mf">160.0</span><span class="p">,</span> <span class="mf">62.5</span><span class="p">)],</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">cx</span> <span class="ow">in</span> <span class="p">(</span><span class="mf">28.0</span><span class="p">,</span> <span class="mf">72.0</span><span class="p">,</span> <span class="mf">116.0</span><span class="p">,</span> <span class="mf">160.0</span><span class="p">):</span>
-    <span class="n">line</span><span class="p">((</span><span class="n">cx</span><span class="p">,</span> <span class="mf">62.5</span><span class="p">),</span> <span class="p">(</span><span class="n">cx</span><span class="p">,</span> <span class="mf">56.2</span><span class="p">),</span> <span class="n">arrow_head</span><span class="o">=</span><span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">Styles</span><span class="o">.</span><span class="n">PrimaryBold</span> <span class="k">if</span> <span class="n">cx</span> <span class="o">==</span> <span class="mf">28.0</span> <span class="k">else</span> <span class="n">Styles</span><span class="o">.</span><span class="n">DarkBold</span><span class="p">)</span>
-
-<span class="n">save</span><span class="p">()</span>
-</code></pre>
-</details>
 <table>
 <thead>
 <tr>
@@ -665,19 +408,19 @@
 <tr>
 <td style="text-align:left"><strong>SPA Static Build</strong></td>
 <td style="text-align:left"><code>app.frontend(&quot;/&quot;, directory=&quot;dist&quot;)</code></td>
-<td style="text-align:left">Lowest priority (<code>_low_priority_routes</code>); supports <code>Depends()</code></td>
+<td style="text-align:left">Lowest priority (evaluated after all API routes); supports <code>Depends()</code></td>
 <td style="text-align:left">Vite, React, Vue, Svelte, Astro, or static docs co-hosted with <code>/api</code></td>
 </tr>
 <tr>
 <td style="text-align:left"><strong>Named Asset Mount</strong></td>
 <td style="text-align:left"><code>app.mount(&quot;/static&quot;, StaticFiles(...), name=&quot;static&quot;)</code></td>
-<td style="text-align:left">Prefix <code>Mount</code> in <code>self.routes</code>; enables <code>url_for(&quot;static&quot;, ...)</code></td>
+<td style="text-align:left">Prefix <code>Mount</code> at <code>/static</code>; enables <code>url_for(&quot;static&quot;, ...)</code></td>
 <td style="text-align:left">Versioned CSS/JS/images referenced by Jinja2 or self-hosted Swagger UI</td>
 </tr>
 <tr>
 <td style="text-align:left"><strong>Server-Side Templates</strong></td>
 <td style="text-align:left"><code>Jinja2Templates(directory=&quot;templates&quot;)</code></td>
-<td style="text-align:left">Standard <code>APIRoute</code> (<code>response_class=HTMLResponse</code>)</td>
+<td style="text-align:left">Standard HTTP route (<code>response_class=HTMLResponse</code>)</td>
 <td style="text-align:left">HTMX fragments, transactional emails, SEO landing pages</td>
 </tr>
 <tr>
@@ -781,6 +524,11 @@
 <p>Next, explore how FastAPI extends OpenAPI <code>3.1.0</code> for asynchronous event push, client SDK code generation, and air-gapped documentation portals in <strong><a href="webhooks_callbacks_sdks.html">Webhooks, Callbacks, SDKs &amp; Docs UI</a></strong>, or review reverse-proxy <code>--forwarded-allow-ips</code> deployment in <strong><a href="../08_ecosystem_and_operations/cli_proxy_graphql_ai.html">FastAPI CLI, Proxies, GraphQL &amp; AI</a></strong>.</p>
 
             </main>
+            <footer class="footer">
+                
+                FastAPI® is a registered trademark of Sebastián Ramírez (<a href="https://github.com/tiangolo" target="_blank" rel="noopener noreferrer">@tiangolo</a>). Unofficial guide — not affiliated with or endorsed by the official FastAPI project (<a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">fastapi.tiangolo.com</a>).
+                
+            </footer>
         </div>
     </div>
     

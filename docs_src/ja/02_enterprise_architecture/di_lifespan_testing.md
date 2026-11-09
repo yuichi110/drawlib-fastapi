@@ -2,7 +2,7 @@
 
 **500以上のエンドポイントと10万行超（100,000+ LOC）のコードベース**において、サブ秒単位のテストフィードバックと確実なリソース解放を維持するには、**プロセス寿命のインフラ管理**（`lifespan`）、**リクエスト寿命の Unit-of-Work 注入**（`Annotated[..., Depends]`）、**純粋ドメイン例外の境界変換**（`@app.exception_handler`）、そして **密閉型（Hermetic）契約テスト**（`app.dependency_overrides`）を明確に分離する必要があります。
 
-```drawlib align=center code=fold file=enterprise_di_lifespan_flow.png caption="Lifespan とリクエストスコープ DI の二層配線および RFC 9457 ドメイン例外変換フロー"
+```drawlib align=center code=hide file=enterprise_di_lifespan_flow.png caption="Lifespan とリクエストスコープ DI の二層配線および RFC 9457 ドメイン例外変換フロー"
 from drawlib.canvas import save, setup
 from drawlib.diagrams.architecture import ArchitectureDiagram, Node, NodeGroup, PhosphorIcon
 from drawlib.styles import Styles
@@ -379,7 +379,7 @@ def register_domain_exception_handlers(app: FastAPI) -> None:
 
 すべての業務分岐テストで毎回実 PostgreSQL コンテナを起動して `TestClient` 経由の HTTP リクエストを流していると、テスト数が 5,000 件を超えた時点で **CI 実行時間が45分を超える壁** に直面します。逆に `unittest.mock.patch("src.orders.crud.db.execute")` のような文字列パス指定のモンキーパッチに頼ると、内部モジュールを整理するたびにテストが壊れる脆弱なスイートになります。
 
-```drawlib align=center code=fold file=enterprise_test_pyramid.png caption="10万行規模システムのテストピラミッド：70% 純粋ドメイン単体・20% FastAPI 契約 DI 差替・10% コンテナ統合"
+```drawlib align=center code=hide file=enterprise_test_pyramid.png caption="10万行規模システムのテストピラミッド：70% 純粋ドメイン単体・20% FastAPI 契約 DI 差替・10% コンテナ統合"
 from drawlib.canvas import save, setup
 from drawlib.icons import phosphor
 from drawlib.smartarts import CardList, Pyramid

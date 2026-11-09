@@ -1,0 +1,551 @@
+<!--
+ Copyright (c) 2026 Yuichi Ito (yuichi@yuichi.com)
+
+ This software is licensed under the Apache License, Version 2.0.
+ For more information, please visit: https://github.com/yuichi110/drawlib
+
+ This software is provided "as is", without warranty of any kind,
+ express or implied, including but not limited to the warranties of
+ merchantability, fitness for a particular purpose and noninfringement.
+-->
+<!DOCTYPE html>
+<html lang="ja" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ミドルウェア7層構造と AnyIO スレッドプール並行制御 — FastAPI Architecture Guide (Unofficial)</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-S9N5BZ1VRC');
+    </script>
+    <script>
+        (function() {
+            const saved = localStorage.getItem('drawlib-theme');
+            if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    
+    <link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/architecture/en/05_asgi_and_telemetry/middleware_and_concurrency.html">
+    
+    <link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/architecture/ja/05_asgi_and_telemetry/middleware_and_concurrency.html">
+    
+    <link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/architecture/en/05_asgi_and_telemetry/middleware_and_concurrency.html">
+    
+    
+    
+    <meta name="description" content="FastAPI インスタンスへ到達するすべての HTTP リクエスト、WebSocket セッション、および ASGI lifespan イベントは、fastapi/applications.py の FastAPI.call を通過します。FastAPI…">
+    <link rel="canonical" href="https://fastapi.drawlib.com/architecture/ja/05_asgi_and_telemetry/middleware_and_concurrency.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="FastAPI 内部構造">
+    <meta property="og:title" content="ミドルウェア7層構造と AnyIO スレッドプール並行制御 — FastAPI 内部構造">
+    <meta property="og:description" content="FastAPI インスタンスへ到達するすべての HTTP リクエスト、WebSocket セッション、および ASGI lifespan イベントは、fastapi/applications.py の FastAPI.call を通過します。FastAPI…">
+    <meta property="og:url" content="https://fastapi.drawlib.com/architecture/ja/05_asgi_and_telemetry/middleware_and_concurrency.html">
+    <meta property="og:image" content="https://fastapi.drawlib.com/architecture/_assets/ogp.png">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:locale:alternate" content="en_US">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ミドルウェア7層構造と AnyIO スレッドプール並行制御 — FastAPI 内部構造">
+    <meta name="twitter:description" content="FastAPI インスタンスへ到達するすべての HTTP リクエスト、WebSocket セッション、および ASGI lifespan イベントは、fastapi/applications.py の FastAPI.call を通過します。FastAPI…">
+    <meta name="twitter:image" content="https://fastapi.drawlib.com/architecture/_assets/ogp.png">
+    
+    
+    <link rel="icon" type="image/png" href="../../_assets/favicon.png">
+    
+    
+    <link rel="stylesheet" href="../style.css">
+    
+    
+</head>
+<body>
+    <div class="demo-banner" role="region" aria-label="ポータルナビゲーション">
+        <div class="demo-banner-inner">
+            <span class="demo-banner-badge">INTERNAL ARCHITECTURE</span>
+            
+            <span class="demo-banner-text">
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a>（v0.162.2）内部アーキテクチャ解説（非公式）
+            </span>
+            <span class="demo-banner-links">
+                <a href="https://fastapi.drawlib.com/">User Guide</a>
+                <span class="demo-banner-sep">·</span>
+                <strong style="color:#ffffff;">Architecture</strong>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Audit</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official Docs ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+            </span>
+            
+        </div>
+    </div>
+    
+    <div class="doc-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI 内部構造">
+                    
+                    FastAPI 内部構造
+                    
+                </a>
+                <div class="sidebar-header-actions">
+                    <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">
+                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                    <button type="button" id="menu-toggle" class="menu-toggle-btn" aria-label="Toggle navigation" aria-expanded="false">
+                        <svg class="icon-hamburger" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        <svg class="icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="sidebar-menu">
+                
+                    
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../index.html" >アーキテクチャ全体像</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">1. パッケージ階層と境界設計</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../01_package_and_layers/module_hierarchy.html" >5層モジュール構造と Starlette 再公開</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">2. ルーティングコンパイラとクロージャ</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../02_routing_compiler/apiroute_and_closures.html" >APIRouter・APIRoute とクロージャ合成</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../02_routing_compiler/streaming_and_spa_internals.html" >ジェネレータ配信と SPA ルータ内部実装</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">3. DI 解決エンジンと認証機構</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../03_di_and_security_engine/dependant_and_solver.html" >Dependant グラフと solve_dependencies</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../03_di_and_security_engine/security_internals.html" >SecurityBase 階層と HTTPConnection</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">4. Pydantic v2 ブリッジ層</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../04_pydantic_bridge/compat_and_serialization.html" >_compat/v2.py・ModelField・直列化</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">5. ASGI スタックとテレメトリ</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item active">
+                                <a href="middleware_and_concurrency.html" >ミドルウェア7層構造とスレッドプール</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="native_telemetry_internals.html" >NativeTelemetry と例外スパン記録</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">6. OpenAPI 3.1 合成エンジン</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../06_openapi_and_docs/openapi_synthesis_engine.html" >get_openapi()・$defs 集約・Docs UI</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">関連ガイド &amp; 公式リンク</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/" target="_blank" rel="noopener noreferrer">FastAPI ユーザーガイド<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/reports/pni501/" target="_blank" rel="noopener noreferrer">PNI501 診断レポート<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI 公式ドキュメント<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub リポジトリ<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                        </ul>
+                    
+                
+            </div>
+        </aside>
+        <div class="content-wrapper">
+            <header class="top-bar">
+                <div class="breadcrumbs">
+                    <span class="crumb">Architecture</span>
+                    <span class="crumb-separator">&raquo;</span>
+                    <span class="crumb active">ミドルウェア7層構造と AnyIO スレッドプール並行制御</span>
+                </div>
+                
+                <div class="lang-switcher">
+                    <details class="lang-dropdown">
+                        <summary class="lang-dropdown-btn" aria-label="Select language">
+                            <svg class="lang-globe-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            <span class="lang-current-label">日本語</span>
+                            <svg class="lang-caret-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </summary>
+                        <div class="lang-dropdown-menu" role="menu">
+                            
+                            <a href="../../en/05_asgi_and_telemetry/middleware_and_concurrency.html" class="lang-option" lang="en" hreflang="en" >
+                                <span>English</span>
+                                
+                            </a>
+                            
+                            <a href="middleware_and_concurrency.html" class="lang-option active" lang="ja" hreflang="ja" aria-current="page">
+                                <span>日本語</span>
+                                
+                                <svg class="lang-check-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                
+                            </a>
+                            
+                        </div>
+                    </details>
+                </div>
+                
+            </header>
+            <main class="main-content">
+                <h1>ミドルウェア7層構造と AnyIO スレッドプール並行制御</h1>
+<p><code>FastAPI</code> インスタンスへ到達するすべての HTTP リクエスト、WebSocket セッション、および ASGI lifespan イベントは、<code>fastapi/applications.py</code> の <code>FastAPI.__call__</code> を通過します。FastAPI はリクエストごとにラッパークロージャを再構築するのではなく、最初の HTTP または WebSocket 呼び出し時に確定的な 7 層 ASGI ミドルウェア構造（オニオンモデル）を 1 度だけ遅延構築し、外側のクラッシュ復旧（<code>500</code>）と内側のアプリケーション例外処理（<code>4xx</code> / <code>422</code>）を分離しつつ、同期関数を AnyIO ワーカースレッドへ安全にオフロードします。</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/05_asgi_and_telemetry/middleware_and_concurrency/seven_layer_asgi_stack.png" alt="middleware_and_concurrency_1" />
+  <figcaption class="drawlib-caption">FastAPI.__call__ と build_middleware_stack() が構築する7層 ASGI ミドルウェア構造</figcaption>
+</figure>
+<hr />
+<h2>1. <code>FastAPI.__call__</code> の分岐制御とスタック遅延構築</h2>
+<p><code>FastAPI</code> は <code>starlette.applications.Starlette</code> を継承しており、<code>__init__()</code> 時点では <code>self.middleware_stack: ASGIApp | None = None</code> のまま初期化します。最初のリクエスト到達まで構築を遅らせることで、起動時に <code>app.add_middleware()</code>・<code>@app.middleware(&quot;http&quot;)</code>・<code>@app.exception_handler()</code> を任意の順序で登録しても、その都度ラッパーチェーンを再生成せずに済みます。</p>
+<p><code>fastapi/applications.py</code> 内の <code>await app(scope, receive, send)</code> は、スコープ種別とテレメトリ状態に応じて 3 つの実行経路へ分岐します。</p>
+<ol>
+<li><strong>Lifespan フック（<code>scope[&quot;type&quot;] == &quot;lifespan&quot;</code>）</strong>: <code>fastapi.telemetry._runtime.lifespan(config=self._telemetry, app=super().__call__, ...)</code> へ委譲し、<code>lifespan.startup</code> 時に環境変数ベースの OTLP 自動構成を実行し、<code>lifespan.shutdown.complete</code> 時に FastAPI 管理下のエクスポータをフラッシュします。</li>
+<li><strong>非計測ファストパス</strong>: <code>scope[&quot;type&quot;]</code> が <code>&quot;http&quot;</code>・<code>&quot;websocket&quot;</code> 以外の場合、マウントされたサブアプリなどで <code>&quot;fastapi.telemetry&quot;</code> が既に <code>scope</code> に存在する場合、または <code>self._native_telemetry.enabled()</code> が <code>False</code> の場合は、そのまま <code>await super().__call__(scope, receive, send)</code> を呼び出します。親クラスの <code>Starlette.__call__</code> が <code>scope[&quot;app&quot;] = self</code> を設定し、<code>self.middleware_stack</code> が <code>None</code> なら <code>self.build_middleware_stack()</code> で構築して実行します。</li>
+<li><strong>計測対象の HTTP / WebSocket パス</strong>: <code>self._native_telemetry.enabled()</code> が <code>True</code> の場合、<code>FastAPI.__call__</code> は先に <code>self.middleware_stack</code> を構築し、<code>_legacy_otel(self.middleware_stack)</code> で既存の <code>opentelemetry.instrumentation.asgi.OpenTelemetryMiddleware</code> の有無を確認したうえで、<code>super().__call__</code> を <code>await self._native_telemetry(...)</code> で包んで呼び出します。</li>
+</ol>
+<hr />
+<h2>2. <code>build_middleware_stack()</code> の7層構造（外側から内側へ）</h2>
+<p><code>FastAPI.build_middleware_stack()</code> は Starlette の標準構築処理をオーバーライドし、<code>self.user_middleware</code> の前後に <code>ExceptionTelemetryMiddleware</code> と <code>AsyncExitStackMiddleware</code> を挿入します。まず <code>self.exception_handlers</code> を走査してキー <code>500</code> および <code>Exception</code> を <code>ServerErrorMiddleware</code> 用の <code>error_handler</code> に分離し、それ以外の個別例外ハンドラを <code>ExceptionMiddleware</code> 用の <code>exception_handlers</code> に振り分けます。その後、<code>middleware</code> リストを逆順にたどりながら <code>self.router</code> を内側から外側へとラップします。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">層</th>
+<th style="text-align:left">クラスとモジュール</th>
+<th style="text-align:left">Scope / 状態キー</th>
+<th style="text-align:left">主な責務</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>L1</strong></td>
+<td style="text-align:left"><code>NativeTelemetry</code> (<code>fastapi.telemetry._asgi</code>)</td>
+<td style="text-align:left"><code>scope[&quot;fastapi.telemetry&quot;]</code></td>
+<td style="text-align:left"><code>FastAPI.__call__</code> で <code>super().__call__</code> を包み、W3C コンテキスト抽出・<code>SERVER</code> スパン開始・HTTP メトリクス記録を担当。</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>L2</strong></td>
+<td style="text-align:left"><code>ServerErrorMiddleware</code> (<code>starlette.middleware.errors</code>)</td>
+<td style="text-align:left">—</td>
+<td style="text-align:left"><code>middleware_stack</code> 最外層。未処理 <code>Exception</code> を捕捉し、<code>500</code>/<code>Exception</code> ハンドラまたはデバッグトレースバックを送信後に再送出。</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>L3</strong></td>
+<td style="text-align:left"><code>ExceptionTelemetryMiddleware</code> (<code>fastapi.telemetry._asgi</code>)</td>
+<td style="text-align:left"><code>_RequestTelemetry._exceptions</code></td>
+<td style="text-align:left"><code>L4</code>〜<code>L7</code> から漏れた未処理例外を、<code>L2</code> が <code>500</code> レスポンス本文を送信してスパンを閉じる前に記録。</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>L4</strong></td>
+<td style="text-align:left"><code>self.user_middleware</code> (<code>starlette.middleware</code>)</td>
+<td style="text-align:left">ユーザー定義</td>
+<td style="text-align:left"><code>add_middleware()</code> が <code>self.user_middleware.insert(0, ...)</code> を行うため、登録の逆順（LIFO）で重なるカスタムミドルウェア群。</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>L5</strong></td>
+<td style="text-align:left"><code>ExceptionMiddleware</code> (<code>starlette.middleware.exceptions</code>)</td>
+<td style="text-align:left">—</td>
+<td style="text-align:left"><code>HTTPException</code>・<code>RequestValidationError</code>（<code>422</code>）・<code>WebSocketRequestValidationError</code>（<code>1008</code>）・独自例外ハンドラを処理。</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>L6</strong></td>
+<td style="text-align:left"><code>AsyncExitStackMiddleware</code> (<code>fastapi.middleware.asyncexitstack</code>)</td>
+<td style="text-align:left"><code>scope[&quot;fastapi_middleware_astack&quot;]</code></td>
+<td style="text-align:left">レスポンス送信完了後に <code>FormData</code> や <code>UploadFile</code> の一時ファイルを確実にクローズするための <code>AsyncExitStack</code> を保持。</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>L7</strong></td>
+<td style="text-align:left"><code>APIRouter</code> (<code>fastapi.routing</code>)</td>
+<td style="text-align:left"><code>scope[&quot;router&quot;]</code>, <code>scope[&quot;route&quot;]</code></td>
+<td style="text-align:left"><code>APIRoute</code>・<code>Mount</code>・フロントエンドルートを照合し、<code>_route_selected()</code> を通知して <code>request_response()</code> を実行。</td>
+</tr>
+</tbody>
+</table>
+<h3>なぜ <code>ServerErrorMiddleware</code> は <code>user_middleware</code> の外側、<code>ExceptionMiddleware</code> は内側なのか</h3>
+<p>エラー処理を <strong>L2</strong>（<code>self.user_middleware</code> の外側）と <strong>L5</strong>（<code>self.user_middleware</code> の内側）に二分割している理由は、相反する 2 つの ASGI 要件を同時に満たすためです。</p>
+<ul>
+<li><strong>ユーザーミドルウェア自身のクラッシュからの保護（L2 が L4 の外側）</strong>: ユーザーミドルウェアはルーティングの前後で認証ヘッダ解析やセッション接続など任意のコードを実行します。もしユーザーミドルウェア内で未処理の <code>RuntimeError</code> が発生した場合、内側の <strong>L5</strong>（<code>ExceptionMiddleware</code>）は既に通過済みか未到達です。<code>ServerErrorMiddleware</code> を <strong>L2</strong> に配置することで、ユーザーミドルウェア内のバグに対しても確実に有効な HTTP <code>500 Internal Server Error</code> を返却でき、さらにその直下の <strong>L3</strong> に <code>ExceptionTelemetryMiddleware</code> を置くことで、<code>500</code> レスポンス送信前に <code>error.type</code> を欠落なく記録できます。</li>
+<li><strong>制御された HTTP エラーに対するミドルウェアヘッダの維持（L5 が L4 の内側）</strong>: <code>HTTPException(status_code=401)</code> や <code>RequestValidationError</code>（<code>fastapi/exception_handlers.py</code> による <code>422</code> 応答）といった想定内のアプリケーション例外は、<strong>L5</strong>（および <code>request_response()</code> 内の <code>wrap_app_handling_exceptions</code>）で捕捉され、<strong>L4</strong> へ戻る前に通常の <code>JSONResponse</code> オブジェクトへ変換されます。その結果、外側の <code>CORSMiddleware</code> や <code>GZipMiddleware</code>、アクセスログミドルウェアは例外ではなく正常な HTTP レスポンスとして後続処理を実行でき、<code>401</code> や <code>422</code> 応答にも <code>Access-Control-Allow-Origin</code> ヘッダが正しく付与されます。</li>
+</ul>
+<h3>3 段階に分離された <code>AsyncExitStack</code> スコープ</h3>
+<p>FastAPI はすべてのリソース解放を <strong>L6</strong> ひとつに押し込めるのではなく、用途と寿命に応じて 3 つの入れ子 <code>AsyncExitStack</code> を使い分けています。</p>
+<ol>
+<li><strong><code>scope[&quot;fastapi_middleware_astack&quot;]</code>（L6 — <code>AsyncExitStackMiddleware</code>）</strong>: すべてのユーザーミドルウェアの内側（<code>BaseHTTPMiddleware</code> が生成する <code>contextvars</code> タスクコンテキストの内側）で開始され、レスポンス完了後に閉じられます。<code>get_request_handler()</code> は <code>file_stack.push_async_callback(body.close)</code> をここへ登録し、ストリーミング応答中も <code>UploadFile</code> の <code>SpooledTemporaryFile</code> が閉じられないよう保証します。</li>
+<li><strong><code>scope[&quot;fastapi_function_astack&quot;]</code>（L7 — <code>request_response()</code>）</strong>: <code>await response(scope, receive, send)</code> の開始前に終了し、<code>Depends(..., scope=&quot;function&quot;)</code> 指定の <code>yield</code> 依存関係をレスポンス送信前にクリーンアップしつつ、<code>yield</code> 後の <code>HTTPException</code> 送出との互換性を保ちます。</li>
+<li><strong><code>scope[&quot;fastapi_inner_astack&quot;]</code>（L7 — <code>request_response()</code>）</strong>: <code>await response(scope, receive, send)</code> 全体を包み、<code>Depends(..., scope=&quot;request&quot;)</code> の <code>yield</code> 依存関係（ストリーミングジェネレータが参照する DB セッションなど）を最後のバイト送信完了まで生存させます。</li>
+</ol>
+<hr />
+<h2>3. AnyIO スレッドプールへのオフロードと <code>contextvars</code> 伝播</h2>
+<p>FastAPI は非同期イベントループ上で動作するため、ブロッキングな CPU 処理や同期 I/O をイベントループ上で直接実行すると、同一ワーカープロセス上の全同時接続が停止してしまいます。<code>async def</code> と通常の <code>def</code> の双方を安全に扱うため、FastAPI はルート登録時のコルーチン判定と AnyIO ワーカースレッドへのオフロードを組み合わせています。</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/05_asgi_and_telemetry/middleware_and_concurrency/anyio_threadpool_contextvars.png" alt="middleware_and_concurrency_2" />
+  <figcaption class="drawlib-caption">AnyIO ワーカースレッドへのオフロード、CapacityLimiter(1) による終了処理、および contextvars の伝播</figcaption>
+</figure>
+<h3><code>run_endpoint_function()</code>（<code>is_coroutine</code> と <code>run_in_threadpool</code>）</h3>
+<p><code>fastapi/routing.py</code> の <code>get_request_handler()</code> はルートクロージャ生成時に <code>is_coroutine = _is_coroutine_callable(dependant.call)</code>（<code>functools.partial</code> や呼び出し可能インスタンスも展開して判定）を 1 度だけ評価します。リクエスト実行時、<code>run_endpoint_function()</code> はこの事前計算済みフラグで分岐します。</p>
+<ul>
+<li><strong><code>is_coroutine == True</code>（<code>async def</code>）</strong>: <code>with _operation(name=&quot;endpoint&quot;, function=dependant.call):</code> の中で <code>await dependant.call(**values)</code> をイベントループ上で直接実行し、スレッド切り替えやコンテキスト複製のコストを一切発生させません。</li>
+<li><strong><code>is_coroutine == False</code>（<code>def</code>）</strong>: Starlette の <code>await run_in_threadpool(_run_sync_endpoint, function=dependant.call, arguments=values)</code> を通じて <code>anyio.to_thread.run_sync</code>（デフォルト上限 40 トークンの <code>CapacityLimiter</code>）へオフロードします。<code>_run_sync_endpoint</code> はワーカースレッド内部で <code>_operation(name=&quot;endpoint&quot;, ...)</code> を開くため、OpenTelemetry の子スパンは同期実行の実時間に正確に対応します。</li>
+</ul>
+<p>同様の分岐は <code>solve_dependencies()</code>（同期サブ依存関数の実行）や <code>serialize_response()</code>（<code>is_coroutine=False</code> 時のレスポンスモデル検証）でも一貫して適用されています。</p>
+<h3><code>contextmanager_in_threadpool()</code> と <code>CapacityLimiter(1)</code> によるデッドロック回避</h3>
+<p>同期ジェネレータ依存関係（<code>def get_db(): ... yield db ...</code>）は、前処理と後処理の双方でブロッキング I/O を伴う可能性があります。<code>fastapi/dependencies/utils.py</code> の <code>_solve_generator()</code> は同期ジェネレータを <code>contextlib.contextmanager</code> で包んだうえで、<code>fastapi/concurrency.py</code> の <code>contextmanager_in_threadpool()</code> に渡します。</p>
+<ul>
+<li><strong>前処理（<code>__enter__</code>）</strong>: AnyIO の共有デフォルトスレッドリミッタ（40 トークン）を使って <code>yield await run_in_threadpool(cm.__enter__)</code> を実行します。</li>
+<li><strong>後処理（<code>__exit__</code>）</strong>: 呼び出しごとに専用の <code>exit_limiter = CapacityLimiter(1)</code> を新規生成し、<code>except Exception as e:</code> 分岐（<code>cm.__exit__</code> の例外抑制戻り値も反映）と <code>else:</code> 分岐の双方で <code>await anyio.to_thread.run_sync(cm.__exit__, ..., limiter=exit_limiter)</code> を実行します。</li>
+</ul>
+<p>なぜ <code>__exit__</code> に専用の <code>CapacityLimiter(1)</code> を割り当てるのでしょうか。たとえば上限 10 接続の DB コネクションプールに対し 50 リクエストが同時到達した状況を考えます。10 リクエストが DB 接続を取得し、残り 40 個のワーカースレッドが <code>cm.__enter__</code> 内で空き DB 接続を待機すると、AnyIO のデフォルト 40 トークンが完全に枯渇します。このとき最初の 1 リクエストが処理を完了して <code>cm.__exit__</code> で DB 接続を返却しようとした際、もしデフォルトリミッタの空きを待ってしまうと、「<code>cm.__enter__</code> は <code>cm.__exit__</code> の DB 返却を待ち、<code>cm.__exit__</code> は <code>cm.__enter__</code> のスレッド解放を待つ」という完全なデッドロックに陥ります。<code>limiter=exit_limiter</code> を指定することで、飽和した共有プールを迂回して即座にリソースを解放できます。</p>
+<h3>ワーカースレッドへの <code>contextvars</code> コピー挙動</h3>
+<p><code>starlette.concurrency.run_in_threadpool</code> および <code>anyio.to_thread.run_sync</code> は、イベントループ側で <code>contextvars.copy_context()</code> を取得し、ワーカースレッド内で <code>context.run(...)</code> を実行します。</p>
+<ul>
+<li><strong>下流への自動伝播</strong>: <code>async</code> ミドルウェアや <code>async</code> 依存関数で設定された <code>ContextVar</code>（FastAPI の <code>_REQUEST_TELEMETRY_KEY</code> を含む）は、同期 <code>def</code> の <code>yield</code> 依存関数や同期 <code>def</code> エンドポイント内からそのまま読み取ることができます。</li>
+<li><strong>スナップショット分離の注意点</strong>: <code>copy_context()</code> は <code>run_sync</code> 呼び出しごとに浅いコピーを作るため、同期 <code>def</code> 依存関数内で <code>my_var.set(&quot;new&quot;)</code> を呼んでも書き換わるのはそのワーカースレッド用コピーのみであり、イベントループ側や後続の同期エンドポイント、さらには別々の <code>run_sync</code> として動く <code>cm.__enter__</code> から <code>cm.__exit__</code> へも伝播しません。複数段階をまたいで <code>ContextVar</code> を更新したい場合は、<code>async</code> ミドルウェアまたは <code>async def</code> の <code>yield</code> 依存関数内で設定・リセットを行います。</li>
+</ul>
+<hr />
+<h2>4. 7層ミドルウェア順序と <code>ContextVar</code> 伝播の検証</h2>
+<p>以下のコードスニペットは、実稼働する <code>FastAPI()</code> インスタンス上で初回リクエスト前後の <code>middleware_stack</code> 遅延構築、外側から内側 <code>APIRouter</code> までの正確なミドルウェア連鎖、およびワーカースレッドへの <code>ContextVar</code> 伝播を検証します。</p>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">contextvars</span><span class="w"> </span><span class="kn">import</span> <span class="n">ContextVar</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">threading</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">FastAPI</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.telemetry._asgi</span><span class="w"> </span><span class="kn">import</span> <span class="n">NativeTelemetry</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.testclient</span><span class="w"> </span><span class="kn">import</span> <span class="n">TestClient</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">starlette.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">ASGIApp</span><span class="p">,</span> <span class="n">Receive</span><span class="p">,</span> <span class="n">Scope</span><span class="p">,</span> <span class="n">Send</span>
+
+<span class="n">request_id_var</span><span class="p">:</span> <span class="n">ContextVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">ContextVar</span><span class="p">(</span><span class="s2">"request_id"</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">"unset"</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">FirstUserMiddleware</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">app</span><span class="p">:</span> <span class="n">ASGIApp</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">app</span> <span class="o">=</span> <span class="n">app</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scope</span><span class="p">:</span> <span class="n">Scope</span><span class="p">,</span> <span class="n">receive</span><span class="p">:</span> <span class="n">Receive</span><span class="p">,</span> <span class="n">send</span><span class="p">:</span> <span class="n">Send</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">token</span> <span class="o">=</span> <span class="n">request_id_var</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">"req-42"</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="p">(</span><span class="n">scope</span><span class="p">,</span> <span class="n">receive</span><span class="p">,</span> <span class="n">send</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">request_id_var</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">SecondUserMiddleware</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">app</span><span class="p">:</span> <span class="n">ASGIApp</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">app</span> <span class="o">=</span> <span class="n">app</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scope</span><span class="p">:</span> <span class="n">Scope</span><span class="p">,</span> <span class="n">receive</span><span class="p">:</span> <span class="n">Receive</span><span class="p">,</span> <span class="n">send</span><span class="p">:</span> <span class="n">Send</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="p">(</span><span class="n">scope</span><span class="p">,</span> <span class="n">receive</span><span class="p">,</span> <span class="n">send</span><span class="p">)</span>
+
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">()</span>
+<span class="n">app</span><span class="o">.</span><span class="n">add_middleware</span><span class="p">(</span><span class="n">FirstUserMiddleware</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">add_middleware</span><span class="p">(</span><span class="n">SecondUserMiddleware</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">sync_yield_dep</span><span class="p">():</span>
+    <span class="k">yield</span> <span class="p">{</span>
+        <span class="s2">"dep_thread"</span><span class="p">:</span> <span class="n">threading</span><span class="o">.</span><span class="n">current_thread</span><span class="p">()</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="s2">"dep_ctx"</span><span class="p">:</span> <span class="n">request_id_var</span><span class="o">.</span><span class="n">get</span><span class="p">(),</span>
+    <span class="p">}</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/threads"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_threads</span><span class="p">(</span><span class="n">dep</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">sync_yield_dep</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="o">**</span><span class="n">dep</span><span class="p">,</span>
+        <span class="s2">"ep_thread"</span><span class="p">:</span> <span class="n">threading</span><span class="o">.</span><span class="n">current_thread</span><span class="p">()</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="s2">"ep_ctx"</span><span class="p">:</span> <span class="n">request_id_var</span><span class="o">.</span><span class="n">get</span><span class="p">(),</span>
+    <span class="p">}</span>
+
+
+<span class="c1"># 1. 遅延構築: 初回 HTTP/WS 呼び出し前は middleware_stack が None</span>
+<span class="k">assert</span> <span class="n">app</span><span class="o">.</span><span class="n">middleware_stack</span> <span class="ow">is</span> <span class="kc">None</span>
+<span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">app</span><span class="o">.</span><span class="n">_native_telemetry</span><span class="p">,</span> <span class="n">NativeTelemetry</span><span class="p">)</span>
+
+<span class="k">with</span> <span class="n">TestClient</span><span class="p">(</span><span class="n">app</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
+    <span class="n">payload</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/threads"</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="n">payload</span><span class="p">[</span><span class="s2">"dep_ctx"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"req-42"</span>
+    <span class="k">assert</span> <span class="n">payload</span><span class="p">[</span><span class="s2">"ep_ctx"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"req-42"</span>
+    <span class="k">assert</span> <span class="n">payload</span><span class="p">[</span><span class="s2">"dep_thread"</span><span class="p">]</span> <span class="o">!=</span> <span class="n">threading</span><span class="o">.</span><span class="n">main_thread</span><span class="p">()</span><span class="o">.</span><span class="n">name</span>
+
+<span class="c1"># 2. app.middleware_stack を最外層から最内層 APIRouter まで走査</span>
+<span class="n">layers</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">cursor</span><span class="p">:</span> <span class="nb">object</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">middleware_stack</span>
+<span class="k">while</span> <span class="n">cursor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">layers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">cursor</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">cursor</span> <span class="ow">is</span> <span class="n">app</span><span class="o">.</span><span class="n">router</span><span class="p">:</span>
+        <span class="k">break</span>
+    <span class="n">cursor</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">cursor</span><span class="p">,</span> <span class="s2">"app"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+<span class="k">assert</span> <span class="n">layers</span> <span class="o">==</span> <span class="p">[</span>
+    <span class="s2">"ServerErrorMiddleware"</span><span class="p">,</span>
+    <span class="s2">"ExceptionTelemetryMiddleware"</span><span class="p">,</span>
+    <span class="s2">"SecondUserMiddleware"</span><span class="p">,</span>
+    <span class="s2">"FirstUserMiddleware"</span><span class="p">,</span>
+    <span class="s2">"ExceptionMiddleware"</span><span class="p">,</span>
+    <span class="s2">"AsyncExitStackMiddleware"</span><span class="p">,</span>
+    <span class="s2">"APIRouter"</span><span class="p">,</span>
+<span class="p">]</span>
+</code></pre>
+<p>続いて、第 1 層（<code>NativeTelemetry</code>）と第 3 層（<code>ExceptionTelemetryMiddleware</code>）がスパン・メトリクス・例外ログをどのように協調記録するかについては、<a href="native_telemetry_internals.html">NativeTelemetry と例外スパン記録</a>を参照してください。</p>
+
+            </main>
+            <footer class="footer">
+                
+                FastAPI® は Sebastián Ramírez（<a href="https://github.com/tiangolo" target="_blank" rel="noopener noreferrer">@tiangolo</a>）の登録商標です。本サイトは非公式の内部アーキテクチャ解説であり、公式プロジェクトとは提携していません。公式ドキュメントは <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">fastapi.tiangolo.com</a> をご参照ください。
+                
+            </footer>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeBtn = document.getElementById('theme-toggle');
+            if (themeBtn) {
+                themeBtn.addEventListener('click', function() {
+                    const current = document.documentElement.getAttribute('data-theme');
+                    const next = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    localStorage.setItem('drawlib-theme', next);
+                });
+            }
+
+            const langDropdowns = document.querySelectorAll('.lang-dropdown');
+            if (langDropdowns.length > 0) {
+                document.addEventListener('click', function(e) {
+                    langDropdowns.forEach(function(dd) {
+                        if (dd.hasAttribute('open') && !dd.contains(e.target)) {
+                            dd.removeAttribute('open');
+                        }
+                    });
+                });
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        langDropdowns.forEach(function(dd) {
+                            dd.removeAttribute('open');
+                        });
+                    }
+                });
+            }
+
+            const menuBtn = document.getElementById('menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            if (menuBtn && sidebar) {
+                function setMenuOpen(open) {
+                    sidebar.classList.toggle('is-open', open);
+                    menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    document.body.classList.toggle('menu-open', open);
+                    if (open) {
+                        const menu = sidebar.querySelector('.sidebar-menu');
+                        if (menu) {
+                            menu.scrollTop = 0;
+                        }
+                    }
+                }
+
+                menuBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const willOpen = !sidebar.classList.contains('is-open');
+                    setMenuOpen(willOpen);
+                });
+
+                document.addEventListener('click', function(e) {
+                    if (sidebar.classList.contains('is-open') && !sidebar.contains(e.target)) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                const navLinks = sidebar.querySelectorAll('.nav-item a');
+                navLinks.forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        setMenuOpen(false);
+                    });
+                });
+
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                window.addEventListener('resize', function() {
+                    if (window.innerWidth > 768 && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

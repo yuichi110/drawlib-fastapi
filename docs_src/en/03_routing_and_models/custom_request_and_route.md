@@ -2,7 +2,7 @@
 
 Subclassing `APIRoute.get_route_handler()` and Starlette's `Request` lets you intercept requests **after** router matching yet **before** FastAPI decodes JSON or runs Pydantic validation—enabling router-scoped `gzip` decompression, raw-byte HMAC verification, per-operation latency headers, and structured `422` validation error wrapping.
 
-```drawlib align=center code=fold file=custom_apiroute_interception.png caption="Interception Boundary Comparison: Global ASGI Middleware vs Router-Scoped APIRoute.get_route_handler()"
+```drawlib align=center code=hide file=custom_apiroute_interception.png caption="Interception Boundary Comparison: Global ASGI Middleware vs Router-Scoped APIRoute.get_route_handler()"
 from drawlib.canvas import save, setup
 from drawlib.icons import code, phosphor
 from drawlib.lines import line
@@ -61,7 +61,7 @@ p_route.draw((5, 6), width=164, height=38)
 route_steps = [
     (24.5, "1. Matched Route", "Fires ONLY on target\nAPIRouter endpoints", Styles.PrimaryNeutral, False),
     (64.5, "2. Custom Handler", "Swaps GzipRequest &\nverifies raw body HMAC", Styles.PrimaryFlat, True),
-    (104.5, "3. original_handler", "get_request_handler()\nJSON + Depends + Model", Styles.White, False),
+    (104.5, "3. original_handler", "Built-in route handler\nJSON + Depends + Model", Styles.White, False),
     (144.5, "4. 422 & Latency", "Catches ValidationError\n& sets X-Response-Time", Styles.SecondaryNeutral, False),
 ]
 for idx, (cx, rt_title, rt_sub, rt_fill, is_focal) in enumerate(route_steps):
@@ -81,26 +81,26 @@ Choosing the right extension hook in FastAPI depends on **when** during the ASGI
 
 ## 1. ASGI Middleware vs `APIRoute.get_route_handler()` Lifecycle
 
-Inside `fastapi/routing.py`, every path operation registered on an `APIRouter` constructs an `APIRoute` (or the custom subclass passed to `APIRouter(route_class=...)`) and binds `self.app = request_response(self.get_route_handler())`. When a child router is mounted via `app.include_router()`, `_EffectiveRouteContext.from_api_route()` sets `_effective_route_context_var` and invokes `original_route.get_route_handler()` once per inclusion context—ensuring your custom wrapper automatically inherits merged parent prefixes, dependencies, and response settings while leaving sibling routers untouched.
+Every path operation registered on an `APIRouter` constructs an `APIRoute` instance (or the custom subclass passed to `APIRouter(route_class=...)`) and builds its per-request handler by calling `self.get_route_handler()`. When a child router is mounted via `app.include_router()`, FastAPI applies **router prefix and dependency inheritance**—invoking `get_route_handler()` with the merged parent prefixes, tags, dependencies, and response settings while leaving sibling routers completely untouched.
 
-Crucially, inspect the internal order inside `get_request_handler()` (`fastapi/routing.py`):
+Understanding the execution order inside FastAPI's built-in route handler explains when you need a custom `APIRoute` instead of `Depends()`:
 
 1. **Body Read & JSON Decoding (`await request.body()` / `await request.json()`)** runs **first**—raising `RequestValidationError(type="json_invalid")` immediately if JSON syntax is malformed.
-2. **Dependency Resolution (`await solve_dependencies(...)`)** runs **second**—meaning a `Depends()` callable *cannot* decompress a `gzip`-encoded JSON stream before `request.json()` fails, nor can `Depends()` catch `RequestValidationError` raised by body or parameter validation.
+2. **Dependency Resolution & Parameter Validation** runs **second**—meaning a `Depends()` callable *cannot* decompress a `gzip`-encoded JSON stream before `request.json()` fails, nor can `Depends()` catch `RequestValidationError` raised by body or parameter validation.
 
 | Dimension | Global Pure ASGI Middleware | `APIRouter(route_class=CustomRoute)` | `Depends()` / `Security()` |
 | :--- | :--- | :--- | :--- |
-| **Execution Timing** | Before routing (runs on `404`s, `/static`, all routers) | After `APIRoute.matches()`, **before** JSON parse & `Depends()` | **After** `get_request_handler()` decodes JSON/form body |
+| **Execution Timing** | Before routing (runs on `404`s, `/static`, all routers) | After route matching, **before** JSON parsing & `Depends()` | **After** FastAPI decodes the JSON or form body |
 | **Scope Granularity** | Entire `FastAPI` app or mounted sub-app | Exact `APIRouter` subtree (`route_class=...`) | App, `APIRouter`, route `dependencies=[...]`, or param |
 | **Swap `Request` (`body()`)** | Requires manual low-level ASGI `receive` wrapper | Native: instantiate `CustomRequest(request.scope, request.receive)` | Too late (`request.json()` already ran) |
-| **Catch `RequestValidationError`** | No (converted by outer `ExceptionMiddleware` unless handled globally) | **Yes**: `try: await original_route_handler(request)` | No (errors aggregated *after* `solve_dependencies()`) |
-| **Route Metadata Access** | `scope["route"]` not yet populated pre-routing | Direct `self.operation_id`, `self.path`, `self.tags`, `self.dependant` | Via `request.scope["route"]` only |
+| **Catch `RequestValidationError`** | No (handled by app-wide `@app.exception_handler`) | **Yes**: `try: await original_route_handler(request)` | No (validation errors are raised before endpoint execution) |
+| **Route Metadata Access** | `scope["route"]` not yet populated pre-routing | Direct `self.operation_id`, `self.path`, `self.tags`, `self.name` | Via `request.scope["route"]` only |
 
 ## 2. Transparent `GzipRequest`, Error Wrapping & Webhook HMAC Routes
 
 Combining a custom `Request` subclass with a custom `APIRoute` unlocks clean stream transformations and cryptographic pre-validation without polluting endpoint signatures.
 
-```drawlib align=center code=fold file=gzip_and_hmac_route_pipeline.png caption="Runtime Sequence Inside Custom APIRoute: Bounded GzipRequest Decompression, Constant-Time HMAC-SHA256 & 422 Error Enrichment"
+```drawlib align=center code=hide file=gzip_and_hmac_route_pipeline.png caption="Runtime Sequence Inside Custom APIRoute: Bounded GzipRequest Decompression, Constant-Time HMAC-SHA256 & 422 Error Enrichment"
 from drawlib.canvas import save, setup
 from drawlib.diagrams.sequence import Participant, ParticipantGroup, PhosphorIcon, SequenceDiagram
 from drawlib.icons import code
@@ -168,7 +168,7 @@ gzip_req = router_grp.add(
 )
 inner_handler = router_grp.add(
     Participant(
-        "get_request_handler()",
+        "original_handler",
         width=30,
         height=13,
         icon=PhosphorIcon.CPU,
@@ -179,7 +179,7 @@ inner_handler = router_grp.add(
 
 client.request(custom_route, "POST Content-Encoding: gzip + X-Hub-Signature")
 custom_route.request(gzip_req, "Wrap scope & await request.body()")
-gzip_req.reply(custom_route, "Gunzip (<=1 MiB cap) & cache self._body")
+gzip_req.reply(custom_route, "Gunzip (<=1 MiB cap) & cache bytes")
 d.note(
     "hmac.compare_digest() & perf_counter()",
     over=[custom_route, gzip_req],
@@ -189,7 +189,7 @@ d.note(
 with d.opt("Valid HMAC & <=1 MiB") as ok_blk:
     ok_blk.text_style = Styles.DarkBold.patch(text_size=10.0, halign="left")
     custom_route.request(inner_handler, "await original_route_handler(request)")
-    inner_handler.request(gzip_req, "await request.json() [reuses _body]")
+    inner_handler.request(gzip_req, "await request.json() [reuses cache]")
     gzip_req.reply(inner_handler, "Decompressed UTF-8 JSON")
     inner_handler.reply(custom_route, "200 Response or RequestValidationError")
     custom_route.reply(
@@ -214,7 +214,7 @@ save()
 
 ### Bounded `GzipRequest` & `GzipRoute` Decompression
 
-Starlette's `Request.json()` internally calls `await self.body()` and caches the result on `self._body`. Overriding `async def body(self) -> bytes` on `GzipRequest`—and reading through `gzip.GzipFile.read(MAX_DECOMPRESSED_BYTES + 1)` rather than unbounded `gzip.decompress()`—transparently feeds decompressed UTF-8 JSON to `get_request_handler()` while neutralizing zip-bomb denial-of-service payloads with `413 Content Too Large`:
+Starlette's `Request.json()` calls `await self.body()` and memoizes the resulting bytes in memory for the duration of the request. Overriding `async def body(self) -> bytes` on `GzipRequest`—and reading through `gzip.GzipFile.read(MAX_DECOMPRESSED_BYTES + 1)` rather than unbounded `gzip.decompress()`—transparently feeds decompressed UTF-8 JSON to `original_route_handler` while neutralizing zip-bomb denial-of-service payloads with `413 Content Too Large`:
 
 ```python
 import gzip
@@ -392,6 +392,6 @@ app.include_router(webhook_router)
 ```
 
 > [!TIP]
-> Because `await request.body()` caches `request._body` in memory, calling `await request.body()` inside `HmacTimedRoute` does **not** consume the ASGI stream away from `original_route_handler(request)`—`get_request_handler()` reuses the cached bytes immediately. Avoid overriding `Request.body()` only on multi-megabyte multipart file uploads where `request.stream()` should stream chunks directly to `SpooledTemporaryFile`.
+> Because `await request.body()` caches the raw payload bytes in memory on the `Request` instance, calling `await request.body()` inside `HmacTimedRoute` does **not** consume the ASGI stream away from `original_route_handler(request)`—FastAPI's built-in route handler reuses the cached bytes immediately. Avoid eager `request.body()` reads only on multi-megabyte multipart file uploads where `request.stream()` should stream chunks directly to `SpooledTemporaryFile`.
 
-With Chapter 3's routing and model layer complete—spanning [Path, Query, Header, Cookie & Body](parameters_and_validation.md), [Response Serialization & OpenAPI 3.1](responses_and_openapi.md), and [Parameter Models, Extra Types & Examples](advanced_types_and_models.md)—continue to Chapter 4's [Dependant DAG, Caching & Scopes](../04_dependencies_and_security/dependency_injection.md), [ASGI Middleware & Threadpool](../05_async_and_realtime/concurrency_and_middleware.md) for transport-level middleware, [Native OpenTelemetry & Exceptions](../06_observability_and_testing/telemetry_and_errors.md) for app-wide exception handlers, and [Webhooks, Callbacks, SDKs & Docs UI](../07_frontend_and_openapi_ext/webhooks_callbacks_sdks.md) for documenting `@app.webhooks` schemas.
+With Chapter 3's routing and model layer complete—spanning [Path, Query, Header, Cookie & Body](parameters_and_validation.md), [Response Serialization & OpenAPI 3.1](responses_and_openapi.md), and [Parameter Models, Extra Types & Examples](advanced_types_and_models.md)—continue to Chapter 4's [Dependency Graph, Caching & Scopes](../04_dependencies_and_security/dependency_injection.md), [ASGI Middleware & Threadpool](../05_async_and_realtime/concurrency_and_middleware.md) for transport-level middleware, [Native OpenTelemetry & Exceptions](../06_observability_and_testing/telemetry_and_errors.md) for app-wide exception handlers, and [Webhooks, Callbacks, SDKs & Docs UI](../07_frontend_and_openapi_ext/webhooks_callbacks_sdks.md) for documenting `@app.webhooks` schemas.

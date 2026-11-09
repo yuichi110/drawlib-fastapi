@@ -2,7 +2,7 @@
 
 FastAPI `v0.162.2` pairs typed 12-Factor environment configuration (`pydantic-settings` with `@lru_cache` dependency caching) and unified relational ORM/schema models (`SQLModel` with per-request `yield` sessions) so external infrastructure remains 100% swappable in tests via `app.dependency_overrides`.
 
-```drawlib align=center code=fold file=pydantic_settings_di_flow.png caption="Typed 12-Factor Configuration Pipeline: Environment Sources -> BaseSettings -> @lru_cache DI -> Hermetic Test Override"
+```drawlib align=center code=hide file=pydantic_settings_di_flow.png caption="Typed 12-Factor Configuration Pipeline: Environment Sources -> BaseSettings -> @lru_cache DI -> Hermetic Test Override"
 from drawlib.canvas import save, setup
 from drawlib.icons import phosphor
 from drawlib.lines import line
@@ -197,7 +197,7 @@ def test_settings_dependency_override_isolation() -> None:
 
 Created by the author of FastAPI (`@tiangolo`), **`SQLModel`** unifies **SQLAlchemy 2.0** and **Pydantic v2** under a single class hierarchy so database table definitions and HTTP validation schemas share field types, constraints, and editor autocomplete without duplicating boilerplate.
 
-```drawlib align=center code=fold file=sqlmodel_session_and_testing.png caption="FastAPI + SQLModel Multi-Model Architecture, Per-Request Session Yield Lifecycle & StaticPool SQLite Test Isolation"
+```drawlib align=center code=hide file=sqlmodel_session_and_testing.png caption="FastAPI + SQLModel Multi-Model Architecture, Per-Request Session Yield Lifecycle & StaticPool SQLite Test Isolation"
 from drawlib.canvas import save, setup
 from drawlib.icons import phosphor
 from drawlib.lines import lines

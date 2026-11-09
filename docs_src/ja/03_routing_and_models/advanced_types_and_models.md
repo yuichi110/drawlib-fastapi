@@ -2,7 +2,7 @@
 
 FastAPI `v0.157.0`〜`v0.162.2` は、Pydantic パラメータモデル（`Query()`・`Header()`・`Cookie()`・`Form()`）を合成・省略可能・判別共用体対応の抽出器へと拡張するとともに、JSON `null` と省略キーの厳密な区別、HTML チェックボックス `Form` の既定値解決、標準ライブラリ／Pydantic の拡張データ型、および 3 階層の OpenAPI 3.1 例示機構を統合します。
 
-```drawlib align=center code=fold file=parameter_models_composition.png caption="FastAPI v0.157–v0.162 パラメータモデル合成アーキテクチャ: 複数モデル抽出・Optional/Union 解決・兄弟モデル間の extra='forbid' 規則"
+```drawlib align=center code=hide file=parameter_models_composition.png caption="FastAPI v0.157–v0.162 パラメータモデル合成アーキテクチャ: 複数モデル抽出・Optional/Union 解決・兄弟モデル間の extra='forbid' 規則"
 from drawlib.canvas import save, setup
 from drawlib.icons import code, phosphor
 from drawlib.lines import line
@@ -292,7 +292,7 @@ async def upsert_subscription(
 
 基本的な `int`・`str`・`bool` に加え、FastAPI と Pydantic v2 は標準ライブラリおよび Pydantic の豊富なドメイン型を Rust バリデータと JSON Schema 2020-12 形式へ直接コンパイルしつつ、**キーの省略**・**明示的な JSON `null`**・**空の HTML フォーム文字列**を厳密に区別します。
 
-```drawlib align=center code=fold file=extra_types_and_null_semantics.png caption="拡張データ型マトリクス・v0.151 JSON null と v0.162 Form 真偽値仕様・3 階層 OpenAPI 3.1 例示"
+```drawlib align=center code=hide file=extra_types_and_null_semantics.png caption="拡張データ型マトリクス・v0.151 JSON null と v0.162 Form 真偽値仕様・3 階層 OpenAPI 3.1 例示"
 from drawlib.canvas import save, setup
 from drawlib.icons import code, phosphor
 from drawlib.shapes import rectangle

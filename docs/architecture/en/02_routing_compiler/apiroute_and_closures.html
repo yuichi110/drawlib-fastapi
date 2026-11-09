@@ -1,0 +1,601 @@
+<!--
+ Copyright (c) 2026 Yuichi Ito (yuichi@yuichi.com)
+
+ This software is licensed under the Apache License, Version 2.0.
+ For more information, please visit: https://github.com/yuichi110/drawlib
+
+ This software is provided "as is", without warranty of any kind,
+ express or implied, including but not limited to the warranties of
+ merchantability, fitness for a particular purpose and noninfringement.
+-->
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APIRouter, APIRoute &amp; Handler Closure Compilation — FastAPI Architecture Guide (Unofficial)</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-S9N5BZ1VRC');
+    </script>
+    <script>
+        (function() {
+            const saved = localStorage.getItem('drawlib-theme');
+            if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    
+    
+    
+    <link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/architecture/en/02_routing_compiler/apiroute_and_closures.html">
+    
+    <link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/architecture/ja/02_routing_compiler/apiroute_and_closures.html">
+    
+    <link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/architecture/en/02_routing_compiler/apiroute_and_closures.html">
+    
+    
+    
+    <meta name="description" content="FastAPI&#x27;s routing engine (fastapi/routing.py) operates as an ahead-of-time closure compiler built atop Starlette&#x27;s Router and Route primitives. Rather than…">
+    <link rel="canonical" href="https://fastapi.drawlib.com/architecture/en/02_routing_compiler/apiroute_and_closures.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="FastAPI Architecture">
+    <meta property="og:title" content="APIRouter, APIRoute &amp; Handler Closure Compilation — FastAPI Architecture">
+    <meta property="og:description" content="FastAPI&#x27;s routing engine (fastapi/routing.py) operates as an ahead-of-time closure compiler built atop Starlette&#x27;s Router and Route primitives. Rather than…">
+    <meta property="og:url" content="https://fastapi.drawlib.com/architecture/en/02_routing_compiler/apiroute_and_closures.html">
+    <meta property="og:image" content="https://fastapi.drawlib.com/architecture/_assets/ogp.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="ja_JP">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="APIRouter, APIRoute &amp; Handler Closure Compilation — FastAPI Architecture">
+    <meta name="twitter:description" content="FastAPI&#x27;s routing engine (fastapi/routing.py) operates as an ahead-of-time closure compiler built atop Starlette&#x27;s Router and Route primitives. Rather than…">
+    <meta name="twitter:image" content="https://fastapi.drawlib.com/architecture/_assets/ogp.png">
+    
+    
+    <link rel="icon" type="image/png" href="../../_assets/favicon.png">
+    
+    
+    <link rel="stylesheet" href="../style.css">
+    
+    
+</head>
+<body>
+    <div class="demo-banner" role="region" aria-label="Portal Navigation">
+        <div class="demo-banner-inner">
+            <span class="demo-banner-badge">INTERNAL ARCHITECTURE</span>
+            
+            <span class="demo-banner-text">
+                Unofficial Internal Architecture Guide to <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a> (v0.162.2)
+            </span>
+            <span class="demo-banner-links">
+                <a href="https://fastapi.drawlib.com/">User Guide</a>
+                <span class="demo-banner-sep">·</span>
+                <strong style="color:#ffffff;">Architecture</strong>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Audit</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official Docs ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+            </span>
+            
+        </div>
+    </div>
+    
+    <div class="doc-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI Architecture">
+                    
+                    FastAPI Architecture
+                    
+                </a>
+                <div class="sidebar-header-actions">
+                    <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">
+                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                    <button type="button" id="menu-toggle" class="menu-toggle-btn" aria-label="Toggle navigation" aria-expanded="false">
+                        <svg class="icon-hamburger" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        <svg class="icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="sidebar-menu">
+                
+                    
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../index.html" >Architecture Overview</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">1. Package Topology &amp; Layers</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../01_package_and_layers/module_hierarchy.html" >5-Tier Module Hierarchy &amp; Shims</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">2. Routing Compiler &amp; Closures</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item active">
+                                <a href="apiroute_and_closures.html" >APIRouter, APIRoute &amp; Handler Closure</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="streaming_and_spa_internals.html" >Generator Streaming &amp; SPA Internals</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">3. DI &amp; Security Engine</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../03_di_and_security_engine/dependant_and_solver.html" >Dependant DAG &amp; solve_dependencies</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../03_di_and_security_engine/security_internals.html" >SecurityBase &amp; HTTPConnection</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">4. Pydantic v2 Bridge</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../04_pydantic_bridge/compat_and_serialization.html" >_compat/v2.py, ModelField &amp; Serialization</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">5. ASGI Stack &amp; Telemetry</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../05_asgi_and_telemetry/middleware_and_concurrency.html" >Middleware Onion &amp; Threadpool</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../05_asgi_and_telemetry/native_telemetry_internals.html" >NativeTelemetry &amp; Runtime Spans</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">6. OpenAPI 3.1 Synthesis</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../06_openapi_and_docs/openapi_synthesis_engine.html" >get_openapi(), $defs &amp; Docs UI</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">Companion Guides &amp; Links</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/" target="_blank" rel="noopener noreferrer">FastAPI User Guide<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/reports/pni501/" target="_blank" rel="noopener noreferrer">PNI501 Diagnostic Report<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official FastAPI Docs<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub Repository<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                        </ul>
+                    
+                
+            </div>
+        </aside>
+        <div class="content-wrapper">
+            <header class="top-bar">
+                <div class="breadcrumbs">
+                    <span class="crumb">Architecture</span>
+                    <span class="crumb-separator">&raquo;</span>
+                    <span class="crumb active">APIRouter, APIRoute &amp; Handler Closure Compilation</span>
+                </div>
+                
+                <div class="lang-switcher">
+                    <details class="lang-dropdown">
+                        <summary class="lang-dropdown-btn" aria-label="Select language">
+                            <svg class="lang-globe-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            <span class="lang-current-label">English</span>
+                            <svg class="lang-caret-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </summary>
+                        <div class="lang-dropdown-menu" role="menu">
+                            
+                            <a href="apiroute_and_closures.html" class="lang-option active" lang="en" hreflang="en" aria-current="page">
+                                <span>English</span>
+                                
+                                <svg class="lang-check-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                
+                            </a>
+                            
+                            <a href="../../ja/02_routing_compiler/apiroute_and_closures.html" class="lang-option" lang="ja" hreflang="ja" >
+                                <span>日本語</span>
+                                
+                            </a>
+                            
+                        </div>
+                    </details>
+                </div>
+                
+            </header>
+            <main class="main-content">
+                <h1>APIRouter, APIRoute &amp; Handler Closure Compilation</h1>
+<p>FastAPI's routing engine (<code>fastapi/routing.py</code>) operates as an ahead-of-time <strong>closure compiler</strong> built atop Starlette's <code>Router</code> and <code>Route</code> primitives. Rather than reflecting over Python type annotations or rebuilding Pydantic validators on every HTTP request, <code>APIRouter</code> and <code>APIRoute</code> inspect endpoint signatures once during registration (or lazy router inclusion), synthesize dedicated <code>Dependant</code> graphs and <code>ModelField</code> adapters, and freeze those artifacts inside a specialized <code>async def app(request: Request) -&gt; Response</code> closure wrapped by FastAPI's dual-stack <code>request_response()</code> ASGI adapter.</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/02_routing_compiler/apiroute_and_closures/apiroute_closure_compiler.png" alt="apiroute_and_closures_1" />
+  <figcaption class="drawlib-caption">End-to-End APIRoute & Handler Closure Compilation Pipeline</figcaption>
+</figure>
+<h2>1. Compile-Time State Synthesis (<code>APIRoute.__init__</code> &amp; <code>_populate_api_route_state</code>)</h2>
+<p>Every HTTP verb decorator on <code>APIRouter</code> (<code>@router.get()</code>, <code>@router.post()</code>, <code>@router.put()</code>, <code>@router.delete()</code>, <code>@router.patch()</code>, <code>@router.options()</code>, <code>@router.head()</code>, <code>@router.trace()</code>) delegates through <code>APIRouter.api_route()</code> to <code>APIRouter.add_api_route()</code>. <code>add_api_route()</code> merges the router's immediate <code>prefix</code>, <code>tags</code>, <code>dependencies</code>, <code>responses</code>, <code>callbacks</code>, <code>default_response_class</code>, <code>generate_unique_id_function</code>, and <code>strict_content_type</code> with the decorator's arguments, then instantiates <code>route_class</code> (<code>APIRoute</code> by default).</p>
+<p>Inside <code>APIRoute.__init__</code>, FastAPI delegates state construction to <code>_populate_api_route_state(route, path, endpoint, ...)</code> so that both direct <code>APIRoute</code> instances and lazy <code>_EffectiveRouteContext</code> clones share identical compilation logic:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Compiled Attribute</th>
+<th style="text-align:left">Producer Function</th>
+<th style="text-align:left">Role in FastAPI <code>v0.162.2</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><code>path_regex</code>, <code>path_format</code>, <code>param_convertors</code></td>
+<td style="text-align:left"><code>starlette.routing.compile_path(path)</code></td>
+<td style="text-align:left">Compiles <code>{param:type}</code> segments into a regex, normalized OpenAPI path template, and Starlette convertors.</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>unique_id</code></td>
+<td style="text-align:left"><code>operation_id or generate_unique_id(route)</code></td>
+<td style="text-align:left">Deterministic identifier (<code>&lt;name&gt;&lt;path_format&gt;_&lt;method&gt;</code>) used for OpenAPI <code>operationId</code> and synthetic Pydantic model names.</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>dependant</code>, <code>_embed_body_fields</code></td>
+<td style="text-align:left"><code>_build_dependant_with_parameterless_dependencies()</code></td>
+<td style="text-align:left">Calls <code>get_dependant(path=path_format, call=endpoint, scope=&quot;function&quot;)</code>, prepends router/decorator <code>Depends</code> at index <code>0</code> in reverse so outer-to-inner declaration order is preserved, flattens <code>body_params</code>, and computes <code>_should_embed_body_fields()</code>.</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>body_field</code></td>
+<td style="text-align:left"><code>_get_body_field()</code></td>
+<td style="text-align:left">Returns the single <code>ModelField</code> directly when <code>_embed_body_fields=False</code>, or synthesizes a composite <code>Body_&lt;unique_id&gt;</code> Pydantic model (<code>create_body_model</code>) for multi-parameter JSON bodies, <code>Body(embed=True)</code>, or <code>Form</code>/<code>File</code> uploads.</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>response_field</code>, <code>response_fields</code></td>
+<td style="text-align:left"><code>create_model_field(..., mode=&quot;serialization&quot;)</code></td>
+<td style="text-align:left">Wraps <code>response_model</code> (or inferred return annotation, unless <code>issubclass(ret, Response)</code>) in <code>Response_&lt;unique_id&gt;</code> using Pydantic v2's <code>TypeAdapter</code> in <code>&quot;serialization&quot;</code> mode; builds per-status <code>Response_&lt;code&gt;_&lt;unique_id&gt;</code> fields for <code>responses={...}</code>.</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>stream_item_field</code>, <code>is_sse_stream</code>, <code>is_json_stream</code></td>
+<td style="text-align:left"><code>get_stream_item_type()</code> + <code>create_model_field()</code></td>
+<td style="text-align:left">For <code>yield</code> generator endpoints, extracts <code>T</code> from <code>AsyncIterable[T]</code> / <code>Iterable[T]</code> (excluding <code>ServerSentEvent</code>) into <code>StreamItem_&lt;unique_id&gt;</code> (<code>mode=&quot;serialization&quot;</code>) and sets streaming dispatch flags.</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>app</code></td>
+<td style="text-align:left"><code>request_response(self.get_route_handler())</code></td>
+<td style="text-align:left">Freezes the compiled route handler closure inside FastAPI's ASGI <code>Scope</code>/<code>Receive</code>/<code>Send</code> adapter.</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>[!NOTE]
+<strong>Removal of Legacy <code>secure_cloned_response_field</code></strong>: In Pydantic v1 versions of FastAPI, <code>APIRoute</code> maintained both <code>response_field</code> and a cloned <code>secure_cloned_response_field</code> (<code>create_cloned_field</code>) to strip arbitrary sub-fields safely. Because FastAPI <code>v0.162.2</code> runs exclusively on Pydantic v2 (<code>PydanticV1NotSupportedError</code> rejects v1 models in <code>create_model_field()</code>), <code>v2.ModelField(mode=&quot;serialization&quot;)</code> compiles a single Rust-backed <code>TypeAdapter</code> that enforces field filtering, aliases, and validation natively without cloning models.</p>
+</blockquote>
+<h2>2. The Runtime Handler Closure (<code>get_request_handler</code> &amp; <code>request_response</code>)</h2>
+<h3>2.1 Dual AsyncExitStack &amp; Swallowed-Exception Guard in <code>request_response()</code></h3>
+<p><code>APIRoute.__init__</code> finishes with <code>self.app = request_response(self.get_route_handler())</code>. FastAPI vendors and customizes Starlette's <code>request_response()</code> in <code>fastapi/routing.py</code> to manage two distinct <code>AsyncExitStack</code> lifecycles inside <code>scope</code> before delegating exception translation to Starlette's <code>wrap_app_handling_exceptions(app, request)</code>:</p>
+<ol>
+<li><strong><code>scope[&quot;fastapi_inner_astack&quot;]</code> (Outer Request Stack)</strong>: Encompasses both <code>response = await f(request)</code> <strong>and</strong> <code>await response(scope, receive, send)</code>. Dependencies with <code>yield</code> using <code>scope=&quot;request&quot;</code> (the default for request-wide resources such as database sessions consumed by streaming responses) remain alive until every response byte has been transmitted over ASGI <code>send</code>.</li>
+<li><strong><code>scope[&quot;fastapi_function_astack&quot;]</code> (Inner Function Stack)</strong>: Encloses only <code>response = await f(request)</code>. Dependencies explicitly configured with <code>Depends(..., scope=&quot;function&quot;)</code> exit immediately after the endpoint returns its <code>Response</code> object, before body streaming begins.</li>
+<li><strong><code>response_awaited</code> Integrity Check</strong>: A boolean flag <code>response_awaited</code> is set to <code>True</code> only after <code>await response(scope, receive, send)</code> completes. If <code>request_stack.__aexit__</code> suppresses an exception (because a buggy <code>yield</code> dependency caught <code>Exception</code> in a bare <code>except:</code> block without re-raising) before <code>response</code> was ever awaited, FastAPI explicitly raises <code>FastAPIError(&quot;Response not awaited...&quot;)</code> instead of silently hanging the HTTP connection.</li>
+</ol>
+<h3>2.2 Body Parsing, Strict Content-Type CSRF Gate &amp; Dependency Solving</h3>
+<p><code>APIRoute.get_route_handler()</code> passes the route's compiled attributes into <code>get_request_handler()</code>, which precomputes five invariants outside the per-request hot path (<code>is_coroutine</code>, <code>is_body_form</code>, <code>actual_response_class</code>, <code>is_sse_stream</code>, and <code>actual_strict_content_type</code>) and returns <code>async def app(request: Request) -&gt; Response</code>:</p>
+<ul>
+<li><strong>Multipart &amp; Form Cleanup (<code>fastapi_middleware_astack</code>)</strong>: The closure fetches <code>file_stack = request.scope.get(&quot;fastapi_middleware_astack&quot;)</code> (installed by <code>AsyncExitStackMiddleware</code>). When <code>body_field</code> is present and <code>is_body_form</code> is <code>True</code> (<code>isinstance(body_field.field_info, params.Form)</code>, which covers both <code>Form()</code> and <code>File()</code> since <code>File</code> subclasses <code>Form</code>), FastAPI awaits <code>body = await request.form()</code> and pushes <code>body.close</code> onto <code>file_stack</code> so temporary <code>SpooledTemporaryFile</code> handles are guaranteed to close even if validation fails.</li>
+<li><strong>JSON Parsing &amp; Strict Content-Type CSRF Defense</strong>: For non-form <code>body_field</code> routes, FastAPI reads <code>body_bytes = await request.body()</code>. When non-empty, it inspects <code>request.headers.get(&quot;content-type&quot;)</code> via <code>email.message.Message</code>:
+<ul>
+<li>If <code>Content-Type</code> is <code>application/json</code> or <code>application/*+json</code> (such as <code>application/problem+json</code> or <code>application/vnd.api+json</code>), it parses <code>await request.json()</code>.</li>
+<li>If <code>Content-Type</code> is <strong>missing</strong>, FastAPI checks <code>actual_strict_content_type</code> (<code>True</code> by default). When <code>True</code>, headerless payloads are left as raw <code>bytes</code> (causing Pydantic dict/model validation to reject them with <code>422</code>), preventing browsers from exploiting simple <code>fetch()</code> requests without <code>Content-Type</code> to bypass CORS preflight checks against <code>localhost</code> services. Setting <code>strict_content_type=False</code> restores permissive JSON parsing for headerless legacy clients.</li>
+<li>Malformed JSON raises <code>json.JSONDecodeError</code>, which FastAPI converts into <code>RequestValidationError</code> with <code>type=&quot;json_invalid&quot;</code>, byte offset <code>loc=(&quot;body&quot;, e.pos)</code>, and cached source metadata from <code>_extract_endpoint_context(dependant.call)</code>, firing the <code>_validation_failed()</code> telemetry hook.</li>
+</ul>
+</li>
+<li><strong>Dependency DAG Resolution</strong>: Inside <code>_operation(name=&quot;dependencies&quot;, function=dependant.call)</code>, <code>solve_dependencies()</code> validates path, query, header, cookie, and parsed <code>body</code> values while resolving sub-dependencies on <code>fastapi_inner_astack</code>. Any accumulated <code>solved_result.errors</code> raise <code>RequestValidationError</code> prior to endpoint invocation.</li>
+</ul>
+<h3>2.3 Endpoint Execution, Rust <code>serialize_json</code> Fast Path &amp; <code>BackgroundTasks</code> Merging</h3>
+<p>When <code>solved_result.errors</code> is empty and the route is not a streaming generator, <code>get_request_handler()</code> executes the standard request-response branch:</p>
+<ol>
+<li><strong><code>run_endpoint_function()</code></strong>: Separated into a top-level helper for profiler visibility. Async endpoints execute directly via <code>await dependant.call(**values)</code> inside <code>_operation(name=&quot;endpoint&quot;)</code>; synchronous <code>def</code> endpoints offload via <code>await run_in_threadpool(_run_sync_endpoint, function=dependant.call, arguments=values)</code> so blocking I/O does not stall the event loop while preserving OpenTelemetry context.</li>
+<li><strong>Direct <code>Response</code> Return Bypass</strong>: If <code>isinstance(raw_response, Response)</code> is <code>True</code>, FastAPI skips <code>serialize_response()</code> completely. If <code>raw_response.background is None</code>, it attaches <code>solved_result.background_tasks</code> (preserving tasks queued via injected <code>BackgroundTasks</code> dependencies) and returns <code>raw_response</code> untouched.</li>
+<li><strong>Pydantic Rust <code>dump_json</code> Fast Path vs Custom <code>response_class</code></strong>: Otherwise, <code>_build_response_args()</code> merges <code>background_tasks</code> and <code>status_code</code> (allowing <code>solved_result.response.status_code</code> mutated inside dependencies or the endpoint to override the decorator's <code>status_code</code>). FastAPI then evaluates:
+<ul>
+<li><strong><code>use_dump_json = response_field is not None and isinstance(response_class, DefaultPlaceholder)</code></strong>: When <code>True</code>, <code>serialize_response(..., dump_json=True)</code> validates <code>raw_response</code> via <code>field.validate()</code> (offloaded to <code>run_in_threadpool</code> for sync endpoints, raising <code>ResponseValidationError</code> on contract mismatch) and calls <code>field.serialize_json(...)</code>. Pydantic's Rust core (<code>pydantic-core</code>) emits UTF-8 JSON <code>bytes</code> directly, which FastAPI wraps in a bare Starlette <code>Response(content=content, media_type=&quot;application/json&quot;, **response_args)</code>—bypassing intermediate Python <code>dict</code> allocation and <code>json.dumps()</code>!</li>
+<li><strong>Fallback Serialization (<code>use_dump_json=False</code>)</strong>: Calls <code>field.serialize(...)</code> (producing Python primitives) or <code>jsonable_encoder(raw_response)</code> when <code>response_field is None</code>, passing the result to <code>actual_response_class(content, **response_args)</code> (e.g., <code>ORJSONResponse</code> or default <code>JSONResponse</code>).</li>
+</ul>
+</li>
+<li><strong>Body Stripping &amp; Header Merging</strong>: If <code>not is_body_allowed_for_status_code(response.status_code)</code> (<code>1xx</code>, <code>204</code>, <code>205</code>, or <code>304</code>), <code>response.body</code> is cleared to <code>b&quot;&quot;</code>. Finally, <code>response.headers.raw.extend(solved_result.response.headers.raw)</code> appends every <code>Set-Cookie</code> and custom header written to the injected <code>Response</code> parameter.</li>
+</ol>
+<h2>3. Nested <code>include_router()</code>, <code>_EffectiveRouteContext</code> &amp; Lifespan Composition</h2>
+<p>In FastAPI <code>v0.162.2</code>, <code>APIRouter.include_router(router, ...)</code> no longer eagerly clones <code>APIRoute</code> objects at call time. Instead, after asserting against self-inclusion (<code>self is not router</code>) and cyclic router graphs (<code>not router._contains_router(self)</code>), it records an immutable <code>_RouterIncludeContext.for_include(...)</code> inside a <code>_IncludedRouter(original_router=router, include_context=include_context)</code> node appended to <code>self.routes</code>, increments <code>self._routes_version</code>, and composes lifespans. This lazy architecture ensures that routes registered on a child <code>APIRouter</code> <em>after</em> <code>include_router()</code> is called are still discovered automatically when <code>_get_routes_version()</code> changes!</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/02_routing_compiler/apiroute_and_closures/include_router_context_merge.png" alt="apiroute_and_closures_2" />
+  <figcaption class="drawlib-caption">Nested include_router() Context Composition, Outer-to-Inner Dependency Ordering & _merge_lifespan_context</figcaption>
+</figure>
+<p>When a request arrives (or OpenAPI iterates routes via <code>iter_route_contexts()</code>), <code>_IncludedRouter.effective_candidates()</code> acquires <code>_effective_routes_lock</code>, combines nested <code>_RouterIncludeContext</code> layers via <code>.combine()</code>, and builds one <code>_EffectiveRouteContext</code> per included route via <code>_EffectiveRouteContext.from_api_route()</code>:</p>
+<ul>
+<li><strong>Outer-to-Inner Dependency Ordering</strong>: <code>_RouterIncludeContext</code> concatenates <code>dependencies=[*parent_router.dependencies, *(include_dependencies or [])]</code> down every nesting level, and <code>from_api_route()</code> appends <code>*route.dependencies</code>. Inside <code>_build_dependant_with_parameterless_dependencies()</code>, FastAPI iterates <code>for depends in dependencies[::-1]: dependant.dependencies.insert(0, ...)</code>, placing all parameterless router/decorator dependencies <strong>ahead</strong> of the endpoint's signature <code>Depends(...)</code> parameters in exact outer-to-inner order (<code>FastAPI</code> -&gt; outer <code>APIRouter</code> -&gt; <code>include_router()</code> -&gt; inner <code>APIRouter</code> -&gt; <code>@router.post(dependencies=...)</code> -&gt; endpoint function signature).</li>
+<li><strong>Precedence of Defaults &amp; Responses</strong>: <code>responses</code> merges via <code>{**include_context.responses, **route.responses}</code> so inner status definitions override outer defaults. <code>response_class</code>, <code>generate_unique_id_function</code>, and <code>strict_content_type</code> resolve via <code>get_value_or_default(route_val, included_router_val, include_context_val)</code>, picking the most specific non-<code>DefaultPlaceholder</code> setting. <code>deprecated</code> combines with logical <code>or</code>, while <code>include_in_schema</code> combines with logical <code>and</code>.</li>
+<li><strong><code>_merge_lifespan_context(original_context, nested_context)</code></strong>: At <code>include_router()</code> time, legacy <code>on_startup</code>/<code>on_shutdown</code> lists are copied and <code>self.lifespan_context</code> is wrapped in a nested <code>@asynccontextmanager</code>. During ASGI lifespan startup, <code>original_context(app)</code> enters <strong>first</strong> (outer) and <code>nested_context(app)</code> enters <strong>second</strong> (inner), tearing down in reverse LIFO order on shutdown. If either yields a state mapping, FastAPI yields <code>{**(maybe_nested_state or {}), **(maybe_original_state or {})}</code> so parent lifespan keys take precedence over nested router keys.</li>
+</ul>
+<h2>4. Source-Verified Inspection &amp; Custom <code>APIRoute</code> Wrapping</h2>
+<h3>4.1 Inspecting Compiled <code>APIRoute</code> Fields, <code>RouteContext</code> &amp; Lifespan Merging</h3>
+<p>The following snippet inspects the compiled <code>ModelField</code> artifacts on a raw <code>APIRoute</code>, composes a 3-level router hierarchy, reads the effective route metadata through <code>iter_route_contexts(app.routes)</code>, and verifies both outer-to-inner dependency execution order and <code>_merge_lifespan_context</code> state precedence:</p>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncIterator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">contextlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">asynccontextmanager</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">FastAPI</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.routing</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRoute</span><span class="p">,</span> <span class="n">_IncludedRouter</span><span class="p">,</span> <span class="n">iter_route_contexts</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.testclient</span><span class="w"> </span><span class="kn">import</span> <span class="n">TestClient</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">ItemIn</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">title</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">qty</span><span class="p">:</span> <span class="nb">int</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">ItemOut</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="nb">id</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">title</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">secret</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<span class="n">order</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">make_dep</span><span class="p">(</span><span class="n">label</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_dep</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">order</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">label</span>
+
+    <span class="k">return</span> <span class="n">_dep</span>
+
+
+<span class="nd">@asynccontextmanager</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">app_lifespan</span><span class="p">(</span><span class="n">_app</span><span class="p">:</span> <span class="n">FastAPI</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
+    <span class="k">yield</span> <span class="p">{</span><span class="s2">"app_scope"</span><span class="p">:</span> <span class="s2">"root"</span><span class="p">,</span> <span class="s2">"shared"</span><span class="p">:</span> <span class="s2">"parent_wins"</span><span class="p">}</span>
+
+
+<span class="nd">@asynccontextmanager</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">router_lifespan</span><span class="p">(</span><span class="n">_app</span><span class="p">:</span> <span class="n">FastAPI</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
+    <span class="k">yield</span> <span class="p">{</span><span class="s2">"router_scope"</span><span class="p">:</span> <span class="s2">"child"</span><span class="p">,</span> <span class="s2">"shared"</span><span class="p">:</span> <span class="s2">"child_overridden"</span><span class="p">}</span>
+
+
+<span class="n">inner</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">(</span>
+    <span class="n">prefix</span><span class="o">=</span><span class="s2">"/items"</span><span class="p">,</span>
+    <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">"items"</span><span class="p">],</span>
+    <span class="n">dependencies</span><span class="o">=</span><span class="p">[</span><span class="n">Depends</span><span class="p">(</span><span class="n">make_dep</span><span class="p">(</span><span class="s2">"inner_router"</span><span class="p">))],</span>
+    <span class="n">lifespan</span><span class="o">=</span><span class="n">router_lifespan</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="nd">@inner</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+    <span class="s2">"/</span><span class="si">{group}</span><span class="s2">"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">ItemOut</span><span class="p">,</span>
+    <span class="n">response_model_exclude_none</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">responses</span><span class="o">=</span><span class="p">{</span><span class="mi">409</span><span class="p">:</span> <span class="p">{</span><span class="s2">"model"</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]}},</span>
+    <span class="n">dependencies</span><span class="o">=</span><span class="p">[</span><span class="n">Depends</span><span class="p">(</span><span class="n">make_dep</span><span class="p">(</span><span class="s2">"decorator"</span><span class="p">))],</span>
+<span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">create_item</span><span class="p">(</span>
+    <span class="n">group</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">payload</span><span class="p">:</span> <span class="n">ItemIn</span><span class="p">,</span>
+    <span class="n">sig_dep</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">make_dep</span><span class="p">(</span><span class="s2">"endpoint_sig"</span><span class="p">)),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"id"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"title"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">group</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">payload</span><span class="o">.</span><span class="n">title</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">sig_dep</span><span class="si">}</span><span class="s2">"</span><span class="p">}</span>
+
+
+<span class="c1"># 1. Direct APIRoute state compiled at decorator evaluation time</span>
+<span class="n">raw_route</span> <span class="o">=</span> <span class="n">inner</span><span class="o">.</span><span class="n">routes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raw_route</span><span class="p">,</span> <span class="n">APIRoute</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">raw_route</span><span class="o">.</span><span class="n">unique_id</span> <span class="o">==</span> <span class="s2">"create_item_items__group__post"</span>
+<span class="k">assert</span> <span class="n">raw_route</span><span class="o">.</span><span class="n">body_field</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">raw_route</span><span class="o">.</span><span class="n">body_field</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">"payload"</span>
+<span class="k">assert</span> <span class="n">raw_route</span><span class="o">.</span><span class="n">_embed_body_fields</span> <span class="ow">is</span> <span class="kc">False</span>
+<span class="k">assert</span> <span class="n">raw_route</span><span class="o">.</span><span class="n">response_field</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+<span class="k">assert</span> <span class="n">raw_route</span><span class="o">.</span><span class="n">response_field</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"serialization"</span>
+<span class="k">assert</span> <span class="mi">409</span> <span class="ow">in</span> <span class="n">raw_route</span><span class="o">.</span><span class="n">response_fields</span>
+
+<span class="c1"># 2. Lazy _IncludedRouter composition &amp; effective RouteContext materialization</span>
+<span class="n">outer</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">(</span>
+    <span class="n">prefix</span><span class="o">=</span><span class="s2">"/v1"</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">"v1"</span><span class="p">],</span> <span class="n">dependencies</span><span class="o">=</span><span class="p">[</span><span class="n">Depends</span><span class="p">(</span><span class="n">make_dep</span><span class="p">(</span><span class="s2">"outer_router"</span><span class="p">))]</span>
+<span class="p">)</span>
+<span class="n">outer</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">inner</span><span class="p">,</span> <span class="n">dependencies</span><span class="o">=</span><span class="p">[</span><span class="n">Depends</span><span class="p">(</span><span class="n">make_dep</span><span class="p">(</span><span class="s2">"include_call"</span><span class="p">))])</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">(</span><span class="n">dependencies</span><span class="o">=</span><span class="p">[</span><span class="n">Depends</span><span class="p">(</span><span class="n">make_dep</span><span class="p">(</span><span class="s2">"app"</span><span class="p">))],</span> <span class="n">lifespan</span><span class="o">=</span><span class="n">app_lifespan</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">outer</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api"</span><span class="p">)</span>
+
+<span class="k">assert</span> <span class="nb">any</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">_IncludedRouter</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">app</span><span class="o">.</span><span class="n">router</span><span class="o">.</span><span class="n">routes</span><span class="p">)</span>
+<span class="n">eff</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">ctx</span> <span class="k">for</span> <span class="n">ctx</span> <span class="ow">in</span> <span class="n">iter_route_contexts</span><span class="p">(</span><span class="n">app</span><span class="o">.</span><span class="n">routes</span><span class="p">)</span> <span class="k">if</span> <span class="n">ctx</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">"create_item"</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">eff</span><span class="o">.</span><span class="n">path</span> <span class="o">==</span> <span class="s2">"/api/v1/items/</span><span class="si">{group}</span><span class="s2">"</span>
+<span class="k">assert</span> <span class="n">eff</span><span class="o">.</span><span class="n">tags</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"v1"</span><span class="p">,</span> <span class="s2">"items"</span><span class="p">]</span>
+
+<span class="k">with</span> <span class="n">TestClient</span><span class="p">(</span><span class="n">app</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/api/v1/items/books"</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="p">{</span><span class="s2">"title"</span><span class="p">:</span> <span class="s2">"ASGI"</span><span class="p">,</span> <span class="s2">"qty"</span><span class="p">:</span> <span class="mi">2</span><span class="p">})</span>
+    <span class="k">assert</span> <span class="n">res</span><span class="o">.</span><span class="n">json</span><span class="p">()</span> <span class="o">==</span> <span class="p">{</span><span class="s2">"id"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"title"</span><span class="p">:</span> <span class="s2">"books:ASGI:endpoint_sig"</span><span class="p">}</span>
+    <span class="k">assert</span> <span class="n">order</span> <span class="o">==</span> <span class="p">[</span>
+        <span class="s2">"app"</span><span class="p">,</span>
+        <span class="s2">"outer_router"</span><span class="p">,</span>
+        <span class="s2">"include_call"</span><span class="p">,</span>
+        <span class="s2">"inner_router"</span><span class="p">,</span>
+        <span class="s2">"decorator"</span><span class="p">,</span>
+        <span class="s2">"endpoint_sig"</span><span class="p">,</span>
+    <span class="p">]</span>
+    <span class="k">assert</span> <span class="n">client</span><span class="o">.</span><span class="n">app_state</span><span class="p">[</span><span class="s2">"shared"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"parent_wins"</span>
+</code></pre>
+<h3>4.2 Wrapping <code>get_request_handler()</code> via a Custom <code>APIRoute.get_route_handler()</code> Subclass</h3>
+<p>Custom <code>APIRoute</code> subclasses override <code>get_route_handler(self)</code> to intercept <code>Request</code> and <code>Response</code> objects around the closure returned by <code>super().get_route_handler()</code>. When <code>_EffectiveRouteContext.from_api_route()</code> compiles an included route, it temporarily binds <code>_effective_route_context_var.set(context)</code> (<code>ContextVar</code>) before calling <code>original_route.get_route_handler()</code>, ensuring <code>super().get_route_handler()</code> builds its closure against the merged <code>_EffectiveRouteContext</code> while executing your custom wrapper:</p>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Coroutine</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">Request</span><span class="p">,</span> <span class="n">Response</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.routing</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRoute</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.testclient</span><span class="w"> </span><span class="kn">import</span> <span class="n">TestClient</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">AuditAPIRoute</span><span class="p">(</span><span class="n">APIRoute</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_route_handler</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Request</span><span class="p">],</span> <span class="n">Coroutine</span><span class="p">[</span><span class="nb">object</span><span class="p">,</span> <span class="nb">object</span><span class="p">,</span> <span class="n">Response</span><span class="p">]]:</span>
+        <span class="n">original_handler</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_route_handler</span><span class="p">()</span>
+
+        <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">custom_handler</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Response</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="n">original_handler</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+            <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">"X-Route-Name"</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+            <span class="k">return</span> <span class="n">response</span>
+
+        <span class="k">return</span> <span class="n">custom_handler</span>
+
+
+<span class="n">router</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">(</span><span class="n">route_class</span><span class="o">=</span><span class="n">AuditAPIRoute</span><span class="p">)</span>
+
+
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/ping"</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">ping</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"ok"</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">()</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/v2"</span><span class="p">)</span>
+
+<span class="n">resp</span> <span class="o">=</span> <span class="n">TestClient</span><span class="p">(</span><span class="n">app</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/v2/ping"</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">resp</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span>
+<span class="k">assert</span> <span class="n">resp</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">"X-Route-Name"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"ping"</span>
+</code></pre>
+<p>Next, explore how <code>get_request_handler()</code> dispatches generator endpoints and low-priority SPA frontends in <a href="streaming_and_spa_internals.html">Generator Streaming &amp; SPA Internals</a>, how <code>Dependant</code> graphs resolve in <a href="../03_di_and_security_engine/dependant_and_solver.html">Dependant DAG &amp; solve_dependencies</a>, how <code>ModelField</code> wraps <code>TypeAdapter</code> in <a href="../04_pydantic_bridge/compat_and_serialization.html">_compat/v2.py, ModelField &amp; Serialization</a>, and how <code>AsyncExitStackMiddleware</code> frames the outer request stack in <a href="../05_asgi_and_telemetry/middleware_and_concurrency.html">Middleware Onion &amp; Threadpool</a>.</p>
+
+            </main>
+            <footer class="footer">
+                
+                FastAPI® is a registered trademark of Sebastián Ramírez (<a href="https://github.com/tiangolo" target="_blank" rel="noopener noreferrer">@tiangolo</a>). Unofficial internal architecture guide — not affiliated with or endorsed by the official FastAPI project (<a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">fastapi.tiangolo.com</a>).
+                
+            </footer>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeBtn = document.getElementById('theme-toggle');
+            if (themeBtn) {
+                themeBtn.addEventListener('click', function() {
+                    const current = document.documentElement.getAttribute('data-theme');
+                    const next = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    localStorage.setItem('drawlib-theme', next);
+                });
+            }
+
+            const langDropdowns = document.querySelectorAll('.lang-dropdown');
+            if (langDropdowns.length > 0) {
+                document.addEventListener('click', function(e) {
+                    langDropdowns.forEach(function(dd) {
+                        if (dd.hasAttribute('open') && !dd.contains(e.target)) {
+                            dd.removeAttribute('open');
+                        }
+                    });
+                });
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        langDropdowns.forEach(function(dd) {
+                            dd.removeAttribute('open');
+                        });
+                    }
+                });
+            }
+
+            const menuBtn = document.getElementById('menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            if (menuBtn && sidebar) {
+                function setMenuOpen(open) {
+                    sidebar.classList.toggle('is-open', open);
+                    menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    document.body.classList.toggle('menu-open', open);
+                    if (open) {
+                        const menu = sidebar.querySelector('.sidebar-menu');
+                        if (menu) {
+                            menu.scrollTop = 0;
+                        }
+                    }
+                }
+
+                menuBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const willOpen = !sidebar.classList.contains('is-open');
+                    setMenuOpen(willOpen);
+                });
+
+                document.addEventListener('click', function(e) {
+                    if (sidebar.classList.contains('is-open') && !sidebar.contains(e.target)) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                const navLinks = sidebar.querySelectorAll('.nav-item a');
+                navLinks.forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        setMenuOpen(false);
+                    });
+                });
+
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                window.addEventListener('resize', function() {
+                    if (window.innerWidth > 768 && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
