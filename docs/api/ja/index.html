@@ -1,0 +1,2302 @@
+<!--
+ Copyright (c) 2026 Yuichi Ito (yuichi@yuichi.com)
+
+ This software is licensed under the Apache License, Version 2.0.
+ For more information, please visit: https://github.com/yuichi110/drawlib
+
+ This software is provided "as is", without warranty of any kind,
+ express or implied, including but not limited to the warranties of
+ merchantability, fitness for a particular purpose and noninfringement.
+-->
+<!DOCTYPE html>
+<html lang="ja" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastAPI パッケージ概要 — FastAPI API Reference (Unofficial)</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-S9N5BZ1VRC');
+    </script>
+    <script>
+        (function() {
+            try {
+                var savedTheme = localStorage.getItem('drawlib-theme');
+                if (savedTheme === 'dark' || savedTheme === 'light') {
+                    document.documentElement.setAttribute('data-theme', savedTheme);
+                } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                }
+            } catch (e) {}
+        })();
+    </script>
+    
+    <link rel="icon" href="../_assets/favicon.png">
+    
+    
+    
+    <link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/api/en/">
+    
+    <link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/api/ja/">
+    
+    <link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/api/">
+    
+    
+    
+    <meta name="description" content="FastAPI v0.162.2 の完全 API・CLI リファレンス（非公式）：全公開クラス、パラメータ記述子、DI・認証スキーム、レスポンス、SSE・OpenTelemetry・OpenAPI 関数、CLI コマンドを網羅。">
+    <link rel="canonical" href="https://fastapi.drawlib.com/api/ja/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="FastAPI API Reference">
+    <meta property="og:title" content="FastAPI パッケージ概要 — FastAPI API Reference">
+    <meta property="og:description" content="FastAPI v0.162.2 の完全 API・CLI リファレンス（非公式）：全公開クラス、パラメータ記述子、DI・認証スキーム、レスポンス、SSE・OpenTelemetry・OpenAPI 関数、CLI コマンドを網羅。">
+    <meta property="og:url" content="https://fastapi.drawlib.com/api/ja/">
+    <meta property="og:image" content="https://fastapi.drawlib.com/api/_assets/ogp.png">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:locale:alternate" content="en_US">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="FastAPI パッケージ概要 — FastAPI API Reference">
+    <meta name="twitter:description" content="FastAPI v0.162.2 の完全 API・CLI リファレンス（非公式）：全公開クラス、パラメータ記述子、DI・認証スキーム、レスポンス、SSE・OpenTelemetry・OpenAPI 関数、CLI コマンドを網羅。">
+    <meta name="twitter:image" content="https://fastapi.drawlib.com/api/_assets/ogp.png">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    
+    <link rel="stylesheet" href="style.css">
+    
+</head>
+<body>
+    <div class="demo-banner" role="region" aria-label="ポータルナビゲーション">
+        <div class="demo-banner-inner">
+            <span class="demo-banner-badge">API REFERENCE</span>
+            
+            <span class="demo-banner-text">
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a>（v0.162.2）API・CLI リファレンス（非公式）
+            </span>
+            <span class="demo-banner-links">
+                <a href="https://fastapi.drawlib.com/">User Guide</a>
+                <span class="demo-banner-sep">·</span>
+                <strong style="color:#ffffff;">API Reference</strong>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.drawlib.com/architecture/">Architecture</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Audit</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official Docs ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+            </span>
+            
+        </div>
+    </div>
+    
+    <div class="doc-layout">
+        <aside class="sidebar" id="catalog-sidebar">
+            <div class="sidebar-header has-subbar">
+                <a href="index.html" class="site-title">
+                    FastAPI API リファレンス
+                </a>
+                <div class="sidebar-header-actions">
+                    <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle color theme" title="Toggle light/dark mode">
+                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                    <button type="button" id="menu-toggle" class="menu-toggle-btn" aria-label="Toggle navigation menu">
+                        <svg class="icon-hamburger" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        <svg class="icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="sidebar-subbar">
+                
+                
+                <a href="index.html" class="sidebar-version-badge">
+                    <span class="sidebar-version-dot"></span>
+                    <span>API リファレンス · v0.162.2</span>
+                </a>
+                
+                
+                
+                <a href="https://github.com/fastapi/fastapi" target="_blank" rel="noopener noreferrer" class="sidebar-github-link" aria-label="Repository" title="View Upstream FastAPI Repository">
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+                </a>
+                
+            </div>
+            
+
+            <div class="sidebar-menu">
+                <div class="catalog-sidebar-toolbar">
+                    <div class="catalog-filter-box">
+                        <svg class="catalog-filter-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <input id="catalog-filter-input" type="search" class="catalog-filter-input" placeholder="項目を絞り込み..." autocomplete="off" spellcheck="false" aria-label="項目を絞り込み...">
+                        <kbd class="catalog-filter-kbd">/</kbd>
+                    </div>
+                    <div class="catalog-toolbar-meta">
+                        <span class="catalog-toolbar-label">カテゴリ &amp; 項目</span>
+                        <button type="button" id="catalog-expand-toggle" class="catalog-expand-btn" data-expand-label="すべて展開" data-collapse-label="すべて折りたたむ">すべて折りたたむ</button>
+                    </div>
+                </div>
+
+                <nav class="catalog-sidebar-nav" id="catalog-sidebar-nav" aria-label="Catalog Navigation">
+                    
+                    
+                    
+                    <details class="catalog-nav-group is-current-page" data-cat="FastAPI パッケージ概要" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="00_overview.html" class="catalog-nav-cat-link is-prose-cat">FastAPI パッケージ概要</a>
+                            
+                            <span class="catalog-nav-count">4</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="const fastapi.__version__">
+                                <a href="#fastapi-version" class="catalog-nav-sublink is-prose-sublink" data-target="fastapi-version">
+                                    
+                                    <span class="catalog-badge catalog-badge-const">const</span>
+                                    
+                                    <span class="catalog-nav-sym-text">fastapi.__version__</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="module fastapi.status">
+                                <a href="#fastapi-status" class="catalog-nav-sublink is-prose-sublink" data-target="fastapi-status">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">module</span>
+                                    
+                                    <span class="catalog-nav-sym-text">fastapi.status</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="type fastapi.types.DecoratedCallable">
+                                <a href="#fastapi-types-decoratedcallable" class="catalog-nav-sublink is-prose-sublink" data-target="fastapi-types-decoratedcallable">
+                                    
+                                    <span class="catalog-badge catalog-badge-type">type</span>
+                                    
+                                    <span class="catalog-nav-sym-text">fastapi.types.DecoratedCallable</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="type fastapi.types.IncEx">
+                                <a href="#fastapi-types-incex" class="catalog-nav-sublink is-prose-sublink" data-target="fastapi-types-incex">
+                                    
+                                    <span class="catalog-badge catalog-badge-type">type</span>
+                                    
+                                    <span class="catalog-nav-sym-text">fastapi.types.IncEx</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group" data-cat="applications" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="01_applications.html" class="catalog-nav-cat-link">fastapi.applications</a>
+                            
+                            <span class="catalog-nav-count">12</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="class FastAPI">
+                                <a href="01_applications.html#fastapi" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FastAPI</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method FastAPI.get()">
+                                <a href="01_applications.html#fastapi-get" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FastAPI.get()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method FastAPI.api_route()">
+                                <a href="01_applications.html#fastapi-api-route" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FastAPI.api_route()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method FastAPI.websocket()">
+                                <a href="01_applications.html#fastapi-websocket" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FastAPI.websocket()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method FastAPI.include_router()">
+                                <a href="01_applications.html#fastapi-include-router" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FastAPI.include_router()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method FastAPI.mount()">
+                                <a href="01_applications.html#fastapi-mount" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FastAPI.mount()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method FastAPI.frontend()">
+                                <a href="01_applications.html#fastapi-frontend" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FastAPI.frontend()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method FastAPI.add_middleware()">
+                                <a href="01_applications.html#fastapi-add-middleware" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FastAPI.add_middleware()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method FastAPI.middleware()">
+                                <a href="01_applications.html#fastapi-middleware" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FastAPI.middleware()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method FastAPI.add_exception_handler()">
+                                <a href="01_applications.html#fastapi-add-exception-handler" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FastAPI.add_exception_handler()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method FastAPI.exception_handler()">
+                                <a href="01_applications.html#fastapi-exception-handler" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FastAPI.exception_handler()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method FastAPI.openapi()">
+                                <a href="01_applications.html#fastapi-openapi" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FastAPI.openapi()</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group" data-cat="routing" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="02_routing.html" class="catalog-nav-cat-link">fastapi.routing</a>
+                            
+                            <span class="catalog-nav-count">11</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="class APIRouter">
+                                <a href="02_routing.html#apirouter" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">APIRouter</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method APIRouter.get()">
+                                <a href="02_routing.html#apirouter-get" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">APIRouter.get()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method APIRouter.include_router()">
+                                <a href="02_routing.html#apirouter-include-router" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">APIRouter.include_router()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method APIRouter.add_api_route()">
+                                <a href="02_routing.html#apirouter-add-api-route" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">APIRouter.add_api_route()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method APIRouter.api_route()">
+                                <a href="02_routing.html#apirouter-api-route" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">APIRouter.api_route()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method APIRouter.websocket()">
+                                <a href="02_routing.html#apirouter-websocket" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">APIRouter.websocket()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method APIRouter.frontend()">
+                                <a href="02_routing.html#apirouter-frontend" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">APIRouter.frontend()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class APIRoute">
+                                <a href="02_routing.html#apiroute" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">APIRoute</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method APIRoute.get_route_handler()">
+                                <a href="02_routing.html#apiroute-get-route-handler" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">APIRoute.get_route_handler()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class APIWebSocketRoute">
+                                <a href="02_routing.html#apiwebsocketroute" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">APIWebSocketRoute</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class Mount">
+                                <a href="02_routing.html#mount" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Mount</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group" data-cat="params" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="03_parameters.html" class="catalog-nav-cat-link">fastapi.params</a>
+                            
+                            <span class="catalog-nav-count">8</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="def Path()">
+                                <a href="03_parameters.html#path" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Path()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def Query()">
+                                <a href="03_parameters.html#query" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Query()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def Header()">
+                                <a href="03_parameters.html#header" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Header()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def Cookie()">
+                                <a href="03_parameters.html#cookie" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Cookie()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def Body()">
+                                <a href="03_parameters.html#body" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Body()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def Form()">
+                                <a href="03_parameters.html#form" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Form()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def File()">
+                                <a href="03_parameters.html#file" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">File()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def annotated_doc.Doc()">
+                                <a href="03_parameters.html#annotated-doc-doc" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">annotated_doc.Doc()</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group" data-cat="dependencies" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="04_dependencies.html" class="catalog-nav-cat-link">fastapi.dependencies</a>
+                            
+                            <span class="catalog-nav-count">4</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="def Depends()">
+                                <a href="04_dependencies.html#depends" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Depends()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def Security()">
+                                <a href="04_dependencies.html#security" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Security()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class SecurityScopes">
+                                <a href="04_dependencies.html#securityscopes" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">SecurityScopes</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="attr FastAPI.dependency_overrides">
+                                <a href="04_dependencies.html#fastapi-dependency-overrides" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-const">attr</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FastAPI.dependency_overrides</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group" data-cat="security" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="05_security.html" class="catalog-nav-cat-link">fastapi.security</a>
+                            
+                            <span class="catalog-nav-count">16</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="class OAuth2PasswordBearer">
+                                <a href="05_security.html#oauth2passwordbearer" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">OAuth2PasswordBearer</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class OAuth2AuthorizationCodeBearer">
+                                <a href="05_security.html#oauth2authorizationcodebearer" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">OAuth2AuthorizationCodeBearer</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class OAuth2PasswordRequestForm">
+                                <a href="05_security.html#oauth2passwordrequestform" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">OAuth2PasswordRequestForm</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class OAuth2PasswordRequestFormStrict">
+                                <a href="05_security.html#oauth2passwordrequestformstrict" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">OAuth2PasswordRequestFormStrict</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class OAuth2">
+                                <a href="05_security.html#oauth2" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">OAuth2</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class HTTPBearer">
+                                <a href="05_security.html#httpbearer" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">HTTPBearer</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class HTTPBasic">
+                                <a href="05_security.html#httpbasic" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">HTTPBasic</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class HTTPDigest">
+                                <a href="05_security.html#httpdigest" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">HTTPDigest</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class HTTPAuthorizationCredentials">
+                                <a href="05_security.html#httpauthorizationcredentials" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">HTTPAuthorizationCredentials</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class HTTPBasicCredentials">
+                                <a href="05_security.html#httpbasiccredentials" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">HTTPBasicCredentials</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class APIKeyHeader">
+                                <a href="05_security.html#apikeyheader" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">APIKeyHeader</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class APIKeyQuery">
+                                <a href="05_security.html#apikeyquery" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">APIKeyQuery</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class APIKeyCookie">
+                                <a href="05_security.html#apikeycookie" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">APIKeyCookie</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class OpenIdConnect">
+                                <a href="05_security.html#openidconnect" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">OpenIdConnect</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class SecurityBase">
+                                <a href="05_security.html#securitybase" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">SecurityBase</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def get_authorization_scheme_param()">
+                                <a href="05_security.html#get-authorization-scheme-param" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">get_authorization_scheme_param()</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group" data-cat="requests &amp; websockets" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="06_requests_websockets.html" class="catalog-nav-cat-link">fastapi.requests &amp; websockets</a>
+                            
+                            <span class="catalog-nav-count">5</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="class Request">
+                                <a href="06_requests_websockets.html#request" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Request</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class HTTPConnection">
+                                <a href="06_requests_websockets.html#httpconnection" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">HTTPConnection</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class WebSocket">
+                                <a href="06_requests_websockets.html#websocket" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">WebSocket</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class WebSocketDisconnect">
+                                <a href="06_requests_websockets.html#websocketdisconnect" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">WebSocketDisconnect</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="enum WebSocketState">
+                                <a href="06_requests_websockets.html#websocketstate" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-type">enum</span>
+                                    
+                                    <span class="catalog-nav-sym-text">WebSocketState</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group" data-cat="responses" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="07_responses.html" class="catalog-nav-cat-link">fastapi.responses</a>
+                            
+                            <span class="catalog-nav-count">9</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="class Response">
+                                <a href="07_responses.html#response" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Response</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class JSONResponse">
+                                <a href="07_responses.html#jsonresponse" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">JSONResponse</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class HTMLResponse">
+                                <a href="07_responses.html#htmlresponse" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">HTMLResponse</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class PlainTextResponse">
+                                <a href="07_responses.html#plaintextresponse" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">PlainTextResponse</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class RedirectResponse">
+                                <a href="07_responses.html#redirectresponse" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">RedirectResponse</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class StreamingResponse">
+                                <a href="07_responses.html#streamingresponse" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">StreamingResponse</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class FileResponse">
+                                <a href="07_responses.html#fileresponse" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FileResponse</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="deprecated ORJSONResponse">
+                                <a href="07_responses.html#orjsonresponse" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-error">deprecated</span>
+                                    
+                                    <span class="catalog-nav-sym-text">ORJSONResponse</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="deprecated UJSONResponse">
+                                <a href="07_responses.html#ujsonresponse" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-error">deprecated</span>
+                                    
+                                    <span class="catalog-nav-sym-text">UJSONResponse</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group" data-cat="sse" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="08_sse.html" class="catalog-nav-cat-link">fastapi.sse</a>
+                            
+                            <span class="catalog-nav-count">4</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="class EventSourceResponse">
+                                <a href="08_sse.html#eventsourceresponse" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">EventSourceResponse</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class ServerSentEvent">
+                                <a href="08_sse.html#serversentevent" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">ServerSentEvent</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def format_sse_event()">
+                                <a href="08_sse.html#format-sse-event" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">format_sse_event()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="const KEEPALIVE_COMMENT">
+                                <a href="08_sse.html#keepalive-comment" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-const">const</span>
+                                    
+                                    <span class="catalog-nav-sym-text">KEEPALIVE_COMMENT</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group" data-cat="datastructures" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="09_datastructures.html" class="catalog-nav-cat-link">fastapi.datastructures</a>
+                            
+                            <span class="catalog-nav-count">9</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="class UploadFile">
+                                <a href="09_datastructures.html#uploadfile" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">UploadFile</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class URL">
+                                <a href="09_datastructures.html#url" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">URL</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class Headers">
+                                <a href="09_datastructures.html#headers" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Headers</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class QueryParams">
+                                <a href="09_datastructures.html#queryparams" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">QueryParams</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class FormData">
+                                <a href="09_datastructures.html#formdata" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FormData</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class State">
+                                <a href="09_datastructures.html#state" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">State</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class Address">
+                                <a href="09_datastructures.html#address" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Address</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def Default()">
+                                <a href="09_datastructures.html#default" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Default()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class DefaultPlaceholder">
+                                <a href="09_datastructures.html#defaultplaceholder" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">DefaultPlaceholder</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group" data-cat="exceptions" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="10_exceptions.html" class="catalog-nav-cat-link">fastapi.exceptions</a>
+                            
+                            <span class="catalog-nav-count">11</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="class HTTPException">
+                                <a href="10_exceptions.html#httpexception" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">HTTPException</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class WebSocketException">
+                                <a href="10_exceptions.html#websocketexception" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">WebSocketException</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class ValidationException">
+                                <a href="10_exceptions.html#validationexception" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">ValidationException</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class RequestValidationError">
+                                <a href="10_exceptions.html#requestvalidationerror" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">RequestValidationError</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class ResponseValidationError">
+                                <a href="10_exceptions.html#responsevalidationerror" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">ResponseValidationError</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class WebSocketRequestValidationError">
+                                <a href="10_exceptions.html#websocketrequestvalidationerror" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">WebSocketRequestValidationError</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class FastAPIError">
+                                <a href="10_exceptions.html#fastapierror" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FastAPIError</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class DependencyScopeError">
+                                <a href="10_exceptions.html#dependencyscopeerror" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">DependencyScopeError</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="async def http_exception_handler()">
+                                <a href="10_exceptions.html#http-exception-handler" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">async def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">http_exception_handler()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="async def request_validation_exception_handler()">
+                                <a href="10_exceptions.html#request-validation-exception-handler" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">async def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">request_validation_exception_handler()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="async def websocket_request_validation_exception_handler()">
+                                <a href="10_exceptions.html#websocket-request-validation-exception-handler" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">async def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">websocket_request_validation_exception_handler()</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group" data-cat="middleware" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="11_middleware.html" class="catalog-nav-cat-link">fastapi.middleware</a>
+                            
+                            <span class="catalog-nav-count">6</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="class CORSMiddleware">
+                                <a href="11_middleware.html#corsmiddleware" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">CORSMiddleware</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class TrustedHostMiddleware">
+                                <a href="11_middleware.html#trustedhostmiddleware" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">TrustedHostMiddleware</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class GZipMiddleware">
+                                <a href="11_middleware.html#gzipmiddleware" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">GZipMiddleware</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class HTTPSRedirectMiddleware">
+                                <a href="11_middleware.html#httpsredirectmiddleware" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">HTTPSRedirectMiddleware</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class AsyncExitStackMiddleware">
+                                <a href="11_middleware.html#asyncexitstackmiddleware" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">AsyncExitStackMiddleware</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="deprecated WSGIMiddleware">
+                                <a href="11_middleware.html#wsgimiddleware" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-error">deprecated</span>
+                                    
+                                    <span class="catalog-nav-sym-text">WSGIMiddleware</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group" data-cat="telemetry" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="12_telemetry.html" class="catalog-nav-cat-link">fastapi.telemetry</a>
+                            
+                            <span class="catalog-nav-count">3</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="class TelemetryConfig">
+                                <a href="12_telemetry.html#telemetryconfig" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">TelemetryConfig</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class TelemetryData">
+                                <a href="12_telemetry.html#telemetrydata" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">TelemetryData</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def get_telemetry_data()">
+                                <a href="12_telemetry.html#get-telemetry-data" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">get_telemetry_data()</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group" data-cat="openapi" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="13_openapi.html" class="catalog-nav-cat-link">fastapi.openapi</a>
+                            
+                            <span class="catalog-nav-count">10</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="def get_openapi()">
+                                <a href="13_openapi.html#get-openapi" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">get_openapi()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def get_swagger_ui_html()">
+                                <a href="13_openapi.html#get-swagger-ui-html" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">get_swagger_ui_html()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def get_swagger_ui_oauth2_redirect_html()">
+                                <a href="13_openapi.html#get-swagger-ui-oauth2-redirect-html" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">get_swagger_ui_oauth2_redirect_html()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def get_redoc_html()">
+                                <a href="13_openapi.html#get-redoc-html" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">get_redoc_html()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="const SWAGGER_UI_PARAMETERS">
+                                <a href="13_openapi.html#swagger-ui-parameters" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-const">const</span>
+                                    
+                                    <span class="catalog-nav-sym-text">SWAGGER_UI_PARAMETERS</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="const METHODS_WITH_BODY &amp; REF_PREFIX &amp; REF_TEMPLATE">
+                                <a href="13_openapi.html#methods-with-body-ref-prefix-ref-template" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-const">const</span>
+                                    
+                                    <span class="catalog-nav-sym-text">METHODS_WITH_BODY &amp; REF_PREFIX &amp; REF_TEMPLATE</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="model OpenAPI">
+                                <a href="13_openapi.html#openapi" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">model</span>
+                                    
+                                    <span class="catalog-nav-sym-text">OpenAPI</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="model Info / Contact / License / Server">
+                                <a href="13_openapi.html#info-contact-license-server" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">model</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Info / Contact / License / Server</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="model Paths / PathItem / Operation / Parameter">
+                                <a href="13_openapi.html#paths-pathitem-operation-parameter" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">model</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Paths / PathItem / Operation / Parameter</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="model Components / Schema / SecurityScheme">
+                                <a href="13_openapi.html#components-schema-securityscheme" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">model</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Components / Schema / SecurityScheme</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group" data-cat="background &amp; utilities" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="14_utilities.html" class="catalog-nav-cat-link">fastapi.background &amp; utilities</a>
+                            
+                            <span class="catalog-nav-count">7</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="class BackgroundTasks">
+                                <a href="14_utilities.html#backgroundtasks" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">BackgroundTasks</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method BackgroundTasks.add_task()">
+                                <a href="14_utilities.html#backgroundtasks-add-task" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">BackgroundTasks.add_task()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def jsonable_encoder()">
+                                <a href="14_utilities.html#jsonable-encoder" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">jsonable_encoder()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="async def run_in_threadpool()">
+                                <a href="14_utilities.html#run-in-threadpool" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">async def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">run_in_threadpool()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="async def contextmanager_in_threadpool()">
+                                <a href="14_utilities.html#contextmanager-in-threadpool" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">async def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">contextmanager_in_threadpool()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class StaticFiles">
+                                <a href="14_utilities.html#staticfiles" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">StaticFiles</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class Jinja2Templates">
+                                <a href="14_utilities.html#jinja2templates" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Jinja2Templates</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group" data-cat="testclient &amp; cli" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="15_testing_and_cli.html" class="catalog-nav-cat-link">fastapi.testclient &amp; cli</a>
+                            
+                            <span class="catalog-nav-count">5</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="class TestClient">
+                                <a href="15_testing_and_cli.html#testclient" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">TestClient</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method TestClient.websocket_connect()">
+                                <a href="15_testing_and_cli.html#testclient-websocket-connect" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">TestClient.websocket_connect()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="cmd fastapi dev">
+                                <a href="15_testing_and_cli.html#fastapi-dev" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-cmd">cmd</span>
+                                    
+                                    <span class="catalog-nav-sym-text">fastapi dev</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="cmd fastapi run">
+                                <a href="15_testing_and_cli.html#fastapi-run" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-cmd">cmd</span>
+                                    
+                                    <span class="catalog-nav-sym-text">fastapi run</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="cmd fastapi --version">
+                                <a href="15_testing_and_cli.html#fastapi-version" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-cmd">cmd</span>
+                                    
+                                    <span class="catalog-nav-sym-text">fastapi --version</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    
+                    <div id="catalog-nav-empty" class="catalog-nav-empty" hidden>一致する項目が見つかりません。</div>
+                </nav>
+            </div>
+        </aside>
+        <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+        <div class="content-wrapper">
+            <div class="top-bar">
+                <div class="breadcrumbs">
+                    <a href="index.html" class="crumb">API リファレンス</a>
+                    <span class="crumb-separator">/</span>
+                    <span class="crumb active">FastAPI パッケージ概要</span>
+                </div>
+                
+                <div class="top-bar-right">
+                    
+                    
+                    <div class="lang-switcher" aria-label="Language switcher">
+                        <details class="lang-dropdown">
+                            <summary class="lang-dropdown-btn" aria-haspopup="listbox">
+                                <svg class="lang-globe-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                                <span class="lang-current-label">日本語</span>
+                                <svg class="lang-caret-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </summary>
+                            <div class="lang-dropdown-menu" role="listbox">
+                                
+                                
+                                <a href="../en/index.html" class="lang-option" role="option" hreflang="">
+                                    <span>English</span>
+                                </a>
+                                
+                                
+                                
+                                <span class="lang-option active" role="option" aria-selected="true">
+                                    <span>日本語</span>
+                                    <svg class="lang-check-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                </span>
+                                
+                                
+                            </div>
+                        </details>
+                    </div>
+                    
+                </div>
+                
+            </div>
+
+            <main class="main-content catalog-main-content">
+                <h1 class="catalog-page-title">FastAPI パッケージ概要</h1>
+<p>FastAPI <code>v0.162.2</code> は、Python の標準型アノテーション、Pydantic v2 によるデータ検証、Starlette のルーティング基盤、および OpenAPI 3.1.0 スキーマの自動生成を組み合わせて HTTP・Server-Sent Events (SSE)・WebSocket API を構築する高速な ASGI Web フレームワークです。</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../images/00_overview/fastapi_package_overview.png" alt="00_overview_1" />
+  <figcaption class="drawlib-caption">FastAPI v0.162.2 パッケージ構成と 15 モジュール群</figcaption>
+</figure>
+<h3 id="トップレベル再エクスポート-fastapi">トップレベル再エクスポート (<code>fastapi</code>)<a class="header-anchor" href="#トップレベル再エクスポート-fastapi" aria-label="Permalink">#</a></h3>
+<p><code>fastapi</code> パッケージ直下（<code>fastapi/__init__.py</code>）からのインポートで、主要なアプリケーションクラス、パラメータ宣言関数、依存性マーカー、送受信オブジェクト、ステータス定数にアクセスできます。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">カテゴリ</th>
+<th style="text-align:left">トップレベルシンボル (<code>from fastapi import ...</code>)</th>
+<th style="text-align:left">定義元サブモジュール</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>アプリケーション・ルーティング</strong></td>
+<td style="text-align:left"><code>FastAPI</code>, <code>APIRouter</code></td>
+<td style="text-align:left"><code>fastapi.applications</code>, <code>fastapi.routing</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>パラメータ記述子</strong></td>
+<td style="text-align:left"><code>Path</code>, <code>Query</code>, <code>Header</code>, <code>Cookie</code>, <code>Body</code>, <code>Form</code>, <code>File</code></td>
+<td style="text-align:left"><code>fastapi.param_functions</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>依存性注入・セキュリティ</strong></td>
+<td style="text-align:left"><code>Depends</code>, <code>Security</code></td>
+<td style="text-align:left"><code>fastapi.param_functions</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>通信・ストリーミング</strong></td>
+<td style="text-align:left"><code>Request</code>, <code>Response</code>, <code>WebSocket</code>, <code>WebSocketDisconnect</code></td>
+<td style="text-align:left"><code>fastapi.requests</code>, <code>fastapi.responses</code>, <code>fastapi.websockets</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>ファイル・バックグラウンド処理</strong></td>
+<td style="text-align:left"><code>UploadFile</code>, <code>BackgroundTasks</code></td>
+<td style="text-align:left"><code>fastapi.datastructures</code>, <code>fastapi.background</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>例外・ステータスコード</strong></td>
+<td style="text-align:left"><code>HTTPException</code>, <code>WebSocketException</code>, <code>status</code>, <code>__version__</code></td>
+<td style="text-align:left"><code>fastapi.exceptions</code>, <code>starlette.status</code>, <code>fastapi</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="api-cli-リファレンス一覧-全-16-ページ">API・CLI リファレンス一覧（全 16 ページ）<a class="header-anchor" href="#api-cli-リファレンス一覧-全-16-ページ" aria-label="Permalink">#</a></h3>
+<p>FastAPI <code>v0.162.2</code> の全公開クラス、関数、定数、型エイリアス、CLI コマンドを以下の 16 ページに分けて体系的に収録しています。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">ページ</th>
+<th style="text-align:left">モジュール / 対象範囲</th>
+<th style="text-align:left">主な収録シンボル・内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><a href="00_overview.html">00. FastAPI パッケージ概要</a></td>
+<td style="text-align:left"><code>fastapi</code>, <code>fastapi.status</code>, <code>fastapi.types</code></td>
+<td style="text-align:left"><code>__version__</code>、HTTP / WebSocket ステータス定数、<code>DecoratedCallable</code>、<code>IncEx</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="01_applications.html">01. fastapi.applications</a></td>
+<td style="text-align:left"><code>fastapi.applications</code></td>
+<td style="text-align:left"><code>FastAPI</code>、HTTP/WS デコレータ、<code>include_router()</code>、<code>mount()</code>、<code>frontend()</code>、ミドルウェア、<code>openapi()</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="02_routing.html">02. fastapi.routing</a></td>
+<td style="text-align:left"><code>fastapi.routing</code></td>
+<td style="text-align:left"><code>APIRouter</code>、<code>APIRoute</code>、<code>APIRoute.get_route_handler()</code>、<code>APIWebSocketRoute</code>、<code>Mount</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="03_parameters.html">03. fastapi.params</a></td>
+<td style="text-align:left"><code>fastapi.param_functions</code>, <code>fastapi.params</code>, <code>annotated_doc</code></td>
+<td style="text-align:left"><code>Path()</code>、<code>Query()</code>、<code>Header()</code>、<code>Cookie()</code>、<code>Body()</code>、<code>Form()</code>、<code>File()</code>、<code>Doc()</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="04_dependencies.html">04. fastapi.dependencies</a></td>
+<td style="text-align:left"><code>fastapi.param_functions</code>, <code>fastapi.dependencies</code></td>
+<td style="text-align:left"><code>Depends()</code>、<code>Dependant</code>、非同期・ジェネレータ依存性解決、<code>dependency_overrides</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="05_security.html">05. fastapi.security</a></td>
+<td style="text-align:left"><code>fastapi.security</code></td>
+<td style="text-align:left"><code>Security()</code>、<code>SecurityScopes</code>、OAuth2 フロー、<code>APIKey*</code>、<code>HTTPBearer</code>、<code>HTTPBasic</code>、<code>OpenIdConnect</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="06_requests_websockets.html">06. fastapi.requests &amp; websockets</a></td>
+<td style="text-align:left"><code>fastapi.requests</code>, <code>fastapi.websockets</code></td>
+<td style="text-align:left"><code>Request</code>、<code>HTTPConnection</code>、<code>WebSocket</code>、<code>WebSocketDisconnect</code>、<code>WebSocketState</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="07_responses.html">07. fastapi.responses</a></td>
+<td style="text-align:left"><code>fastapi.responses</code></td>
+<td style="text-align:left"><code>Response</code>、<code>JSONResponse</code>、<code>HTMLResponse</code>、<code>RedirectResponse</code>、<code>StreamingResponse</code>、<code>FileResponse</code>、<code>ORJSONResponse</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="08_sse.html">08. fastapi.sse</a></td>
+<td style="text-align:left"><code>fastapi.sse</code></td>
+<td style="text-align:left"><code>EventSourceResponse</code>、<code>ServerSentEvent</code>、<code>format_sse_event()</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="09_datastructures.html">09. fastapi.datastructures</a></td>
+<td style="text-align:left"><code>fastapi.datastructures</code></td>
+<td style="text-align:left"><code>UploadFile</code>、<code>URL</code>、<code>Address</code>、<code>Headers</code>、<code>QueryParams</code>、<code>FormData</code>、<code>State</code>、<code>Default()</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="10_exceptions.html">10. fastapi.exceptions</a></td>
+<td style="text-align:left"><code>fastapi.exceptions</code>, <code>fastapi.exception_handlers</code></td>
+<td style="text-align:left"><code>HTTPException</code>、<code>WebSocketException</code>、<code>RequestValidationError</code>、<code>ResponseValidationError</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="11_middleware.html">11. fastapi.middleware</a></td>
+<td style="text-align:left"><code>fastapi.middleware.*</code></td>
+<td style="text-align:left"><code>CORSMiddleware</code>、<code>GZipMiddleware</code>、<code>HTTPSRedirectMiddleware</code>、<code>TrustedHostMiddleware</code>、<code>WSGIMiddleware</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="12_telemetry.html">12. fastapi.telemetry</a></td>
+<td style="text-align:left"><code>fastapi.telemetry</code></td>
+<td style="text-align:left"><code>TelemetryConfig</code> およびネイティブ OpenTelemetry トレーシング・メトリクス・ログ統合</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="13_openapi.html">13. fastapi.openapi</a></td>
+<td style="text-align:left"><code>fastapi.openapi.*</code></td>
+<td style="text-align:left"><code>get_openapi()</code>、OpenAPI 3.1.0 スキーマモデル、Swagger UI / ReDoc HTML 生成ヘルパー</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="14_utilities.html">14. ユーティリティ群</a></td>
+<td style="text-align:left"><code>background</code>, <code>encoders</code>, <code>concurrency</code>, <code>staticfiles</code>, <code>templating</code>, <code>utils</code></td>
+<td style="text-align:left"><code>BackgroundTasks</code>、<code>jsonable_encoder()</code>、<code>run_in_threadpool()</code>、<code>StaticFiles</code>、<code>Jinja2Templates</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="15_testing_and_cli.html">15. テスト・CLI</a></td>
+<td style="text-align:left"><code>fastapi.testclient</code>, <code>fastapi.cli</code></td>
+<td style="text-align:left"><code>TestClient</code>、<code>fastapi dev</code>、<code>fastapi run</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="fastapi-version" class="catalog-symbol-heading"><span class="catalog-badge catalog-badge-const">const</span><code class="catalog-sig"><span class="catalog-sig-name">fastapi.__version__</span></code><a class="header-anchor" href="#fastapi-version" aria-label="Permalink to fastapi.__version__">#</a></h2>
+<p>インストールされている FastAPI リリースを識別するセマンティックバージョン文字列（<code>PEP 440</code> / <code>PEP 396</code>）です。ヘルスチェックエンドポイント、テレメトリメタデータ、実行時の互換性検証に利用できます。</p>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">__version__</span>
+
+<span class="n">__version__</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"0.162.2"</span>
+</code></pre>
+<h3 id="属性">属性<a class="header-anchor" href="#属性" aria-label="Permalink">#</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">定数名</th>
+<th style="text-align:left">型</th>
+<th style="text-align:left">値</th>
+<th style="text-align:left">説明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><code>fastapi.__version__</code></td>
+<td style="text-align:left"><code>str</code></td>
+<td style="text-align:left"><code>&quot;0.162.2&quot;</code></td>
+<td style="text-align:left">パッケージルートで公開されている FastAPI のバージョン文字列。</td>
+</tr>
+</tbody>
+</table>
+<h3 id="使用例">使用例<a class="header-anchor" href="#使用例" aria-label="Permalink">#</a></h3>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">__version__</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">"Inventory API"</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">__version__</span><span class="p">)</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/healthz"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">healthz</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"status"</span><span class="p">:</span> <span class="s2">"ok"</span><span class="p">,</span> <span class="s2">"framework_version"</span><span class="p">:</span> <span class="n">__version__</span><span class="p">}</span>
+</code></pre>
+<hr />
+<h2 id="fastapi-status" class="catalog-symbol-heading"><span class="catalog-badge catalog-badge-method">module</span><code class="catalog-sig"><span class="catalog-sig-name">fastapi.status</span></code><a class="header-anchor" href="#fastapi-status" aria-label="Permalink to fastapi.status">#</a></h2>
+<p>IANA HTTP ステータスコード（<code>RFC 9110</code>）および WebSocket クローズフレームコード（<code>RFC 6455</code>）の名前付き整数定数を提供する <code>starlette.status</code> の再エクスポートです。パスオペレーションデコレータの <code>status_code=</code>、<code>Response</code>、<code>HTTPException</code>、<code>WebSocketException</code> に渡すことでエディタ補完を効かせた明快なコード記述が可能になります。</p>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">status</span>
+
+<span class="n">status</span><span class="o">.</span><span class="n">HTTP_200_OK</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">200</span>
+<span class="n">status</span><span class="o">.</span><span class="n">HTTP_201_CREATED</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">201</span>
+<span class="n">status</span><span class="o">.</span><span class="n">HTTP_204_NO_CONTENT</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">204</span>
+<span class="n">status</span><span class="o">.</span><span class="n">HTTP_422_UNPROCESSABLE_CONTENT</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">422</span>
+<span class="n">status</span><span class="o">.</span><span class="n">WS_1000_NORMAL_CLOSURE</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span>
+<span class="n">status</span><span class="o">.</span><span class="n">WS_1008_POLICY_VIOLATION</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1008</span>
+</code></pre>
+<h3 id="http-ステータス定数-100-511">HTTP ステータス定数 (<code>100</code>–<code>511</code>)<a class="header-anchor" href="#http-ステータス定数-100-511" aria-label="Permalink">#</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">定数名</th>
+<th style="text-align:left">値</th>
+<th style="text-align:left">分類および主な API 用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><code>HTTP_100_CONTINUE</code> .. <code>HTTP_103_EARLY_HINTS</code></td>
+<td style="text-align:left"><code>100</code>–<code>103</code></td>
+<td style="text-align:left">情報レスポンス（WebSocket アップグレード時の <code>101 Switching Protocols</code>、<code>103 Early Hints</code> など）。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>HTTP_200_OK</code></td>
+<td style="text-align:left"><code>200</code></td>
+<td style="text-align:left"><code>GET</code>・<code>POST</code>・<code>PUT</code>・<code>PATCH</code>・<code>DELETE</code> における標準の成功ステータス。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>HTTP_201_CREATED</code></td>
+<td style="text-align:left"><code>201</code></td>
+<td style="text-align:left">リソースの新規作成成功（<code>POST</code> エンドポイントで一般的）。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>HTTP_202_ACCEPTED</code></td>
+<td style="text-align:left"><code>202</code></td>
+<td style="text-align:left">非同期バックグラウンド処理（<code>BackgroundTasks</code> やジョブキュー）の受付完了。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>HTTP_204_NO_CONTENT</code></td>
+<td style="text-align:left"><code>204</code></td>
+<td style="text-align:left">レスポンスボディを持たない更新・削除の成功。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>HTTP_206_PARTIAL_CONTENT</code></td>
+<td style="text-align:left"><code>206</code></td>
+<td style="text-align:left"><code>Range</code> ヘッダを用いた部分バイト範囲レスポンス（<code>FileResponse</code> 等）。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>HTTP_301_MOVED_PERMANENTLY</code> / <code>HTTP_302_FOUND</code></td>
+<td style="text-align:left"><code>301</code> / <code>302</code></td>
+<td style="text-align:left">恒久的・一時的 URL リダイレクト（一部クライアントでメソッドが <code>GET</code> に変化する場合あり）。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>HTTP_303_SEE_OTHER</code></td>
+<td style="text-align:left"><code>303</code></td>
+<td style="text-align:left"><code>POST</code> 処理完了後に参照用 <code>GET</code> URI へ誘導するリダイレクト。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>HTTP_304_NOT_MODIFIED</code></td>
+<td style="text-align:left"><code>304</code></td>
+<td style="text-align:left">条件付きキャッシュヒット（<code>ETag</code> / <code>If-None-Match</code>）。ボディは空である必要があります。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>HTTP_307_TEMPORARY_REDIRECT</code> / <code>HTTP_308_PERMANENT_REDIRECT</code></td>
+<td style="text-align:left"><code>307</code> / <code>308</code></td>
+<td style="text-align:left">HTTP メソッドを維持するリダイレクト（<code>307</code> は <code>RedirectResponse</code> や <code>redirect_slashes</code> の既定値）。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>HTTP_400_BAD_REQUEST</code></td>
+<td style="text-align:left"><code>400</code></td>
+<td style="text-align:left">不正なリクエスト構文またはドメインルール違反。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>HTTP_401_UNAUTHORIZED</code></td>
+<td style="text-align:left"><code>401</code></td>
+<td style="text-align:left">未認証または無効な認証情報（<code>WWW-Authenticate</code> ヘッダと併用）。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>HTTP_403_FORBIDDEN</code></td>
+<td style="text-align:left"><code>403</code></td>
+<td style="text-align:left">認証済みだが必要な権限または OAuth2 スコープが不足。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>HTTP_404_NOT_FOUND</code></td>
+<td style="text-align:left"><code>404</code></td>
+<td style="text-align:left">対象リソースまたはルートパスが存在しない。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>HTTP_405_METHOD_NOT_ALLOWED</code></td>
+<td style="text-align:left"><code>405</code></td>
+<td style="text-align:left">パスは一致するが対象の HTTP メソッドが未登録。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>HTTP_409_CONFLICT</code></td>
+<td style="text-align:left"><code>409</code></td>
+<td style="text-align:left">一意制約違反または楽観的ロック競合。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>HTTP_413_CONTENT_TOO_LARGE</code></td>
+<td style="text-align:left"><code>413</code></td>
+<td style="text-align:left">ペイロードサイズ上限超過（非推奨の <code>HTTP_413_REQUEST_ENTITY_TOO_LARGE</code> を置換）。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>HTTP_414_URI_TOO_LONG</code></td>
+<td style="text-align:left"><code>414</code></td>
+<td style="text-align:left">リクエスト URI 長上限超過（非推奨の <code>HTTP_414_REQUEST_URI_TOO_LONG</code> を置換）。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>HTTP_415_UNSUPPORTED_MEDIA_TYPE</code></td>
+<td style="text-align:left"><code>415</code></td>
+<td style="text-align:left">未対応の <code>Content-Type</code> ヘッダによるリクエスト。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>HTTP_416_RANGE_NOT_SATISFIABLE</code></td>
+<td style="text-align:left"><code>416</code></td>
+<td style="text-align:left">無効なバイト範囲指定（非推奨の <code>HTTP_416_REQUESTED_RANGE_NOT_SATISFIABLE</code> を置換）。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>HTTP_422_UNPROCESSABLE_CONTENT</code></td>
+<td style="text-align:left"><code>422</code></td>
+<td style="text-align:left">FastAPI の <code>RequestValidationError</code> 既定ステータス（非推奨の <code>HTTP_422_UNPROCESSABLE_ENTITY</code> を置換）。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>HTTP_429_TOO_MANY_REQUESTS</code></td>
+<td style="text-align:left"><code>429</code></td>
+<td style="text-align:left">レート制限超過（<code>Retry-After</code> ヘッダと併用）。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>HTTP_500_INTERNAL_SERVER_ERROR</code></td>
+<td style="text-align:left"><code>500</code></td>
+<td style="text-align:left">未処理のサーバー例外、または <code>ResponseValidationError</code> によるレスポンス契約違反。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>HTTP_502_BAD_GATEWAY</code> / <code>HTTP_503_SERVICE_UNAVAILABLE</code> / <code>HTTP_504_GATEWAY_TIMEOUT</code></td>
+<td style="text-align:left"><code>502</code>–<code>504</code></td>
+<td style="text-align:left">上流サービス障害、メンテナンス・過負荷遮断、または上流タイムアウト。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>HTTP_511_NETWORK_AUTHENTICATION_REQUIRED</code></td>
+<td style="text-align:left"><code>511</code></td>
+<td style="text-align:left">キャプティブポータル等のネットワーク認証が必要（<code>5xx</code> 番台の上限定数）。</td>
+</tr>
+</tbody>
+</table>
+<h3 id="websocket-クローズコード定数-1000-1015">WebSocket クローズコード定数 (<code>1000</code>–<code>1015</code>)<a class="header-anchor" href="#websocket-クローズコード定数-1000-1015" aria-label="Permalink">#</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">定数名</th>
+<th style="text-align:left">値</th>
+<th style="text-align:left">説明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><code>WS_1000_NORMAL_CLOSURE</code></td>
+<td style="text-align:left"><code>1000</code></td>
+<td style="text-align:left">WebSocket セッションの正常終了。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>WS_1001_GOING_AWAY</code></td>
+<td style="text-align:left"><code>1001</code></td>
+<td style="text-align:left">サーバー停止やブラウザのページ離脱に伴う切断。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>WS_1002_PROTOCOL_ERROR</code></td>
+<td style="text-align:left"><code>1002</code></td>
+<td style="text-align:left">WebSocket プロトコル違反による切断。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>WS_1003_UNSUPPORTED_DATA</code></td>
+<td style="text-align:left"><code>1003</code></td>
+<td style="text-align:left">未対応のフレームデータ型（テキスト専用の箇所にバイナリを受信した場合など）。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>WS_1005_NO_STATUS_RCVD</code> / <code>WS_1006_ABNORMAL_CLOSURE</code></td>
+<td style="text-align:left"><code>1005</code> / <code>1006</code></td>
+<td style="text-align:left">ステータスコード欠落またはトランスポート異常切断を表す予約コード。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>WS_1007_INVALID_FRAME_PAYLOAD_DATA</code></td>
+<td style="text-align:left"><code>1007</code></td>
+<td style="text-align:left">非 UTF-8 テキストフレームまたはスキーマ不整合データ。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>WS_1008_POLICY_VIOLATION</code></td>
+<td style="text-align:left"><code>1008</code></td>
+<td style="text-align:left">ポリシー・認証違反（<code>WebSocketRequestValidationError</code> の既定コード）。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>WS_1009_MESSAGE_TOO_BIG</code></td>
+<td style="text-align:left"><code>1009</code></td>
+<td style="text-align:left">許容サイズを超えるフレームメッセージ。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>WS_1010_MANDATORY_EXT</code></td>
+<td style="text-align:left"><code>1010</code></td>
+<td style="text-align:left">クライアントが必須とした WebSocket 拡張がネゴシエートされなかった場合。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>WS_1011_INTERNAL_ERROR</code></td>
+<td style="text-align:left"><code>1011</code></td>
+<td style="text-align:left">サーバー内部の予期しない例外によるセッション終了。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>WS_1012_SERVICE_RESTART</code> / <code>WS_1013_TRY_AGAIN_LATER</code></td>
+<td style="text-align:left"><code>1012</code> / <code>1013</code></td>
+<td style="text-align:left">サーバー再起動中または一時的な過負荷（バックオフ後の再接続が可能）。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>WS_1014_BAD_GATEWAY</code> / <code>WS_1015_TLS_HANDSHAKE</code></td>
+<td style="text-align:left"><code>1014</code> / <code>1015</code></td>
+<td style="text-align:left">上流ゲートウェイエラー（<code>1014</code>）または予約済み TLS ハンドシェイク失敗（<code>1015</code>）。</td>
+</tr>
+</tbody>
+</table>
+<h3 id="使用例-2">使用例<a class="header-anchor" href="#使用例-2" aria-label="Permalink">#</a></h3>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">status</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">()</span>
+<span class="n">ITEMS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="s2">"Keyboard"</span><span class="p">}</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/items/</span><span class="si">{item_id}</span><span class="s2">"</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_201_CREATED</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_item</span><span class="p">(</span><span class="n">item_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="n">item_id</span> <span class="ow">in</span> <span class="n">ITEMS</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_409_CONFLICT</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Item already exists"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="n">ITEMS</span><span class="p">[</span><span class="n">item_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"id"</span><span class="p">:</span> <span class="n">item_id</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">}</span>
+</code></pre>
+<hr />
+<h2 id="fastapi-types-decoratedcallable" class="catalog-symbol-heading"><span class="catalog-badge catalog-badge-type">type</span><code class="catalog-sig"><span class="catalog-sig-name">fastapi.types.DecoratedCallable</span></code><a class="header-anchor" href="#fastapi-types-decoratedcallable" aria-label="Permalink to fastapi.types.DecoratedCallable">#</a></h2>
+<p>FastAPI のルート・WebSocket・ミドルウェア・例外ハンドラ各デコレータの戻り値型に使われる境界付き <code>TypeVar</code> です。デコレート対象の関数が持つ引数型・戻り値型シグネチャをそのまま保持し、静的型チェッカー（<code>mypy</code>、<code>pyright</code>、<code>ty</code>）での型推論を維持します。</p>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">TypeVar</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">DecoratedCallable</span>
+
+<span class="n">DecoratedCallable</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">"DecoratedCallable"</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span>
+</code></pre>
+<h3 id="型定義の詳細">型定義の詳細<a class="header-anchor" href="#型定義の詳細" aria-label="Permalink">#</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">シンボル</th>
+<th style="text-align:left">定義</th>
+<th style="text-align:left">用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><code>DecoratedCallable</code></td>
+<td style="text-align:left"><code>TypeVar(&quot;DecoratedCallable&quot;, bound=Callable[..., Any])</code></td>
+<td style="text-align:left"><code>@app.get()</code>、<code>@router.post()</code>、<code>@app.websocket()</code>、<code>@app.middleware()</code>、<code>@app.exception_handler()</code> でエンドポイント関数の型を保持。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>ModelNameMap</code></td>
+<td style="text-align:left"><code>dict[type[BaseModel] | type[Enum], str]</code></td>
+<td style="text-align:left"><code>fastapi.types</code> 内の補助エイリアス。Pydantic モデルや Enum を OpenAPI コンポーネント名へ対応付けます。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>DependencyCacheKey</code></td>
+<td style="text-align:left"><code>tuple[Callable[..., Any] | None, tuple[str, ...], str]</code></td>
+<td style="text-align:left"><code>fastapi.types</code> 内の補助エイリアス。リクエスト/関数スコープの DI キャッシュキーを表現します。</td>
+</tr>
+</tbody>
+</table>
+<h3 id="使用例-3">使用例<a class="header-anchor" href="#使用例-3" aria-label="Permalink">#</a></h3>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRouter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">DecoratedCallable</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">public_get</span><span class="p">(</span><span class="n">router</span><span class="p">:</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">DecoratedCallable</span><span class="p">],</span> <span class="n">DecoratedCallable</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="n">router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">"public"</span><span class="p">])</span>
+</code></pre>
+<hr />
+<h2 id="fastapi-types-incex" class="catalog-symbol-heading"><span class="catalog-badge catalog-badge-type">type</span><code class="catalog-sig"><span class="catalog-sig-name">fastapi.types.IncEx</span></code><a class="header-anchor" href="#fastapi-types-incex" aria-label="Permalink to fastapi.types.IncEx">#</a></h2>
+<p>パスオペレーションデコレータ、<code>add_api_route()</code>、<code>APIRoute</code> の <code>response_model_include</code> および <code>response_model_exclude</code> で受け取る再帰的型エイリアス（<code>pydantic.main.IncEx</code> の再エクスポート）です。トップレベルの <code>set</code> またはネストした <code>dict</code> でシリアライズ対象フィールドを制御します。</p>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">IncEx</span>
+
+<span class="nb">type</span> <span class="n">IncEx</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="nb">set</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+    <span class="o">|</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="o">|</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">IncEx</span> <span class="o">|</span> <span class="nb">bool</span><span class="p">]</span>
+    <span class="o">|</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">IncEx</span> <span class="o">|</span> <span class="nb">bool</span><span class="p">]</span>
+<span class="p">)</span>
+</code></pre>
+<h3 id="指定可能なデータ構造">指定可能なデータ構造<a class="header-anchor" href="#指定可能なデータ構造" aria-label="Permalink">#</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">型形状</th>
+<th style="text-align:left">指定例</th>
+<th style="text-align:left">シリアライズ時の動作</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><code>set[str]</code></td>
+<td style="text-align:left"><code>{&quot;id&quot;, &quot;username&quot;}</code></td>
+<td style="text-align:left">Pydantic モデルまたは <code>dict</code> のトップレベル属性名を指定して抽出・除外します。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>set[int]</code></td>
+<td style="text-align:left"><code>{0, 1}</code></td>
+<td style="text-align:left"><code>list</code> や <code>tuple</code> をシリアライズする際に対象インデックスを指定します。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>Mapping[str, IncEx | bool]</code></td>
+<td style="text-align:left"><code>{&quot;profile&quot;: {&quot;email&quot;: True}}</code></td>
+<td style="text-align:left">ネストしたサブモデルや辞書を再帰的に辿り、末端フィールド単位で抽出・除外します。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>Mapping[int, IncEx | bool]</code></td>
+<td style="text-align:left"><code>{&quot;__all__&quot;: {&quot;secret_hash&quot;}}</code> / <code>{0: {&quot;name&quot;: True}}</code></td>
+<td style="text-align:left">コレクション要素全体または特定インデックス配下のネスト属性へルールを適用します。</td>
+</tr>
+</tbody>
+</table>
+<h3 id="使用例-4">使用例<a class="header-anchor" href="#使用例-4" aria-label="Permalink">#</a></h3>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastAPI</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">IncEx</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">()</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">UserOut</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="nb">id</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">username</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">internal_notes</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+
+
+<span class="n">PUBLIC_FIELDS</span><span class="p">:</span> <span class="n">IncEx</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"id"</span><span class="p">,</span> <span class="s2">"username"</span><span class="p">}</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/users/me"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">UserOut</span><span class="p">,</span> <span class="n">response_model_include</span><span class="o">=</span><span class="n">PUBLIC_FIELDS</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_me</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">UserOut</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">UserOut</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">username</span><span class="o">=</span><span class="s2">"alice"</span><span class="p">,</span> <span class="n">internal_notes</span><span class="o">=</span><span class="s2">"vip-tier"</span><span class="p">)</span>
+</code></pre>
+
+
+                
+                <nav class="catalog-pager" aria-label="Catalog Page Navigation">
+                    
+                    <div></div>
+                    
+                    
+                    <a href="01_applications.html" class="catalog-pager-card is-next">
+                        <span class="catalog-pager-dir">次へ &rarr;</span>
+                        <span class="catalog-pager-title">fastapi.applications</span>
+                    </a>
+                    
+                </nav>
+                
+            </main>
+
+            <footer class="footer">
+                
+                FastAPI® は Sebastián Ramírez（<a href="https://github.com/tiangolo" target="_blank" rel="noopener noreferrer">@tiangolo</a>）の登録商標です。本サイトは非公式 API リファレンスであり、公式プロジェクトとは提携していません。公式ドキュメントは <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">fastapi.tiangolo.com</a> をご参照ください。
+                
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            var toggleBtn = document.getElementById('theme-toggle');
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', function() {
+                    var current = document.documentElement.getAttribute('data-theme');
+                    if (!current) {
+                        current = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+                    }
+                    var next = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    try { localStorage.setItem('drawlib-theme', next); } catch (e) {}
+                });
+            }
+
+            var menuBtn = document.getElementById('menu-toggle');
+            var sidebar = document.getElementById('catalog-sidebar');
+            var backdrop = document.getElementById('sidebar-backdrop');
+            function closeMenu() {
+                if (sidebar) sidebar.classList.remove('is-open');
+                if (backdrop) backdrop.classList.remove('is-open');
+            }
+            if (menuBtn && sidebar && backdrop) {
+                menuBtn.addEventListener('click', function() {
+                    sidebar.classList.toggle('is-open');
+                    backdrop.classList.toggle('is-open');
+                });
+                backdrop.addEventListener('click', closeMenu);
+            }
+
+            document.querySelectorAll('.catalog-nav-cat-link').forEach(function(link) {
+                link.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
+            });
+
+            if (sidebar) {
+                try {
+                    var savedScroll = sessionStorage.getItem('drawlib-catalog-sidebar-scroll');
+                    if (savedScroll !== null) {
+                        sidebar.scrollTop = parseInt(savedScroll, 10) || 0;
+                    }
+                    sidebar.addEventListener('scroll', function() {
+                        try { sessionStorage.setItem('drawlib-catalog-sidebar-scroll', String(sidebar.scrollTop)); } catch (e) {}
+                    }, { passive: true });
+                } catch (e) {}
+            }
+
+            var groups = Array.prototype.slice.call(document.querySelectorAll('.catalog-nav-group'));
+            var expandBtn = document.getElementById('catalog-expand-toggle');
+            function updateExpandBtnLabel() {
+                if (!expandBtn || groups.length === 0) return;
+                var visibleGroups = groups.filter(function(g) { return !g.hidden; });
+                var allOpen = visibleGroups.length > 0 && visibleGroups.every(function(g) { return g.open; });
+                var expandText = expandBtn.getAttribute('data-expand-label') || 'Expand All';
+                var collapseText = expandBtn.getAttribute('data-collapse-label') || 'Collapse All';
+                expandBtn.textContent = allOpen ? collapseText : expandText;
+            }
+            if (expandBtn) {
+                updateExpandBtnLabel();
+                expandBtn.addEventListener('click', function() {
+                    var visibleGroups = groups.filter(function(g) { return !g.hidden; });
+                    var allOpen = visibleGroups.length > 0 && visibleGroups.every(function(g) { return g.open; });
+                    visibleGroups.forEach(function(g) { g.open = !allOpen; });
+                    updateExpandBtnLabel();
+                });
+                groups.forEach(function(g) {
+                    g.addEventListener('toggle', updateExpandBtnLabel);
+                });
+            }
+
+            var filterInput = document.getElementById('catalog-filter-input');
+            var emptyNotice = document.getElementById('catalog-nav-empty');
+            var savedOpenState = null;
+
+            if (filterInput) {
+                filterInput.addEventListener('input', function() {
+                    var q = filterInput.value.trim().toLowerCase();
+                    if (q && !savedOpenState) {
+                        savedOpenState = groups.map(function(g) { return g.open; });
+                    }
+                    var anyMatch = false;
+                    groups.forEach(function(g, idx) {
+                        var catText = (g.getAttribute('data-cat') || '').toLowerCase();
+                        var catMatches = q !== '' && catText.indexOf(q) !== -1;
+                        var items = Array.prototype.slice.call(g.querySelectorAll('.catalog-nav-subitem'));
+                        var visibleCount = 0;
+
+                        items.forEach(function(li) {
+                            var symText = (li.getAttribute('data-sym') || '').toLowerCase();
+                            var show = (q === '') || catMatches || symText.indexOf(q) !== -1;
+                            li.hidden = !show;
+                            if (show) visibleCount += 1;
+                        });
+
+                        if (q === '') {
+                            g.hidden = false;
+                            if (savedOpenState && typeof savedOpenState[idx] === 'boolean') {
+                                g.open = savedOpenState[idx];
+                            }
+                            anyMatch = true;
+                        } else if (catMatches || visibleCount > 0) {
+                            g.hidden = false;
+                            g.open = true;
+                            anyMatch = true;
+                        } else {
+                            g.hidden = true;
+                        }
+                    });
+
+                    if (q === '') {
+                        savedOpenState = null;
+                    }
+                    if (emptyNotice) {
+                        emptyNotice.hidden = anyMatch;
+                    }
+                    updateExpandBtnLabel();
+                });
+
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === '/' && document.activeElement !== filterInput) {
+                        var tag = document.activeElement ? document.activeElement.tagName : '';
+                        if (tag !== 'INPUT' && tag !== 'TEXTAREA' && tag !== 'SELECT') {
+                            e.preventDefault();
+                            filterInput.focus();
+                        }
+                    } else if (e.key === 'Escape' && document.activeElement === filterInput) {
+                        filterInput.value = '';
+                        filterInput.dispatchEvent(new Event('input'));
+                        filterInput.blur();
+                    }
+                });
+            }
+
+            document.addEventListener('click', function(e) {
+                document.querySelectorAll('.lang-dropdown[open]').forEach(function(dd) {
+                    if (!dd.contains(e.target)) {
+                        dd.removeAttribute('open');
+                    }
+                });
+            });
+
+            var activeLinks = Array.prototype.slice.call(document.querySelectorAll('.catalog-nav-sublink[data-target]'));
+            if (activeLinks.length > 0 && 'IntersectionObserver' in window) {
+                var linkBySlug = {};
+                var headings = [];
+                activeLinks.forEach(function(a) {
+                    var slug = a.getAttribute('data-target');
+                    var el = slug ? document.getElementById(slug) : null;
+                    if (slug && el) {
+                        linkBySlug[slug] = a;
+                        headings.push(el);
+                    }
+                    a.addEventListener('click', closeMenu);
+                });
+
+                function setActiveSlug(slug) {
+                    activeLinks.forEach(function(a) {
+                        if (a.getAttribute('data-target') === slug) {
+                            a.classList.add('is-active');
+                        } else {
+                            a.classList.remove('is-active');
+                        }
+                    });
+                }
+
+                if (window.location.hash) {
+                    var initSlug = decodeURIComponent(window.location.hash.slice(1));
+                    if (linkBySlug[initSlug]) setActiveSlug(initSlug);
+                } else if (headings.length > 0) {
+                    setActiveSlug(headings[0].id);
+                }
+
+                var visibleIds = {};
+                var observer = new IntersectionObserver(function(entries) {
+                    entries.forEach(function(entry) {
+                        visibleIds[entry.target.id] = entry.isIntersecting;
+                    });
+                    for (var i = 0; i < headings.length; i++) {
+                        if (visibleIds[headings[i].id]) {
+                            setActiveSlug(headings[i].id);
+                            break;
+                        }
+                    }
+                }, { rootMargin: '-90px 0px -65% 0px', threshold: [0, 1] });
+
+                headings.forEach(function(h) { observer.observe(h); });
+            }
+        })();
+    </script>
+</body>
+</html>

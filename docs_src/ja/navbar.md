@@ -38,6 +38,7 @@
 - [FastAPI CLI・プロキシ・GraphQL・AI 連携](08_ecosystem_and_operations/cli_proxy_graphql_ai.md)
 
 ## 関連ガイド & 公式リンク
+- [FastAPI API リファレンス](https://fastapi.drawlib.com/api/)
 - [FastAPI 内部アーキテクチャ解説](https://fastapi.drawlib.com/architecture/)
 - [FastAPI 公式ドキュメント](https://fastapi.tiangolo.com/)
 - [GitHub リポジトリ](https://github.com/yuichi110/drawlib-fastapi)

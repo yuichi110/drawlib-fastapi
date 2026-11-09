@@ -25,6 +25,7 @@
 
 ## 関連ガイド & 公式リンク
 - [FastAPI ユーザーガイド](https://fastapi.drawlib.com/)
+- [FastAPI API リファレンス](https://fastapi.drawlib.com/api/)
 - [PNI501 診断レポート](https://fastapi.drawlib.com/reports/pni501/)
 - [FastAPI 公式ドキュメント](https://fastapi.tiangolo.com/)
 - [GitHub リポジトリ](https://github.com/yuichi110/drawlib-fastapi)

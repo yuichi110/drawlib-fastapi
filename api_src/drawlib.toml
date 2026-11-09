@@ -1,0 +1,33 @@
+[project]
+name = "api"
+type = "catalog"
+title = "FastAPI API Reference"
+description = "Complete bilingual API and CLI reference for FastAPI v0.162.2 — every public class, parameter descriptor, dependency, security extractor, response, SSE/telemetry API, OpenAPI helper, and CLI command."
+style = "default"
+
+[i18n]
+default_lang = "en"
+langs = ["en", "ja"]
+
+[i18n.labels]
+en = "English"
+ja = "日本語"
+
+[i18n.descriptions]
+en = "Complete bilingual API and CLI reference for FastAPI v0.162.2 — every public class, parameter descriptor, dependency, security extractor, response, SSE/telemetry API, OpenAPI helper, and CLI command."
+ja = "FastAPI v0.162.2 の完全 API・CLI リファレンス（非公式）：全公開クラス、パラメータ記述子、DI・認証スキーム、レスポンス、SSE・OpenTelemetry・OpenAPI 関数、CLI コマンドを網羅。"
+
+[catalog]
+sidebar_expanded = true
+breadcrumb_root = { en = "API Reference", ja = "API リファレンス" }
+badge_text = { en = "API Reference · v0.162.2", ja = "API リファレンス · v0.162.2" }
+badge_url = "index.html"
+repo_url = "https://github.com/fastapi/fastapi"
+
+[seo]
+site_url = "https://fastapi.drawlib.com/api"
+og_image = "_assets/ogp.png"
+twitter_card = "summary_large_image"
+sitemap = true
+robots = true
+llms_txt = true

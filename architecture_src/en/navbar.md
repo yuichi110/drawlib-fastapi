@@ -25,6 +25,7 @@
 
 ## Companion Guides & Links
 - [FastAPI User Guide](https://fastapi.drawlib.com/)
+- [FastAPI API Reference](https://fastapi.drawlib.com/api/)
 - [PNI501 Diagnostic Report](https://fastapi.drawlib.com/reports/pni501/)
 - [Official FastAPI Docs](https://fastapi.tiangolo.com/)
 - [GitHub Repository](https://github.com/yuichi110/drawlib-fastapi)

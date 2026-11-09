@@ -15,13 +15,13 @@ if [ -z "${DRAWLIB_CMD:-}" ]; then
     fi
 fi
 
-# Preserve sub-portals (docs/reports/, docs/architecture/) and GitHub Pages docs/CNAME across root docs/ builds
-PRESERVE_REPORTS=""
-if [ -d "docs/reports" ]; then
+# Preserve sub-portals (docs/api/, docs/architecture/, docs/reports/) and GitHub Pages docs/CNAME across root docs/ builds
+PRESERVE_API=""
+if [ -d "docs/api" ]; then
     mkdir -p .drawlib/scratch
-    PRESERVE_REPORTS=".drawlib/scratch/_preserved_reports_$$"
-    rm -rf "$PRESERVE_REPORTS"
-    cp -a "docs/reports" "$PRESERVE_REPORTS"
+    PRESERVE_API=".drawlib/scratch/_preserved_api_$$"
+    rm -rf "$PRESERVE_API"
+    cp -a "docs/api" "$PRESERVE_API"
 fi
 
 PRESERVE_ARCH=""
@@ -30,6 +30,14 @@ if [ -d "docs/architecture" ]; then
     PRESERVE_ARCH=".drawlib/scratch/_preserved_arch_$$"
     rm -rf "$PRESERVE_ARCH"
     cp -a "docs/architecture" "$PRESERVE_ARCH"
+fi
+
+PRESERVE_REPORTS=""
+if [ -d "docs/reports" ]; then
+    mkdir -p .drawlib/scratch
+    PRESERVE_REPORTS=".drawlib/scratch/_preserved_reports_$$"
+    rm -rf "$PRESERVE_REPORTS"
+    cp -a "docs/reports" "$PRESERVE_REPORTS"
 fi
 
 PRESERVE_CNAME=""
@@ -43,12 +51,12 @@ fi
 echo "Building FastAPI User Guide HTML site -> docs/ ..."
 $DRAWLIB_CMD build html docs_src/ -o docs/ -s docs_src/styles.py -u docs_src/utils.py
 
-if [ -n "$PRESERVE_REPORTS" ] && [ -d "$PRESERVE_REPORTS" ]; then
+if [ -n "$PRESERVE_API" ] && [ -d "$PRESERVE_API" ]; then
     mkdir -p docs
-    if [ ! -d "docs/reports" ]; then
-        mv "$PRESERVE_REPORTS" "docs/reports"
+    if [ ! -d "docs/api" ]; then
+        mv "$PRESERVE_API" "docs/api"
     else
-        rm -rf "$PRESERVE_REPORTS"
+        rm -rf "$PRESERVE_API"
     fi
 fi
 
@@ -58,6 +66,15 @@ if [ -n "$PRESERVE_ARCH" ] && [ -d "$PRESERVE_ARCH" ]; then
         mv "$PRESERVE_ARCH" "docs/architecture"
     else
         rm -rf "$PRESERVE_ARCH"
+    fi
+fi
+
+if [ -n "$PRESERVE_REPORTS" ] && [ -d "$PRESERVE_REPORTS" ]; then
+    mkdir -p docs
+    if [ ! -d "docs/reports" ]; then
+        mv "$PRESERVE_REPORTS" "docs/reports"
+    else
+        rm -rf "$PRESERVE_REPORTS"
     fi
 fi
 

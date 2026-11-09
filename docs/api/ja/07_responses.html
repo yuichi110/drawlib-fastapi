@@ -1,0 +1,2584 @@
+<!--
+ Copyright (c) 2026 Yuichi Ito (yuichi@yuichi.com)
+
+ This software is licensed under the Apache License, Version 2.0.
+ For more information, please visit: https://github.com/yuichi110/drawlib
+
+ This software is provided "as is", without warranty of any kind,
+ express or implied, including but not limited to the warranties of
+ merchantability, fitness for a particular purpose and noninfringement.
+-->
+<!DOCTYPE html>
+<html lang="ja" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>fastapi.responses — FastAPI API Reference (Unofficial)</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-S9N5BZ1VRC');
+    </script>
+    <script>
+        (function() {
+            try {
+                var savedTheme = localStorage.getItem('drawlib-theme');
+                if (savedTheme === 'dark' || savedTheme === 'light') {
+                    document.documentElement.setAttribute('data-theme', savedTheme);
+                } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                }
+            } catch (e) {}
+        })();
+    </script>
+    
+    <link rel="icon" href="../_assets/favicon.png">
+    
+    
+    
+    <link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/api/en/07_responses.html">
+    
+    <link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/api/ja/07_responses.html">
+    
+    <link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/api/en/07_responses.html">
+    
+    
+    
+    <meta name="description" content="fastapi.responses は、Starlette の ASGI レスポンスクラス群（Response、JSONResponse、HTMLResponse、PlainTextResponse、RedirectResponse、StreamingResponse、FileResponse）に加え、FastAPI…">
+    <link rel="canonical" href="https://fastapi.drawlib.com/api/ja/07_responses.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="FastAPI API Reference">
+    <meta property="og:title" content="fastapi.responses — FastAPI API Reference">
+    <meta property="og:description" content="fastapi.responses は、Starlette の ASGI レスポンスクラス群（Response、JSONResponse、HTMLResponse、PlainTextResponse、RedirectResponse、StreamingResponse、FileResponse）に加え、FastAPI…">
+    <meta property="og:url" content="https://fastapi.drawlib.com/api/ja/07_responses.html">
+    <meta property="og:image" content="https://fastapi.drawlib.com/api/_assets/ogp.png">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:locale:alternate" content="en_US">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="fastapi.responses — FastAPI API Reference">
+    <meta name="twitter:description" content="fastapi.responses は、Starlette の ASGI レスポンスクラス群（Response、JSONResponse、HTMLResponse、PlainTextResponse、RedirectResponse、StreamingResponse、FileResponse）に加え、FastAPI…">
+    <meta name="twitter:image" content="https://fastapi.drawlib.com/api/_assets/ogp.png">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    
+    <link rel="stylesheet" href="style.css">
+    
+</head>
+<body>
+    <div class="demo-banner" role="region" aria-label="ポータルナビゲーション">
+        <div class="demo-banner-inner">
+            <span class="demo-banner-badge">API REFERENCE</span>
+            
+            <span class="demo-banner-text">
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a>（v0.162.2）API・CLI リファレンス（非公式）
+            </span>
+            <span class="demo-banner-links">
+                <a href="https://fastapi.drawlib.com/">User Guide</a>
+                <span class="demo-banner-sep">·</span>
+                <strong style="color:#ffffff;">API Reference</strong>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.drawlib.com/architecture/">Architecture</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Audit</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official Docs ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+            </span>
+            
+        </div>
+    </div>
+    
+    <div class="doc-layout">
+        <aside class="sidebar" id="catalog-sidebar">
+            <div class="sidebar-header has-subbar">
+                <a href="index.html" class="site-title">
+                    FastAPI API リファレンス
+                </a>
+                <div class="sidebar-header-actions">
+                    <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle color theme" title="Toggle light/dark mode">
+                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                    <button type="button" id="menu-toggle" class="menu-toggle-btn" aria-label="Toggle navigation menu">
+                        <svg class="icon-hamburger" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        <svg class="icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="sidebar-subbar">
+                
+                
+                <a href="index.html" class="sidebar-version-badge">
+                    <span class="sidebar-version-dot"></span>
+                    <span>API リファレンス · v0.162.2</span>
+                </a>
+                
+                
+                
+                <a href="https://github.com/fastapi/fastapi" target="_blank" rel="noopener noreferrer" class="sidebar-github-link" aria-label="Repository" title="View Upstream FastAPI Repository">
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+                </a>
+                
+            </div>
+            
+
+            <div class="sidebar-menu">
+                <div class="catalog-sidebar-toolbar">
+                    <div class="catalog-filter-box">
+                        <svg class="catalog-filter-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <input id="catalog-filter-input" type="search" class="catalog-filter-input" placeholder="項目を絞り込み..." autocomplete="off" spellcheck="false" aria-label="項目を絞り込み...">
+                        <kbd class="catalog-filter-kbd">/</kbd>
+                    </div>
+                    <div class="catalog-toolbar-meta">
+                        <span class="catalog-toolbar-label">カテゴリ &amp; 項目</span>
+                        <button type="button" id="catalog-expand-toggle" class="catalog-expand-btn" data-expand-label="すべて展開" data-collapse-label="すべて折りたたむ">すべて折りたたむ</button>
+                    </div>
+                </div>
+
+                <nav class="catalog-sidebar-nav" id="catalog-sidebar-nav" aria-label="Catalog Navigation">
+                    
+                    
+                    
+                    <details class="catalog-nav-group" data-cat="FastAPI パッケージ概要" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="00_overview.html" class="catalog-nav-cat-link is-prose-cat">FastAPI パッケージ概要</a>
+                            
+                            <span class="catalog-nav-count">4</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="const fastapi.__version__">
+                                <a href="00_overview.html#fastapi-version" class="catalog-nav-sublink is-prose-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-const">const</span>
+                                    
+                                    <span class="catalog-nav-sym-text">fastapi.__version__</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="module fastapi.status">
+                                <a href="00_overview.html#fastapi-status" class="catalog-nav-sublink is-prose-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">module</span>
+                                    
+                                    <span class="catalog-nav-sym-text">fastapi.status</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="type fastapi.types.DecoratedCallable">
+                                <a href="00_overview.html#fastapi-types-decoratedcallable" class="catalog-nav-sublink is-prose-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-type">type</span>
+                                    
+                                    <span class="catalog-nav-sym-text">fastapi.types.DecoratedCallable</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="type fastapi.types.IncEx">
+                                <a href="00_overview.html#fastapi-types-incex" class="catalog-nav-sublink is-prose-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-type">type</span>
+                                    
+                                    <span class="catalog-nav-sym-text">fastapi.types.IncEx</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group" data-cat="applications" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="01_applications.html" class="catalog-nav-cat-link">fastapi.applications</a>
+                            
+                            <span class="catalog-nav-count">12</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="class FastAPI">
+                                <a href="01_applications.html#fastapi" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FastAPI</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method FastAPI.get()">
+                                <a href="01_applications.html#fastapi-get" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FastAPI.get()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method FastAPI.api_route()">
+                                <a href="01_applications.html#fastapi-api-route" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FastAPI.api_route()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method FastAPI.websocket()">
+                                <a href="01_applications.html#fastapi-websocket" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FastAPI.websocket()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method FastAPI.include_router()">
+                                <a href="01_applications.html#fastapi-include-router" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FastAPI.include_router()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method FastAPI.mount()">
+                                <a href="01_applications.html#fastapi-mount" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FastAPI.mount()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method FastAPI.frontend()">
+                                <a href="01_applications.html#fastapi-frontend" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FastAPI.frontend()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method FastAPI.add_middleware()">
+                                <a href="01_applications.html#fastapi-add-middleware" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FastAPI.add_middleware()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method FastAPI.middleware()">
+                                <a href="01_applications.html#fastapi-middleware" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FastAPI.middleware()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method FastAPI.add_exception_handler()">
+                                <a href="01_applications.html#fastapi-add-exception-handler" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FastAPI.add_exception_handler()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method FastAPI.exception_handler()">
+                                <a href="01_applications.html#fastapi-exception-handler" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FastAPI.exception_handler()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method FastAPI.openapi()">
+                                <a href="01_applications.html#fastapi-openapi" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FastAPI.openapi()</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group" data-cat="routing" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="02_routing.html" class="catalog-nav-cat-link">fastapi.routing</a>
+                            
+                            <span class="catalog-nav-count">11</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="class APIRouter">
+                                <a href="02_routing.html#apirouter" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">APIRouter</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method APIRouter.get()">
+                                <a href="02_routing.html#apirouter-get" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">APIRouter.get()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method APIRouter.include_router()">
+                                <a href="02_routing.html#apirouter-include-router" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">APIRouter.include_router()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method APIRouter.add_api_route()">
+                                <a href="02_routing.html#apirouter-add-api-route" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">APIRouter.add_api_route()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method APIRouter.api_route()">
+                                <a href="02_routing.html#apirouter-api-route" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">APIRouter.api_route()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method APIRouter.websocket()">
+                                <a href="02_routing.html#apirouter-websocket" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">APIRouter.websocket()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method APIRouter.frontend()">
+                                <a href="02_routing.html#apirouter-frontend" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">APIRouter.frontend()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class APIRoute">
+                                <a href="02_routing.html#apiroute" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">APIRoute</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method APIRoute.get_route_handler()">
+                                <a href="02_routing.html#apiroute-get-route-handler" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">APIRoute.get_route_handler()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class APIWebSocketRoute">
+                                <a href="02_routing.html#apiwebsocketroute" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">APIWebSocketRoute</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class Mount">
+                                <a href="02_routing.html#mount" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Mount</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group" data-cat="params" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="03_parameters.html" class="catalog-nav-cat-link">fastapi.params</a>
+                            
+                            <span class="catalog-nav-count">8</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="def Path()">
+                                <a href="03_parameters.html#path" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Path()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def Query()">
+                                <a href="03_parameters.html#query" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Query()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def Header()">
+                                <a href="03_parameters.html#header" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Header()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def Cookie()">
+                                <a href="03_parameters.html#cookie" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Cookie()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def Body()">
+                                <a href="03_parameters.html#body" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Body()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def Form()">
+                                <a href="03_parameters.html#form" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Form()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def File()">
+                                <a href="03_parameters.html#file" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">File()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def annotated_doc.Doc()">
+                                <a href="03_parameters.html#annotated-doc-doc" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">annotated_doc.Doc()</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group" data-cat="dependencies" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="04_dependencies.html" class="catalog-nav-cat-link">fastapi.dependencies</a>
+                            
+                            <span class="catalog-nav-count">4</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="def Depends()">
+                                <a href="04_dependencies.html#depends" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Depends()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def Security()">
+                                <a href="04_dependencies.html#security" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Security()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class SecurityScopes">
+                                <a href="04_dependencies.html#securityscopes" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">SecurityScopes</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="attr FastAPI.dependency_overrides">
+                                <a href="04_dependencies.html#fastapi-dependency-overrides" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-const">attr</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FastAPI.dependency_overrides</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group" data-cat="security" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="05_security.html" class="catalog-nav-cat-link">fastapi.security</a>
+                            
+                            <span class="catalog-nav-count">16</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="class OAuth2PasswordBearer">
+                                <a href="05_security.html#oauth2passwordbearer" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">OAuth2PasswordBearer</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class OAuth2AuthorizationCodeBearer">
+                                <a href="05_security.html#oauth2authorizationcodebearer" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">OAuth2AuthorizationCodeBearer</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class OAuth2PasswordRequestForm">
+                                <a href="05_security.html#oauth2passwordrequestform" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">OAuth2PasswordRequestForm</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class OAuth2PasswordRequestFormStrict">
+                                <a href="05_security.html#oauth2passwordrequestformstrict" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">OAuth2PasswordRequestFormStrict</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class OAuth2">
+                                <a href="05_security.html#oauth2" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">OAuth2</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class HTTPBearer">
+                                <a href="05_security.html#httpbearer" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">HTTPBearer</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class HTTPBasic">
+                                <a href="05_security.html#httpbasic" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">HTTPBasic</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class HTTPDigest">
+                                <a href="05_security.html#httpdigest" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">HTTPDigest</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class HTTPAuthorizationCredentials">
+                                <a href="05_security.html#httpauthorizationcredentials" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">HTTPAuthorizationCredentials</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class HTTPBasicCredentials">
+                                <a href="05_security.html#httpbasiccredentials" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">HTTPBasicCredentials</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class APIKeyHeader">
+                                <a href="05_security.html#apikeyheader" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">APIKeyHeader</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class APIKeyQuery">
+                                <a href="05_security.html#apikeyquery" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">APIKeyQuery</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class APIKeyCookie">
+                                <a href="05_security.html#apikeycookie" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">APIKeyCookie</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class OpenIdConnect">
+                                <a href="05_security.html#openidconnect" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">OpenIdConnect</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class SecurityBase">
+                                <a href="05_security.html#securitybase" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">SecurityBase</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def get_authorization_scheme_param()">
+                                <a href="05_security.html#get-authorization-scheme-param" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">get_authorization_scheme_param()</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group" data-cat="requests &amp; websockets" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="06_requests_websockets.html" class="catalog-nav-cat-link">fastapi.requests &amp; websockets</a>
+                            
+                            <span class="catalog-nav-count">5</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="class Request">
+                                <a href="06_requests_websockets.html#request" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Request</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class HTTPConnection">
+                                <a href="06_requests_websockets.html#httpconnection" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">HTTPConnection</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class WebSocket">
+                                <a href="06_requests_websockets.html#websocket" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">WebSocket</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class WebSocketDisconnect">
+                                <a href="06_requests_websockets.html#websocketdisconnect" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">WebSocketDisconnect</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="enum WebSocketState">
+                                <a href="06_requests_websockets.html#websocketstate" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-type">enum</span>
+                                    
+                                    <span class="catalog-nav-sym-text">WebSocketState</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group is-current-page" data-cat="responses" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="07_responses.html" class="catalog-nav-cat-link">fastapi.responses</a>
+                            
+                            <span class="catalog-nav-count">9</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="class Response">
+                                <a href="#response" class="catalog-nav-sublink" data-target="response">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Response</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class JSONResponse">
+                                <a href="#jsonresponse" class="catalog-nav-sublink" data-target="jsonresponse">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">JSONResponse</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class HTMLResponse">
+                                <a href="#htmlresponse" class="catalog-nav-sublink" data-target="htmlresponse">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">HTMLResponse</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class PlainTextResponse">
+                                <a href="#plaintextresponse" class="catalog-nav-sublink" data-target="plaintextresponse">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">PlainTextResponse</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class RedirectResponse">
+                                <a href="#redirectresponse" class="catalog-nav-sublink" data-target="redirectresponse">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">RedirectResponse</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class StreamingResponse">
+                                <a href="#streamingresponse" class="catalog-nav-sublink" data-target="streamingresponse">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">StreamingResponse</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class FileResponse">
+                                <a href="#fileresponse" class="catalog-nav-sublink" data-target="fileresponse">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FileResponse</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="deprecated ORJSONResponse">
+                                <a href="#orjsonresponse" class="catalog-nav-sublink" data-target="orjsonresponse">
+                                    
+                                    <span class="catalog-badge catalog-badge-error">deprecated</span>
+                                    
+                                    <span class="catalog-nav-sym-text">ORJSONResponse</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="deprecated UJSONResponse">
+                                <a href="#ujsonresponse" class="catalog-nav-sublink" data-target="ujsonresponse">
+                                    
+                                    <span class="catalog-badge catalog-badge-error">deprecated</span>
+                                    
+                                    <span class="catalog-nav-sym-text">UJSONResponse</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group" data-cat="sse" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="08_sse.html" class="catalog-nav-cat-link">fastapi.sse</a>
+                            
+                            <span class="catalog-nav-count">4</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="class EventSourceResponse">
+                                <a href="08_sse.html#eventsourceresponse" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">EventSourceResponse</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class ServerSentEvent">
+                                <a href="08_sse.html#serversentevent" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">ServerSentEvent</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def format_sse_event()">
+                                <a href="08_sse.html#format-sse-event" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">format_sse_event()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="const KEEPALIVE_COMMENT">
+                                <a href="08_sse.html#keepalive-comment" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-const">const</span>
+                                    
+                                    <span class="catalog-nav-sym-text">KEEPALIVE_COMMENT</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group" data-cat="datastructures" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="09_datastructures.html" class="catalog-nav-cat-link">fastapi.datastructures</a>
+                            
+                            <span class="catalog-nav-count">9</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="class UploadFile">
+                                <a href="09_datastructures.html#uploadfile" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">UploadFile</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class URL">
+                                <a href="09_datastructures.html#url" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">URL</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class Headers">
+                                <a href="09_datastructures.html#headers" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Headers</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class QueryParams">
+                                <a href="09_datastructures.html#queryparams" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">QueryParams</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class FormData">
+                                <a href="09_datastructures.html#formdata" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FormData</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class State">
+                                <a href="09_datastructures.html#state" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">State</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class Address">
+                                <a href="09_datastructures.html#address" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Address</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def Default()">
+                                <a href="09_datastructures.html#default" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Default()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class DefaultPlaceholder">
+                                <a href="09_datastructures.html#defaultplaceholder" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">DefaultPlaceholder</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group" data-cat="exceptions" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="10_exceptions.html" class="catalog-nav-cat-link">fastapi.exceptions</a>
+                            
+                            <span class="catalog-nav-count">11</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="class HTTPException">
+                                <a href="10_exceptions.html#httpexception" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">HTTPException</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class WebSocketException">
+                                <a href="10_exceptions.html#websocketexception" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">WebSocketException</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class ValidationException">
+                                <a href="10_exceptions.html#validationexception" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">ValidationException</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class RequestValidationError">
+                                <a href="10_exceptions.html#requestvalidationerror" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">RequestValidationError</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class ResponseValidationError">
+                                <a href="10_exceptions.html#responsevalidationerror" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">ResponseValidationError</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class WebSocketRequestValidationError">
+                                <a href="10_exceptions.html#websocketrequestvalidationerror" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">WebSocketRequestValidationError</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class FastAPIError">
+                                <a href="10_exceptions.html#fastapierror" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FastAPIError</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class DependencyScopeError">
+                                <a href="10_exceptions.html#dependencyscopeerror" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">DependencyScopeError</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="async def http_exception_handler()">
+                                <a href="10_exceptions.html#http-exception-handler" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">async def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">http_exception_handler()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="async def request_validation_exception_handler()">
+                                <a href="10_exceptions.html#request-validation-exception-handler" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">async def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">request_validation_exception_handler()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="async def websocket_request_validation_exception_handler()">
+                                <a href="10_exceptions.html#websocket-request-validation-exception-handler" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">async def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">websocket_request_validation_exception_handler()</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group" data-cat="middleware" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="11_middleware.html" class="catalog-nav-cat-link">fastapi.middleware</a>
+                            
+                            <span class="catalog-nav-count">6</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="class CORSMiddleware">
+                                <a href="11_middleware.html#corsmiddleware" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">CORSMiddleware</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class TrustedHostMiddleware">
+                                <a href="11_middleware.html#trustedhostmiddleware" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">TrustedHostMiddleware</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class GZipMiddleware">
+                                <a href="11_middleware.html#gzipmiddleware" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">GZipMiddleware</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class HTTPSRedirectMiddleware">
+                                <a href="11_middleware.html#httpsredirectmiddleware" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">HTTPSRedirectMiddleware</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class AsyncExitStackMiddleware">
+                                <a href="11_middleware.html#asyncexitstackmiddleware" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">AsyncExitStackMiddleware</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="deprecated WSGIMiddleware">
+                                <a href="11_middleware.html#wsgimiddleware" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-error">deprecated</span>
+                                    
+                                    <span class="catalog-nav-sym-text">WSGIMiddleware</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group" data-cat="telemetry" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="12_telemetry.html" class="catalog-nav-cat-link">fastapi.telemetry</a>
+                            
+                            <span class="catalog-nav-count">3</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="class TelemetryConfig">
+                                <a href="12_telemetry.html#telemetryconfig" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">TelemetryConfig</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class TelemetryData">
+                                <a href="12_telemetry.html#telemetrydata" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">TelemetryData</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def get_telemetry_data()">
+                                <a href="12_telemetry.html#get-telemetry-data" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">get_telemetry_data()</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group" data-cat="openapi" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="13_openapi.html" class="catalog-nav-cat-link">fastapi.openapi</a>
+                            
+                            <span class="catalog-nav-count">10</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="def get_openapi()">
+                                <a href="13_openapi.html#get-openapi" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">get_openapi()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def get_swagger_ui_html()">
+                                <a href="13_openapi.html#get-swagger-ui-html" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">get_swagger_ui_html()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def get_swagger_ui_oauth2_redirect_html()">
+                                <a href="13_openapi.html#get-swagger-ui-oauth2-redirect-html" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">get_swagger_ui_oauth2_redirect_html()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def get_redoc_html()">
+                                <a href="13_openapi.html#get-redoc-html" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">get_redoc_html()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="const SWAGGER_UI_PARAMETERS">
+                                <a href="13_openapi.html#swagger-ui-parameters" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-const">const</span>
+                                    
+                                    <span class="catalog-nav-sym-text">SWAGGER_UI_PARAMETERS</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="const METHODS_WITH_BODY &amp; REF_PREFIX &amp; REF_TEMPLATE">
+                                <a href="13_openapi.html#methods-with-body-ref-prefix-ref-template" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-const">const</span>
+                                    
+                                    <span class="catalog-nav-sym-text">METHODS_WITH_BODY &amp; REF_PREFIX &amp; REF_TEMPLATE</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="model OpenAPI">
+                                <a href="13_openapi.html#openapi" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">model</span>
+                                    
+                                    <span class="catalog-nav-sym-text">OpenAPI</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="model Info / Contact / License / Server">
+                                <a href="13_openapi.html#info-contact-license-server" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">model</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Info / Contact / License / Server</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="model Paths / PathItem / Operation / Parameter">
+                                <a href="13_openapi.html#paths-pathitem-operation-parameter" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">model</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Paths / PathItem / Operation / Parameter</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="model Components / Schema / SecurityScheme">
+                                <a href="13_openapi.html#components-schema-securityscheme" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">model</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Components / Schema / SecurityScheme</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group" data-cat="background &amp; utilities" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="14_utilities.html" class="catalog-nav-cat-link">fastapi.background &amp; utilities</a>
+                            
+                            <span class="catalog-nav-count">7</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="class BackgroundTasks">
+                                <a href="14_utilities.html#backgroundtasks" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">BackgroundTasks</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method BackgroundTasks.add_task()">
+                                <a href="14_utilities.html#backgroundtasks-add-task" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">BackgroundTasks.add_task()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def jsonable_encoder()">
+                                <a href="14_utilities.html#jsonable-encoder" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">jsonable_encoder()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="async def run_in_threadpool()">
+                                <a href="14_utilities.html#run-in-threadpool" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">async def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">run_in_threadpool()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="async def contextmanager_in_threadpool()">
+                                <a href="14_utilities.html#contextmanager-in-threadpool" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">async def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">contextmanager_in_threadpool()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class StaticFiles">
+                                <a href="14_utilities.html#staticfiles" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">StaticFiles</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class Jinja2Templates">
+                                <a href="14_utilities.html#jinja2templates" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Jinja2Templates</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group" data-cat="testclient &amp; cli" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="15_testing_and_cli.html" class="catalog-nav-cat-link">fastapi.testclient &amp; cli</a>
+                            
+                            <span class="catalog-nav-count">5</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="class TestClient">
+                                <a href="15_testing_and_cli.html#testclient" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">TestClient</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method TestClient.websocket_connect()">
+                                <a href="15_testing_and_cli.html#testclient-websocket-connect" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">TestClient.websocket_connect()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="cmd fastapi dev">
+                                <a href="15_testing_and_cli.html#fastapi-dev" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-cmd">cmd</span>
+                                    
+                                    <span class="catalog-nav-sym-text">fastapi dev</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="cmd fastapi run">
+                                <a href="15_testing_and_cli.html#fastapi-run" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-cmd">cmd</span>
+                                    
+                                    <span class="catalog-nav-sym-text">fastapi run</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="cmd fastapi --version">
+                                <a href="15_testing_and_cli.html#fastapi-version" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-cmd">cmd</span>
+                                    
+                                    <span class="catalog-nav-sym-text">fastapi --version</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    
+                    <div id="catalog-nav-empty" class="catalog-nav-empty" hidden>一致する項目が見つかりません。</div>
+                </nav>
+            </div>
+        </aside>
+        <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+        <div class="content-wrapper">
+            <div class="top-bar">
+                <div class="breadcrumbs">
+                    <a href="index.html" class="crumb">API リファレンス</a>
+                    <span class="crumb-separator">/</span>
+                    <span class="crumb active">fastapi.responses</span>
+                </div>
+                
+                <div class="top-bar-right">
+                    
+                    
+                    <div class="lang-switcher" aria-label="Language switcher">
+                        <details class="lang-dropdown">
+                            <summary class="lang-dropdown-btn" aria-haspopup="listbox">
+                                <svg class="lang-globe-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                                <span class="lang-current-label">日本語</span>
+                                <svg class="lang-caret-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </summary>
+                            <div class="lang-dropdown-menu" role="listbox">
+                                
+                                
+                                <a href="../en/07_responses.html" class="lang-option" role="option" hreflang="">
+                                    <span>English</span>
+                                </a>
+                                
+                                
+                                
+                                <span class="lang-option active" role="option" aria-selected="true">
+                                    <span>日本語</span>
+                                    <svg class="lang-check-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                </span>
+                                
+                                
+                            </div>
+                        </details>
+                    </div>
+                    
+                </div>
+                
+            </div>
+
+            <main class="main-content catalog-main-content">
+                <h1 class="catalog-page-title is-module">fastapi.responses</h1>
+<p><code>fastapi.responses</code> は、Starlette の ASGI レスポンスクラス群（<code>Response</code>、<code>JSONResponse</code>、<code>HTMLResponse</code>、<code>PlainTextResponse</code>、<code>RedirectResponse</code>、<code>StreamingResponse</code>、<code>FileResponse</code>）に加え、FastAPI <code>v0.162.2</code> で非推奨（<code>@deprecated</code>）となった JSON サブクラス（<code>ORJSONResponse</code>、<code>UJSONResponse</code>）を公開します。パスオペレーションから <code>Response</code> インスタンスを直接返すか、ルートデコレータの <code>response_class=...</code> に指定することで、ステータスコード、<code>Content-Type</code> ヘッダー、Cookie、チャンクストリーミング、バックグラウンドタスクを制御できます。</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../images/07_responses/fastapi_responses_hierarchy.png" alt="07_responses_1" />
+  <figcaption class="drawlib-caption">FastAPI レスポンスクラス階層・既定 Media Type・配信方式</figcaption>
+</figure>
+<hr />
+<h2 id="response" class="catalog-symbol-heading"><span class="catalog-badge catalog-badge-class">class</span><code class="catalog-sig"><span class="catalog-sig-name">Response</span></code><a class="header-anchor" href="#response" aria-label="Permalink to Response">#</a></h2>
+<p>基底となる ASGI HTTP レスポンスクラス（<code>from fastapi import Response</code> または <code>from fastapi.responses import Response</code>）です。<code>charset = &quot;utf-8&quot;</code> で文字列またはバイト列ペイロードをエンコードし、<code>raw_headers</code> 内に <code>content-length</code> と <code>content-type</code> を構築するほか、<code>set_cookie()</code> / <code>delete_cookie()</code> による <code>Set-Cookie</code> ヘッダー管理、およびレスポンス送信後に実行される <code>background</code> タスクをサポートします。</p>
+<pre><code class="language-python"><span class="k">class</span><span class="w"> </span><span class="nc">Response</span><span class="p">:</span>
+    <span class="n">media_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">charset</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"utf-8"</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">content</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">status_code</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span>
+        <span class="n">headers</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">media_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">background</span><span class="p">:</span> <span class="n">BackgroundTask</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_cookie</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">value</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+        <span class="n">max_age</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">expires</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="s2">"/"</span><span class="p">,</span>
+        <span class="n">domain</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">secure</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">httponly</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">samesite</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"lax"</span><span class="p">,</span> <span class="s2">"strict"</span><span class="p">,</span> <span class="s2">"none"</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="s2">"lax"</span><span class="p">,</span>
+        <span class="n">partitioned</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete_cookie</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"/"</span><span class="p">,</span>
+        <span class="n">domain</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">secure</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">httponly</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">samesite</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"lax"</span><span class="p">,</span> <span class="s2">"strict"</span><span class="p">,</span> <span class="s2">"none"</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="s2">"lax"</span><span class="p">,</span>
+        <span class="n">partitioned</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+</code></pre>
+<h3 id="パラメータ-属性-メソッド">パラメータ・属性・メソッド<a class="header-anchor" href="#パラメータ-属性-メソッド" aria-label="Permalink">#</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">名前</th>
+<th style="text-align:left">種別</th>
+<th style="text-align:left">型 / デフォルト</th>
+<th style="text-align:left">説明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><code>content</code></td>
+<td style="text-align:left">引数</td>
+<td style="text-align:left"><code>Any = None</code></td>
+<td style="text-align:left"><code>render(content)</code> を通じて <code>self.body</code> に変換される <code>bytes</code>、<code>memoryview</code>、または <code>str</code>。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>status_code</code></td>
+<td style="text-align:left">引数 / 属性</td>
+<td style="text-align:left"><code>int = 200</code></td>
+<td style="text-align:left"><code>http.response.start</code> で送信される HTTP ステータスコード。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>headers</code></td>
+<td style="text-align:left">引数 / プロパティ</td>
+<td style="text-align:left"><code>MutableHeaders</code></td>
+<td style="text-align:left"><code>self.raw_headers</code> を背後で操作する大文字・小文字非依存の可変ヘッダー辞書。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>raw_headers</code></td>
+<td style="text-align:left">属性</td>
+<td style="text-align:left"><code>list[tuple[bytes, bytes]]</code></td>
+<td style="text-align:left">ASGI サーバーへ送信される小文字 Latin-1 エンコード済みの <code>(name, value)</code> バイトタプル配列。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>media_type</code></td>
+<td style="text-align:left">引数 / 属性</td>
+<td style="text-align:left"><code>str | None = None</code></td>
+<td style="text-align:left"><code>Content-Type</code> に設定される MIME タイプ（<code>text/*</code> の場合は <code>; charset=utf-8</code> が自動付与）。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>background</code></td>
+<td style="text-align:left">引数 / 属性</td>
+<td style="text-align:left"><code>BackgroundTask | None = None</code></td>
+<td style="text-align:left"><code>http.response.body</code> 送信完了後に実行される Starlette の <code>BackgroundTask</code> / <code>BackgroundTasks</code>。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>set_cookie()</code></td>
+<td style="text-align:left">メソッド</td>
+<td style="text-align:left"><code>None</code></td>
+<td style="text-align:left"><code>raw_headers</code> に <code>Set-Cookie</code> ヘッダーを追加します（セッション Cookie には <code>__Host-</code> プレフィックス、<code>secure=True</code>、<code>httponly=True</code>、<code>samesite=&quot;lax&quot;</code> または <code>&quot;strict&quot;</code> を付与してください）。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>delete_cookie()</code></td>
+<td style="text-align:left">メソッド</td>
+<td style="text-align:left"><code>None</code></td>
+<td style="text-align:left"><code>set_cookie(..., max_age=0, expires=0)</code> を呼び出して既存 Cookie を即時失効させます。</td>
+</tr>
+</tbody>
+</table>
+<h3 id="使用例">使用例<a class="header-anchor" href="#使用例" aria-label="Permalink">#</a></h3>
+<pre><code class="language-python"><span class="kn">import</span><span class="w"> </span><span class="nn">secrets</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">Response</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.testclient</span><span class="w"> </span><span class="kn">import</span> <span class="n">TestClient</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">()</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/auth/cookie-login"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">login_with_cookie</span><span class="p">(</span><span class="n">response</span><span class="p">:</span> <span class="n">Response</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+    <span class="n">session_token</span> <span class="o">=</span> <span class="n">secrets</span><span class="o">.</span><span class="n">token_urlsafe</span><span class="p">(</span><span class="mi">24</span><span class="p">)</span>
+    <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">=</span> <span class="mi">201</span>
+    <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">"X-Content-Type-Options"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"nosniff"</span>
+    <span class="n">response</span><span class="o">.</span><span class="n">set_cookie</span><span class="p">(</span>
+        <span class="n">key</span><span class="o">=</span><span class="s2">"__Host-session"</span><span class="p">,</span>
+        <span class="n">value</span><span class="o">=</span><span class="n">session_token</span><span class="p">,</span>
+        <span class="n">max_age</span><span class="o">=</span><span class="mi">3600</span><span class="p">,</span>
+        <span class="n">path</span><span class="o">=</span><span class="s2">"/"</span><span class="p">,</span>
+        <span class="n">secure</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">httponly</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">samesite</span><span class="o">=</span><span class="s2">"lax"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"status"</span><span class="p">:</span> <span class="s2">"established"</span><span class="p">}</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/auth/cookie-logout"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">logout_cookie</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Response</span><span class="p">:</span>
+    <span class="n">resp</span> <span class="o">=</span> <span class="n">Response</span><span class="p">(</span><span class="n">content</span><span class="o">=</span><span class="sa">b</span><span class="s2">""</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">204</span><span class="p">)</span>
+    <span class="n">resp</span><span class="o">.</span><span class="n">delete_cookie</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s2">"__Host-session"</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">"/"</span><span class="p">,</span> <span class="n">secure</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">httponly</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">resp</span>
+
+
+<span class="n">client</span> <span class="o">=</span> <span class="n">TestClient</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+<span class="n">login_res</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/auth/cookie-login"</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">login_res</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">201</span>
+<span class="k">assert</span> <span class="s2">"HttpOnly"</span> <span class="ow">in</span> <span class="n">login_res</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">"set-cookie"</span><span class="p">]</span>
+<span class="k">assert</span> <span class="nb">any</span><span class="p">(</span><span class="n">k</span> <span class="o">==</span> <span class="sa">b</span><span class="s2">"set-cookie"</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">login_res</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">raw</span><span class="p">)</span>
+
+<span class="n">logout_res</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/auth/cookie-logout"</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">logout_res</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">204</span>
+<span class="k">assert</span> <span class="s2">"Max-Age=0"</span> <span class="ow">in</span> <span class="n">logout_res</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">"set-cookie"</span><span class="p">]</span>
+</code></pre>
+<hr />
+<h2 id="jsonresponse" class="catalog-symbol-heading"><span class="catalog-badge catalog-badge-class">class</span><code class="catalog-sig"><span class="catalog-sig-name">JSONResponse</span></code><a class="header-anchor" href="#jsonresponse" aria-label="Permalink to JSONResponse">#</a></h2>
+<p>標準ライブラリの <code>json.dumps(..., ensure_ascii=False, allow_nan=False, separators=(&quot;,&quot;, &quot;:&quot;))</code> を用いて Python オブジェクトを UTF-8 JSON バイト列へ変換するレスポンスクラスです（既定 <code>media_type = &quot;application/json&quot;</code>）。Pydantic モデルを介さずにカスタムステータスコードやヘッダーを直接返したい場合や、カスタム例外ハンドラー（<code>@app.exception_handler</code>）内で使用します。</p>
+<pre><code class="language-python"><span class="k">class</span><span class="w"> </span><span class="nc">JSONResponse</span><span class="p">(</span><span class="n">Response</span><span class="p">):</span>
+    <span class="n">media_type</span> <span class="o">=</span> <span class="s2">"application/json"</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">content</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">status_code</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span>
+        <span class="n">headers</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">media_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">background</span><span class="p">:</span> <span class="n">BackgroundTask</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+</code></pre>
+<h3 id="パラメータ">パラメータ<a class="header-anchor" href="#パラメータ" aria-label="Permalink">#</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">パラメータ</th>
+<th style="text-align:left">型</th>
+<th style="text-align:left">デフォルト</th>
+<th style="text-align:left">説明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><code>content</code></td>
+<td style="text-align:left"><code>Any</code></td>
+<td style="text-align:left"><em>(必須)</em></td>
+<td style="text-align:left">JSON シリアライズ可能な Python 値（<code>datetime</code> / <code>UUID</code> / <code>BaseModel</code> を含む場合は <code>fastapi.encoders.jsonable_encoder</code> を併用）。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>status_code</code></td>
+<td style="text-align:left"><code>int</code></td>
+<td style="text-align:left"><code>200</code></td>
+<td style="text-align:left">HTTP ステータスコード（例: <code>202</code>、<code>400</code>、<code>429</code>）。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>headers</code></td>
+<td style="text-align:left"><code>Mapping[str, str] | None</code></td>
+<td style="text-align:left"><code>None</code></td>
+<td style="text-align:left">追加する HTTP レスポンスヘッダー。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>media_type</code></td>
+<td style="text-align:left"><code>str | None</code></td>
+<td style="text-align:left"><code>None</code></td>
+<td style="text-align:left">既定の <code>&quot;application/json&quot;</code> を上書きする MIME タイプ（例: <code>&quot;application/problem+json&quot;</code>）。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>background</code></td>
+<td style="text-align:left"><code>BackgroundTask | None</code></td>
+<td style="text-align:left"><code>None</code></td>
+<td style="text-align:left">レスポンス送信後に実行するバックグラウンドタスク。</td>
+</tr>
+</tbody>
+</table>
+<h3 id="使用例-2">使用例<a class="header-anchor" href="#使用例-2" aria-label="Permalink">#</a></h3>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastAPI</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.responses</span><span class="w"> </span><span class="kn">import</span> <span class="n">JSONResponse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.testclient</span><span class="w"> </span><span class="kn">import</span> <span class="n">TestClient</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">()</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/jobs"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">enqueue_job</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">JSONResponse</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">JSONResponse</span><span class="p">(</span>
+        <span class="n">content</span><span class="o">=</span><span class="p">{</span><span class="s2">"job_id"</span><span class="p">:</span> <span class="s2">"job-42"</span><span class="p">,</span> <span class="s2">"state"</span><span class="p">:</span> <span class="s2">"queued"</span><span class="p">},</span>
+        <span class="n">status_code</span><span class="o">=</span><span class="mi">202</span><span class="p">,</span>
+        <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">"Cache-Control"</span><span class="p">:</span> <span class="s2">"no-store"</span><span class="p">},</span>
+    <span class="p">)</span>
+
+
+<span class="n">client</span> <span class="o">=</span> <span class="n">TestClient</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/jobs"</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">res</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">202</span>
+<span class="k">assert</span> <span class="n">res</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">"content-type"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"application/json"</span>
+<span class="k">assert</span> <span class="n">res</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">"cache-control"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"no-store"</span>
+<span class="k">assert</span> <span class="n">res</span><span class="o">.</span><span class="n">json</span><span class="p">()</span> <span class="o">==</span> <span class="p">{</span><span class="s2">"job_id"</span><span class="p">:</span> <span class="s2">"job-42"</span><span class="p">,</span> <span class="s2">"state"</span><span class="p">:</span> <span class="s2">"queued"</span><span class="p">}</span>
+</code></pre>
+<hr />
+<h2 id="htmlresponse" class="catalog-symbol-heading"><span class="catalog-badge catalog-badge-class">class</span><code class="catalog-sig"><span class="catalog-sig-name">HTMLResponse</span></code><a class="header-anchor" href="#htmlresponse" aria-label="Permalink to HTMLResponse">#</a></h2>
+<p><code>media_type = &quot;text/html&quot;</code>（<code>Content-Type: text/html; charset=utf-8</code>）で UTF-8 HTML ドキュメントを返却します。外部入力を埋め込む際は XSS を防ぐため、必ず <code>html.escape()</code> または自動エスケープ有効なテンプレートエンジン（<code>Jinja2Templates</code> など）を使用し、厳格な <code>Content-Security-Policy</code> ヘッダーを設定してください。</p>
+<pre><code class="language-python"><span class="k">class</span><span class="w"> </span><span class="nc">HTMLResponse</span><span class="p">(</span><span class="n">Response</span><span class="p">):</span>
+    <span class="n">media_type</span> <span class="o">=</span> <span class="s2">"text/html"</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">content</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">status_code</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span>
+        <span class="n">headers</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">media_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">background</span><span class="p">:</span> <span class="n">BackgroundTask</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+</code></pre>
+<h3 id="パラメータ-2">パラメータ<a class="header-anchor" href="#パラメータ-2" aria-label="Permalink">#</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">パラメータ</th>
+<th style="text-align:left">型</th>
+<th style="text-align:left">デフォルト</th>
+<th style="text-align:left">説明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><code>content</code></td>
+<td style="text-align:left"><code>Any</code></td>
+<td style="text-align:left"><code>None</code></td>
+<td style="text-align:left">HTML の <code>str</code> または <code>bytes</code> ペイロード。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>status_code</code></td>
+<td style="text-align:left"><code>int</code></td>
+<td style="text-align:left"><code>200</code></td>
+<td style="text-align:left">HTTP ステータスコード。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>headers</code></td>
+<td style="text-align:left"><code>Mapping[str, str] | None</code></td>
+<td style="text-align:left"><code>None</code></td>
+<td style="text-align:left">セキュリティ・キャッシュ制御用の HTTP ヘッダー（<code>Content-Security-Policy</code>、<code>X-Frame-Options</code> など）。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>media_type</code></td>
+<td style="text-align:left"><code>str | None</code></td>
+<td style="text-align:left"><code>None</code></td>
+<td style="text-align:left">既定値は <code>&quot;text/html&quot;</code>。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>background</code></td>
+<td style="text-align:left"><code>BackgroundTask | None</code></td>
+<td style="text-align:left"><code>None</code></td>
+<td style="text-align:left">レスポンス送信後の任意のバックグラウンドタスク。</td>
+</tr>
+</tbody>
+</table>
+<h3 id="使用例-3">使用例<a class="header-anchor" href="#使用例-3" aria-label="Permalink">#</a></h3>
+<pre><code class="language-python"><span class="kn">import</span><span class="w"> </span><span class="nn">html</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastAPI</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.responses</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTMLResponse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.testclient</span><span class="w"> </span><span class="kn">import</span> <span class="n">TestClient</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">()</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/welcome"</span><span class="p">,</span> <span class="n">response_class</span><span class="o">=</span><span class="n">HTMLResponse</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">welcome_page</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"Developer"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HTMLResponse</span><span class="p">:</span>
+    <span class="n">safe_name</span> <span class="o">=</span> <span class="n">html</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">quote</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">body</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"&lt;!doctype html&gt;&lt;html&gt;&lt;body&gt;&lt;h1&gt;Hello, </span><span class="si">{</span><span class="n">safe_name</span><span class="si">}</span><span class="s2">&lt;/h1&gt;&lt;/body&gt;&lt;/html&gt;"</span>
+    <span class="k">return</span> <span class="n">HTMLResponse</span><span class="p">(</span>
+        <span class="n">content</span><span class="o">=</span><span class="n">body</span><span class="p">,</span>
+        <span class="n">headers</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"Content-Security-Policy"</span><span class="p">:</span> <span class="s2">"default-src 'self'; object-src 'none'"</span><span class="p">,</span>
+            <span class="s2">"X-Content-Type-Options"</span><span class="p">:</span> <span class="s2">"nosniff"</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">)</span>
+
+
+<span class="n">client</span> <span class="o">=</span> <span class="n">TestClient</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/welcome"</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"&lt;Admin&gt;"</span><span class="p">})</span>
+<span class="k">assert</span> <span class="n">res</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span>
+<span class="k">assert</span> <span class="s2">"text/html"</span> <span class="ow">in</span> <span class="n">res</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">"content-type"</span><span class="p">]</span>
+<span class="k">assert</span> <span class="s2">"&amp;lt;Admin&amp;gt;"</span> <span class="ow">in</span> <span class="n">res</span><span class="o">.</span><span class="n">text</span>
+</code></pre>
+<hr />
+<h2 id="plaintextresponse" class="catalog-symbol-heading"><span class="catalog-badge catalog-badge-class">class</span><code class="catalog-sig"><span class="catalog-sig-name">PlainTextResponse</span></code><a class="header-anchor" href="#plaintextresponse" aria-label="Permalink to PlainTextResponse">#</a></h2>
+<p><code>media_type = &quot;text/plain&quot;</code>（<code>Content-Type: text/plain; charset=utf-8</code>）でプレーンテキストを返却します。<code>/robots.txt</code>、Prometheus メトリクス出力、ヘルスチェック応答などに適しています。</p>
+<pre><code class="language-python"><span class="k">class</span><span class="w"> </span><span class="nc">PlainTextResponse</span><span class="p">(</span><span class="n">Response</span><span class="p">):</span>
+    <span class="n">media_type</span> <span class="o">=</span> <span class="s2">"text/plain"</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">content</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">status_code</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span>
+        <span class="n">headers</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">media_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">background</span><span class="p">:</span> <span class="n">BackgroundTask</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+</code></pre>
+<h3 id="パラメータ-3">パラメータ<a class="header-anchor" href="#パラメータ-3" aria-label="Permalink">#</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">パラメータ</th>
+<th style="text-align:left">型</th>
+<th style="text-align:left">デフォルト</th>
+<th style="text-align:left">説明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><code>content</code></td>
+<td style="text-align:left"><code>Any</code></td>
+<td style="text-align:left"><code>None</code></td>
+<td style="text-align:left">プレーンテキストの <code>str</code> または <code>bytes</code> ボディ。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>status_code</code></td>
+<td style="text-align:left"><code>int</code></td>
+<td style="text-align:left"><code>200</code></td>
+<td style="text-align:left">HTTP ステータスコード。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>headers</code></td>
+<td style="text-align:left"><code>Mapping[str, str] | None</code></td>
+<td style="text-align:left"><code>None</code></td>
+<td style="text-align:left">任意の HTTP ヘッダー。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>media_type</code></td>
+<td style="text-align:left"><code>str | None</code></td>
+<td style="text-align:left"><code>None</code></td>
+<td style="text-align:left">既定値は <code>&quot;text/plain&quot;</code>。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>background</code></td>
+<td style="text-align:left"><code>BackgroundTask | None</code></td>
+<td style="text-align:left"><code>None</code></td>
+<td style="text-align:left">レスポンス送信後の任意のバックグラウンドタスク。</td>
+</tr>
+</tbody>
+</table>
+<h3 id="使用例-4">使用例<a class="header-anchor" href="#使用例-4" aria-label="Permalink">#</a></h3>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastAPI</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.responses</span><span class="w"> </span><span class="kn">import</span> <span class="n">PlainTextResponse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.testclient</span><span class="w"> </span><span class="kn">import</span> <span class="n">TestClient</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">()</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/robots.txt"</span><span class="p">,</span> <span class="n">response_class</span><span class="o">=</span><span class="n">PlainTextResponse</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">robots_txt</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="s2">"User-agent: *</span><span class="se">\n</span><span class="s2">Disallow: /admin/"</span>
+
+
+<span class="n">client</span> <span class="o">=</span> <span class="n">TestClient</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/robots.txt"</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">res</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span>
+<span class="k">assert</span> <span class="n">res</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">"content-type"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"text/plain; charset=utf-8"</span>
+<span class="k">assert</span> <span class="n">res</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"User-agent: *"</span><span class="p">)</span>
+</code></pre>
+<hr />
+<h2 id="redirectresponse" class="catalog-symbol-heading"><span class="catalog-badge catalog-badge-class">class</span><code class="catalog-sig"><span class="catalog-sig-name">RedirectResponse</span></code><a class="header-anchor" href="#redirectresponse" aria-label="Permalink to RedirectResponse">#</a></h2>
+<p><code>Location</code> レスポンスヘッダーに <code>url</code> を設定して HTTP リダイレクトを実行します（URL エンコード対象文字は自動エスケープされます）。既定の <code>status_code = 307</code>（<code>Temporary Redirect</code>）は元の HTTP メソッドとボディを維持します。<code>POST</code> フォーム送信後に <code>GET</code> ページへ遷移させる場合は <code>status_code = 303</code>（<code>See Other</code>）を指定します。</p>
+<pre><code class="language-python"><span class="k">class</span><span class="w"> </span><span class="nc">RedirectResponse</span><span class="p">(</span><span class="n">Response</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">URL</span><span class="p">,</span>
+        <span class="n">status_code</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">307</span><span class="p">,</span>
+        <span class="n">headers</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">background</span><span class="p">:</span> <span class="n">BackgroundTask</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+</code></pre>
+<h3 id="パラメータ-4">パラメータ<a class="header-anchor" href="#パラメータ-4" aria-label="Permalink">#</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">パラメータ</th>
+<th style="text-align:left">型</th>
+<th style="text-align:left">デフォルト</th>
+<th style="text-align:left">説明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><code>url</code></td>
+<td style="text-align:left"><code>str | starlette.datastructures.URL</code></td>
+<td style="text-align:left"><em>(必須)</em></td>
+<td style="text-align:left"><code>Location</code> ヘッダーに設定される遷移先 URL（外部入力由来の場合は許可リストで検証してください）。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>status_code</code></td>
+<td style="text-align:left"><code>int</code></td>
+<td style="text-align:left"><code>307</code></td>
+<td style="text-align:left">リダイレクト用 HTTP ステータスコード（<code>301</code>、<code>302</code>、<code>303</code>、<code>307</code>、<code>308</code>）。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>headers</code></td>
+<td style="text-align:left"><code>Mapping[str, str] | None</code></td>
+<td style="text-align:left"><code>None</code></td>
+<td style="text-align:left">リダイレクト応答に付与する追加 HTTP ヘッダー。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>background</code></td>
+<td style="text-align:left"><code>BackgroundTask | None</code></td>
+<td style="text-align:left"><code>None</code></td>
+<td style="text-align:left">レスポンス送信後の任意のバックグラウンドタスク。</td>
+</tr>
+</tbody>
+</table>
+<h3 id="使用例-5">使用例<a class="header-anchor" href="#使用例-5" aria-label="Permalink">#</a></h3>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastAPI</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.responses</span><span class="w"> </span><span class="kn">import</span> <span class="n">RedirectResponse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.testclient</span><span class="w"> </span><span class="kn">import</span> <span class="n">TestClient</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">()</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/v1/docs-legacy"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">legacy_redirect</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">RedirectResponse</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">RedirectResponse</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s2">"/v2/reference"</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">308</span><span class="p">)</span>
+
+
+<span class="n">client</span> <span class="o">=</span> <span class="n">TestClient</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/v1/docs-legacy"</span><span class="p">,</span> <span class="n">follow_redirects</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">res</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">308</span>
+<span class="k">assert</span> <span class="n">res</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">"location"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"/v2/reference"</span>
+</code></pre>
+<hr />
+<h2 id="streamingresponse" class="catalog-symbol-heading"><span class="catalog-badge catalog-badge-class">class</span><code class="catalog-sig"><span class="catalog-sig-name">StreamingResponse</span></code><a class="header-anchor" href="#streamingresponse" aria-label="Permalink to StreamingResponse">#</a></h2>
+<p>非同期イテレータ（<code>AsyncIterable[bytes | str]</code>）または同期イテレータ（<code>Iterable[bytes | str]</code>）からチャンク単位でレスポンスボディを逐次送信します。ペイロード全体をメモリ上に保持せず、かつ ASGI の <code>http.disconnect</code> を並行監視してクライアント途中切断時に生成処理を安全に停止します。</p>
+<pre><code class="language-python"><span class="k">class</span><span class="w"> </span><span class="nc">StreamingResponse</span><span class="p">(</span><span class="n">Response</span><span class="p">):</span>
+    <span class="n">body_iterator</span><span class="p">:</span> <span class="n">AsyncIterable</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">content</span><span class="p">:</span> <span class="n">ContentStream</span><span class="p">,</span>
+        <span class="n">status_code</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span>
+        <span class="n">headers</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">media_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">background</span><span class="p">:</span> <span class="n">BackgroundTask</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+</code></pre>
+<h3 id="パラメータ-5">パラメータ<a class="header-anchor" href="#パラメータ-5" aria-label="Permalink">#</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">パラメータ</th>
+<th style="text-align:left">型</th>
+<th style="text-align:left">デフォルト</th>
+<th style="text-align:left">説明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><code>content</code></td>
+<td style="text-align:left"><code>AsyncIterable[str | bytes | memoryview] | Iterable[str | bytes | memoryview]</code></td>
+<td style="text-align:left"><em>(必須)</em></td>
+<td style="text-align:left">チャンクを順次返す同期または非同期ジェネレータ（<code>str</code> は <code>charset = &quot;utf-8&quot;</code> で自動エンコード）。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>status_code</code></td>
+<td style="text-align:left"><code>int</code></td>
+<td style="text-align:left"><code>200</code></td>
+<td style="text-align:left">HTTP ステータスコード。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>headers</code></td>
+<td style="text-align:left"><code>Mapping[str, str] | None</code></td>
+<td style="text-align:left"><code>None</code></td>
+<td style="text-align:left">任意の HTTP ヘッダー（ダウンロード用の <code>Content-Disposition</code> など）。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>media_type</code></td>
+<td style="text-align:left"><code>str | None</code></td>
+<td style="text-align:left"><code>None</code></td>
+<td style="text-align:left"><code>&quot;application/x-ndjson&quot;</code> や <code>&quot;text/csv&quot;</code> などの MIME タイプ。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>background</code></td>
+<td style="text-align:left"><code>BackgroundTask | None</code></td>
+<td style="text-align:left"><code>None</code></td>
+<td style="text-align:left">ストリーム完了後に実行されるクリーンアップタスク。</td>
+</tr>
+</tbody>
+</table>
+<h3 id="使用例-6">使用例<a class="header-anchor" href="#使用例-6" aria-label="Permalink">#</a></h3>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncIterator</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastAPI</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.responses</span><span class="w"> </span><span class="kn">import</span> <span class="n">StreamingResponse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.testclient</span><span class="w"> </span><span class="kn">import</span> <span class="n">TestClient</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">()</span>
+
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">generate_ndjson</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]:</span>
+    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s2">"row"</span><span class="p">:</span> <span class="n">idx</span><span class="p">})</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">)</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/exports/events.ndjson"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">export_events</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">StreamingResponse</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">StreamingResponse</span><span class="p">(</span>
+        <span class="n">generate_ndjson</span><span class="p">(),</span>
+        <span class="n">media_type</span><span class="o">=</span><span class="s2">"application/x-ndjson"</span><span class="p">,</span>
+        <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">"X-Content-Type-Options"</span><span class="p">:</span> <span class="s2">"nosniff"</span><span class="p">},</span>
+    <span class="p">)</span>
+
+
+<span class="n">client</span> <span class="o">=</span> <span class="n">TestClient</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/exports/events.ndjson"</span><span class="p">)</span>
+<span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">res</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()]</span>
+<span class="k">assert</span> <span class="n">res</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span>
+<span class="k">assert</span> <span class="n">res</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">"content-type"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"application/x-ndjson"</span>
+<span class="k">assert</span> <span class="n">lines</span> <span class="o">==</span> <span class="p">[{</span><span class="s2">"row"</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span> <span class="p">{</span><span class="s2">"row"</span><span class="p">:</span> <span class="mi">2</span><span class="p">},</span> <span class="p">{</span><span class="s2">"row"</span><span class="p">:</span> <span class="mi">3</span><span class="p">}]</span>
+</code></pre>
+<hr />
+<h2 id="fileresponse" class="catalog-symbol-heading"><span class="catalog-badge catalog-badge-class">class</span><code class="catalog-sig"><span class="catalog-sig-name">FileResponse</span></code><a class="header-anchor" href="#fileresponse" aria-label="Permalink to FileResponse">#</a></h2>
+<p>ファイルシステム上のファイルを <code>64 KiB</code> チャンク（<code>chunk_size = 64 * 1024</code>）で非同期ストリーミング配信し、<code>Content-Length</code>、<code>Last-Modified</code>、<code>ETag</code>、拡張子に基づく <code>Content-Type</code>（<code>mimetypes.guess_type</code>）、<code>Content-Disposition</code>、および HTTP <code>Range</code>（<code>206 Partial Content</code>）リクエストに自動対応します。ユーザー入力に由来するファイル名を扱う際は、必ずパスを解決して許可ディレクトリ境界内であることを検証してください。</p>
+<pre><code class="language-python"><span class="k">class</span><span class="w"> </span><span class="nc">FileResponse</span><span class="p">(</span><span class="n">Response</span><span class="p">):</span>
+    <span class="n">chunk_size</span> <span class="o">=</span> <span class="mi">64</span> <span class="o">*</span> <span class="mi">1024</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">status_code</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span>
+        <span class="n">headers</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">media_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">background</span><span class="p">:</span> <span class="n">BackgroundTask</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">stat_result</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">stat_result</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">content_disposition_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"attachment"</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+</code></pre>
+<h3 id="パラメータ-6">パラメータ<a class="header-anchor" href="#パラメータ-6" aria-label="Permalink">#</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">パラメータ</th>
+<th style="text-align:left">型</th>
+<th style="text-align:left">デフォルト</th>
+<th style="text-align:left">説明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><code>path</code></td>
+<td style="text-align:left"><code>str | os.PathLike[str]</code></td>
+<td style="text-align:left"><em>(必須)</em></td>
+<td style="text-align:left">配信対象ファイルの検証済みファイルシステムパス。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>status_code</code></td>
+<td style="text-align:left"><code>int</code></td>
+<td style="text-align:left"><code>200</code></td>
+<td style="text-align:left">HTTP ステータスコード（有効な <code>Range</code> リクエスト時は自動で <code>206</code>）。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>headers</code></td>
+<td style="text-align:left"><code>Mapping[str, str] | None</code></td>
+<td style="text-align:left"><code>None</code></td>
+<td style="text-align:left">追加する HTTP ヘッダー（例: <code>X-Content-Type-Options: nosniff</code>）。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>media_type</code></td>
+<td style="text-align:left"><code>str | None</code></td>
+<td style="text-align:left"><code>None</code></td>
+<td style="text-align:left">明示的な MIME タイプ。<code>None</code> の場合は <code>filename</code> または <code>path</code> から推定（不明時は <code>&quot;text/plain&quot;</code>）。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>background</code></td>
+<td style="text-align:left"><code>BackgroundTask | None</code></td>
+<td style="text-align:left"><code>None</code></td>
+<td style="text-align:left">配信完了後に一時ファイル削除などを実行するバックグラウンドタスク。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>filename</code></td>
+<td style="text-align:left"><code>str | None</code></td>
+<td style="text-align:left"><code>None</code></td>
+<td style="text-align:left">指定時に <code>Content-Disposition: &lt;content_disposition_type&gt;; filename=&quot;&lt;filename&gt;&quot;</code> を自動付与。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>stat_result</code></td>
+<td style="text-align:left"><code>os.stat_result | None</code></td>
+<td style="text-align:left"><code>None</code></td>
+<td style="text-align:left">事前取得済みの <code>os.stat()</code> 結果（<code>None</code> 時は <code>anyio.to_thread</code> で非同期取得）。</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>content_disposition_type</code></td>
+<td style="text-align:left"><code>str</code></td>
+<td style="text-align:left"><code>&quot;attachment&quot;</code></td>
+<td style="text-align:left">配置モード（<code>&quot;attachment&quot;</code> はダウンロードを強制、<code>&quot;inline&quot;</code> はブラウザ内表示）。</td>
+</tr>
+</tbody>
+</table>
+<h3 id="使用例-7">使用例<a class="header-anchor" href="#使用例-7" aria-label="Permalink">#</a></h3>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">HTTPException</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.responses</span><span class="w"> </span><span class="kn">import</span> <span class="n">FileResponse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.testclient</span><span class="w"> </span><span class="kn">import</span> <span class="n">TestClient</span>
+
+<span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">tmp_dir</span><span class="p">:</span>
+    <span class="n">export_root</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+    <span class="n">report_path</span> <span class="o">=</span> <span class="n">export_root</span> <span class="o">/</span> <span class="s2">"summary.csv"</span>
+    <span class="n">report_path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="s2">"id,total</span><span class="se">\n</span><span class="s2">1,42</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+
+    <span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">()</span>
+
+    <span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/downloads/</span><span class="si">{report_name}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">download_report</span><span class="p">(</span><span class="n">report_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FileResponse</span><span class="p">:</span>
+        <span class="n">safe_name</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">report_name</span><span class="p">)</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">candidate</span> <span class="o">=</span> <span class="p">(</span><span class="n">export_root</span> <span class="o">/</span> <span class="n">safe_name</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">candidate</span><span class="o">.</span><span class="n">is_relative_to</span><span class="p">(</span><span class="n">export_root</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">candidate</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Report not found"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">FileResponse</span><span class="p">(</span>
+            <span class="n">path</span><span class="o">=</span><span class="n">candidate</span><span class="p">,</span>
+            <span class="n">filename</span><span class="o">=</span><span class="n">safe_name</span><span class="p">,</span>
+            <span class="n">media_type</span><span class="o">=</span><span class="s2">"text/csv"</span><span class="p">,</span>
+            <span class="n">content_disposition_type</span><span class="o">=</span><span class="s2">"attachment"</span><span class="p">,</span>
+            <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">"X-Content-Type-Options"</span><span class="p">:</span> <span class="s2">"nosniff"</span><span class="p">},</span>
+        <span class="p">)</span>
+
+    <span class="n">client</span> <span class="o">=</span> <span class="n">TestClient</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/downloads/summary.csv"</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">res</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span>
+    <span class="k">assert</span> <span class="s1">'attachment; filename="summary.csv"'</span> <span class="ow">in</span> <span class="n">res</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">"content-disposition"</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="s2">"etag"</span> <span class="ow">in</span> <span class="n">res</span><span class="o">.</span><span class="n">headers</span>
+    <span class="k">assert</span> <span class="n">res</span><span class="o">.</span><span class="n">text</span> <span class="o">==</span> <span class="s2">"id,total</span><span class="se">\n</span><span class="s2">1,42</span><span class="se">\n</span><span class="s2">"</span>
+</code></pre>
+<hr />
+<h2 id="orjsonresponse" class="catalog-symbol-heading"><span class="catalog-badge catalog-badge-error">deprecated</span><code class="catalog-sig"><span class="catalog-sig-name">ORJSONResponse</span></code><a class="header-anchor" href="#orjsonresponse" aria-label="Permalink to ORJSONResponse">#</a></h2>
+<blockquote>
+<p>[!WARNING]
+<strong>FastAPI 非推奨（<code>FastAPIDeprecationWarning</code>）</strong>: <code>ORJSONResponse</code> は <code>v0.162.2</code> で <code>@deprecated(...)</code> 指定されています。パスオペレーションに戻り値の型アノテーション（<code>-&gt; Item</code> や <code>-&gt; list[Item]</code>）または <code>response_model=...</code> を設定すると、Pydantic v2 の Rust 製シリアライザ（<code>pydantic-core</code>）が直接 JSON バイト列へ高速シリアライズするため、カスタムレスポンスクラスは不要です。</p>
+</blockquote>
+<p><code>orjson.dumps(content, option=orjson.OPT_NON_STR_KEYS | orjson.OPT_SERIALIZE_NUMPY)</code> に <code>render()</code> を委譲する旧式の <code>JSONResponse</code> サブクラス（<code>from fastapi.responses import ORJSONResponse</code>）です。利用には別途 <code>orjson</code> パッケージ（<code>pip install orjson</code>）が必要です。</p>
+<pre><code class="language-python"><span class="nd">@deprecated</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="n">FastAPIDeprecationWarning</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ORJSONResponse</span><span class="p">(</span><span class="n">JSONResponse</span><span class="p">):</span>
+    <span class="n">media_type</span> <span class="o">=</span> <span class="s2">"application/json"</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">content</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span> <span class="o">...</span>
+</code></pre>
+<h3 id="移行ガイド">移行ガイド<a class="header-anchor" href="#移行ガイド" aria-label="Permalink">#</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">項目</th>
+<th style="text-align:left">旧 <code>ORJSONResponse</code></th>
+<th style="text-align:left"><code>v0.162.2</code> 推奨パターン</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">非推奨警告</td>
+<td style="text-align:left">インスタンス化・継承時に <code>FastAPIDeprecationWarning</code> が発生</td>
+<td style="text-align:left">警告なし</td>
+</tr>
+<tr>
+<td style="text-align:left">追加パッケージ</td>
+<td style="text-align:left">別途 <code>orjson</code> のインストールが必要</td>
+<td style="text-align:left"><code>pydantic-core</code>（Rust 製）に標準内蔵</td>
+</tr>
+<tr>
+<td style="text-align:left">ルート定義</td>
+<td style="text-align:left"><code>@app.get(&quot;/items&quot;, response_class=ORJSONResponse)</code></td>
+<td style="text-align:left"><code>@app.get(&quot;/items&quot;) def list_items() -&gt; list[Item]:</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="使用例-8">使用例<a class="header-anchor" href="#使用例-8" aria-label="Permalink">#</a></h3>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastAPI</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.responses</span><span class="w"> </span><span class="kn">import</span> <span class="n">JSONResponse</span><span class="p">,</span> <span class="n">ORJSONResponse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.testclient</span><span class="w"> </span><span class="kn">import</span> <span class="n">TestClient</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span>
+
+<span class="k">assert</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">ORJSONResponse</span><span class="p">,</span> <span class="n">JSONResponse</span><span class="p">)</span>
+<span class="k">assert</span> <span class="s2">"ORJSONResponse is deprecated"</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">ORJSONResponse</span><span class="p">,</span> <span class="s2">"__deprecated__"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MetricOut</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">service</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">latency_ms</span><span class="p">:</span> <span class="nb">float</span>
+
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">()</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/metrics/fast"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_fast_metrics</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">MetricOut</span><span class="p">]:</span>
+    <span class="c1"># Serialized directly to JSON bytes by Pydantic v2's Rust serializer</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">MetricOut</span><span class="p">(</span><span class="n">service</span><span class="o">=</span><span class="s2">"gateway"</span><span class="p">,</span> <span class="n">latency_ms</span><span class="o">=</span><span class="mf">1.4</span><span class="p">)]</span>
+
+
+<span class="n">client</span> <span class="o">=</span> <span class="n">TestClient</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/metrics/fast"</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">res</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span>
+<span class="k">assert</span> <span class="n">res</span><span class="o">.</span><span class="n">json</span><span class="p">()</span> <span class="o">==</span> <span class="p">[{</span><span class="s2">"service"</span><span class="p">:</span> <span class="s2">"gateway"</span><span class="p">,</span> <span class="s2">"latency_ms"</span><span class="p">:</span> <span class="mf">1.4</span><span class="p">}]</span>
+</code></pre>
+<hr />
+<h2 id="ujsonresponse" class="catalog-symbol-heading"><span class="catalog-badge catalog-badge-error">deprecated</span><code class="catalog-sig"><span class="catalog-sig-name">UJSONResponse</span></code><a class="header-anchor" href="#ujsonresponse" aria-label="Permalink to UJSONResponse">#</a></h2>
+<blockquote>
+<p>[!WARNING]
+<strong>FastAPI 非推奨（<code>FastAPIDeprecationWarning</code>）</strong>: <code>UJSONResponse</code> は <code>v0.162.2</code> で <code>@deprecated(...)</code> 指定されています。戻り値型アノテーションまたは <code>response_model</code> を宣言すれば Pydantic v2 の Rust エンジンが直接 JSON バイト列へシリアライズするため、<code>ujson</code> やカスタムレスポンスクラスは不要です。</p>
+</blockquote>
+<p><code>ujson.dumps(content, ensure_ascii=False).encode(&quot;utf-8&quot;)</code> を用いて JSON 文字列を生成する旧式の <code>JSONResponse</code> サブクラス（<code>from fastapi.responses import UJSONResponse</code>）です。別途 <code>ujson</code> のインストールが必要であり、<code>pydantic-core</code> や標準 <code>JSONResponse</code> と比べて浮動小数点や Unicode エッジケースの扱いに差異があります。</p>
+<pre><code class="language-python"><span class="nd">@deprecated</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="n">FastAPIDeprecationWarning</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">UJSONResponse</span><span class="p">(</span><span class="n">JSONResponse</span><span class="p">):</span>
+    <span class="n">media_type</span> <span class="o">=</span> <span class="s2">"application/json"</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">content</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span> <span class="o">...</span>
+</code></pre>
+<h3 id="移行ガイド-2">移行ガイド<a class="header-anchor" href="#移行ガイド-2" aria-label="Permalink">#</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">項目</th>
+<th style="text-align:left">旧 <code>UJSONResponse</code></th>
+<th style="text-align:left"><code>v0.162.2</code> 推奨パターン</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">非推奨警告</td>
+<td style="text-align:left">インスタンス化・継承時に <code>FastAPIDeprecationWarning</code> が発生</td>
+<td style="text-align:left">警告なし</td>
+</tr>
+<tr>
+<td style="text-align:left">追加パッケージ</td>
+<td style="text-align:left">別途 <code>ujson</code> のインストールが必要</td>
+<td style="text-align:left"><code>pydantic-core</code>（Rust 製）に標準内蔵</td>
+</tr>
+<tr>
+<td style="text-align:left">ルート定義</td>
+<td style="text-align:left"><code>@app.get(&quot;/users&quot;, response_class=UJSONResponse)</code></td>
+<td style="text-align:left"><code>@app.get(&quot;/users&quot;, response_model=list[UserOut])</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="使用例-9">使用例<a class="header-anchor" href="#使用例-9" aria-label="Permalink">#</a></h3>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastAPI</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.responses</span><span class="w"> </span><span class="kn">import</span> <span class="n">JSONResponse</span><span class="p">,</span> <span class="n">UJSONResponse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.testclient</span><span class="w"> </span><span class="kn">import</span> <span class="n">TestClient</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span>
+
+<span class="k">assert</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">UJSONResponse</span><span class="p">,</span> <span class="n">JSONResponse</span><span class="p">)</span>
+<span class="k">assert</span> <span class="s2">"UJSONResponse is deprecated"</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">UJSONResponse</span><span class="p">,</span> <span class="s2">"__deprecated__"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">UserSummary</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">username</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">active</span><span class="p">:</span> <span class="nb">bool</span>
+
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">()</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/users/summary"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">UserSummary</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_user_summary</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"username"</span><span class="p">:</span> <span class="s2">"alice"</span><span class="p">,</span> <span class="s2">"active"</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+
+
+<span class="n">client</span> <span class="o">=</span> <span class="n">TestClient</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/users/summary"</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">res</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span>
+<span class="k">assert</span> <span class="n">res</span><span class="o">.</span><span class="n">json</span><span class="p">()</span> <span class="o">==</span> <span class="p">{</span><span class="s2">"username"</span><span class="p">:</span> <span class="s2">"alice"</span><span class="p">,</span> <span class="s2">"active"</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+</code></pre>
+
+
+                
+                <nav class="catalog-pager" aria-label="Catalog Page Navigation">
+                    
+                    <a href="06_requests_websockets.html" class="catalog-pager-card is-prev">
+                        <span class="catalog-pager-dir">&larr; 前へ</span>
+                        <span class="catalog-pager-title">fastapi.requests &amp; websockets</span>
+                    </a>
+                    
+                    
+                    <a href="08_sse.html" class="catalog-pager-card is-next">
+                        <span class="catalog-pager-dir">次へ &rarr;</span>
+                        <span class="catalog-pager-title">fastapi.sse</span>
+                    </a>
+                    
+                </nav>
+                
+            </main>
+
+            <footer class="footer">
+                
+                FastAPI® は Sebastián Ramírez（<a href="https://github.com/tiangolo" target="_blank" rel="noopener noreferrer">@tiangolo</a>）の登録商標です。本サイトは非公式 API リファレンスであり、公式プロジェクトとは提携していません。公式ドキュメントは <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">fastapi.tiangolo.com</a> をご参照ください。
+                
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            var toggleBtn = document.getElementById('theme-toggle');
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', function() {
+                    var current = document.documentElement.getAttribute('data-theme');
+                    if (!current) {
+                        current = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+                    }
+                    var next = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    try { localStorage.setItem('drawlib-theme', next); } catch (e) {}
+                });
+            }
+
+            var menuBtn = document.getElementById('menu-toggle');
+            var sidebar = document.getElementById('catalog-sidebar');
+            var backdrop = document.getElementById('sidebar-backdrop');
+            function closeMenu() {
+                if (sidebar) sidebar.classList.remove('is-open');
+                if (backdrop) backdrop.classList.remove('is-open');
+            }
+            if (menuBtn && sidebar && backdrop) {
+                menuBtn.addEventListener('click', function() {
+                    sidebar.classList.toggle('is-open');
+                    backdrop.classList.toggle('is-open');
+                });
+                backdrop.addEventListener('click', closeMenu);
+            }
+
+            document.querySelectorAll('.catalog-nav-cat-link').forEach(function(link) {
+                link.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
+            });
+
+            if (sidebar) {
+                try {
+                    var savedScroll = sessionStorage.getItem('drawlib-catalog-sidebar-scroll');
+                    if (savedScroll !== null) {
+                        sidebar.scrollTop = parseInt(savedScroll, 10) || 0;
+                    }
+                    sidebar.addEventListener('scroll', function() {
+                        try { sessionStorage.setItem('drawlib-catalog-sidebar-scroll', String(sidebar.scrollTop)); } catch (e) {}
+                    }, { passive: true });
+                } catch (e) {}
+            }
+
+            var groups = Array.prototype.slice.call(document.querySelectorAll('.catalog-nav-group'));
+            var expandBtn = document.getElementById('catalog-expand-toggle');
+            function updateExpandBtnLabel() {
+                if (!expandBtn || groups.length === 0) return;
+                var visibleGroups = groups.filter(function(g) { return !g.hidden; });
+                var allOpen = visibleGroups.length > 0 && visibleGroups.every(function(g) { return g.open; });
+                var expandText = expandBtn.getAttribute('data-expand-label') || 'Expand All';
+                var collapseText = expandBtn.getAttribute('data-collapse-label') || 'Collapse All';
+                expandBtn.textContent = allOpen ? collapseText : expandText;
+            }
+            if (expandBtn) {
+                updateExpandBtnLabel();
+                expandBtn.addEventListener('click', function() {
+                    var visibleGroups = groups.filter(function(g) { return !g.hidden; });
+                    var allOpen = visibleGroups.length > 0 && visibleGroups.every(function(g) { return g.open; });
+                    visibleGroups.forEach(function(g) { g.open = !allOpen; });
+                    updateExpandBtnLabel();
+                });
+                groups.forEach(function(g) {
+                    g.addEventListener('toggle', updateExpandBtnLabel);
+                });
+            }
+
+            var filterInput = document.getElementById('catalog-filter-input');
+            var emptyNotice = document.getElementById('catalog-nav-empty');
+            var savedOpenState = null;
+
+            if (filterInput) {
+                filterInput.addEventListener('input', function() {
+                    var q = filterInput.value.trim().toLowerCase();
+                    if (q && !savedOpenState) {
+                        savedOpenState = groups.map(function(g) { return g.open; });
+                    }
+                    var anyMatch = false;
+                    groups.forEach(function(g, idx) {
+                        var catText = (g.getAttribute('data-cat') || '').toLowerCase();
+                        var catMatches = q !== '' && catText.indexOf(q) !== -1;
+                        var items = Array.prototype.slice.call(g.querySelectorAll('.catalog-nav-subitem'));
+                        var visibleCount = 0;
+
+                        items.forEach(function(li) {
+                            var symText = (li.getAttribute('data-sym') || '').toLowerCase();
+                            var show = (q === '') || catMatches || symText.indexOf(q) !== -1;
+                            li.hidden = !show;
+                            if (show) visibleCount += 1;
+                        });
+
+                        if (q === '') {
+                            g.hidden = false;
+                            if (savedOpenState && typeof savedOpenState[idx] === 'boolean') {
+                                g.open = savedOpenState[idx];
+                            }
+                            anyMatch = true;
+                        } else if (catMatches || visibleCount > 0) {
+                            g.hidden = false;
+                            g.open = true;
+                            anyMatch = true;
+                        } else {
+                            g.hidden = true;
+                        }
+                    });
+
+                    if (q === '') {
+                        savedOpenState = null;
+                    }
+                    if (emptyNotice) {
+                        emptyNotice.hidden = anyMatch;
+                    }
+                    updateExpandBtnLabel();
+                });
+
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === '/' && document.activeElement !== filterInput) {
+                        var tag = document.activeElement ? document.activeElement.tagName : '';
+                        if (tag !== 'INPUT' && tag !== 'TEXTAREA' && tag !== 'SELECT') {
+                            e.preventDefault();
+                            filterInput.focus();
+                        }
+                    } else if (e.key === 'Escape' && document.activeElement === filterInput) {
+                        filterInput.value = '';
+                        filterInput.dispatchEvent(new Event('input'));
+                        filterInput.blur();
+                    }
+                });
+            }
+
+            document.addEventListener('click', function(e) {
+                document.querySelectorAll('.lang-dropdown[open]').forEach(function(dd) {
+                    if (!dd.contains(e.target)) {
+                        dd.removeAttribute('open');
+                    }
+                });
+            });
+
+            var activeLinks = Array.prototype.slice.call(document.querySelectorAll('.catalog-nav-sublink[data-target]'));
+            if (activeLinks.length > 0 && 'IntersectionObserver' in window) {
+                var linkBySlug = {};
+                var headings = [];
+                activeLinks.forEach(function(a) {
+                    var slug = a.getAttribute('data-target');
+                    var el = slug ? document.getElementById(slug) : null;
+                    if (slug && el) {
+                        linkBySlug[slug] = a;
+                        headings.push(el);
+                    }
+                    a.addEventListener('click', closeMenu);
+                });
+
+                function setActiveSlug(slug) {
+                    activeLinks.forEach(function(a) {
+                        if (a.getAttribute('data-target') === slug) {
+                            a.classList.add('is-active');
+                        } else {
+                            a.classList.remove('is-active');
+                        }
+                    });
+                }
+
+                if (window.location.hash) {
+                    var initSlug = decodeURIComponent(window.location.hash.slice(1));
+                    if (linkBySlug[initSlug]) setActiveSlug(initSlug);
+                } else if (headings.length > 0) {
+                    setActiveSlug(headings[0].id);
+                }
+
+                var visibleIds = {};
+                var observer = new IntersectionObserver(function(entries) {
+                    entries.forEach(function(entry) {
+                        visibleIds[entry.target.id] = entry.isIntersecting;
+                    });
+                    for (var i = 0; i < headings.length; i++) {
+                        if (visibleIds[headings[i].id]) {
+                            setActiveSlug(headings[i].id);
+                            break;
+                        }
+                    }
+                }, { rootMargin: '-90px 0px -65% 0px', threshold: [0, 1] });
+
+                headings.forEach(function(h) { observer.observe(h); });
+            }
+        })();
+    </script>
+</body>
+</html>

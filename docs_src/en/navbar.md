@@ -38,6 +38,7 @@
 - [FastAPI CLI, Proxies, GraphQL & AI](08_ecosystem_and_operations/cli_proxy_graphql_ai.md)
 
 ## Companion Guides & Links
+- [FastAPI API Reference](https://fastapi.drawlib.com/api/)
 - [FastAPI Internal Architecture](https://fastapi.drawlib.com/architecture/)
 - [Official FastAPI Docs](https://fastapi.tiangolo.com/)
 - [GitHub Repository](https://github.com/yuichi110/drawlib-fastapi)

@@ -1,0 +1,2412 @@
+<!--
+ Copyright (c) 2026 Yuichi Ito (yuichi@yuichi.com)
+
+ This software is licensed under the Apache License, Version 2.0.
+ For more information, please visit: https://github.com/yuichi110/drawlib
+
+ This software is provided "as is", without warranty of any kind,
+ express or implied, including but not limited to the warranties of
+ merchantability, fitness for a particular purpose and noninfringement.
+-->
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>fastapi.exceptions — FastAPI API Reference (Unofficial)</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-S9N5BZ1VRC');
+    </script>
+    <script>
+        (function() {
+            try {
+                var savedTheme = localStorage.getItem('drawlib-theme');
+                if (savedTheme === 'dark' || savedTheme === 'light') {
+                    document.documentElement.setAttribute('data-theme', savedTheme);
+                } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                }
+            } catch (e) {}
+        })();
+    </script>
+    
+    <link rel="icon" href="../_assets/favicon.png">
+    
+    
+    
+    <link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/api/en/10_exceptions.html">
+    
+    <link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/api/ja/10_exceptions.html">
+    
+    <link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/api/en/10_exceptions.html">
+    
+    
+    
+    <meta name="description" content="HTTP, WebSocket, request/response validation, and dependency-scope exception classes imported from fastapi.exceptions, paired with built-in ASGI exception…">
+    <link rel="canonical" href="https://fastapi.drawlib.com/api/en/10_exceptions.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="FastAPI API Reference">
+    <meta property="og:title" content="fastapi.exceptions — FastAPI API Reference">
+    <meta property="og:description" content="HTTP, WebSocket, request/response validation, and dependency-scope exception classes imported from fastapi.exceptions, paired with built-in ASGI exception…">
+    <meta property="og:url" content="https://fastapi.drawlib.com/api/en/10_exceptions.html">
+    <meta property="og:image" content="https://fastapi.drawlib.com/api/_assets/ogp.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="ja_JP">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="fastapi.exceptions — FastAPI API Reference">
+    <meta name="twitter:description" content="HTTP, WebSocket, request/response validation, and dependency-scope exception classes imported from fastapi.exceptions, paired with built-in ASGI exception…">
+    <meta name="twitter:image" content="https://fastapi.drawlib.com/api/_assets/ogp.png">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    
+    
+    
+    <link rel="stylesheet" href="style.css">
+    
+</head>
+<body>
+    <div class="demo-banner" role="region" aria-label="Portal Navigation">
+        <div class="demo-banner-inner">
+            <span class="demo-banner-badge">API REFERENCE</span>
+            
+            <span class="demo-banner-text">
+                Unofficial API &amp; CLI Reference for <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a> (v0.162.2)
+            </span>
+            <span class="demo-banner-links">
+                <a href="https://fastapi.drawlib.com/">User Guide</a>
+                <span class="demo-banner-sep">·</span>
+                <strong style="color:#ffffff;">API Reference</strong>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.drawlib.com/architecture/">Architecture</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Audit</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official Docs ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+            </span>
+            
+        </div>
+    </div>
+    
+    <div class="doc-layout">
+        <aside class="sidebar" id="catalog-sidebar">
+            <div class="sidebar-header has-subbar">
+                <a href="index.html" class="site-title">
+                    FastAPI API Reference
+                </a>
+                <div class="sidebar-header-actions">
+                    <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle color theme" title="Toggle light/dark mode">
+                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                    <button type="button" id="menu-toggle" class="menu-toggle-btn" aria-label="Toggle navigation menu">
+                        <svg class="icon-hamburger" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        <svg class="icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="sidebar-subbar">
+                
+                
+                <a href="index.html" class="sidebar-version-badge">
+                    <span class="sidebar-version-dot"></span>
+                    <span>API Reference · v0.162.2</span>
+                </a>
+                
+                
+                
+                <a href="https://github.com/fastapi/fastapi" target="_blank" rel="noopener noreferrer" class="sidebar-github-link" aria-label="Repository" title="View Upstream FastAPI Repository">
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+                </a>
+                
+            </div>
+            
+
+            <div class="sidebar-menu">
+                <div class="catalog-sidebar-toolbar">
+                    <div class="catalog-filter-box">
+                        <svg class="catalog-filter-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <input id="catalog-filter-input" type="search" class="catalog-filter-input" placeholder="Filter items..." autocomplete="off" spellcheck="false" aria-label="Filter items...">
+                        <kbd class="catalog-filter-kbd">/</kbd>
+                    </div>
+                    <div class="catalog-toolbar-meta">
+                        <span class="catalog-toolbar-label">Categories &amp; Items</span>
+                        <button type="button" id="catalog-expand-toggle" class="catalog-expand-btn" data-expand-label="Expand All" data-collapse-label="Collapse All">Collapse All</button>
+                    </div>
+                </div>
+
+                <nav class="catalog-sidebar-nav" id="catalog-sidebar-nav" aria-label="Catalog Navigation">
+                    
+                    
+                    
+                    <details class="catalog-nav-group" data-cat="FastAPI Package Overview" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="00_overview.html" class="catalog-nav-cat-link is-prose-cat">FastAPI Package Overview</a>
+                            
+                            <span class="catalog-nav-count">4</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="const fastapi.__version__">
+                                <a href="00_overview.html#fastapi-version" class="catalog-nav-sublink is-prose-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-const">const</span>
+                                    
+                                    <span class="catalog-nav-sym-text">fastapi.__version__</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="module fastapi.status">
+                                <a href="00_overview.html#fastapi-status" class="catalog-nav-sublink is-prose-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">module</span>
+                                    
+                                    <span class="catalog-nav-sym-text">fastapi.status</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="type fastapi.types.DecoratedCallable">
+                                <a href="00_overview.html#fastapi-types-decoratedcallable" class="catalog-nav-sublink is-prose-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-type">type</span>
+                                    
+                                    <span class="catalog-nav-sym-text">fastapi.types.DecoratedCallable</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="type fastapi.types.IncEx">
+                                <a href="00_overview.html#fastapi-types-incex" class="catalog-nav-sublink is-prose-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-type">type</span>
+                                    
+                                    <span class="catalog-nav-sym-text">fastapi.types.IncEx</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group" data-cat="applications" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="01_applications.html" class="catalog-nav-cat-link">fastapi.applications</a>
+                            
+                            <span class="catalog-nav-count">12</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="class FastAPI">
+                                <a href="01_applications.html#fastapi" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FastAPI</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method FastAPI.get()">
+                                <a href="01_applications.html#fastapi-get" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FastAPI.get()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method FastAPI.api_route()">
+                                <a href="01_applications.html#fastapi-api-route" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FastAPI.api_route()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method FastAPI.websocket()">
+                                <a href="01_applications.html#fastapi-websocket" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FastAPI.websocket()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method FastAPI.include_router()">
+                                <a href="01_applications.html#fastapi-include-router" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FastAPI.include_router()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method FastAPI.mount()">
+                                <a href="01_applications.html#fastapi-mount" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FastAPI.mount()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method FastAPI.frontend()">
+                                <a href="01_applications.html#fastapi-frontend" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FastAPI.frontend()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method FastAPI.add_middleware()">
+                                <a href="01_applications.html#fastapi-add-middleware" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FastAPI.add_middleware()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method FastAPI.middleware()">
+                                <a href="01_applications.html#fastapi-middleware" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FastAPI.middleware()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method FastAPI.add_exception_handler()">
+                                <a href="01_applications.html#fastapi-add-exception-handler" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FastAPI.add_exception_handler()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method FastAPI.exception_handler()">
+                                <a href="01_applications.html#fastapi-exception-handler" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FastAPI.exception_handler()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method FastAPI.openapi()">
+                                <a href="01_applications.html#fastapi-openapi" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FastAPI.openapi()</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group" data-cat="routing" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="02_routing.html" class="catalog-nav-cat-link">fastapi.routing</a>
+                            
+                            <span class="catalog-nav-count">11</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="class APIRouter">
+                                <a href="02_routing.html#apirouter" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">APIRouter</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method APIRouter.get()">
+                                <a href="02_routing.html#apirouter-get" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">APIRouter.get()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method APIRouter.include_router()">
+                                <a href="02_routing.html#apirouter-include-router" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">APIRouter.include_router()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method APIRouter.add_api_route()">
+                                <a href="02_routing.html#apirouter-add-api-route" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">APIRouter.add_api_route()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method APIRouter.api_route()">
+                                <a href="02_routing.html#apirouter-api-route" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">APIRouter.api_route()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method APIRouter.websocket()">
+                                <a href="02_routing.html#apirouter-websocket" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">APIRouter.websocket()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method APIRouter.frontend()">
+                                <a href="02_routing.html#apirouter-frontend" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">APIRouter.frontend()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class APIRoute">
+                                <a href="02_routing.html#apiroute" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">APIRoute</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method APIRoute.get_route_handler()">
+                                <a href="02_routing.html#apiroute-get-route-handler" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">APIRoute.get_route_handler()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class APIWebSocketRoute">
+                                <a href="02_routing.html#apiwebsocketroute" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">APIWebSocketRoute</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class Mount">
+                                <a href="02_routing.html#mount" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Mount</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group" data-cat="params" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="03_parameters.html" class="catalog-nav-cat-link">fastapi.params</a>
+                            
+                            <span class="catalog-nav-count">8</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="def Path()">
+                                <a href="03_parameters.html#path" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Path()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def Query()">
+                                <a href="03_parameters.html#query" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Query()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def Header()">
+                                <a href="03_parameters.html#header" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Header()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def Cookie()">
+                                <a href="03_parameters.html#cookie" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Cookie()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def Body()">
+                                <a href="03_parameters.html#body" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Body()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def Form()">
+                                <a href="03_parameters.html#form" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Form()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def File()">
+                                <a href="03_parameters.html#file" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">File()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def annotated_doc.Doc()">
+                                <a href="03_parameters.html#annotated-doc-doc" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">annotated_doc.Doc()</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group" data-cat="dependencies" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="04_dependencies.html" class="catalog-nav-cat-link">fastapi.dependencies</a>
+                            
+                            <span class="catalog-nav-count">4</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="def Depends()">
+                                <a href="04_dependencies.html#depends" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Depends()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def Security()">
+                                <a href="04_dependencies.html#security" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Security()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class SecurityScopes">
+                                <a href="04_dependencies.html#securityscopes" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">SecurityScopes</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="attr FastAPI.dependency_overrides">
+                                <a href="04_dependencies.html#fastapi-dependency-overrides" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-const">attr</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FastAPI.dependency_overrides</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group" data-cat="security" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="05_security.html" class="catalog-nav-cat-link">fastapi.security</a>
+                            
+                            <span class="catalog-nav-count">16</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="class OAuth2PasswordBearer">
+                                <a href="05_security.html#oauth2passwordbearer" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">OAuth2PasswordBearer</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class OAuth2AuthorizationCodeBearer">
+                                <a href="05_security.html#oauth2authorizationcodebearer" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">OAuth2AuthorizationCodeBearer</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class OAuth2PasswordRequestForm">
+                                <a href="05_security.html#oauth2passwordrequestform" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">OAuth2PasswordRequestForm</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class OAuth2PasswordRequestFormStrict">
+                                <a href="05_security.html#oauth2passwordrequestformstrict" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">OAuth2PasswordRequestFormStrict</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class OAuth2">
+                                <a href="05_security.html#oauth2" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">OAuth2</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class HTTPBearer">
+                                <a href="05_security.html#httpbearer" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">HTTPBearer</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class HTTPBasic">
+                                <a href="05_security.html#httpbasic" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">HTTPBasic</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class HTTPDigest">
+                                <a href="05_security.html#httpdigest" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">HTTPDigest</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class HTTPAuthorizationCredentials">
+                                <a href="05_security.html#httpauthorizationcredentials" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">HTTPAuthorizationCredentials</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class HTTPBasicCredentials">
+                                <a href="05_security.html#httpbasiccredentials" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">HTTPBasicCredentials</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class APIKeyHeader">
+                                <a href="05_security.html#apikeyheader" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">APIKeyHeader</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class APIKeyQuery">
+                                <a href="05_security.html#apikeyquery" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">APIKeyQuery</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class APIKeyCookie">
+                                <a href="05_security.html#apikeycookie" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">APIKeyCookie</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class OpenIdConnect">
+                                <a href="05_security.html#openidconnect" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">OpenIdConnect</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class SecurityBase">
+                                <a href="05_security.html#securitybase" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">SecurityBase</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def get_authorization_scheme_param()">
+                                <a href="05_security.html#get-authorization-scheme-param" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">get_authorization_scheme_param()</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group" data-cat="requests &amp; websockets" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="06_requests_websockets.html" class="catalog-nav-cat-link">fastapi.requests &amp; websockets</a>
+                            
+                            <span class="catalog-nav-count">5</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="class Request">
+                                <a href="06_requests_websockets.html#request" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Request</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class HTTPConnection">
+                                <a href="06_requests_websockets.html#httpconnection" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">HTTPConnection</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class WebSocket">
+                                <a href="06_requests_websockets.html#websocket" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">WebSocket</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class WebSocketDisconnect">
+                                <a href="06_requests_websockets.html#websocketdisconnect" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">WebSocketDisconnect</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="enum WebSocketState">
+                                <a href="06_requests_websockets.html#websocketstate" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-type">enum</span>
+                                    
+                                    <span class="catalog-nav-sym-text">WebSocketState</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group" data-cat="responses" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="07_responses.html" class="catalog-nav-cat-link">fastapi.responses</a>
+                            
+                            <span class="catalog-nav-count">9</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="class Response">
+                                <a href="07_responses.html#response" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Response</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class JSONResponse">
+                                <a href="07_responses.html#jsonresponse" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">JSONResponse</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class HTMLResponse">
+                                <a href="07_responses.html#htmlresponse" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">HTMLResponse</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class PlainTextResponse">
+                                <a href="07_responses.html#plaintextresponse" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">PlainTextResponse</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class RedirectResponse">
+                                <a href="07_responses.html#redirectresponse" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">RedirectResponse</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class StreamingResponse">
+                                <a href="07_responses.html#streamingresponse" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">StreamingResponse</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class FileResponse">
+                                <a href="07_responses.html#fileresponse" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FileResponse</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="deprecated ORJSONResponse">
+                                <a href="07_responses.html#orjsonresponse" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-error">deprecated</span>
+                                    
+                                    <span class="catalog-nav-sym-text">ORJSONResponse</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="deprecated UJSONResponse">
+                                <a href="07_responses.html#ujsonresponse" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-error">deprecated</span>
+                                    
+                                    <span class="catalog-nav-sym-text">UJSONResponse</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group" data-cat="sse" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="08_sse.html" class="catalog-nav-cat-link">fastapi.sse</a>
+                            
+                            <span class="catalog-nav-count">4</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="class EventSourceResponse">
+                                <a href="08_sse.html#eventsourceresponse" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">EventSourceResponse</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class ServerSentEvent">
+                                <a href="08_sse.html#serversentevent" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">ServerSentEvent</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def format_sse_event()">
+                                <a href="08_sse.html#format-sse-event" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">format_sse_event()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="const KEEPALIVE_COMMENT">
+                                <a href="08_sse.html#keepalive-comment" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-const">const</span>
+                                    
+                                    <span class="catalog-nav-sym-text">KEEPALIVE_COMMENT</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group" data-cat="datastructures" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="09_datastructures.html" class="catalog-nav-cat-link">fastapi.datastructures</a>
+                            
+                            <span class="catalog-nav-count">9</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="class UploadFile">
+                                <a href="09_datastructures.html#uploadfile" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">UploadFile</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class URL">
+                                <a href="09_datastructures.html#url" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">URL</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class Headers">
+                                <a href="09_datastructures.html#headers" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Headers</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class QueryParams">
+                                <a href="09_datastructures.html#queryparams" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">QueryParams</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class FormData">
+                                <a href="09_datastructures.html#formdata" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FormData</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class State">
+                                <a href="09_datastructures.html#state" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">State</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class Address">
+                                <a href="09_datastructures.html#address" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Address</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def Default()">
+                                <a href="09_datastructures.html#default" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Default()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class DefaultPlaceholder">
+                                <a href="09_datastructures.html#defaultplaceholder" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">DefaultPlaceholder</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group is-current-page" data-cat="exceptions" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="10_exceptions.html" class="catalog-nav-cat-link">fastapi.exceptions</a>
+                            
+                            <span class="catalog-nav-count">11</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="class HTTPException">
+                                <a href="#httpexception" class="catalog-nav-sublink" data-target="httpexception">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">HTTPException</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class WebSocketException">
+                                <a href="#websocketexception" class="catalog-nav-sublink" data-target="websocketexception">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">WebSocketException</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class ValidationException">
+                                <a href="#validationexception" class="catalog-nav-sublink" data-target="validationexception">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">ValidationException</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class RequestValidationError">
+                                <a href="#requestvalidationerror" class="catalog-nav-sublink" data-target="requestvalidationerror">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">RequestValidationError</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class ResponseValidationError">
+                                <a href="#responsevalidationerror" class="catalog-nav-sublink" data-target="responsevalidationerror">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">ResponseValidationError</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class WebSocketRequestValidationError">
+                                <a href="#websocketrequestvalidationerror" class="catalog-nav-sublink" data-target="websocketrequestvalidationerror">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">WebSocketRequestValidationError</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class FastAPIError">
+                                <a href="#fastapierror" class="catalog-nav-sublink" data-target="fastapierror">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">FastAPIError</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class DependencyScopeError">
+                                <a href="#dependencyscopeerror" class="catalog-nav-sublink" data-target="dependencyscopeerror">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">DependencyScopeError</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="async def http_exception_handler()">
+                                <a href="#http-exception-handler" class="catalog-nav-sublink" data-target="http-exception-handler">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">async def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">http_exception_handler()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="async def request_validation_exception_handler()">
+                                <a href="#request-validation-exception-handler" class="catalog-nav-sublink" data-target="request-validation-exception-handler">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">async def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">request_validation_exception_handler()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="async def websocket_request_validation_exception_handler()">
+                                <a href="#websocket-request-validation-exception-handler" class="catalog-nav-sublink" data-target="websocket-request-validation-exception-handler">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">async def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">websocket_request_validation_exception_handler()</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group" data-cat="middleware" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="11_middleware.html" class="catalog-nav-cat-link">fastapi.middleware</a>
+                            
+                            <span class="catalog-nav-count">6</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="class CORSMiddleware">
+                                <a href="11_middleware.html#corsmiddleware" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">CORSMiddleware</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class TrustedHostMiddleware">
+                                <a href="11_middleware.html#trustedhostmiddleware" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">TrustedHostMiddleware</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class GZipMiddleware">
+                                <a href="11_middleware.html#gzipmiddleware" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">GZipMiddleware</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class HTTPSRedirectMiddleware">
+                                <a href="11_middleware.html#httpsredirectmiddleware" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">HTTPSRedirectMiddleware</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class AsyncExitStackMiddleware">
+                                <a href="11_middleware.html#asyncexitstackmiddleware" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">AsyncExitStackMiddleware</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="deprecated WSGIMiddleware">
+                                <a href="11_middleware.html#wsgimiddleware" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-error">deprecated</span>
+                                    
+                                    <span class="catalog-nav-sym-text">WSGIMiddleware</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group" data-cat="telemetry" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="12_telemetry.html" class="catalog-nav-cat-link">fastapi.telemetry</a>
+                            
+                            <span class="catalog-nav-count">3</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="class TelemetryConfig">
+                                <a href="12_telemetry.html#telemetryconfig" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">TelemetryConfig</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class TelemetryData">
+                                <a href="12_telemetry.html#telemetrydata" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">TelemetryData</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def get_telemetry_data()">
+                                <a href="12_telemetry.html#get-telemetry-data" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">get_telemetry_data()</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group" data-cat="openapi" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="13_openapi.html" class="catalog-nav-cat-link">fastapi.openapi</a>
+                            
+                            <span class="catalog-nav-count">10</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="def get_openapi()">
+                                <a href="13_openapi.html#get-openapi" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">get_openapi()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def get_swagger_ui_html()">
+                                <a href="13_openapi.html#get-swagger-ui-html" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">get_swagger_ui_html()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def get_swagger_ui_oauth2_redirect_html()">
+                                <a href="13_openapi.html#get-swagger-ui-oauth2-redirect-html" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">get_swagger_ui_oauth2_redirect_html()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def get_redoc_html()">
+                                <a href="13_openapi.html#get-redoc-html" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">get_redoc_html()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="const SWAGGER_UI_PARAMETERS">
+                                <a href="13_openapi.html#swagger-ui-parameters" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-const">const</span>
+                                    
+                                    <span class="catalog-nav-sym-text">SWAGGER_UI_PARAMETERS</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="const METHODS_WITH_BODY &amp; REF_PREFIX &amp; REF_TEMPLATE">
+                                <a href="13_openapi.html#methods-with-body-ref-prefix-ref-template" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-const">const</span>
+                                    
+                                    <span class="catalog-nav-sym-text">METHODS_WITH_BODY &amp; REF_PREFIX &amp; REF_TEMPLATE</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="model OpenAPI">
+                                <a href="13_openapi.html#openapi" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">model</span>
+                                    
+                                    <span class="catalog-nav-sym-text">OpenAPI</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="model Info / Contact / License / Server">
+                                <a href="13_openapi.html#info-contact-license-server" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">model</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Info / Contact / License / Server</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="model Paths / PathItem / Operation / Parameter">
+                                <a href="13_openapi.html#paths-pathitem-operation-parameter" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">model</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Paths / PathItem / Operation / Parameter</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="model Components / Schema / SecurityScheme">
+                                <a href="13_openapi.html#components-schema-securityscheme" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">model</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Components / Schema / SecurityScheme</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group" data-cat="background &amp; utilities" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="14_utilities.html" class="catalog-nav-cat-link">fastapi.background &amp; utilities</a>
+                            
+                            <span class="catalog-nav-count">7</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="class BackgroundTasks">
+                                <a href="14_utilities.html#backgroundtasks" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">BackgroundTasks</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method BackgroundTasks.add_task()">
+                                <a href="14_utilities.html#backgroundtasks-add-task" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">BackgroundTasks.add_task()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="def jsonable_encoder()">
+                                <a href="14_utilities.html#jsonable-encoder" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">jsonable_encoder()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="async def run_in_threadpool()">
+                                <a href="14_utilities.html#run-in-threadpool" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">async def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">run_in_threadpool()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="async def contextmanager_in_threadpool()">
+                                <a href="14_utilities.html#contextmanager-in-threadpool" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-def">async def</span>
+                                    
+                                    <span class="catalog-nav-sym-text">contextmanager_in_threadpool()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class StaticFiles">
+                                <a href="14_utilities.html#staticfiles" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">StaticFiles</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="class Jinja2Templates">
+                                <a href="14_utilities.html#jinja2templates" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">Jinja2Templates</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    <details class="catalog-nav-group" data-cat="testclient &amp; cli" open>
+                        <summary class="catalog-nav-summary">
+                            <svg class="catalog-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <a href="15_testing_and_cli.html" class="catalog-nav-cat-link">fastapi.testclient &amp; cli</a>
+                            
+                            <span class="catalog-nav-count">5</span>
+                            
+                        </summary>
+                        
+                        <ul class="catalog-nav-sublist">
+                            
+                            <li class="catalog-nav-subitem" data-sym="class TestClient">
+                                <a href="15_testing_and_cli.html#testclient" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-class">class</span>
+                                    
+                                    <span class="catalog-nav-sym-text">TestClient</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="method TestClient.websocket_connect()">
+                                <a href="15_testing_and_cli.html#testclient-websocket-connect" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-method">method</span>
+                                    
+                                    <span class="catalog-nav-sym-text">TestClient.websocket_connect()</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="cmd fastapi dev">
+                                <a href="15_testing_and_cli.html#fastapi-dev" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-cmd">cmd</span>
+                                    
+                                    <span class="catalog-nav-sym-text">fastapi dev</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="cmd fastapi run">
+                                <a href="15_testing_and_cli.html#fastapi-run" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-cmd">cmd</span>
+                                    
+                                    <span class="catalog-nav-sym-text">fastapi run</span>
+                                </a>
+                            </li>
+                            
+                            <li class="catalog-nav-subitem" data-sym="cmd fastapi --version">
+                                <a href="15_testing_and_cli.html#fastapi-version" class="catalog-nav-sublink">
+                                    
+                                    <span class="catalog-badge catalog-badge-cmd">cmd</span>
+                                    
+                                    <span class="catalog-nav-sym-text">fastapi --version</span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                        
+                    </details>
+                    
+                    
+                    <div id="catalog-nav-empty" class="catalog-nav-empty" hidden>No matching items found.</div>
+                </nav>
+            </div>
+        </aside>
+        <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+        <div class="content-wrapper">
+            <div class="top-bar">
+                <div class="breadcrumbs">
+                    <a href="index.html" class="crumb">API Reference</a>
+                    <span class="crumb-separator">/</span>
+                    <span class="crumb active">fastapi.exceptions</span>
+                </div>
+                
+                <div class="top-bar-right">
+                    
+                    
+                    <div class="lang-switcher" aria-label="Language switcher">
+                        <details class="lang-dropdown">
+                            <summary class="lang-dropdown-btn" aria-haspopup="listbox">
+                                <svg class="lang-globe-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                                <span class="lang-current-label">English</span>
+                                <svg class="lang-caret-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </summary>
+                            <div class="lang-dropdown-menu" role="listbox">
+                                
+                                
+                                <span class="lang-option active" role="option" aria-selected="true">
+                                    <span>English</span>
+                                    <svg class="lang-check-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                </span>
+                                
+                                
+                                
+                                <a href="../ja/10_exceptions.html" class="lang-option" role="option" hreflang="">
+                                    <span>日本語</span>
+                                </a>
+                                
+                                
+                            </div>
+                        </details>
+                    </div>
+                    
+                </div>
+                
+            </div>
+
+            <main class="main-content catalog-main-content">
+                <h1 class="catalog-page-title is-module">fastapi.exceptions</h1>
+<p>HTTP, WebSocket, request/response validation, and dependency-scope exception classes imported from <code>fastapi.exceptions</code>, paired with built-in ASGI exception handlers in <code>fastapi.exception_handlers</code>. FastAPI maps client-facing protocol and validation failures to structured HTTP responses or WebSocket close frames while surfacing response contract and dependency graph misconfigurations as explicit server errors.</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../images/10_exceptions/fastapi_exceptions_hierarchy.png" alt="10_exceptions_1" />
+  <figcaption class="drawlib-caption">FastAPI Exception Class Hierarchy and Built-in Exception Handlers</figcaption>
+</figure>
+<hr />
+<h2 id="httpexception" class="catalog-symbol-heading"><span class="catalog-badge catalog-badge-class">class</span><code class="catalog-sig"><span class="catalog-sig-name">HTTPException</span></code><a class="header-anchor" href="#httpexception" aria-label="Permalink to HTTPException">#</a></h2>
+<p>Client-facing HTTP error subclassing <code>starlette.exceptions.HTTPException</code> (also re-exported directly from <code>fastapi</code>). Unlike Starlette's base class, FastAPI's <code>HTTPException</code> accepts any JSON-serializable object (<code>str</code>, <code>dict</code>, <code>list</code>) in <code>detail</code> and serializes it under <code>{&quot;detail&quot;: ...}</code> with optional custom response <code>headers</code>.</p>
+<pre><code class="language-python"><span class="k">class</span><span class="w"> </span><span class="nc">HTTPException</span><span class="p">(</span><span class="n">StarletteHTTPException</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">status_code</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">detail</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">headers</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+</code></pre>
+<h3 id="parameters-attributes">Parameters &amp; Attributes<a class="header-anchor" href="#parameters-attributes" aria-label="Permalink">#</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Parameter / Attribute</th>
+<th style="text-align:left">Type</th>
+<th style="text-align:left">Default</th>
+<th style="text-align:left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><code>status_code</code></td>
+<td style="text-align:left"><code>int</code></td>
+<td style="text-align:left"><em>(Required)</em></td>
+<td style="text-align:left">HTTP status code returned to the client (for example, <code>401</code>, <code>403</code>, <code>404</code>, <code>409</code>).</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>detail</code></td>
+<td style="text-align:left"><code>Any</code></td>
+<td style="text-align:left"><code>None</code></td>
+<td style="text-align:left">JSON-serializable error payload placed under <code>&quot;detail&quot;</code>; defaults to the standard HTTP status phrase when <code>None</code>.</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>headers</code></td>
+<td style="text-align:left"><code>Mapping[str, str] | None</code></td>
+<td style="text-align:left"><code>None</code></td>
+<td style="text-align:left">Optional response headers (such as <code>{&quot;WWW-Authenticate&quot;: &quot;Bearer&quot;}</code> or <code>{&quot;Retry-After&quot;: &quot;30&quot;}</code>).</td>
+</tr>
+</tbody>
+</table>
+<h3 id="example">Example<a class="header-anchor" href="#example" aria-label="Permalink">#</a></h3>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">HTTPException</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.testclient</span><span class="w"> </span><span class="kn">import</span> <span class="n">TestClient</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">()</span>
+<span class="n">ITEMS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"item-1"</span><span class="p">:</span> <span class="s2">"Keyboard"</span><span class="p">}</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/items/</span><span class="si">{item_id}</span><span class="s2">"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_item</span><span class="p">(</span><span class="n">item_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="n">item_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ITEMS</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="p">{</span><span class="s2">"code"</span><span class="p">:</span> <span class="s2">"ITEM_NOT_FOUND"</span><span class="p">,</span> <span class="s2">"item_id"</span><span class="p">:</span> <span class="n">item_id</span><span class="p">},</span>
+            <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">"X-Error-Code"</span><span class="p">:</span> <span class="s2">"ITEM_NOT_FOUND"</span><span class="p">},</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="n">ITEMS</span><span class="p">[</span><span class="n">item_id</span><span class="p">]}</span>
+
+
+<span class="n">client</span> <span class="o">=</span> <span class="n">TestClient</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/items/missing"</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">res</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">404</span>
+<span class="k">assert</span> <span class="n">res</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">"x-error-code"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"ITEM_NOT_FOUND"</span>
+<span class="k">assert</span> <span class="n">res</span><span class="o">.</span><span class="n">json</span><span class="p">()</span> <span class="o">==</span> <span class="p">{</span><span class="s2">"detail"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"code"</span><span class="p">:</span> <span class="s2">"ITEM_NOT_FOUND"</span><span class="p">,</span> <span class="s2">"item_id"</span><span class="p">:</span> <span class="s2">"missing"</span><span class="p">}}</span>
+</code></pre>
+<hr />
+<h2 id="websocketexception" class="catalog-symbol-heading"><span class="catalog-badge catalog-badge-class">class</span><code class="catalog-sig"><span class="catalog-sig-name">WebSocketException</span></code><a class="header-anchor" href="#websocketexception" aria-label="Permalink to WebSocketException">#</a></h2>
+<p>WebSocket error exception subclassing <code>starlette.exceptions.WebSocketException</code> (also re-exported from <code>fastapi</code>). Raising <code>WebSocketException</code> inside a <code>@app.websocket()</code> route or its dependencies closes the WebSocket session with the specified RFC 6455 close <code>code</code> and optional UTF-8 <code>reason</code>.</p>
+<pre><code class="language-python"><span class="k">class</span><span class="w"> </span><span class="nc">WebSocketException</span><span class="p">(</span><span class="n">StarletteWebSocketException</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">code</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">reason</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+</code></pre>
+<h3 id="parameters-attributes-2">Parameters &amp; Attributes<a class="header-anchor" href="#parameters-attributes-2" aria-label="Permalink">#</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Parameter / Attribute</th>
+<th style="text-align:left">Type</th>
+<th style="text-align:left">Default</th>
+<th style="text-align:left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><code>code</code></td>
+<td style="text-align:left"><code>int</code></td>
+<td style="text-align:left"><em>(Required)</em></td>
+<td style="text-align:left">Valid RFC 6455 WebSocket closing code (for example, <code>status.WS_1008_POLICY_VIOLATION</code>).</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>reason</code></td>
+<td style="text-align:left"><code>str | None</code></td>
+<td style="text-align:left"><code>None</code></td>
+<td style="text-align:left">Optional UTF-8 close reason string sent to the WebSocket peer.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="example-2">Example<a class="header-anchor" href="#example-2" aria-label="Permalink">#</a></h3>
+<pre><code class="language-python"><span class="kn">import</span><span class="w"> </span><span class="nn">pytest</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">starlette.websockets</span><span class="w"> </span><span class="kn">import</span> <span class="n">WebSocketDisconnect</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">WebSocket</span><span class="p">,</span> <span class="n">WebSocketException</span><span class="p">,</span> <span class="n">status</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.testclient</span><span class="w"> </span><span class="kn">import</span> <span class="n">TestClient</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">()</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">websocket</span><span class="p">(</span><span class="s2">"/ws"</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">ws_route</span><span class="p">(</span><span class="n">websocket</span><span class="p">:</span> <span class="n">WebSocket</span><span class="p">,</span> <span class="n">token</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">token</span> <span class="o">!=</span> <span class="s2">"valid-session"</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">WebSocketException</span><span class="p">(</span>
+            <span class="n">code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">WS_1008_POLICY_VIOLATION</span><span class="p">,</span>
+            <span class="n">reason</span><span class="o">=</span><span class="s2">"Missing or invalid session token"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">await</span> <span class="n">websocket</span><span class="o">.</span><span class="n">accept</span><span class="p">()</span>
+
+
+<span class="n">client</span> <span class="o">=</span> <span class="n">TestClient</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">pytest</span><span class="o">.</span><span class="n">raises</span><span class="p">(</span><span class="n">WebSocketDisconnect</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc_info</span><span class="p">:</span>
+    <span class="k">with</span> <span class="n">client</span><span class="o">.</span><span class="n">websocket_connect</span><span class="p">(</span><span class="s2">"/ws"</span><span class="p">):</span>
+        <span class="k">pass</span>
+<span class="k">assert</span> <span class="n">exc_info</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="n">status</span><span class="o">.</span><span class="n">WS_1008_POLICY_VIOLATION</span>
+</code></pre>
+<hr />
+<h2 id="validationexception" class="catalog-symbol-heading"><span class="catalog-badge catalog-badge-class">class</span><code class="catalog-sig"><span class="catalog-sig-name">ValidationException</span></code><a class="header-anchor" href="#validationexception" aria-label="Permalink to ValidationException">#</a></h2>
+<p>Common base exception (<code>Exception</code>) for FastAPI request, WebSocket, and response validation failures. Stores the sequence of Pydantic/FastAPI error dictionaries alongside optional <code>endpoint_ctx</code> source metadata (<code>EndpointContext</code> with <code>function</code>, <code>path</code>, <code>file</code>, <code>line</code>) formatted into human-readable trace messages by <code>__str__()</code>.</p>
+<pre><code class="language-python"><span class="k">class</span><span class="w"> </span><span class="nc">ValidationException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">errors</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">endpoint_ctx</span><span class="p">:</span> <span class="n">EndpointContext</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">errors</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span> <span class="o">...</span>
+</code></pre>
+<h3 id="parameters-methods">Parameters &amp; Methods<a class="header-anchor" href="#parameters-methods" aria-label="Permalink">#</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Member</th>
+<th style="text-align:left">Type / Signature</th>
+<th style="text-align:left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><code>errors</code></td>
+<td style="text-align:left"><code>Sequence[Any]</code></td>
+<td style="text-align:left">Sequence of structured validation error dictionaries captured during parsing or serialization.</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>endpoint_ctx</code></td>
+<td style="text-align:left"><code>EndpointContext | None</code></td>
+<td style="text-align:left">Optional <code>TypedDict</code> recording <code>function</code>, <code>path</code>, <code>file</code>, and <code>line</code> for diagnostic tracebacks.</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>errors()</code></td>
+<td style="text-align:left"><code>def errors(self) -&gt; Sequence[Any]</code></td>
+<td style="text-align:left">Returns the underlying <code>Sequence[Any]</code> of structured validation errors.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="example-3">Example<a class="header-anchor" href="#example-3" aria-label="Permalink">#</a></h3>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">ValidationException</span>
+
+<span class="n">exc</span> <span class="o">=</span> <span class="n">ValidationException</span><span class="p">(</span>
+    <span class="p">[{</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"int_parsing"</span><span class="p">,</span> <span class="s2">"loc"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"query"</span><span class="p">,</span> <span class="s2">"limit"</span><span class="p">),</span> <span class="s2">"msg"</span><span class="p">:</span> <span class="s2">"Invalid integer"</span><span class="p">}],</span>
+    <span class="n">endpoint_ctx</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">"function"</span><span class="p">:</span> <span class="s2">"list_users"</span><span class="p">,</span>
+        <span class="s2">"path"</span><span class="p">:</span> <span class="s2">"GET /users"</span><span class="p">,</span>
+        <span class="s2">"file"</span><span class="p">:</span> <span class="s2">"routes.py"</span><span class="p">,</span>
+        <span class="s2">"line"</span><span class="p">:</span> <span class="mi">42</span><span class="p">,</span>
+    <span class="p">},</span>
+<span class="p">)</span>
+<span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">exc</span><span class="o">.</span><span class="n">errors</span><span class="p">())</span> <span class="o">==</span> <span class="mi">1</span>
+<span class="k">assert</span> <span class="s2">"GET /users"</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+<span class="k">assert</span> <span class="s1">'File "routes.py", line 42, in list_users'</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+</code></pre>
+<hr />
+<h2 id="requestvalidationerror" class="catalog-symbol-heading"><span class="catalog-badge catalog-badge-class">class</span><code class="catalog-sig"><span class="catalog-sig-name">RequestValidationError</span></code><a class="header-anchor" href="#requestvalidationerror" aria-label="Permalink to RequestValidationError">#</a></h2>
+<p>Subclass of <code>ValidationException</code> raised when an HTTP request's path parameters, query parameters, headers, cookies, form fields, or JSON body fail validation or JSON decoding. Carries the raw parsed <code>body</code> alongside <code>errors()</code> and is handled by <code>request_validation_exception_handler()</code> (<code>422 Unprocessable Content</code>) by default.</p>
+<pre><code class="language-python"><span class="k">class</span><span class="w"> </span><span class="nc">RequestValidationError</span><span class="p">(</span><span class="n">ValidationException</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">errors</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">body</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">endpoint_ctx</span><span class="p">:</span> <span class="n">EndpointContext</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+</code></pre>
+<h3 id="parameters-attributes-3">Parameters &amp; Attributes<a class="header-anchor" href="#parameters-attributes-3" aria-label="Permalink">#</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Member</th>
+<th style="text-align:left">Type / Signature</th>
+<th style="text-align:left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><code>errors()</code></td>
+<td style="text-align:left"><code>def errors(self) -&gt; Sequence[Any]</code></td>
+<td style="text-align:left">Inherited method returning the list of Pydantic/FastAPI validation error dicts (<code>loc</code>, <code>msg</code>, <code>type</code>, <code>input</code>).</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>body</code></td>
+<td style="text-align:left"><code>Any</code></td>
+<td style="text-align:left">Parsed request payload (or raw document string on <code>JSONDecodeError</code>) attached to the exception (<code>None</code> when no body was parsed).</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>endpoint_ctx</code></td>
+<td style="text-align:left"><code>EndpointContext | None</code></td>
+<td style="text-align:left">Optional endpoint source metadata (<code>function</code>, <code>path</code>, <code>file</code>, <code>line</code>).</td>
+</tr>
+</tbody>
+</table>
+<h3 id="example-4">Example<a class="header-anchor" href="#example-4" aria-label="Permalink">#</a></h3>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">Request</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">RequestValidationError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.responses</span><span class="w"> </span><span class="kn">import</span> <span class="n">JSONResponse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.testclient</span><span class="w"> </span><span class="kn">import</span> <span class="n">TestClient</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">()</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">OrderIn</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">quantity</span><span class="p">:</span> <span class="nb">int</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">exception_handler</span><span class="p">(</span><span class="n">RequestValidationError</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">custom_validation_handler</span><span class="p">(</span>
+    <span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">,</span> <span class="n">exc</span><span class="p">:</span> <span class="n">RequestValidationError</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JSONResponse</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">JSONResponse</span><span class="p">(</span>
+        <span class="n">status_code</span><span class="o">=</span><span class="mi">422</span><span class="p">,</span>
+        <span class="n">content</span><span class="o">=</span><span class="p">{</span><span class="s2">"error_count"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">exc</span><span class="o">.</span><span class="n">errors</span><span class="p">()),</span> <span class="s2">"received_body"</span><span class="p">:</span> <span class="n">exc</span><span class="o">.</span><span class="n">body</span><span class="p">},</span>
+    <span class="p">)</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/orders"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_order</span><span class="p">(</span><span class="n">order</span><span class="p">:</span> <span class="n">OrderIn</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OrderIn</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">order</span>
+
+
+<span class="n">client</span> <span class="o">=</span> <span class="n">TestClient</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/orders"</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="p">{</span><span class="s2">"quantity"</span><span class="p">:</span> <span class="s2">"not-an-int"</span><span class="p">})</span>
+<span class="k">assert</span> <span class="n">res</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">422</span>
+<span class="k">assert</span> <span class="n">res</span><span class="o">.</span><span class="n">json</span><span class="p">()</span> <span class="o">==</span> <span class="p">{</span><span class="s2">"error_count"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"received_body"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"quantity"</span><span class="p">:</span> <span class="s2">"not-an-int"</span><span class="p">}}</span>
+</code></pre>
+<hr />
+<h2 id="responsevalidationerror" class="catalog-symbol-heading"><span class="catalog-badge catalog-badge-class">class</span><code class="catalog-sig"><span class="catalog-sig-name">ResponseValidationError</span></code><a class="header-anchor" href="#responsevalidationerror" aria-label="Permalink to ResponseValidationError">#</a></h2>
+<p>Subclass of <code>ValidationException</code> raised when the value returned (or yielded in a typed stream) by a path operation fails <code>response_model</code> or return-type validation. Because response contract mismatches represent a server-side bug rather than client error, FastAPI lets <code>ResponseValidationError</code> propagate as an unhandled <code>500 Internal Server Error</code> unless explicitly caught.</p>
+<pre><code class="language-python"><span class="k">class</span><span class="w"> </span><span class="nc">ResponseValidationError</span><span class="p">(</span><span class="n">ValidationException</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">errors</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">body</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">endpoint_ctx</span><span class="p">:</span> <span class="n">EndpointContext</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+</code></pre>
+<h3 id="parameters-attributes-4">Parameters &amp; Attributes<a class="header-anchor" href="#parameters-attributes-4" aria-label="Permalink">#</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Member</th>
+<th style="text-align:left">Type / Signature</th>
+<th style="text-align:left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><code>errors()</code></td>
+<td style="text-align:left"><code>def errors(self) -&gt; Sequence[Any]</code></td>
+<td style="text-align:left">Returns the list of response schema validation errors (typically anchored at <code>loc=(&quot;response&quot;, ...)</code>).</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>body</code></td>
+<td style="text-align:left"><code>Any</code></td>
+<td style="text-align:left">Raw unvalidated object returned or yielded by the endpoint function.</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>endpoint_ctx</code></td>
+<td style="text-align:left"><code>EndpointContext | None</code></td>
+<td style="text-align:left">Endpoint function, route path, file, and line metadata included in server logs.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="example-5">Example<a class="header-anchor" href="#example-5" aria-label="Permalink">#</a></h3>
+<pre><code class="language-python"><span class="kn">import</span><span class="w"> </span><span class="nn">pytest</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastAPI</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">ResponseValidationError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.testclient</span><span class="w"> </span><span class="kn">import</span> <span class="n">TestClient</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">()</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">UserOut</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="nb">id</span><span class="p">:</span> <span class="nb">int</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/user"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">UserOut</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_broken_user</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"id"</span><span class="p">:</span> <span class="s2">"not-an-integer"</span><span class="p">}</span>
+
+
+<span class="n">client</span> <span class="o">=</span> <span class="n">TestClient</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">pytest</span><span class="o">.</span><span class="n">raises</span><span class="p">(</span><span class="n">ResponseValidationError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc_info</span><span class="p">:</span>
+    <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/user"</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">exc_info</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">body</span> <span class="o">==</span> <span class="p">{</span><span class="s2">"id"</span><span class="p">:</span> <span class="s2">"not-an-integer"</span><span class="p">}</span>
+<span class="k">assert</span> <span class="n">exc_info</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">errors</span><span class="p">()[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"loc"</span><span class="p">]</span> <span class="o">==</span> <span class="p">(</span><span class="s2">"response"</span><span class="p">,</span> <span class="s2">"id"</span><span class="p">)</span>
+</code></pre>
+<hr />
+<h2 id="websocketrequestvalidationerror" class="catalog-symbol-heading"><span class="catalog-badge catalog-badge-class">class</span><code class="catalog-sig"><span class="catalog-sig-name">WebSocketRequestValidationError</span></code><a class="header-anchor" href="#websocketrequestvalidationerror" aria-label="Permalink to WebSocketRequestValidationError">#</a></h2>
+<p>Subclass of <code>ValidationException</code> raised when path, query, header, or cookie parameters declared on a <code>@app.websocket()</code> endpoint fail validation before entering the route body. Handled by <code>websocket_request_validation_exception_handler()</code> by default.</p>
+<pre><code class="language-python"><span class="k">class</span><span class="w"> </span><span class="nc">WebSocketRequestValidationError</span><span class="p">(</span><span class="n">ValidationException</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">errors</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">endpoint_ctx</span><span class="p">:</span> <span class="n">EndpointContext</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+</code></pre>
+<h3 id="parameters-methods-2">Parameters &amp; Methods<a class="header-anchor" href="#parameters-methods-2" aria-label="Permalink">#</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Member</th>
+<th style="text-align:left">Type / Signature</th>
+<th style="text-align:left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><code>errors()</code></td>
+<td style="text-align:left"><code>def errors(self) -&gt; Sequence[Any]</code></td>
+<td style="text-align:left">Returns the list of validation error dictionaries collected while resolving WebSocket parameters.</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>endpoint_ctx</code></td>
+<td style="text-align:left"><code>EndpointContext | None</code></td>
+<td style="text-align:left">Optional WebSocket endpoint location metadata (<code>function</code>, <code>path</code>, <code>file</code>, <code>line</code>).</td>
+</tr>
+</tbody>
+</table>
+<h3 id="example-6">Example<a class="header-anchor" href="#example-6" aria-label="Permalink">#</a></h3>
+<pre><code class="language-python"><span class="kn">import</span><span class="w"> </span><span class="nn">pytest</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">starlette.websockets</span><span class="w"> </span><span class="kn">import</span> <span class="n">WebSocketDisconnect</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">WebSocket</span><span class="p">,</span> <span class="n">status</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.testclient</span><span class="w"> </span><span class="kn">import</span> <span class="n">TestClient</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">()</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">websocket</span><span class="p">(</span><span class="s2">"/rooms/</span><span class="si">{room_id}</span><span class="s2">"</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">join_room</span><span class="p">(</span><span class="n">websocket</span><span class="p">:</span> <span class="n">WebSocket</span><span class="p">,</span> <span class="n">room_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">await</span> <span class="n">websocket</span><span class="o">.</span><span class="n">accept</span><span class="p">()</span>
+
+
+<span class="n">client</span> <span class="o">=</span> <span class="n">TestClient</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">pytest</span><span class="o">.</span><span class="n">raises</span><span class="p">(</span><span class="n">WebSocketDisconnect</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc_info</span><span class="p">:</span>
+    <span class="k">with</span> <span class="n">client</span><span class="o">.</span><span class="n">websocket_connect</span><span class="p">(</span><span class="s2">"/rooms/not-an-int"</span><span class="p">):</span>
+        <span class="k">pass</span>
+<span class="k">assert</span> <span class="n">exc_info</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="n">status</span><span class="o">.</span><span class="n">WS_1008_POLICY_VIOLATION</span>
+</code></pre>
+<hr />
+<h2 id="fastapierror" class="catalog-symbol-heading"><span class="catalog-badge catalog-badge-class">class</span><code class="catalog-sig"><span class="catalog-sig-name">FastAPIError</span></code><a class="header-anchor" href="#fastapierror" aria-label="Permalink to FastAPIError">#</a></h2>
+<p>Base <code>RuntimeError</code> subclass raised for framework configuration and route registration errors at application startup or route definition time (for example, invalid <code>response_model</code> types that cannot be converted into Pydantic fields, or unsupported Pydantic v1 models via <code>PydanticV1NotSupportedError</code>).</p>
+<pre><code class="language-python"><span class="k">class</span><span class="w"> </span><span class="nc">FastAPIError</span><span class="p">(</span><span class="ne">RuntimeError</span><span class="p">):</span> <span class="o">...</span>
+</code></pre>
+<h3 id="inheritance">Inheritance<a class="header-anchor" href="#inheritance" aria-label="Permalink">#</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Base Class</th>
+<th style="text-align:left">Known Subclasses</th>
+<th style="text-align:left">Typical Trigger</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><code>RuntimeError</code></td>
+<td style="text-align:left"><code>DependencyScopeError</code>, <code>PydanticV1NotSupportedError</code></td>
+<td style="text-align:left">Invalid route annotations, non-Pydantic response field types without <code>response_model=None</code>, or invalid dependency scope graphs.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="example-7">Example<a class="header-anchor" href="#example-7" aria-label="Permalink">#</a></h3>
+<pre><code class="language-python"><span class="kn">import</span><span class="w"> </span><span class="nn">pytest</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">Response</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastAPIError</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">()</span>
+
+<span class="k">with</span> <span class="n">pytest</span><span class="o">.</span><span class="n">raises</span><span class="p">(</span><span class="n">FastAPIError</span><span class="p">):</span>
+
+    <span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/invalid-union"</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">bad_return_annotation</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="n">Response</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">"ok"</span><span class="p">:</span> <span class="s2">"true"</span><span class="p">}</span>
+</code></pre>
+<hr />
+<h2 id="dependencyscopeerror" class="catalog-symbol-heading"><span class="catalog-badge catalog-badge-class">class</span><code class="catalog-sig"><span class="catalog-sig-name">DependencyScopeError</span></code><a class="header-anchor" href="#dependencyscopeerror" aria-label="Permalink to DependencyScopeError">#</a></h2>
+<p>Subclass of <code>FastAPIError</code> raised during dependency graph construction when a generator (<code>yield</code>) dependency with <code>scope=&quot;request&quot;</code> declares a sub-dependency with narrower <code>scope=&quot;function&quot;</code>. Prevents outer request-scoped teardown code from referencing resources that have already exited at function scope.</p>
+<pre><code class="language-python"><span class="k">class</span><span class="w"> </span><span class="nc">DependencyScopeError</span><span class="p">(</span><span class="n">FastAPIError</span><span class="p">):</span> <span class="o">...</span>
+</code></pre>
+<h3 id="scope-rule">Scope Rule<a class="header-anchor" href="#scope-rule" aria-label="Permalink">#</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Parent <code>yield</code> Scope</th>
+<th style="text-align:left">Sub-dependency <code>scope</code></th>
+<th style="text-align:left">Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><code>&quot;function&quot;</code></td>
+<td style="text-align:left"><code>&quot;function&quot;</code> or <code>&quot;request&quot;</code></td>
+<td style="text-align:left">Valid — inner resource outlives or matches parent cleanup.</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>&quot;request&quot;</code></td>
+<td style="text-align:left"><code>&quot;request&quot;</code></td>
+<td style="text-align:left">Valid — both exit stacks unwind after response transmission.</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>&quot;request&quot;</code></td>
+<td style="text-align:left"><code>&quot;function&quot;</code></td>
+<td style="text-align:left">Raises <code>DependencyScopeError</code> at route registration time.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="example-8">Example<a class="header-anchor" href="#example-8" aria-label="Permalink">#</a></h3>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Generator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pytest</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">FastAPI</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">DependencyScopeError</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">inner_dep</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+    <span class="k">yield</span> <span class="s2">"inner"</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">outer_dep</span><span class="p">(</span>
+    <span class="n">val</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Depends</span><span class="p">(</span><span class="n">inner_dep</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="s2">"function"</span><span class="p">)],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+    <span class="k">yield</span> <span class="n">val</span>
+
+
+<span class="k">with</span> <span class="n">pytest</span><span class="o">.</span><span class="n">raises</span><span class="p">(</span><span class="n">DependencyScopeError</span><span class="p">):</span>
+
+    <span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/scope-mismatch"</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">endpoint</span><span class="p">(</span><span class="n">res</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Depends</span><span class="p">(</span><span class="n">outer_dep</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="s2">"request"</span><span class="p">)])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">res</span>
+</code></pre>
+<hr />
+<h2 id="http-exception-handler" class="catalog-symbol-heading"><span class="catalog-badge catalog-badge-def">async def</span><code class="catalog-sig"><span class="catalog-sig-name">http_exception_handler</span><span class="catalog-sig-params">()</span></code><a class="header-anchor" href="#http-exception-handler" aria-label="Permalink to http_exception_handler()">#</a></h2>
+<p>Built-in async HTTP exception handler imported from <code>fastapi.exception_handlers</code>. Converts a Starlette or FastAPI <code>HTTPException</code> into a <code>JSONResponse({&quot;detail&quot;: exc.detail}, status_code=exc.status_code, headers=headers)</code>, or returns an empty <code>Response</code> when the HTTP status code forbids a message body (such as <code>204 No Content</code> or <code>304 Not Modified</code>).</p>
+<pre><code class="language-python"><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">http_exception_handler</span><span class="p">(</span>
+    <span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">,</span>
+    <span class="n">exc</span><span class="p">:</span> <span class="n">HTTPException</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Response</span>
+</code></pre>
+<h3 id="parameters">Parameters<a class="header-anchor" href="#parameters" aria-label="Permalink">#</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Parameter</th>
+<th style="text-align:left">Type</th>
+<th style="text-align:left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><code>request</code></td>
+<td style="text-align:left"><code>Request</code></td>
+<td style="text-align:left">Active Starlette/FastAPI HTTP <code>Request</code> instance.</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>exc</code></td>
+<td style="text-align:left"><code>HTTPException</code></td>
+<td style="text-align:left">Raised <code>HTTPException</code> carrying <code>status_code</code>, <code>detail</code>, and optional <code>headers</code>.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="example-9">Example<a class="header-anchor" href="#example-9" aria-label="Permalink">#</a></h3>
+<pre><code class="language-python"><span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">starlette.requests</span><span class="w"> </span><span class="kn">import</span> <span class="n">Request</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTTPException</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.exception_handlers</span><span class="w"> </span><span class="kn">import</span> <span class="n">http_exception_handler</span>
+
+<span class="n">scope</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"http"</span><span class="p">,</span> <span class="s2">"method"</span><span class="p">:</span> <span class="s2">"GET"</span><span class="p">,</span> <span class="s2">"path"</span><span class="p">:</span> <span class="s2">"/items"</span><span class="p">,</span> <span class="s2">"headers"</span><span class="p">:</span> <span class="p">[]}</span>
+<span class="n">req</span> <span class="o">=</span> <span class="n">Request</span><span class="p">(</span><span class="n">scope</span><span class="p">)</span>
+
+<span class="n">json_resp</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="n">http_exception_handler</span><span class="p">(</span><span class="n">req</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">403</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Forbidden"</span><span class="p">))</span>
+<span class="p">)</span>
+<span class="k">assert</span> <span class="n">json_resp</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">403</span>
+<span class="k">assert</span> <span class="n">json_resp</span><span class="o">.</span><span class="n">body</span> <span class="o">==</span> <span class="sa">b</span><span class="s1">'{"detail":"Forbidden"}'</span>
+
+<span class="n">empty_resp</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="n">http_exception_handler</span><span class="p">(</span><span class="n">req</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">204</span><span class="p">))</span>
+<span class="p">)</span>
+<span class="k">assert</span> <span class="n">empty_resp</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">204</span>
+<span class="k">assert</span> <span class="n">empty_resp</span><span class="o">.</span><span class="n">body</span> <span class="o">==</span> <span class="sa">b</span><span class="s2">""</span>
+</code></pre>
+<hr />
+<h2 id="request-validation-exception-handler" class="catalog-symbol-heading"><span class="catalog-badge catalog-badge-def">async def</span><code class="catalog-sig"><span class="catalog-sig-name">request_validation_exception_handler</span><span class="catalog-sig-params">()</span></code><a class="header-anchor" href="#request-validation-exception-handler" aria-label="Permalink to request_validation_exception_handler()">#</a></h2>
+<p>Built-in async handler imported from <code>fastapi.exception_handlers</code> for <code>RequestValidationError</code>. Serializes <code>exc.errors()</code> via <code>jsonable_encoder()</code> into a <code>422</code> <code>JSONResponse({&quot;detail&quot;: ...})</code>; commonly delegated to at the end of custom <code>@app.exception_handler(RequestValidationError)</code> hooks after recording metrics or audit logs.</p>
+<pre><code class="language-python"><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">request_validation_exception_handler</span><span class="p">(</span>
+    <span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">,</span>
+    <span class="n">exc</span><span class="p">:</span> <span class="n">RequestValidationError</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JSONResponse</span>
+</code></pre>
+<h3 id="parameters-2">Parameters<a class="header-anchor" href="#parameters-2" aria-label="Permalink">#</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Parameter</th>
+<th style="text-align:left">Type</th>
+<th style="text-align:left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><code>request</code></td>
+<td style="text-align:left"><code>Request</code></td>
+<td style="text-align:left">Active HTTP <code>Request</code> that triggered validation failure.</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>exc</code></td>
+<td style="text-align:left"><code>RequestValidationError</code></td>
+<td style="text-align:left">Validation exception exposing <code>exc.errors()</code> and <code>exc.body</code>.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="example-10">Example<a class="header-anchor" href="#example-10" aria-label="Permalink">#</a></h3>
+<pre><code class="language-python"><span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">starlette.requests</span><span class="w"> </span><span class="kn">import</span> <span class="n">Request</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.exception_handlers</span><span class="w"> </span><span class="kn">import</span> <span class="n">request_validation_exception_handler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">RequestValidationError</span>
+
+<span class="n">scope</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"http"</span><span class="p">,</span> <span class="s2">"method"</span><span class="p">:</span> <span class="s2">"POST"</span><span class="p">,</span> <span class="s2">"path"</span><span class="p">:</span> <span class="s2">"/items"</span><span class="p">,</span> <span class="s2">"headers"</span><span class="p">:</span> <span class="p">[]}</span>
+<span class="n">exc</span> <span class="o">=</span> <span class="n">RequestValidationError</span><span class="p">(</span>
+    <span class="p">[{</span><span class="s2">"loc"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"body"</span><span class="p">,</span> <span class="s2">"price"</span><span class="p">),</span> <span class="s2">"msg"</span><span class="p">:</span> <span class="s2">"Input should be a valid number"</span><span class="p">,</span> <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"float_parsing"</span><span class="p">}]</span>
+<span class="p">)</span>
+<span class="n">resp</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">request_validation_exception_handler</span><span class="p">(</span><span class="n">Request</span><span class="p">(</span><span class="n">scope</span><span class="p">),</span> <span class="n">exc</span><span class="p">))</span>
+<span class="k">assert</span> <span class="n">resp</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">422</span>
+<span class="k">assert</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">body</span><span class="p">)</span> <span class="o">==</span> <span class="p">{</span>
+    <span class="s2">"detail"</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span><span class="s2">"loc"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"body"</span><span class="p">,</span> <span class="s2">"price"</span><span class="p">],</span> <span class="s2">"msg"</span><span class="p">:</span> <span class="s2">"Input should be a valid number"</span><span class="p">,</span> <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"float_parsing"</span><span class="p">}</span>
+    <span class="p">]</span>
+<span class="p">}</span>
+</code></pre>
+<hr />
+<h2 id="websocket-request-validation-exception-handler" class="catalog-symbol-heading"><span class="catalog-badge catalog-badge-def">async def</span><code class="catalog-sig"><span class="catalog-sig-name">websocket_request_validation_exception_handler</span><span class="catalog-sig-params">()</span></code><a class="header-anchor" href="#websocket-request-validation-exception-handler" aria-label="Permalink to websocket_request_validation_exception_handler()">#</a></h2>
+<p>Built-in async handler imported from <code>fastapi.exception_handlers</code> for <code>WebSocketRequestValidationError</code>. Closes the <code>WebSocket</code> connection with code <code>WS_1008_POLICY_VIOLATION</code> (<code>1008</code>) and passes <code>jsonable_encoder(exc.errors())</code> as the close reason.</p>
+<pre><code class="language-python"><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">websocket_request_validation_exception_handler</span><span class="p">(</span>
+    <span class="n">websocket</span><span class="p">:</span> <span class="n">WebSocket</span><span class="p">,</span>
+    <span class="n">exc</span><span class="p">:</span> <span class="n">WebSocketRequestValidationError</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre>
+<h3 id="parameters-3">Parameters<a class="header-anchor" href="#parameters-3" aria-label="Permalink">#</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Parameter</th>
+<th style="text-align:left">Type</th>
+<th style="text-align:left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><code>websocket</code></td>
+<td style="text-align:left"><code>WebSocket</code></td>
+<td style="text-align:left">Active FastAPI <code>WebSocket</code> connection being closed.</td>
+</tr>
+<tr>
+<td style="text-align:left"><code>exc</code></td>
+<td style="text-align:left"><code>WebSocketRequestValidationError</code></td>
+<td style="text-align:left">WebSocket parameter validation exception providing <code>exc.errors()</code>.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="example-11">Example<a class="header-anchor" href="#example-11" aria-label="Permalink">#</a></h3>
+<pre><code class="language-python"><span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.exception_handlers</span><span class="w"> </span><span class="kn">import</span> <span class="n">websocket_request_validation_exception_handler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">WebSocketRequestValidationError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.websockets</span><span class="w"> </span><span class="kn">import</span> <span class="n">WebSocket</span>
+
+<span class="n">sent_messages</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">receive</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"websocket.connect"</span><span class="p">}</span>
+
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">send</span><span class="p">(</span><span class="n">message</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">sent_messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+
+
+<span class="n">ws</span> <span class="o">=</span> <span class="n">WebSocket</span><span class="p">({</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"websocket"</span><span class="p">,</span> <span class="s2">"path"</span><span class="p">:</span> <span class="s2">"/ws"</span><span class="p">,</span> <span class="s2">"headers"</span><span class="p">:</span> <span class="p">[]},</span> <span class="n">receive</span><span class="o">=</span><span class="n">receive</span><span class="p">,</span> <span class="n">send</span><span class="o">=</span><span class="n">send</span><span class="p">)</span>
+<span class="n">exc</span> <span class="o">=</span> <span class="n">WebSocketRequestValidationError</span><span class="p">([{</span><span class="s2">"loc"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"query"</span><span class="p">,</span> <span class="s2">"room"</span><span class="p">),</span> <span class="s2">"msg"</span><span class="p">:</span> <span class="s2">"Field required"</span><span class="p">}])</span>
+<span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">websocket_request_validation_exception_handler</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span> <span class="n">exc</span><span class="p">))</span>
+
+<span class="k">assert</span> <span class="n">sent_messages</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"type"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"websocket.close"</span>
+<span class="k">assert</span> <span class="n">sent_messages</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"code"</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1008</span>
+</code></pre>
+
+
+                
+                <nav class="catalog-pager" aria-label="Catalog Page Navigation">
+                    
+                    <a href="09_datastructures.html" class="catalog-pager-card is-prev">
+                        <span class="catalog-pager-dir">&larr; Previous</span>
+                        <span class="catalog-pager-title">fastapi.datastructures</span>
+                    </a>
+                    
+                    
+                    <a href="11_middleware.html" class="catalog-pager-card is-next">
+                        <span class="catalog-pager-dir">Next &rarr;</span>
+                        <span class="catalog-pager-title">fastapi.middleware</span>
+                    </a>
+                    
+                </nav>
+                
+            </main>
+
+            <footer class="footer">
+                
+                FastAPI® is a registered trademark of Sebastián Ramírez (<a href="https://github.com/tiangolo" target="_blank" rel="noopener noreferrer">@tiangolo</a>). Unofficial API reference — not affiliated with or endorsed by the official FastAPI project (<a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">fastapi.tiangolo.com</a>).
+                
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            var toggleBtn = document.getElementById('theme-toggle');
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', function() {
+                    var current = document.documentElement.getAttribute('data-theme');
+                    if (!current) {
+                        current = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+                    }
+                    var next = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    try { localStorage.setItem('drawlib-theme', next); } catch (e) {}
+                });
+            }
+
+            var menuBtn = document.getElementById('menu-toggle');
+            var sidebar = document.getElementById('catalog-sidebar');
+            var backdrop = document.getElementById('sidebar-backdrop');
+            function closeMenu() {
+                if (sidebar) sidebar.classList.remove('is-open');
+                if (backdrop) backdrop.classList.remove('is-open');
+            }
+            if (menuBtn && sidebar && backdrop) {
+                menuBtn.addEventListener('click', function() {
+                    sidebar.classList.toggle('is-open');
+                    backdrop.classList.toggle('is-open');
+                });
+                backdrop.addEventListener('click', closeMenu);
+            }
+
+            document.querySelectorAll('.catalog-nav-cat-link').forEach(function(link) {
+                link.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
+            });
+
+            if (sidebar) {
+                try {
+                    var savedScroll = sessionStorage.getItem('drawlib-catalog-sidebar-scroll');
+                    if (savedScroll !== null) {
+                        sidebar.scrollTop = parseInt(savedScroll, 10) || 0;
+                    }
+                    sidebar.addEventListener('scroll', function() {
+                        try { sessionStorage.setItem('drawlib-catalog-sidebar-scroll', String(sidebar.scrollTop)); } catch (e) {}
+                    }, { passive: true });
+                } catch (e) {}
+            }
+
+            var groups = Array.prototype.slice.call(document.querySelectorAll('.catalog-nav-group'));
+            var expandBtn = document.getElementById('catalog-expand-toggle');
+            function updateExpandBtnLabel() {
+                if (!expandBtn || groups.length === 0) return;
+                var visibleGroups = groups.filter(function(g) { return !g.hidden; });
+                var allOpen = visibleGroups.length > 0 && visibleGroups.every(function(g) { return g.open; });
+                var expandText = expandBtn.getAttribute('data-expand-label') || 'Expand All';
+                var collapseText = expandBtn.getAttribute('data-collapse-label') || 'Collapse All';
+                expandBtn.textContent = allOpen ? collapseText : expandText;
+            }
+            if (expandBtn) {
+                updateExpandBtnLabel();
+                expandBtn.addEventListener('click', function() {
+                    var visibleGroups = groups.filter(function(g) { return !g.hidden; });
+                    var allOpen = visibleGroups.length > 0 && visibleGroups.every(function(g) { return g.open; });
+                    visibleGroups.forEach(function(g) { g.open = !allOpen; });
+                    updateExpandBtnLabel();
+                });
+                groups.forEach(function(g) {
+                    g.addEventListener('toggle', updateExpandBtnLabel);
+                });
+            }
+
+            var filterInput = document.getElementById('catalog-filter-input');
+            var emptyNotice = document.getElementById('catalog-nav-empty');
+            var savedOpenState = null;
+
+            if (filterInput) {
+                filterInput.addEventListener('input', function() {
+                    var q = filterInput.value.trim().toLowerCase();
+                    if (q && !savedOpenState) {
+                        savedOpenState = groups.map(function(g) { return g.open; });
+                    }
+                    var anyMatch = false;
+                    groups.forEach(function(g, idx) {
+                        var catText = (g.getAttribute('data-cat') || '').toLowerCase();
+                        var catMatches = q !== '' && catText.indexOf(q) !== -1;
+                        var items = Array.prototype.slice.call(g.querySelectorAll('.catalog-nav-subitem'));
+                        var visibleCount = 0;
+
+                        items.forEach(function(li) {
+                            var symText = (li.getAttribute('data-sym') || '').toLowerCase();
+                            var show = (q === '') || catMatches || symText.indexOf(q) !== -1;
+                            li.hidden = !show;
+                            if (show) visibleCount += 1;
+                        });
+
+                        if (q === '') {
+                            g.hidden = false;
+                            if (savedOpenState && typeof savedOpenState[idx] === 'boolean') {
+                                g.open = savedOpenState[idx];
+                            }
+                            anyMatch = true;
+                        } else if (catMatches || visibleCount > 0) {
+                            g.hidden = false;
+                            g.open = true;
+                            anyMatch = true;
+                        } else {
+                            g.hidden = true;
+                        }
+                    });
+
+                    if (q === '') {
+                        savedOpenState = null;
+                    }
+                    if (emptyNotice) {
+                        emptyNotice.hidden = anyMatch;
+                    }
+                    updateExpandBtnLabel();
+                });
+
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === '/' && document.activeElement !== filterInput) {
+                        var tag = document.activeElement ? document.activeElement.tagName : '';
+                        if (tag !== 'INPUT' && tag !== 'TEXTAREA' && tag !== 'SELECT') {
+                            e.preventDefault();
+                            filterInput.focus();
+                        }
+                    } else if (e.key === 'Escape' && document.activeElement === filterInput) {
+                        filterInput.value = '';
+                        filterInput.dispatchEvent(new Event('input'));
+                        filterInput.blur();
+                    }
+                });
+            }
+
+            document.addEventListener('click', function(e) {
+                document.querySelectorAll('.lang-dropdown[open]').forEach(function(dd) {
+                    if (!dd.contains(e.target)) {
+                        dd.removeAttribute('open');
+                    }
+                });
+            });
+
+            var activeLinks = Array.prototype.slice.call(document.querySelectorAll('.catalog-nav-sublink[data-target]'));
+            if (activeLinks.length > 0 && 'IntersectionObserver' in window) {
+                var linkBySlug = {};
+                var headings = [];
+                activeLinks.forEach(function(a) {
+                    var slug = a.getAttribute('data-target');
+                    var el = slug ? document.getElementById(slug) : null;
+                    if (slug && el) {
+                        linkBySlug[slug] = a;
+                        headings.push(el);
+                    }
+                    a.addEventListener('click', closeMenu);
+                });
+
+                function setActiveSlug(slug) {
+                    activeLinks.forEach(function(a) {
+                        if (a.getAttribute('data-target') === slug) {
+                            a.classList.add('is-active');
+                        } else {
+                            a.classList.remove('is-active');
+                        }
+                    });
+                }
+
+                if (window.location.hash) {
+                    var initSlug = decodeURIComponent(window.location.hash.slice(1));
+                    if (linkBySlug[initSlug]) setActiveSlug(initSlug);
+                } else if (headings.length > 0) {
+                    setActiveSlug(headings[0].id);
+                }
+
+                var visibleIds = {};
+                var observer = new IntersectionObserver(function(entries) {
+                    entries.forEach(function(entry) {
+                        visibleIds[entry.target.id] = entry.isIntersecting;
+                    });
+                    for (var i = 0; i < headings.length; i++) {
+                        if (visibleIds[headings[i].id]) {
+                            setActiveSlug(headings[i].id);
+                            break;
+                        }
+                    }
+                }, { rootMargin: '-90px 0px -65% 0px', threshold: [0, 1] });
+
+                headings.forEach(function(h) { observer.observe(h); });
+            }
+        })();
+    </script>
+</body>
+</html>
