@@ -12,7 +12,7 @@ from drawlib.styles import Styles
 from drawlib.text import text
 
 setup(width=184, height=68, dpi=150)
-anim = Animation(fps=1.6)
+anim = Animation(fps=0.5)
 
 stages = [
     ("1. Route\nRegistration", "Type Hints & Doc()"),
@@ -47,7 +47,7 @@ stage_notes = [
 
 for step in range(len(stages)):
     is_last = step == len(stages) - 1
-    with anim.frame(duration=2.8 if is_last else None, clear=True):
+    with anim.frame(duration=4.0 if is_last else 2.0, clear=True):
         outer = Panel(
             "FastAPI v0.162.2 — One-Time Startup Setup & Per-Request Execution",
             style=Styles.Neutral.patch(shape_r=2.0),
@@ -76,11 +76,11 @@ for step in range(len(stages)):
             style=Styles.DarkBold.patch(text_size=10.5),
         )
 
-        # Animated 5-stage ChevronProcess
+        # All 5 stages stay visible; only the active spotlight advances calmly
         proc = ChevronProcess(
-            style=Styles.Neutral,
+            style=Styles.White,
             text_style=Styles.DarkBold.patch(text_size=10.5),
-            description_style=Styles.Dark.patch(text_size=10.0),
+            description_style=Styles.Muted.patch(text_size=10.0),
             corner_angle=62.0,
             spacing=1.8,
             flat_left_end=True,
@@ -90,21 +90,20 @@ for step in range(len(stages)):
                 c_style = Styles.PrimaryFlat
                 t_style = Styles.WhiteBold.patch(text_size=10.5)
                 d_style = Styles.White.patch(text_size=10.0)
-            elif i < 2:
-                c_style = Styles.SecondaryNeutral
+            elif i < step:
+                c_style = Styles.SecondaryNeutral if i < 2 else Styles.PrimaryNeutral
                 t_style = Styles.DarkBold.patch(text_size=10.5)
                 d_style = Styles.Dark.patch(text_size=10.0)
             else:
-                c_style = Styles.PrimaryNeutral
+                c_style = Styles.White
                 t_style = Styles.DarkBold.patch(text_size=10.5)
-                d_style = Styles.Dark.patch(text_size=10.0)
+                d_style = Styles.Muted.patch(text_size=10.0)
             proc.add(
                 title,
                 description=desc,
                 style=c_style,
                 text_style=t_style,
                 description_style=d_style,
-                show=(i <= step),
             )
         proc.draw(xy=(8.0, 32.0), width=168.0, height=19.5)
 

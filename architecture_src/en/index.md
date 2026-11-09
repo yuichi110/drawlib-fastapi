@@ -13,7 +13,7 @@ from drawlib.styles import Colors, Styles
 from drawlib.text import text
 
 setup(width=192, height=84, dpi=150)
-anim = Animation(fps=1.4)
+anim = Animation(fps=0.5)
 
 startup_steps = [
     (
@@ -76,7 +76,7 @@ callouts = [
 
 for step in range(5):
     is_last = step == 4
-    with anim.frame(duration=2.8 if is_last else 0.95, clear=True):
+    with anim.frame(duration=4.0 if is_last else 2.0, clear=True):
         # Left Panel: Import & Startup Compilation
         p_left = Panel(
             "Startup Compile (Once)",
