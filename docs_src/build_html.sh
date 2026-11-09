@@ -15,7 +15,7 @@ if [ -z "${DRAWLIB_CMD:-}" ]; then
     fi
 fi
 
-# Preserve sub-portals (docs/reports/ and docs/architecture/) across root docs/ builds
+# Preserve sub-portals (docs/reports/, docs/architecture/) and GitHub Pages docs/CNAME across root docs/ builds
 PRESERVE_REPORTS=""
 if [ -d "docs/reports" ]; then
     mkdir -p .drawlib/scratch
@@ -30,6 +30,14 @@ if [ -d "docs/architecture" ]; then
     PRESERVE_ARCH=".drawlib/scratch/_preserved_arch_$$"
     rm -rf "$PRESERVE_ARCH"
     cp -a "docs/architecture" "$PRESERVE_ARCH"
+fi
+
+PRESERVE_CNAME=""
+if [ -f "docs/CNAME" ]; then
+    mkdir -p .drawlib/scratch
+    PRESERVE_CNAME=".drawlib/scratch/_preserved_CNAME_$$"
+    rm -f "$PRESERVE_CNAME"
+    cp -a "docs/CNAME" "$PRESERVE_CNAME"
 fi
 
 echo "Building FastAPI User Guide HTML site -> docs/ ..."
@@ -51,6 +59,17 @@ if [ -n "$PRESERVE_ARCH" ] && [ -d "$PRESERVE_ARCH" ]; then
     else
         rm -rf "$PRESERVE_ARCH"
     fi
+fi
+
+if [ -n "$PRESERVE_CNAME" ] && [ -f "$PRESERVE_CNAME" ]; then
+    mkdir -p docs
+    if [ ! -f "docs/CNAME" ]; then
+        mv "$PRESERVE_CNAME" "docs/CNAME"
+    else
+        rm -f "$PRESERVE_CNAME"
+    fi
+elif [ ! -f "docs/CNAME" ]; then
+    printf 'fastapi.drawlib.com' > docs/CNAME
 fi
 
 touch docs/.nojekyll
