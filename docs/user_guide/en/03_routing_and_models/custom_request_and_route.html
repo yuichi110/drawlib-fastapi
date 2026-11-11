@@ -1,0 +1,668 @@
+<!--
+ Copyright (c) 2026 Yuichi Ito (yuichi@yuichi.com)
+
+ This software is licensed under the Apache License, Version 2.0.
+ For more information, please visit: https://github.com/yuichi110/drawlib
+
+ This software is provided "as is", without warranty of any kind,
+ express or implied, including but not limited to the warranties of
+ merchantability, fitness for a particular purpose and noninfringement.
+-->
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Request &amp; APIRoute Classes — FastAPI User Guide (Unofficial)</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-S9N5BZ1VRC');
+    </script>
+    <script>
+        (function() {
+            const saved = localStorage.getItem('drawlib-theme');
+            if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    
+    
+    
+    <link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/03_routing_and_models/custom_request_and_route.html">
+    
+    <link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/03_routing_and_models/custom_request_and_route.html">
+    
+    <link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/03_routing_and_models/custom_request_and_route.html">
+    
+    
+    
+    <meta name="description" content="Subclassing APIRoute.get_route_handler() and Starlette&#x27;s Request lets you intercept requests after router matching yet before FastAPI decodes JSON or runs…">
+    <link rel="canonical" href="https://fastapi.drawlib.com/user_guide/en/03_routing_and_models/custom_request_and_route.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="FastAPI User Guide">
+    <meta property="og:title" content="Custom Request &amp; APIRoute Classes — FastAPI User Guide">
+    <meta property="og:description" content="Subclassing APIRoute.get_route_handler() and Starlette&#x27;s Request lets you intercept requests after router matching yet before FastAPI decodes JSON or runs…">
+    <meta property="og:url" content="https://fastapi.drawlib.com/user_guide/en/03_routing_and_models/custom_request_and_route.html">
+    <meta property="og:image" content="https://fastapi.drawlib.com/user_guide/_assets/ogp.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="ja_JP">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Custom Request &amp; APIRoute Classes — FastAPI User Guide">
+    <meta name="twitter:description" content="Subclassing APIRoute.get_route_handler() and Starlette&#x27;s Request lets you intercept requests after router matching yet before FastAPI decodes JSON or runs…">
+    <meta name="twitter:image" content="https://fastapi.drawlib.com/user_guide/_assets/ogp.png">
+    
+    
+    <link rel="icon" type="image/png" href="../../_assets/favicon.png">
+    
+    
+    <link rel="stylesheet" href="../style.css">
+    
+    
+</head>
+<body>
+    
+    
+    
+    <div class="demo-banner" role="region" aria-label="Portal Navigation">
+        <div class="demo-banner-inner">
+            <span class="demo-banner-badge">DRAWLIB SHOWCASE</span>
+            
+            <span class="demo-banner-text">
+                Unofficial <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a> (v0.162.2) Documentation built with <a href="https://www.drawlib.com/" target="_blank" rel="noopener noreferrer">Drawlib</a>
+            </span>
+            <span class="demo-banner-links">
+                <a href="../../../index.html">All Portals</a>
+                <span class="demo-banner-sep">·</span>
+                <strong style="color:#ffffff;">User Guide</strong>
+                <span class="demo-banner-sep">·</span>
+                <a href="../../../api/index.html">API Reference</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="../../../architecture/index.html">Architecture</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="../../../pni501/index.html">PNI501 Audit</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official Docs ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://www.drawlib.com/" target="_blank" rel="noopener noreferrer">Drawlib ↗</a>
+            </span>
+            
+        </div>
+    </div>
+    
+    <div class="doc-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI User Guide">
+                    
+                    FastAPI User Guide
+                    
+                </a>
+                <div class="sidebar-header-actions">
+                    <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">
+                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                    <button type="button" id="menu-toggle" class="menu-toggle-btn" aria-label="Toggle navigation" aria-expanded="false">
+                        <svg class="icon-hamburger" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        <svg class="icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="sidebar-menu">
+                
+                    
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../index.html" >Guide Overview</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">1. Introduction &amp; Quickstart</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../01_getting_started/overview.html" >Why FastAPI &amp; Design Philosophy</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../01_getting_started/quickstart.html" >Quickstart &amp; Interactive OpenAPI</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">2. Scaling to 100k+ LOC</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../02_enterprise_architecture/modular_design.html" >Bounded Contexts &amp; Layering</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../02_enterprise_architecture/di_lifespan_testing.html" >Enterprise DI, Lifespan &amp; Testing</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">3. Routing, Validation &amp; Models</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="parameters_and_validation.html" >Path, Query, Header, Cookie &amp; Body</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="responses_and_openapi.html" >Response Serialization &amp; OpenAPI 3.1</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="advanced_types_and_models.html" >Parameter Models, Extra Types &amp; Examples</a>
+                            </li>
+                            
+                            <li class="nav-item active">
+                                <a href="custom_request_and_route.html" >Custom Request &amp; APIRoute Classes</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">4. Dependency Injection &amp; Security</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../04_dependencies_and_security/dependency_injection.html" >Dependency Graph, Caching &amp; Scopes</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../04_dependencies_and_security/security_and_auth.html" >Authentication &amp; OAuth2 Scopes</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../04_dependencies_and_security/jwt_and_websocket_security.html" >JWT (PyJWT + Argon2) &amp; WS Security</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">5. Async, Middleware &amp; Streaming</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../05_async_and_realtime/concurrency_and_middleware.html" >ASGI Middleware &amp; Threadpool</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../05_async_and_realtime/sse_websockets_streaming.html" >Native SSE, JSONL &amp; WebSockets</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">6. Observability, Errors &amp; Testing</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../06_observability_and_testing/telemetry_and_errors.html" >Native OpenTelemetry &amp; Exceptions</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../06_observability_and_testing/testing_and_deployment.html" >Testing Patterns &amp; Production ASGI</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">7. Frontend, Sub-Apps &amp; OpenAPI</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../07_frontend_and_openapi_ext/frontend_templates_mounts.html" >SPA frontend(), StaticFiles &amp; Mounts</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../07_frontend_and_openapi_ext/webhooks_callbacks_sdks.html" >Webhooks, Callbacks, SDKs &amp; Docs UI</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">8. Settings, Databases &amp; Ecosystem</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../08_ecosystem_and_operations/settings_and_databases.html" >pydantic-settings &amp; SQL Databases</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../08_ecosystem_and_operations/cli_proxy_graphql_ai.html" >FastAPI CLI, Proxies, GraphQL &amp; AI</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">Companion Guides &amp; Links</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/" target="_blank" rel="noopener noreferrer">All Portals (Showcase Hub)<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/api/" target="_blank" rel="noopener noreferrer">FastAPI API Reference<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/architecture/" target="_blank" rel="noopener noreferrer">FastAPI Internal Architecture<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/pni501/" target="_blank" rel="noopener noreferrer">PNI501 Diagnostic Report<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official FastAPI Docs<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub Repository<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                        </ul>
+                    
+                
+            </div>
+        </aside>
+        <div class="content-wrapper">
+            <header class="top-bar">
+                <div class="breadcrumbs">
+                    <span class="crumb">Docs</span>
+                    <span class="crumb-separator">&raquo;</span>
+                    <span class="crumb active">Custom Request &amp; APIRoute Classes</span>
+                </div>
+                
+                <div class="lang-switcher">
+                    <details class="lang-dropdown">
+                        <summary class="lang-dropdown-btn" aria-label="Select language">
+                            <svg class="lang-globe-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            <span class="lang-current-label">English</span>
+                            <svg class="lang-caret-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </summary>
+                        <div class="lang-dropdown-menu" role="menu">
+                            
+                            <a href="custom_request_and_route.html" class="lang-option active" lang="en" hreflang="en" aria-current="page">
+                                <span>English</span>
+                                
+                                <svg class="lang-check-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                
+                            </a>
+                            
+                            <a href="../../ja/03_routing_and_models/custom_request_and_route.html" class="lang-option" lang="ja" hreflang="ja" >
+                                <span>日本語</span>
+                                
+                            </a>
+                            
+                        </div>
+                    </details>
+                </div>
+                
+            </header>
+            <main class="main-content">
+                <h1>Custom Request &amp; APIRoute Classes</h1>
+<p>Subclassing <code>APIRoute.get_route_handler()</code> and Starlette's <code>Request</code> lets you intercept requests <strong>after</strong> router matching yet <strong>before</strong> FastAPI decodes JSON or runs Pydantic validation—enabling router-scoped <code>gzip</code> decompression, raw-byte HMAC verification, per-operation latency headers, and structured <code>422</code> validation error wrapping.</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/03_routing_and_models/custom_request_and_route/custom_apiroute_interception.png" alt="custom_request_and_route_1" />
+  <figcaption class="drawlib-caption">Interception Boundary Comparison: Global ASGI Middleware vs Router-Scoped APIRoute.get_route_handler()</figcaption>
+</figure>
+<p>Choosing the right extension hook in FastAPI depends on <strong>when</strong> during the ASGI lifecycle your logic must execute and <strong>how broadly</strong> it should apply across routers.</p>
+<h2>1. ASGI Middleware vs <code>APIRoute.get_route_handler()</code> Lifecycle</h2>
+<p>Every path operation registered on an <code>APIRouter</code> constructs an <code>APIRoute</code> instance (or the custom subclass passed to <code>APIRouter(route_class=...)</code>) and builds its per-request handler by calling <code>self.get_route_handler()</code>. When a child router is mounted via <code>app.include_router()</code>, FastAPI applies <strong>router prefix and dependency inheritance</strong>—invoking <code>get_route_handler()</code> with the merged parent prefixes, tags, dependencies, and response settings while leaving sibling routers completely untouched.</p>
+<p>Understanding the execution order inside FastAPI's built-in route handler explains when you need a custom <code>APIRoute</code> instead of <code>Depends()</code>:</p>
+<ol>
+<li><strong>Body Read &amp; JSON Decoding (<code>await request.body()</code> / <code>await request.json()</code>)</strong> runs <strong>first</strong>—raising <code>RequestValidationError(type=&quot;json_invalid&quot;)</code> immediately if JSON syntax is malformed.</li>
+<li><strong>Dependency Resolution &amp; Parameter Validation</strong> runs <strong>second</strong>—meaning a <code>Depends()</code> callable <em>cannot</em> decompress a <code>gzip</code>-encoded JSON stream before <code>request.json()</code> fails, nor can <code>Depends()</code> catch <code>RequestValidationError</code> raised by body or parameter validation.</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Dimension</th>
+<th style="text-align:left">Global Pure ASGI Middleware</th>
+<th style="text-align:left"><code>APIRouter(route_class=CustomRoute)</code></th>
+<th style="text-align:left"><code>Depends()</code> / <code>Security()</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>Execution Timing</strong></td>
+<td style="text-align:left">Before routing (runs on <code>404</code>s, <code>/static</code>, all routers)</td>
+<td style="text-align:left">After route matching, <strong>before</strong> JSON parsing &amp; <code>Depends()</code></td>
+<td style="text-align:left"><strong>After</strong> FastAPI decodes the JSON or form body</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Scope Granularity</strong></td>
+<td style="text-align:left">Entire <code>FastAPI</code> app or mounted sub-app</td>
+<td style="text-align:left">Exact <code>APIRouter</code> subtree (<code>route_class=...</code>)</td>
+<td style="text-align:left">App, <code>APIRouter</code>, route <code>dependencies=[...]</code>, or param</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Swap <code>Request</code> (<code>body()</code>)</strong></td>
+<td style="text-align:left">Requires manual low-level ASGI <code>receive</code> wrapper</td>
+<td style="text-align:left">Native: instantiate <code>CustomRequest(request.scope, request.receive)</code></td>
+<td style="text-align:left">Too late (<code>request.json()</code> already ran)</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Catch <code>RequestValidationError</code></strong></td>
+<td style="text-align:left">No (handled by app-wide <code>@app.exception_handler</code>)</td>
+<td style="text-align:left"><strong>Yes</strong>: <code>try: await original_route_handler(request)</code></td>
+<td style="text-align:left">No (validation errors are raised before endpoint execution)</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Route Metadata Access</strong></td>
+<td style="text-align:left"><code>scope[&quot;route&quot;]</code> not yet populated pre-routing</td>
+<td style="text-align:left">Direct <code>self.operation_id</code>, <code>self.path</code>, <code>self.tags</code>, <code>self.name</code></td>
+<td style="text-align:left">Via <code>request.scope[&quot;route&quot;]</code> only</td>
+</tr>
+</tbody>
+</table>
+<h2>2. Transparent <code>GzipRequest</code>, Error Wrapping &amp; Webhook HMAC Routes</h2>
+<p>Combining a custom <code>Request</code> subclass with a custom <code>APIRoute</code> unlocks clean stream transformations and cryptographic pre-validation without polluting endpoint signatures.</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/03_routing_and_models/custom_request_and_route/gzip_and_hmac_route_pipeline.png" alt="custom_request_and_route_2" />
+  <figcaption class="drawlib-caption">Runtime Sequence Inside Custom APIRoute: Bounded GzipRequest Decompression, Constant-Time HMAC-SHA256 & 422 Error Enrichment</figcaption>
+</figure>
+<h3>Bounded <code>GzipRequest</code> &amp; <code>GzipRoute</code> Decompression</h3>
+<p>Starlette's <code>Request.json()</code> calls <code>await self.body()</code> and memoizes the resulting bytes in memory for the duration of the request. Overriding <code>async def body(self) -&gt; bytes</code> on <code>GzipRequest</code>—and reading through <code>gzip.GzipFile.read(MAX_DECOMPRESSED_BYTES + 1)</code> rather than unbounded <code>gzip.decompress()</code>—transparently feeds decompressed UTF-8 JSON to <code>original_route_handler</code> while neutralizing zip-bomb denial-of-service payloads with <code>413 Content Too Large</code>:</p>
+<pre><code class="language-python"><span class="kn">import</span><span class="w"> </span><span class="nn">gzip</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Coroutine</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">Request</span><span class="p">,</span> <span class="n">Response</span><span class="p">,</span> <span class="n">status</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.routing</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRoute</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span>
+
+<span class="n">MAX_DECOMPRESSED_BYTES</span> <span class="o">=</span> <span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span>  <span class="c1"># 1 MiB decompression ceiling against zip bombs</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">GzipRequest</span><span class="p">(</span><span class="n">Request</span><span class="p">):</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">body</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"_body"</span><span class="p">):</span>
+            <span class="n">raw_body</span> <span class="o">=</span> <span class="k">await</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">body</span><span class="p">()</span>
+            <span class="n">encodings</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">token</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">header</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">getlist</span><span class="p">(</span><span class="s2">"Content-Encoding"</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">header</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">","</span><span class="p">)</span>
+            <span class="p">]</span>
+            <span class="k">if</span> <span class="s2">"gzip"</span> <span class="ow">in</span> <span class="n">encodings</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">with</span> <span class="n">gzip</span><span class="o">.</span><span class="n">GzipFile</span><span class="p">(</span><span class="n">fileobj</span><span class="o">=</span><span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">raw_body</span><span class="p">))</span> <span class="k">as</span> <span class="n">gz_stream</span><span class="p">:</span>
+                        <span class="n">decompressed</span> <span class="o">=</span> <span class="n">gz_stream</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">MAX_DECOMPRESSED_BYTES</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">EOFError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+                        <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+                        <span class="n">detail</span><span class="o">=</span><span class="s2">"Malformed gzip request stream"</span><span class="p">,</span>
+                    <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">decompressed</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">MAX_DECOMPRESSED_BYTES</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+                        <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_413_CONTENT_TOO_LARGE</span><span class="p">,</span>
+                        <span class="n">detail</span><span class="o">=</span><span class="s2">"Decompressed payload exceeds 1 MiB limit"</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="n">raw_body</span> <span class="o">=</span> <span class="n">decompressed</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_body</span> <span class="o">=</span> <span class="n">raw_body</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_body</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">GzipRoute</span><span class="p">(</span><span class="n">APIRoute</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_route_handler</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Request</span><span class="p">],</span> <span class="n">Coroutine</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Response</span><span class="p">]]:</span>
+        <span class="n">original_route_handler</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_route_handler</span><span class="p">()</span>
+
+        <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">custom_route_handler</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Response</span><span class="p">:</span>
+            <span class="n">gzip_request</span> <span class="o">=</span> <span class="n">GzipRequest</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">scope</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">receive</span><span class="p">)</span>
+            <span class="k">return</span> <span class="k">await</span> <span class="n">original_route_handler</span><span class="p">(</span><span class="n">gzip_request</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">custom_route_handler</span>
+
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">"Telemetry Ingest API"</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s2">"1.0.0"</span><span class="p">)</span>
+<span class="n">ingest_router</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">"/ingest"</span><span class="p">,</span> <span class="n">route_class</span><span class="o">=</span><span class="n">GzipRoute</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MetricBatch</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">service</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">samples</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
+
+
+<span class="nd">@ingest_router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/metrics"</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">ingest_metrics</span><span class="p">(</span><span class="n">batch</span><span class="p">:</span> <span class="n">MetricBatch</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"service"</span><span class="p">:</span> <span class="n">batch</span><span class="o">.</span><span class="n">service</span><span class="p">,</span>
+        <span class="s2">"count"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">batch</span><span class="o">.</span><span class="n">samples</span><span class="p">),</span>
+        <span class="s2">"sum"</span><span class="p">:</span> <span class="nb">sum</span><span class="p">(</span><span class="n">batch</span><span class="o">.</span><span class="n">samples</span><span class="p">),</span>
+    <span class="p">}</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/healthz"</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">healthz</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"status"</span><span class="p">:</span> <span class="s2">"ok"</span><span class="p">}</span>
+
+
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">ingest_router</span><span class="p">)</span>
+</code></pre>
+<h3>Latency Timing, Structured <code>422</code> Wrapping &amp; HMAC-SHA256 Verification</h3>
+<p>Webhook receivers must verify <code>X-Hub-Signature-256</code> against the <strong>exact raw request bytes</strong> using constant-time <code>hmac.compare_digest()</code> <em>before</em> JSON deserialization—so forged requests are rejected with <code>401 Unauthorized</code> without spending CPU on schema parsing or leaking validation errors. Wrapping <code>await original_route_handler(request)</code> in the same <code>APIRoute</code> subclass also lets you attach <code>X-Response-Time-Ms</code> latency headers and enrich legitimate callers' <code>422</code> validation failures with <code>self.operation_id</code> and a bounded payload preview:</p>
+<pre><code class="language-python"><span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">hmac</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">secrets</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Coroutine</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">Request</span><span class="p">,</span> <span class="n">Response</span><span class="p">,</span> <span class="n">status</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">RequestValidationError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.responses</span><span class="w"> </span><span class="kn">import</span> <span class="n">JSONResponse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.routing</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRoute</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">load_webhook_secret</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+    <span class="n">configured</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"WEBHOOK_HMAC_SECRET"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">configured</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">configured</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"WEBHOOK_HMAC_SECRET unset; using ephemeral instance-isolated key"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">secrets</span><span class="o">.</span><span class="n">token_bytes</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span>
+
+
+<span class="n">WEBHOOK_SECRET</span><span class="p">:</span> <span class="nb">bytes</span> <span class="o">=</span> <span class="n">load_webhook_secret</span><span class="p">()</span>
+<span class="n">MAX_PREVIEW_CHARS</span> <span class="o">=</span> <span class="mi">256</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">HmacTimedRoute</span><span class="p">(</span><span class="n">APIRoute</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_route_handler</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Request</span><span class="p">],</span> <span class="n">Coroutine</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Response</span><span class="p">]]:</span>
+        <span class="n">original_route_handler</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_route_handler</span><span class="p">()</span>
+        <span class="n">operation_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">operation_id</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+
+        <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">custom_route_handler</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Response</span><span class="p">:</span>
+            <span class="n">started</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+
+            <span class="c1"># 1. Verify HMAC-SHA256 over raw bytes BEFORE Pydantic parses JSON</span>
+            <span class="n">raw_body</span> <span class="o">=</span> <span class="k">await</span> <span class="n">request</span><span class="o">.</span><span class="n">body</span><span class="p">()</span>
+            <span class="n">provided_sig</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"X-Hub-Signature-256"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+            <span class="n">expected_sig</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">"sha256="</span>
+                <span class="o">+</span> <span class="n">hmac</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">WEBHOOK_SECRET</span><span class="p">,</span> <span class="n">raw_body</span><span class="p">,</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">)</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">hmac</span><span class="o">.</span><span class="n">compare_digest</span><span class="p">(</span><span class="n">expected_sig</span><span class="p">,</span> <span class="n">provided_sig</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+                    <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_401_UNAUTHORIZED</span><span class="p">,</span>
+                    <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid or missing X-Hub-Signature-256 header"</span><span class="p">,</span>
+                <span class="p">)</span>
+
+            <span class="c1"># 2. Execute inner FastAPI handler &amp; catch RequestValidationError</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="n">original_route_handler</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">RequestValidationError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                <span class="n">elapsed_ms</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">started</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1000.0</span>
+                <span class="n">preview</span> <span class="o">=</span> <span class="n">raw_body</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">"replace"</span><span class="p">)[:</span><span class="n">MAX_PREVIEW_CHARS</span><span class="p">]</span>
+                <span class="k">return</span> <span class="n">JSONResponse</span><span class="p">(</span>
+                    <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_422_UNPROCESSABLE_CONTENT</span><span class="p">,</span>
+                    <span class="n">content</span><span class="o">=</span><span class="p">{</span>
+                        <span class="s2">"operation_id"</span><span class="p">:</span> <span class="n">operation_id</span><span class="p">,</span>
+                        <span class="s2">"detail"</span><span class="p">:</span> <span class="n">exc</span><span class="o">.</span><span class="n">errors</span><span class="p">(),</span>
+                        <span class="s2">"raw_body_preview"</span><span class="p">:</span> <span class="n">preview</span><span class="p">,</span>
+                    <span class="p">},</span>
+                    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">"X-Response-Time-Ms"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">elapsed_ms</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">"</span><span class="p">},</span>
+                <span class="p">)</span>
+
+            <span class="n">elapsed_ms</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">started</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1000.0</span>
+            <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">"X-Response-Time-Ms"</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">elapsed_ms</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">"</span>
+            <span class="k">return</span> <span class="n">response</span>
+
+        <span class="k">return</span> <span class="n">custom_route_handler</span>
+
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">"Signed Webhook Receiver"</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s2">"1.0.0"</span><span class="p">)</span>
+<span class="n">webhook_router</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">"/webhooks"</span><span class="p">,</span> <span class="n">route_class</span><span class="o">=</span><span class="n">HmacTimedRoute</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">PaymentDeliveredEvent</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">event_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">invoice_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">amount_cents</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">gt</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+
+<span class="nd">@webhook_router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/payments"</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">receive_payment_webhook</span><span class="p">(</span>
+    <span class="n">event</span><span class="p">:</span> <span class="n">PaymentDeliveredEvent</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"accepted"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">"event_id"</span><span class="p">:</span> <span class="n">event</span><span class="o">.</span><span class="n">event_id</span><span class="p">}</span>
+
+
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">webhook_router</span><span class="p">)</span>
+</code></pre>
+<blockquote>
+<p>[!TIP]
+Because <code>await request.body()</code> caches the raw payload bytes in memory on the <code>Request</code> instance, calling <code>await request.body()</code> inside <code>HmacTimedRoute</code> does <strong>not</strong> consume the ASGI stream away from <code>original_route_handler(request)</code>—FastAPI's built-in route handler reuses the cached bytes immediately. Avoid eager <code>request.body()</code> reads only on multi-megabyte multipart file uploads where <code>request.stream()</code> should stream chunks directly to <code>SpooledTemporaryFile</code>.</p>
+</blockquote>
+<p>With Chapter 3's routing and model layer complete—spanning <a href="parameters_and_validation.html">Path, Query, Header, Cookie &amp; Body</a>, <a href="responses_and_openapi.html">Response Serialization &amp; OpenAPI 3.1</a>, and <a href="advanced_types_and_models.html">Parameter Models, Extra Types &amp; Examples</a>—continue to Chapter 4's <a href="../04_dependencies_and_security/dependency_injection.html">Dependency Graph, Caching &amp; Scopes</a>, <a href="../05_async_and_realtime/concurrency_and_middleware.html">ASGI Middleware &amp; Threadpool</a> for transport-level middleware, <a href="../06_observability_and_testing/telemetry_and_errors.html">Native OpenTelemetry &amp; Exceptions</a> for app-wide exception handlers, and <a href="../07_frontend_and_openapi_ext/webhooks_callbacks_sdks.html">Webhooks, Callbacks, SDKs &amp; Docs UI</a> for documenting <code>@app.webhooks</code> schemas.</p>
+
+            </main>
+            <footer class="footer">
+                
+                FastAPI® is a registered trademark of Sebastián Ramírez (<a href="https://github.com/tiangolo" target="_blank" rel="noopener noreferrer">@tiangolo</a>). Unofficial guide — not affiliated with or endorsed by the official FastAPI project (<a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">fastapi.tiangolo.com</a>).
+                
+            </footer>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Theme toggle
+            const themeBtn = document.getElementById('theme-toggle');
+            if (themeBtn) {
+                themeBtn.addEventListener('click', function() {
+                    const current = document.documentElement.getAttribute('data-theme');
+                    const next = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    localStorage.setItem('drawlib-theme', next);
+                });
+            }
+
+            // Language dropdown outside-click & Escape close
+            const langDropdowns = document.querySelectorAll('.lang-dropdown');
+            if (langDropdowns.length > 0) {
+                document.addEventListener('click', function(e) {
+                    langDropdowns.forEach(function(dd) {
+                        if (dd.hasAttribute('open') && !dd.contains(e.target)) {
+                            dd.removeAttribute('open');
+                        }
+                    });
+                });
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        langDropdowns.forEach(function(dd) {
+                            dd.removeAttribute('open');
+                        });
+                    }
+                });
+            }
+
+            // Mobile menu toggle
+            const menuBtn = document.getElementById('menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            if (menuBtn && sidebar) {
+                function setMenuOpen(open) {
+                    sidebar.classList.toggle('is-open', open);
+                    menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    document.body.classList.toggle('menu-open', open);
+                    if (open) {
+                        const menu = sidebar.querySelector('.sidebar-menu');
+                        if (menu) {
+                            menu.scrollTop = 0;
+                        }
+                    }
+                }
+
+                menuBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const willOpen = !sidebar.classList.contains('is-open');
+                    setMenuOpen(willOpen);
+                });
+
+                // Close menu when clicking outside sidebar
+                document.addEventListener('click', function(e) {
+                    if (sidebar.classList.contains('is-open') && !sidebar.contains(e.target)) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                // Close menu when a navigation link is clicked
+                const navLinks = sidebar.querySelectorAll('.nav-item a');
+                navLinks.forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        setMenuOpen(false);
+                    });
+                });
+
+                // Close on Escape key
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                // Reset menu state when resized above mobile breakpoint
+                window.addEventListener('resize', function() {
+                    if (window.innerWidth > 768 && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

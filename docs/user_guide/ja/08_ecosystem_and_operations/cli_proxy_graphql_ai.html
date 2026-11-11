@@ -1,0 +1,677 @@
+<!--
+ Copyright (c) 2026 Yuichi Ito (yuichi@yuichi.com)
+
+ This software is licensed under the Apache License, Version 2.0.
+ For more information, please visit: https://github.com/yuichi110/drawlib
+
+ This software is provided "as is", without warranty of any kind,
+ express or implied, including but not limited to the warranties of
+ merchantability, fitness for a particular purpose and noninfringement.
+-->
+<!DOCTYPE html>
+<html lang="ja" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastAPI CLI・リバースプロキシ・GraphQL・AI 駆動開発 — FastAPI User Guide (Unofficial)</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-S9N5BZ1VRC');
+    </script>
+    <script>
+        (function() {
+            const saved = localStorage.getItem('drawlib-theme');
+            if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    
+    <link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/08_ecosystem_and_operations/cli_proxy_graphql_ai.html">
+    
+    <link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/08_ecosystem_and_operations/cli_proxy_graphql_ai.html">
+    
+    <link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/08_ecosystem_and_operations/cli_proxy_graphql_ai.html">
+    
+    
+    
+    <meta name="description" content="FastAPI v0.162.2 は、開発から本番までのサーバー運用（fastapi dev / fastapi run と ASGI --root-path プロキシ連携）、Depends() を共有する Strawberry GraphQL サブルーター、そしてパッケージ同梱の AI…">
+    <link rel="canonical" href="https://fastapi.drawlib.com/user_guide/ja/08_ecosystem_and_operations/cli_proxy_graphql_ai.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="FastAPI ユーザーガイド">
+    <meta property="og:title" content="FastAPI CLI・リバースプロキシ・GraphQL・AI 駆動開発 — FastAPI ユーザーガイド">
+    <meta property="og:description" content="FastAPI v0.162.2 は、開発から本番までのサーバー運用（fastapi dev / fastapi run と ASGI --root-path プロキシ連携）、Depends() を共有する Strawberry GraphQL サブルーター、そしてパッケージ同梱の AI…">
+    <meta property="og:url" content="https://fastapi.drawlib.com/user_guide/ja/08_ecosystem_and_operations/cli_proxy_graphql_ai.html">
+    <meta property="og:image" content="https://fastapi.drawlib.com/user_guide/_assets/ogp.png">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:locale:alternate" content="en_US">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="FastAPI CLI・リバースプロキシ・GraphQL・AI 駆動開発 — FastAPI ユーザーガイド">
+    <meta name="twitter:description" content="FastAPI v0.162.2 は、開発から本番までのサーバー運用（fastapi dev / fastapi run と ASGI --root-path プロキシ連携）、Depends() を共有する Strawberry GraphQL サブルーター、そしてパッケージ同梱の AI…">
+    <meta name="twitter:image" content="https://fastapi.drawlib.com/user_guide/_assets/ogp.png">
+    
+    
+    <link rel="icon" type="image/png" href="../../_assets/favicon.png">
+    
+    
+    <link rel="stylesheet" href="../style.css">
+    
+    
+</head>
+<body>
+    
+    
+    
+    <div class="demo-banner" role="region" aria-label="ポータルナビゲーション">
+        <div class="demo-banner-inner">
+            <span class="demo-banner-badge">DRAWLIB SHOWCASE</span>
+            
+            <span class="demo-banner-text">
+                <a href="https://www.drawlib.com/" target="_blank" rel="noopener noreferrer">Drawlib</a> で構築された <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a>（v0.162.2）非公式ドキュメント
+            </span>
+            <span class="demo-banner-links">
+                <a href="../../../index.html">All Portals</a>
+                <span class="demo-banner-sep">·</span>
+                <strong style="color:#ffffff;">User Guide</strong>
+                <span class="demo-banner-sep">·</span>
+                <a href="../../../api/ja/index.html">API Reference</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="../../../architecture/ja/index.html">Architecture</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="../../../pni501/index.html">PNI501 Audit</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official Docs ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://www.drawlib.com/" target="_blank" rel="noopener noreferrer">Drawlib ↗</a>
+            </span>
+            
+        </div>
+    </div>
+    
+    <div class="doc-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI ユーザーガイド">
+                    
+                    FastAPI ユーザーガイド
+                    
+                </a>
+                <div class="sidebar-header-actions">
+                    <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">
+                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                    <button type="button" id="menu-toggle" class="menu-toggle-btn" aria-label="Toggle navigation" aria-expanded="false">
+                        <svg class="icon-hamburger" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        <svg class="icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="sidebar-menu">
+                
+                    
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../index.html" >ガイド概要</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">1. イントロ &amp; クイックスタート</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../01_getting_started/overview.html" >FastAPI の設計思想と基本概念</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../01_getting_started/quickstart.html" >クイックスタートと自動生成 Docs</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">2. 10万行規模の設計ベストプラクティス</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../02_enterprise_architecture/modular_design.html" >境界づけられたコンテキストと階層化</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../02_enterprise_architecture/di_lifespan_testing.html" >大規模 DI・Lifespan 管理・テスト戦略</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">3. ルーティング・入力検証・スキーマ</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../03_routing_and_models/parameters_and_validation.html" >Path・Query・Header・Cookie・Body</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../03_routing_and_models/responses_and_openapi.html" >レスポンス直列化と OpenAPI 3.1</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../03_routing_and_models/advanced_types_and_models.html" >パラメータモデル合成・特殊型・例示</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../03_routing_and_models/custom_request_and_route.html" >カスタム Request と APIRoute 拡張</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">4. 依存性注入（DI）とセキュリティ</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../04_dependencies_and_security/dependency_injection.html" >依存グラフ・キャッシュ・yield スコープ</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../04_dependencies_and_security/security_and_auth.html" >認証・OAuth2 スコープ認可・抽出器</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../04_dependencies_and_security/jwt_and_websocket_security.html" >JWT (PyJWT + Argon2) と WS 認可</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">5. 非同期並行・ミドルウェア・ストリーミング</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../05_async_and_realtime/concurrency_and_middleware.html" >ASGI ミドルウェアとスレッドプール制御</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../05_async_and_realtime/sse_websockets_streaming.html" >ネイティブ SSE・JSONL・WebSocket</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">6. 可観測性・例外設計・実践テスト</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../06_observability_and_testing/telemetry_and_errors.html" >ネイティブ OpenTelemetry と例外処理</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../06_observability_and_testing/testing_and_deployment.html" >実践テスト手法と本番 ASGI 運用</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">7. フロントエンド・マウント・OpenAPI 拡張</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../07_frontend_and_openapi_ext/frontend_templates_mounts.html" >SPA frontend()・静的配信・マウント統合</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../07_frontend_and_openapi_ext/webhooks_callbacks_sdks.html" >Webhooks・Callbacks・SDK 生成・Docs UI</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">8. 設定管理・SQL DB・CLI・エコシステム</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="settings_and_databases.html" >pydantic-settings 設定管理と SQL DB</a>
+                            </li>
+                            
+                            <li class="nav-item active">
+                                <a href="cli_proxy_graphql_ai.html" >FastAPI CLI・プロキシ・GraphQL・AI 連携</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">関連ガイド &amp; 公式リンク</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/" target="_blank" rel="noopener noreferrer">ポータル一覧（ショーケース）<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/api/" target="_blank" rel="noopener noreferrer">FastAPI API リファレンス<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/architecture/" target="_blank" rel="noopener noreferrer">FastAPI 内部アーキテクチャ解説<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/pni501/" target="_blank" rel="noopener noreferrer">PNI501 診断レポート<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI 公式ドキュメント<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub リポジトリ<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                        </ul>
+                    
+                
+            </div>
+        </aside>
+        <div class="content-wrapper">
+            <header class="top-bar">
+                <div class="breadcrumbs">
+                    <span class="crumb">Docs</span>
+                    <span class="crumb-separator">&raquo;</span>
+                    <span class="crumb active">FastAPI CLI・リバースプロキシ・GraphQL・AI 駆動開発</span>
+                </div>
+                
+                <div class="lang-switcher">
+                    <details class="lang-dropdown">
+                        <summary class="lang-dropdown-btn" aria-label="Select language">
+                            <svg class="lang-globe-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            <span class="lang-current-label">日本語</span>
+                            <svg class="lang-caret-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </summary>
+                        <div class="lang-dropdown-menu" role="menu">
+                            
+                            <a href="../../en/08_ecosystem_and_operations/cli_proxy_graphql_ai.html" class="lang-option" lang="en" hreflang="en" >
+                                <span>English</span>
+                                
+                            </a>
+                            
+                            <a href="cli_proxy_graphql_ai.html" class="lang-option active" lang="ja" hreflang="ja" aria-current="page">
+                                <span>日本語</span>
+                                
+                                <svg class="lang-check-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                
+                            </a>
+                            
+                        </div>
+                    </details>
+                </div>
+                
+            </header>
+            <main class="main-content">
+                <h1>FastAPI CLI・リバースプロキシ・GraphQL・AI 駆動開発</h1>
+<p>FastAPI <code>v0.162.2</code> は、開発から本番までのサーバー運用（<code>fastapi dev</code> / <code>fastapi run</code> と ASGI <code>--root-path</code> プロキシ連携）、<code>Depends()</code> を共有する <code>Strawberry</code> GraphQL サブルーター、そしてパッケージ同梱の AI エージェントスキル（<code>uvx library-skills</code>・<code>PEP 727</code> <code>Doc()</code>・SSE/JSONL ストリーミング）を一貫した設計で統合します。</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/08_ecosystem_and_operations/cli_proxy_graphql_ai/cli_and_reverse_proxy_topology.png" alt="cli_proxy_graphql_ai_1" />
+  <figcaption class="drawlib-caption">FastAPI CLI 実行モード（fastapi dev vs fastapi run）とリバースプロキシのパスプレフィックス（--root-path）運用トポロジ</figcaption>
+</figure>
+<h2>1. FastAPI CLI・リバースプロキシ（<code>--root-path</code>）・エッジミドルウェア</h2>
+<p><code>pip install &quot;fastapi[standard]&quot;</code> を導入すると <code>fastapi</code> コマンド（<code>fastapi.cli:main</code> から <code>fastapi-cli</code> へ委譲）が有効になり、独自シェルスクリプトに頼ることなくローカル開発・本番 ASGI 起動・マネージドクラウドへのデプロイ（<code>uv run fastapi deploy</code>）を標準化できます。</p>
+<h3><code>[tool.fastapi]</code> の宣言と <code>fastapi dev</code> vs <code>fastapi run</code> の使い分け</h3>
+<p>コマンド実行のたびにモジュールパスを指定する代わりに、<code>pyproject.toml</code> にアプリケーションのエントリポイントを 1 度だけ宣言します。</p>
+<pre><code class="language-toml"><span class="k">[tool.fastapi]</span>
+<span class="n">entrypoint</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"my_app.main:app"</span>
+</code></pre>
+<p><code>entrypoint</code> を定義しておけば、<code>fastapi dev</code> と <code>fastapi run</code> がそれぞれの環境に最適化されたセキュリティ設定と並行実行オプションを自動適用します。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">機能・挙動</th>
+<th style="text-align:left"><code>fastapi dev</code>（ローカル開発モード）</th>
+<th style="text-align:left"><code>fastapi run</code>（本番ランタイム）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>既定バインドアドレス</strong></td>
+<td style="text-align:left"><code>127.0.0.1:8000</code>（安全なローカルループバック限定）</td>
+<td style="text-align:left"><code>0.0.0.0:8000</code>（コンテナ待受用・プロキシ背後で保護）</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>自動リロード監視</strong></td>
+<td style="text-align:left"><strong>有効</strong>（ファイル保存時に即座にワーカーを再起動）</td>
+<td style="text-align:left"><strong>無効</strong>（ファイル監視オーバーヘッドなし）</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>FASTAPI_ENV</code> 環境変数</strong></td>
+<td style="text-align:left">未設定時に <code>FASTAPI_ENV=&quot;development&quot;</code> を自動設定</td>
+<td style="text-align:left">設定なし（<code>app.frontend(check_dir=&quot;auto&quot;)</code> がビルド成果物を検証）</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>スケール・プロキシ引数</strong></td>
+<td style="text-align:left">単一リロードプロセス</td>
+<td style="text-align:left"><code>--workers N</code>, <code>--proxy-headers</code>, <code>--root-path /api/v1</code></td>
+</tr>
+</tbody>
+</table>
+<h3>リバースプロキシ配下の <code>--root-path</code> と <code>v0.146.0</code> での <code>FastAPI(root_path=...)</code> 非推奨化</h3>
+<p>マイクロサービスのゲートウェイ構成（Nginx・Traefik・Envoy・Cloud Load Balancing など）では、外部公開 URL <code>https://api.example.com/api/v1/catalog</code> の <strong><code>/api/v1</code> プレフィックスをプロキシ側で除去</strong> し、内部コンテナへ <code>/catalog</code> として転送する構成が一般的です。このときアプリ側が外部プレフィックスを認識していないと、Swagger UI（<code>/docs</code>）が <code>/api/v1/openapi.json</code> ではなくルート直下の <code>/openapi.json</code> を取得しようとして <code>404</code> になります。</p>
+<p><strong>FastAPI <code>v0.146.0</code> 以降</strong>（<code>v0.162.2</code> では <code>FastAPIDeprecationWarning</code> を送出）、Python コード内で <code>FastAPI(root_path=&quot;/api/v1&quot;)</code> を渡す方式は <strong>非推奨（Deprecated）</strong> となりました。URL プレフィックスはアプリケーションコードではなくデプロイトポロジの責務であるため、CLI から ASGI サーバー側へ指定します。</p>
+<pre><code class="language-bash">fastapi<span class="w"> </span>run<span class="w"> </span>--proxy-headers<span class="w"> </span>--root-path<span class="w"> </span>/api/v1
+</code></pre>
+<p><code>FastAPI.setup()</code> 内部では、<code>/openapi.json</code>・<code>/docs</code>・<code>/redoc</code> への各リクエスト時に <code>req.scope.get(&quot;root_path&quot;, &quot;&quot;)</code> を動的に参照します。</p>
+<ol>
+<li><strong>キャッシュ汚染の完全防止</strong>: <code>app.openapi()</code> はベースとなる OpenAPI <code>3.1.0</code> スキーマ辞書を 1 度だけ生成してキャッシュし、<code>/openapi.json</code> ルートはリクエストごとに辞書を浅くコピーした上で <code>servers</code> の先頭に <code>{&quot;url&quot;: &quot;/api/v1&quot;}</code> を追加します（<code>root_path_in_servers=False</code> で無効化可能）。これにより特定の <code>root_path</code> が他リクエストのキャッシュを書き換えることはありません。</li>
+<li><strong>Docs UI パスの自動解決</strong>: Swagger UI（<code>/docs</code>）、OAuth2 リダイレクト（<code>/docs/oauth2-redirect</code>）、ReDoc（<code>/redoc</code>）のすべてが <code>openapi_url</code> に自動で <code>root_path</code>（<code>/api/v1/openapi.json</code>）を付与します。</li>
+</ol>
+<h3>標準搭載のエッジ防御・圧縮ミドルウェア</h3>
+<p>独自の <a href="../05_async_and_realtime/concurrency_and_middleware.html">純粋 ASGI ミドルウェア</a> に加え、<code>fastapi.middleware</code> は本番エッジで頻用される標準ミドルウェアを提供しています。</p>
+<ul>
+<li><strong><code>TrustedHostMiddleware(allowed_hosts=[...])</code></strong>: 未許可の <code>Host</code> ヘッダーを <code>400 Bad Request</code> で即座に拒否し、HTTP Host ヘッダーインジェクション攻撃を防御します。</li>
+<li><strong><code>HTTPSRedirectMiddleware</code></strong>: 上流ロードバランサーで TLS リダイレクトを行わない構成において、<code>http://</code> から <code>https://</code>（および <code>ws://</code> から <code>wss://</code>）への <code>307 Temporary Redirect</code> を強制します。</li>
+<li><strong><code>GZipMiddleware(minimum_size=1000, compresslevel=5)</code></strong>: クライアントが <code>Accept-Encoding: gzip</code> を送信し、かつレスポンスサイズが <code>minimum_size</code> バイト以上の場合にペイロードを自動圧縮します。</li>
+</ul>
+<pre><code class="language-python"><span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">Request</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastAPIDeprecationWarning</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.middleware.gzip</span><span class="w"> </span><span class="kn">import</span> <span class="n">GZipMiddleware</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.middleware.httpsredirect</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTTPSRedirectMiddleware</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.middleware.trustedhost</span><span class="w"> </span><span class="kn">import</span> <span class="n">TrustedHostMiddleware</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.testclient</span><span class="w"> </span><span class="kn">import</span> <span class="n">TestClient</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">build_edge_app</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">enforce_https</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FastAPI</span><span class="p">:</span>
+    <span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">"Edge Catalog API"</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s2">"1.0.0"</span><span class="p">)</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">add_middleware</span><span class="p">(</span>
+        <span class="n">TrustedHostMiddleware</span><span class="p">,</span>
+        <span class="n">allowed_hosts</span><span class="o">=</span><span class="p">[</span><span class="s2">"api.example.com"</span><span class="p">,</span> <span class="s2">"testserver"</span><span class="p">],</span>
+    <span class="p">)</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">add_middleware</span><span class="p">(</span><span class="n">GZipMiddleware</span><span class="p">,</span> <span class="n">minimum_size</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">compresslevel</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">enforce_https</span><span class="p">:</span>
+        <span class="n">app</span><span class="o">.</span><span class="n">add_middleware</span><span class="p">(</span><span class="n">HTTPSRedirectMiddleware</span><span class="p">)</span>
+
+    <span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/catalog"</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">read_catalog</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"root_path"</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">scope</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"root_path"</span><span class="p">,</span> <span class="s2">""</span><span class="p">),</span>
+            <span class="s2">"items"</span><span class="p">:</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"sku-</span><span class="si">{</span><span class="n">idx</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">-enterprise-edition"</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">40</span><span class="p">)],</span>
+        <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">app</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_root_path_openapi_servers_and_edge_middlewares</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">app</span> <span class="o">=</span> <span class="n">build_edge_app</span><span class="p">()</span>
+
+    <span class="c1"># Simulate `fastapi run --root-path /api/v1` via ASGI scope root_path</span>
+    <span class="k">with</span> <span class="n">TestClient</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">root_path</span><span class="o">=</span><span class="s2">"/api/v1"</span><span class="p">)</span> <span class="k">as</span> <span class="n">prefixed_client</span><span class="p">:</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">prefixed_client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/catalog"</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">"Accept-Encoding"</span><span class="p">:</span> <span class="s2">"gzip"</span><span class="p">})</span>
+        <span class="k">assert</span> <span class="n">res</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span>
+        <span class="k">assert</span> <span class="n">res</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"content-encoding"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"gzip"</span>
+        <span class="k">assert</span> <span class="n">res</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">"root_path"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"/api/v1"</span>
+
+        <span class="n">schema</span> <span class="o">=</span> <span class="n">prefixed_client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/openapi.json"</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">schema</span><span class="p">[</span><span class="s2">"servers"</span><span class="p">]</span> <span class="o">==</span> <span class="p">[{</span><span class="s2">"url"</span><span class="p">:</span> <span class="s2">"/api/v1"</span><span class="p">}]</span>
+        <span class="k">assert</span> <span class="s2">"/api/v1/openapi.json"</span> <span class="ow">in</span> <span class="n">prefixed_client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/docs"</span><span class="p">)</span><span class="o">.</span><span class="n">text</span>
+
+    <span class="c1"># Unprefixed requests remain clean; spoofed Host headers return 400</span>
+    <span class="k">with</span> <span class="n">TestClient</span><span class="p">(</span><span class="n">app</span><span class="p">)</span> <span class="k">as</span> <span class="n">direct_client</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="s2">"servers"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">direct_client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/openapi.json"</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="n">bad_host</span> <span class="o">=</span> <span class="n">direct_client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/catalog"</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">"Host"</span><span class="p">:</span> <span class="s2">"evil.attacker.tld"</span><span class="p">})</span>
+        <span class="k">assert</span> <span class="n">bad_host</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">400</span>
+
+    <span class="c1"># HTTPSRedirectMiddleware redirects plain HTTP -&gt; HTTPS (307)</span>
+    <span class="n">https_app</span> <span class="o">=</span> <span class="n">build_edge_app</span><span class="p">(</span><span class="n">enforce_https</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">TestClient</span><span class="p">(</span><span class="n">https_app</span><span class="p">,</span> <span class="n">base_url</span><span class="o">=</span><span class="s2">"http://api.example.com"</span><span class="p">)</span> <span class="k">as</span> <span class="n">http_client</span><span class="p">:</span>
+        <span class="n">redir</span> <span class="o">=</span> <span class="n">http_client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/catalog"</span><span class="p">,</span> <span class="n">follow_redirects</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">redir</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">307</span>
+        <span class="k">assert</span> <span class="n">redir</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">"location"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"https://api.example.com/catalog"</span>
+
+    <span class="c1"># Passing root_path to FastAPI(...) emits FastAPIDeprecationWarning</span>
+    <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">(</span><span class="n">record</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">caught</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">"always"</span><span class="p">)</span>
+        <span class="n">FastAPI</span><span class="p">(</span><span class="n">root_path</span><span class="o">=</span><span class="s2">"/legacy"</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">any</span><span class="p">(</span><span class="nb">issubclass</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">category</span><span class="p">,</span> <span class="n">FastAPIDeprecationWarning</span><span class="p">)</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">caught</span><span class="p">)</span>
+</code></pre>
+<hr />
+<h2>2. Strawberry GraphQL 統合と AI ネイティブ開発ワークフロー</h2>
+<p>FastAPI の型アノテーション中心の設計は、<strong><code>Strawberry</code></strong> による型安全な GraphQL クエリグラフと、最新の <strong>AI コーディングエージェント / MCP ツール基盤</strong> の双方へ自然に拡張できます。</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/08_ecosystem_and_operations/cli_proxy_graphql_ai/graphql_and_ai_agent_workflow.png" alt="cli_proxy_graphql_ai_2" />
+  <figcaption class="drawlib-caption">Depends() コンテキストを共有する Strawberry GraphQLRouter と FastAPI v0.162.2 の AI エージェント開発ワークフロー</figcaption>
+</figure>
+<h3><code>Strawberry</code>（<code>GraphQLRouter</code>）のマウントと <code>Depends()</code> コンテキスト共有</h3>
+<p>深くネストした関連データを 1 往復で柔軟に取得したい画面では GraphQL が威力を発揮する一方、HTTP キャッシュ・<a href="../07_frontend_and_openapi_ext/webhooks_callbacks_sdks.html">OpenAPI からの型付き SDK 生成</a>・ファイルアップロード・明確なステータスコード制御では標準的な REST エンドポイントが優位です。別プロセスで GraphQL サーバーを立てる代わりに、<strong><code>Strawberry</code></strong>（<code>strawberry-graphql</code>）の <code>GraphQLRouter</code> を用いれば単一の FastAPI アプリ内に <code>APIRouter</code> として統合できます。</p>
+<ul>
+<li><strong>型ヒントの完全な親和性</strong>: <code>@strawberry.type</code> は標準の <code>dataclasses</code> や Pydantic モデルと同じ Python 型アノテーションでスキーマを定義します。</li>
+<li><strong><code>context_getter</code> による DI 統合</strong>: <code>strawberry.fastapi.BaseContext</code> を継承し <code>context_getter</code> 関数を渡すことで、REST 側と <strong>完全に同一の FastAPI <code>Depends()</code> 依存関係</strong>（OAuth2 認証ユーザー、<a href="settings_and_databases.html">SQLModel <code>SessionDep</code></a>、<code>SettingsDep</code>）を <code>info.context</code> へ注入でき、<code>pytest</code> の <code>app.dependency_overrides</code> も REST と <code>/graphql</code> の双方へ一括適用されます。</li>
+</ul>
+<h3>FastAPI <code>v0.162.2</code> における AI 駆動開発（<code>library-skills</code>・<code>Doc()</code>・MCP SSE）</h3>
+<p>事前学習済み LLM は古い学習コーパスに引きずられ、非推奨となった <code>ORJSONResponse</code>・<code>RootModel</code>・素の <code>Depends()</code> デフォルト引数・旧式の <code>@app.on_event(&quot;startup&quot;)</code> を出力しがちです。これを防ぐため、FastAPI <code>v0.162.2</code> は <strong>バージョン完全一致の公式 AI エージェントスキル</strong> を <code>fastapi</code> パッケージ内部（<code>fastapi/.agents/skills/fastapi/SKILL.md</code> と <code>references/</code>）に直接同梱しています。</p>
+<ol>
+<li><strong><code>uvx library-skills</code> によるスキル自動同期</strong>: プロジェクト内で <code>uvx library-skills</code> を実行すると、インストール済みの <code>fastapi</code> バージョンに同梱された <code>.agents/skills/fastapi/</code> ルールがワークスペースへ展開され、コーディングエージェントが <code>Annotated[..., Depends()]</code>・<code>app.frontend()</code>・ネイティブ OpenTelemetry・<code>EventSourceResponse</code>・<code>SQLModel</code>・<code>Asyncer</code>（<code>asyncify</code> / <code>syncify</code>）の最新規約を正確に遵守します。</li>
+<li><strong>機械可読な契約情報（<code>PEP 727 Doc()</code>・OpenAPI <code>3.1.0</code>・<code>llms.txt</code>）</strong>: <code>Annotated[str, Doc(&quot;...&quot;)]</code> で記述した引数ドキュメントは <code>/openapi.json</code>（OpenAPI <code>3.1.0</code> JSON Schema）へ出力され、エージェントのツール定義や SDK 生成器、<code>llms.txt</code> ドキュメント索引がハルシネーションなく正確なパラメータ型と制約を参照できます。</li>
+<li><strong>AI &amp; Model Context Protocol（MCP）ストリーミング</strong>: FastAPI ネイティブの <a href="../05_async_and_realtime/sse_websockets_streaming.html">SSE（<code>EventSourceResponse</code>）および JSON Lines</a> は <strong><code>GET</code> だけでなく <code>POST</code> メソッドにも標準対応</strong> しており、LLM トークン配信や MCP の HTTP+SSE トランスポートを <code>yield</code> のみで簡潔に実装できます。</li>
+</ol>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncIterable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">annotated_doc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Doc</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">FastAPI</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.sse</span><span class="w"> </span><span class="kn">import</span> <span class="n">EventSourceResponse</span><span class="p">,</span> <span class="n">ServerSentEvent</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.testclient</span><span class="w"> </span><span class="kn">import</span> <span class="n">TestClient</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">strawberry</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">strawberry.fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseContext</span><span class="p">,</span> <span class="n">GraphQLRouter</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_current_viewer</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="s2">"alice@corp.internal"</span>
+
+
+<span class="n">ViewerDep</span> <span class="o">=</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_viewer</span><span class="p">)]</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">GraphQLContext</span><span class="p">(</span><span class="n">BaseContext</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">viewer</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">viewer</span> <span class="o">=</span> <span class="n">viewer</span>
+
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_graphql_context</span><span class="p">(</span><span class="n">viewer</span><span class="p">:</span> <span class="n">ViewerDep</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GraphQLContext</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">GraphQLContext</span><span class="p">(</span><span class="n">viewer</span><span class="o">=</span><span class="n">viewer</span><span class="p">)</span>
+
+
+<span class="nd">@strawberry</span><span class="o">.</span><span class="n">type</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">BookNode</span><span class="p">:</span>
+    <span class="n">title</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">author</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">requested_by</span><span class="p">:</span> <span class="nb">str</span>
+
+
+<span class="nd">@strawberry</span><span class="o">.</span><span class="n">type</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">QueryRoot</span><span class="p">:</span>
+    <span class="nd">@strawberry</span><span class="o">.</span><span class="n">field</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">books</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">info</span><span class="p">:</span> <span class="n">strawberry</span><span class="o">.</span><span class="n">Info</span><span class="p">[</span><span class="n">GraphQLContext</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">BookNode</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">BookNode</span><span class="p">(</span>
+                <span class="n">title</span><span class="o">=</span><span class="s2">"FastAPI Architecture"</span><span class="p">,</span>
+                <span class="n">author</span><span class="o">=</span><span class="s2">"Sebastián Ramírez"</span><span class="p">,</span>
+                <span class="n">requested_by</span><span class="o">=</span><span class="n">info</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">viewer</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">]</span>
+
+
+<span class="n">graphql_schema</span> <span class="o">=</span> <span class="n">strawberry</span><span class="o">.</span><span class="n">Schema</span><span class="p">(</span><span class="n">query</span><span class="o">=</span><span class="n">QueryRoot</span><span class="p">)</span>
+<span class="n">graphql_router</span> <span class="o">=</span> <span class="n">GraphQLRouter</span><span class="p">(</span><span class="n">graphql_schema</span><span class="p">,</span> <span class="n">context_getter</span><span class="o">=</span><span class="n">get_graphql_context</span><span class="p">)</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">"Hybrid REST + GraphQL + AI Gateway"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">graphql_router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/graphql"</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">"graphql"</span><span class="p">])</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">AgentPrompt</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">prompt</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Doc</span><span class="p">(</span><span class="s2">"Natural-language instruction sent by the AI agent."</span><span class="p">)]</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/ai/stream"</span><span class="p">,</span> <span class="n">response_class</span><span class="o">=</span><span class="n">EventSourceResponse</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">stream_agent_steps</span><span class="p">(</span>
+    <span class="n">body</span><span class="p">:</span> <span class="n">AgentPrompt</span><span class="p">,</span>
+    <span class="n">viewer</span><span class="p">:</span> <span class="n">ViewerDep</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AsyncIterable</span><span class="p">[</span><span class="n">ServerSentEvent</span><span class="p">]:</span>
+    <span class="k">yield</span> <span class="n">ServerSentEvent</span><span class="p">(</span>
+        <span class="n">event</span><span class="o">=</span><span class="s2">"agent.step"</span><span class="p">,</span>
+        <span class="nb">id</span><span class="o">=</span><span class="s2">"1"</span><span class="p">,</span>
+        <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">"viewer"</span><span class="p">:</span> <span class="n">viewer</span><span class="p">,</span> <span class="s2">"accepted_prompt"</span><span class="p">:</span> <span class="n">body</span><span class="o">.</span><span class="n">prompt</span><span class="p">},</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_strawberry_graphql_di_and_ai_sse</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">dependency_overrides</span><span class="p">[</span><span class="n">get_current_viewer</span><span class="p">]</span> <span class="o">=</span> <span class="k">lambda</span><span class="p">:</span> <span class="s2">"bot@ci.local"</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">TestClient</span><span class="p">(</span><span class="n">app</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
+            <span class="n">gql_res</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+                <span class="s2">"/graphql"</span><span class="p">,</span>
+                <span class="n">json</span><span class="o">=</span><span class="p">{</span><span class="s2">"query"</span><span class="p">:</span> <span class="s2">"{ books { title requestedBy } }"</span><span class="p">},</span>
+            <span class="p">)</span>
+            <span class="k">assert</span> <span class="n">gql_res</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span>
+            <span class="k">assert</span> <span class="n">gql_res</span><span class="o">.</span><span class="n">json</span><span class="p">()</span> <span class="o">==</span> <span class="p">{</span>
+                <span class="s2">"data"</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">"books"</span><span class="p">:</span> <span class="p">[</span>
+                        <span class="p">{</span>
+                            <span class="s2">"title"</span><span class="p">:</span> <span class="s2">"FastAPI Architecture"</span><span class="p">,</span>
+                            <span class="s2">"requestedBy"</span><span class="p">:</span> <span class="s2">"bot@ci.local"</span><span class="p">,</span>
+                        <span class="p">}</span>
+                    <span class="p">]</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+
+            <span class="n">sse_res</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/ai/stream"</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="p">{</span><span class="s2">"prompt"</span><span class="p">:</span> <span class="s2">"Summarize schema"</span><span class="p">})</span>
+            <span class="k">assert</span> <span class="n">sse_res</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span>
+            <span class="k">assert</span> <span class="n">sse_res</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">"content-type"</span><span class="p">]</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"text/event-stream"</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="s2">"event: agent.step"</span> <span class="ow">in</span> <span class="n">sse_res</span><span class="o">.</span><span class="n">text</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">app</span><span class="o">.</span><span class="n">dependency_overrides</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+</code></pre>
+<p>型安全な環境変数管理と <code>SQLModel</code> のテスト設計については <a href="settings_and_databases.html">pydantic-settings 設定管理と SQL DB</a> を振り返るか、<a href="../index.html">ガイド概要と全体マップ</a> へ戻って FastAPI <code>v0.162.2</code> の全体アーキテクチャを参照してください。</p>
+
+            </main>
+            <footer class="footer">
+                
+                FastAPI® は Sebastián Ramírez（<a href="https://github.com/tiangolo" target="_blank" rel="noopener noreferrer">@tiangolo</a>）の登録商標です。本サイトは非公式ガイドであり、公式プロジェクトとは提携していません。公式ドキュメントは <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">fastapi.tiangolo.com</a> をご参照ください。
+                
+            </footer>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Theme toggle
+            const themeBtn = document.getElementById('theme-toggle');
+            if (themeBtn) {
+                themeBtn.addEventListener('click', function() {
+                    const current = document.documentElement.getAttribute('data-theme');
+                    const next = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    localStorage.setItem('drawlib-theme', next);
+                });
+            }
+
+            // Language dropdown outside-click & Escape close
+            const langDropdowns = document.querySelectorAll('.lang-dropdown');
+            if (langDropdowns.length > 0) {
+                document.addEventListener('click', function(e) {
+                    langDropdowns.forEach(function(dd) {
+                        if (dd.hasAttribute('open') && !dd.contains(e.target)) {
+                            dd.removeAttribute('open');
+                        }
+                    });
+                });
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        langDropdowns.forEach(function(dd) {
+                            dd.removeAttribute('open');
+                        });
+                    }
+                });
+            }
+
+            // Mobile menu toggle
+            const menuBtn = document.getElementById('menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            if (menuBtn && sidebar) {
+                function setMenuOpen(open) {
+                    sidebar.classList.toggle('is-open', open);
+                    menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    document.body.classList.toggle('menu-open', open);
+                    if (open) {
+                        const menu = sidebar.querySelector('.sidebar-menu');
+                        if (menu) {
+                            menu.scrollTop = 0;
+                        }
+                    }
+                }
+
+                menuBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const willOpen = !sidebar.classList.contains('is-open');
+                    setMenuOpen(willOpen);
+                });
+
+                // Close menu when clicking outside sidebar
+                document.addEventListener('click', function(e) {
+                    if (sidebar.classList.contains('is-open') && !sidebar.contains(e.target)) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                // Close menu when a navigation link is clicked
+                const navLinks = sidebar.querySelectorAll('.nav-item a');
+                navLinks.forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        setMenuOpen(false);
+                    });
+                });
+
+                // Close on Escape key
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                // Reset menu state when resized above mobile breakpoint
+                window.addEventListener('resize', function() {
+                    if (window.innerWidth > 768 && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,644 @@
+<!--
+ Copyright (c) 2026 Yuichi Ito (yuichi@yuichi.com)
+
+ This software is licensed under the Apache License, Version 2.0.
+ For more information, please visit: https://github.com/yuichi110/drawlib
+
+ This software is provided "as is", without warranty of any kind,
+ express or implied, including but not limited to the warranties of
+ merchantability, fitness for a particular purpose and noninfringement.
+-->
+<!DOCTYPE html>
+<html lang="ja" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPA frontend()・静的配信・テンプレート・マウント統合 — FastAPI User Guide (Unofficial)</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-S9N5BZ1VRC');
+    </script>
+    <script>
+        (function() {
+            const saved = localStorage.getItem('drawlib-theme');
+            if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    
+    <link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/07_frontend_and_openapi_ext/frontend_templates_mounts.html">
+    
+    <link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/07_frontend_and_openapi_ext/frontend_templates_mounts.html">
+    
+    <link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/07_frontend_and_openapi_ext/frontend_templates_mounts.html">
+    
+    
+    
+    <meta name="description" content="FastAPI v0.162.2 は、新設された低優先度静的ルーティング機構 app.frontend() / router.frontend() を軸に、モダンな Single-Page Application（SPA）配信、サーバーサイド HTML テンプレート、独立した ASGI…">
+    <link rel="canonical" href="https://fastapi.drawlib.com/user_guide/ja/07_frontend_and_openapi_ext/frontend_templates_mounts.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="FastAPI ユーザーガイド">
+    <meta property="og:title" content="SPA frontend()・静的配信・テンプレート・マウント統合 — FastAPI ユーザーガイド">
+    <meta property="og:description" content="FastAPI v0.162.2 は、新設された低優先度静的ルーティング機構 app.frontend() / router.frontend() を軸に、モダンな Single-Page Application（SPA）配信、サーバーサイド HTML テンプレート、独立した ASGI…">
+    <meta property="og:url" content="https://fastapi.drawlib.com/user_guide/ja/07_frontend_and_openapi_ext/frontend_templates_mounts.html">
+    <meta property="og:image" content="https://fastapi.drawlib.com/user_guide/_assets/ogp.png">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:locale:alternate" content="en_US">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="SPA frontend()・静的配信・テンプレート・マウント統合 — FastAPI ユーザーガイド">
+    <meta name="twitter:description" content="FastAPI v0.162.2 は、新設された低優先度静的ルーティング機構 app.frontend() / router.frontend() を軸に、モダンな Single-Page Application（SPA）配信、サーバーサイド HTML テンプレート、独立した ASGI…">
+    <meta name="twitter:image" content="https://fastapi.drawlib.com/user_guide/_assets/ogp.png">
+    
+    
+    <link rel="icon" type="image/png" href="../../_assets/favicon.png">
+    
+    
+    <link rel="stylesheet" href="../style.css">
+    
+    
+</head>
+<body>
+    
+    
+    
+    <div class="demo-banner" role="region" aria-label="ポータルナビゲーション">
+        <div class="demo-banner-inner">
+            <span class="demo-banner-badge">DRAWLIB SHOWCASE</span>
+            
+            <span class="demo-banner-text">
+                <a href="https://www.drawlib.com/" target="_blank" rel="noopener noreferrer">Drawlib</a> で構築された <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a>（v0.162.2）非公式ドキュメント
+            </span>
+            <span class="demo-banner-links">
+                <a href="../../../index.html">All Portals</a>
+                <span class="demo-banner-sep">·</span>
+                <strong style="color:#ffffff;">User Guide</strong>
+                <span class="demo-banner-sep">·</span>
+                <a href="../../../api/ja/index.html">API Reference</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="../../../architecture/ja/index.html">Architecture</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="../../../pni501/index.html">PNI501 Audit</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official Docs ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://www.drawlib.com/" target="_blank" rel="noopener noreferrer">Drawlib ↗</a>
+            </span>
+            
+        </div>
+    </div>
+    
+    <div class="doc-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI ユーザーガイド">
+                    
+                    FastAPI ユーザーガイド
+                    
+                </a>
+                <div class="sidebar-header-actions">
+                    <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">
+                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                    <button type="button" id="menu-toggle" class="menu-toggle-btn" aria-label="Toggle navigation" aria-expanded="false">
+                        <svg class="icon-hamburger" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        <svg class="icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="sidebar-menu">
+                
+                    
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../index.html" >ガイド概要</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">1. イントロ &amp; クイックスタート</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../01_getting_started/overview.html" >FastAPI の設計思想と基本概念</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../01_getting_started/quickstart.html" >クイックスタートと自動生成 Docs</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">2. 10万行規模の設計ベストプラクティス</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../02_enterprise_architecture/modular_design.html" >境界づけられたコンテキストと階層化</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../02_enterprise_architecture/di_lifespan_testing.html" >大規模 DI・Lifespan 管理・テスト戦略</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">3. ルーティング・入力検証・スキーマ</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../03_routing_and_models/parameters_and_validation.html" >Path・Query・Header・Cookie・Body</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../03_routing_and_models/responses_and_openapi.html" >レスポンス直列化と OpenAPI 3.1</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../03_routing_and_models/advanced_types_and_models.html" >パラメータモデル合成・特殊型・例示</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../03_routing_and_models/custom_request_and_route.html" >カスタム Request と APIRoute 拡張</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">4. 依存性注入（DI）とセキュリティ</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../04_dependencies_and_security/dependency_injection.html" >依存グラフ・キャッシュ・yield スコープ</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../04_dependencies_and_security/security_and_auth.html" >認証・OAuth2 スコープ認可・抽出器</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../04_dependencies_and_security/jwt_and_websocket_security.html" >JWT (PyJWT + Argon2) と WS 認可</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">5. 非同期並行・ミドルウェア・ストリーミング</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../05_async_and_realtime/concurrency_and_middleware.html" >ASGI ミドルウェアとスレッドプール制御</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../05_async_and_realtime/sse_websockets_streaming.html" >ネイティブ SSE・JSONL・WebSocket</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">6. 可観測性・例外設計・実践テスト</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../06_observability_and_testing/telemetry_and_errors.html" >ネイティブ OpenTelemetry と例外処理</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../06_observability_and_testing/testing_and_deployment.html" >実践テスト手法と本番 ASGI 運用</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">7. フロントエンド・マウント・OpenAPI 拡張</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item active">
+                                <a href="frontend_templates_mounts.html" >SPA frontend()・静的配信・マウント統合</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="webhooks_callbacks_sdks.html" >Webhooks・Callbacks・SDK 生成・Docs UI</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">8. 設定管理・SQL DB・CLI・エコシステム</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../08_ecosystem_and_operations/settings_and_databases.html" >pydantic-settings 設定管理と SQL DB</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../08_ecosystem_and_operations/cli_proxy_graphql_ai.html" >FastAPI CLI・プロキシ・GraphQL・AI 連携</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">関連ガイド &amp; 公式リンク</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/" target="_blank" rel="noopener noreferrer">ポータル一覧（ショーケース）<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/api/" target="_blank" rel="noopener noreferrer">FastAPI API リファレンス<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/architecture/" target="_blank" rel="noopener noreferrer">FastAPI 内部アーキテクチャ解説<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/pni501/" target="_blank" rel="noopener noreferrer">PNI501 診断レポート<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI 公式ドキュメント<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub リポジトリ<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                        </ul>
+                    
+                
+            </div>
+        </aside>
+        <div class="content-wrapper">
+            <header class="top-bar">
+                <div class="breadcrumbs">
+                    <span class="crumb">Docs</span>
+                    <span class="crumb-separator">&raquo;</span>
+                    <span class="crumb active">SPA frontend()・静的配信・テンプレート・マウント統合</span>
+                </div>
+                
+                <div class="lang-switcher">
+                    <details class="lang-dropdown">
+                        <summary class="lang-dropdown-btn" aria-label="Select language">
+                            <svg class="lang-globe-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            <span class="lang-current-label">日本語</span>
+                            <svg class="lang-caret-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </summary>
+                        <div class="lang-dropdown-menu" role="menu">
+                            
+                            <a href="../../en/07_frontend_and_openapi_ext/frontend_templates_mounts.html" class="lang-option" lang="en" hreflang="en" >
+                                <span>English</span>
+                                
+                            </a>
+                            
+                            <a href="frontend_templates_mounts.html" class="lang-option active" lang="ja" hreflang="ja" aria-current="page">
+                                <span>日本語</span>
+                                
+                                <svg class="lang-check-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                
+                            </a>
+                            
+                        </div>
+                    </details>
+                </div>
+                
+            </header>
+            <main class="main-content">
+                <h1>SPA frontend()・静的配信・テンプレート・マウント統合</h1>
+<p>FastAPI <code>v0.162.2</code> は、新設された低優先度静的ルーティング機構 <code>app.frontend()</code> / <code>router.frontend()</code> を軸に、モダンな Single-Page Application（SPA）配信、サーバーサイド HTML テンプレート、独立した ASGI サブアプリケーション、そしてレガシー WSGI アプリの段階的移行を単一プロセス上でシームレスに統合します。</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/07_frontend_and_openapi_ext/frontend_templates_mounts/spa_frontend_routing_priority.png" alt="frontend_templates_mounts_1" />
+  <figcaption class="drawlib-caption">FastAPI v0.162.2 の app.frontend() / router.frontend() 優先順位ディスパッチとブラウザ HTML フォールバック判定</figcaption>
+</figure>
+<h2>1. <code>app.frontend()</code> と <code>router.frontend()</code> によるネイティブ SPA 配信</h2>
+<p>従来、React・Vue・Svelte などのビルド成果物（<code>dist/</code>）を <code>app.mount(&quot;/&quot;, StaticFiles(directory=&quot;dist&quot;, html=True))</code> でルート <code>&quot;/&quot;</code> に配信しようとすると、「先にマウントすると <code>@app.get(&quot;/api/...&quot;)</code> を覆い隠してしまう」「クライアントサイドルート（<code>/dashboard/analytics</code> 等）をブラウザでリロードすると <code>404</code> になる」という 2 つの課題がつきまとっていました。</p>
+<p>FastAPI <code>v0.162.2</code> では、<code>app.frontend()</code>（および <code>app.router.frontend()</code> / <code>router.frontend()</code>）によってこれらがフレームワーク標準機能として解決されました。<code>&quot;/&quot;</code> 配下を無差別に捕捉する貪欲な <code>Mount</code> ではなく、専用の <strong>低優先度 SPA フロントエンドルーター</strong> として登録されるため、アプリケーション全体（インクルードされた全 <code>APIRouter</code> を含む）の API ルート・WebSocket・マウント・末尾スラッシュリダイレクトがすべて不一致だった場合にのみフロントエンド探索が実行されます。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">パラメータ / 指定値</th>
+<th style="text-align:left">既定値</th>
+<th style="text-align:left"><code>app.frontend()</code> / <code>router.frontend()</code> の実行時挙動</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong><code>fallback=&quot;auto&quot;</code></strong></td>
+<td style="text-align:left">はい</td>
+<td style="text-align:left"><code>directory</code> 直下に <code>404.html</code> があれば <code>404</code> で返し、なければ HTML ナビゲーション要求時に <code>index.html</code>（<code>200</code>）へフォールバック（どちらも無ければ <code>404</code>）</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>fallback=&quot;index.html&quot;</code></strong></td>
+<td style="text-align:left">いいえ</td>
+<td style="text-align:left"><code>404.html</code> が共存していても HTML ナビゲーション要求には常に <code>index.html</code>（<code>200</code>）を返却。<code>check_dir</code> 有効時は起動時に <code>index.html</code> の存在を検証</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>fallback=&quot;404.html&quot;</code></strong></td>
+<td style="text-align:left">いいえ</td>
+<td style="text-align:left">対象プレフィックス配下の未検出パスに対してカスタム静的 <code>404.html</code> をステータス <code>404</code> で返却。起動時にファイル存在を検証</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>fallback=None</code></strong></td>
+<td style="text-align:left">いいえ</td>
+<td style="text-align:left">フォールバックを無効化。実在するビルドファイルおよびサブディレクトリ <code>index.html</code> のみを配信し、未検出時は通常の JSON <code>404</code> を返却</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>check_dir=&quot;auto&quot;</code></strong></td>
+<td style="text-align:left">はい</td>
+<td style="text-align:left"><code>FASTAPI_ENV=&quot;development&quot;</code>（<code>fastapi dev</code> 実行時に自動設定）では警告のみで起動時チェックをスキップし、本番環境ではディレクトリ欠落時に <code>RuntimeError</code> で即時停止</td>
+</tr>
+</tbody>
+</table>
+<h3>グローバル優先順位・セグメント境界一致・ルーター DI 保護</h3>
+<p>自前のキャッチオール <code>@app.get(&quot;/{full_path:path}&quot;)</code> 実装では見落とされがちな以下の 4 つの安全設計が、組み込みの SPA フロントエンドルーターには標準装備されています。</p>
+<ol>
+<li><strong>グローバル API 優先と API <code>404</code> の保全</strong>: <code>include_router()</code> の登録順序に関わらず、通常の API ルート（<code>@app.get</code>、<code>@app.post</code> 等）と <code>WebSocket</code> ハンドラーが常に優先されます。<code>@app.get(&quot;/api/items/{item_id}&quot;)</code> にマッチした上でエンドポイントが <code>HTTPException(404)</code> を送出した場合も、SPA の <code>index.html</code> にすり替わることなく JSON の <code>404</code> 応答がそのまま返ります。</li>
+<li><strong>ブラウザ HTML ナビゲーション判定（<code>Accept</code> ヘッダー交渉）</strong>: <code>index.html</code> フォールバック時は <code>Accept</code> ヘッダーのメディアタイプと品質値（<code>q</code>）を厳密に解析し、<code>text/html</code> または <code>application/xhtml+xml</code>（<code>q != 0</code>）を明示的に受け入れる <code>GET</code> / <code>HEAD</code> 要求のみ <code>index.html</code>（<code>200 OK</code>）を返します。存在しない JS バンドル（<code>GET /assets/missing.js</code> / <code>Accept: */*</code>）や API 誤 URL（<code>Accept: application/json</code>）には正しく <code>404</code> を返すため、<code>&lt;script&gt;</code> タグが HTML を読み込んで <code>Unexpected token '&lt;'</code> で壊れる事故を防ぎます。</li>
+<li><strong>セグメント境界での最長プレフィックス選択</strong>: <code>app.frontend(&quot;/&quot;, directory=&quot;site&quot;)</code> と <code>router.frontend(&quot;/admin&quot;, directory=&quot;admin_dist&quot;)</code> を併用した場合、パスセグメント境界で一致判定を行い（<code>/admin</code> が <code>/administration</code> を誤捕捉しない）、最も具体的なプレフィックスを選択します。</li>
+<li><strong>保護されたフロントエンドへの依存性注入（DI）適用</strong>: <code>router.frontend()</code> はアプリ階層・<code>include_router()</code>・<code>APIRouter(dependencies=[Depends(...)])</code> の依存関数を外側から内側へ順に解決します。Cookie セッション検証、カスタム <code>Response</code> ヘッダー付与、<code>BackgroundTasks</code>、テスト時の <code>app.dependency_overrides</code> がそのまま機能します。</li>
+</ol>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">Request</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.testclient</span><span class="w"> </span><span class="kn">import</span> <span class="n">TestClient</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">build_spa_service</span><span class="p">(</span><span class="n">dist_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">admin_dist</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FastAPI</span><span class="p">:</span>
+    <span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">"Unified API + SPA Service"</span><span class="p">)</span>
+
+    <span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/api/items/</span><span class="si">{item_id}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">read_item</span><span class="p">(</span><span class="n">item_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">item_id</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Item not found"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">"item_id"</span><span class="p">:</span> <span class="n">item_id</span><span class="p">,</span> <span class="s2">"source"</span><span class="p">:</span> <span class="s2">"api"</span><span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">require_admin_cookie</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">cookies</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"__Host-admin_session"</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">"verified-session"</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">401</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Admin session required"</span><span class="p">)</span>
+
+    <span class="n">admin_router</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">(</span><span class="n">dependencies</span><span class="o">=</span><span class="p">[</span><span class="n">Depends</span><span class="p">(</span><span class="n">require_admin_cookie</span><span class="p">)])</span>
+    <span class="n">admin_router</span><span class="o">.</span><span class="n">frontend</span><span class="p">(</span><span class="s2">"/admin"</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="n">admin_dist</span><span class="p">,</span> <span class="n">fallback</span><span class="o">=</span><span class="s2">"index.html"</span><span class="p">)</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">admin_router</span><span class="p">)</span>
+
+    <span class="c1"># Low-priority SPA mount at "/" never shadows /api/* or /admin/*</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">frontend</span><span class="p">(</span><span class="s2">"/"</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="n">dist_dir</span><span class="p">,</span> <span class="n">fallback</span><span class="o">=</span><span class="s2">"auto"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">app</span>
+</code></pre>
+<h2>2. SPA <code>frontend()</code>・テンプレート・マウント・WSGI の使い分け</h2>
+<p>1 つの FastAPI ASGI ホストプロセス上で、クライアントサイド描画（SPA）、Jinja2 によるサーバーサイド HTML 描画、サブチーム単位の独立 FastAPI アプリ、そして同期型 WSGI レガシー資産を適材適所で共存させることができます。</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/07_frontend_and_openapi_ext/frontend_templates_mounts/mounts_templates_wsgi_topology.png" alt="frontend_templates_mounts_2" />
+  <figcaption class="drawlib-caption">単一 ASGI ホスト上の統合トポロジ — app.frontend()・Jinja2Templates + StaticFiles・サブアプリ・a2wsgi の比較</figcaption>
+</figure>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">統合メカニズム</th>
+<th style="text-align:left">登録 API</th>
+<th style="text-align:left">優先順位とスコープ分離</th>
+<th style="text-align:left">最適なユースケース</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>SPA 静的ビルド配信</strong></td>
+<td style="text-align:left"><code>app.frontend(&quot;/&quot;, directory=&quot;dist&quot;)</code></td>
+<td style="text-align:left">最低優先度（全 API ルート不一致後に評価）・<code>Depends()</code> 対応</td>
+<td style="text-align:left"><code>/api</code> と同居する Vite / React / Vue / Svelte / 静的サイト</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>名前付き静的マウント</strong></td>
+<td style="text-align:left"><code>app.mount(&quot;/static&quot;, StaticFiles(...), name=&quot;static&quot;)</code></td>
+<td style="text-align:left"><code>/static</code> プレフィックスの <code>Mount</code>・<code>url_for</code> 対応</td>
+<td style="text-align:left">Jinja2 や自己配信 Swagger UI から参照する CSS / JS / 画像</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>サーバーサイド描画</strong></td>
+<td style="text-align:left"><code>Jinja2Templates(directory=&quot;templates&quot;)</code></td>
+<td style="text-align:left">標準 HTTP ルート（<code>response_class=HTMLResponse</code>）</td>
+<td style="text-align:left">HTMX フラグメント、メール本文生成、SEO 重視の SSR ページ</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>独立サブアプリ</strong></td>
+<td style="text-align:left"><code>app.mount(&quot;/subapi&quot;, subapi)</code></td>
+<td style="text-align:left">独立した <code>FastAPI</code> インスタンス（<code>root_path=&quot;/subapi&quot;</code>・専用 <code>/docs</code>）</td>
+<td style="text-align:left">マルチバージョン公開 API（<code>/v2</code>）、パートナー向け API、管理画面</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>レガシー WSGI 統合</strong></td>
+<td style="text-align:left"><code>app.mount(&quot;/v1&quot;, WSGIMiddleware(flask_app))</code></td>
+<td style="text-align:left"><code>a2wsgi</code> により同期 WSGI をワーカースレッド上で実行</td>
+<td style="text-align:left">Flask / Django モノリスから FastAPI への段階的マイグレーション</td>
+</tr>
+</tbody>
+</table>
+<h2>3. <code>Jinja2Templates</code> と <code>StaticFiles</code> によるサーバーサイド HTML 描画</h2>
+<p>サーバーサイドレンダリング（SSR）や HTMX ベースの UI を構築する場合は、<code>jinja2</code> パッケージを導入し、<code>fastapi.templating.Jinja2Templates</code> と名前付き <code>StaticFiles</code> マウントを組み合わせます。</p>
+<ul>
+<li><strong>キーワード引数形式の <code>TemplateResponse</code> シグネチャ</strong>: 現行の Starlette / FastAPI では必ず <code>request=request, name=&quot;item.html&quot;, context={...}</code> のキーワード引数形式で呼び出します（旧来の位置引数 <code>TemplateResponse(&quot;item.html&quot;, {&quot;request&quot;: request})</code> は非推奨化されています）。</li>
+<li><strong><code>url_for</code> による逆引きアセット URL 生成</strong>: マウント時に <code>name=&quot;static&quot;</code> を指定すると、テンプレート内から <code>{{ url_for('static', path='/styles.css') }}</code> で <code>root_path</code> 対応の URL を安全に生成できます。</li>
+<li><strong>XSS 自動エスケープと属性クォートの徹底</strong>: Jinja2 は <code>.html</code> / <code>.htm</code> / <code>.xml</code> に対して既定で <code>autoescape</code> を有効化します。HTML 属性に変数を埋め込む際は必ず二重引用符で囲み（<code>data-item-id=&quot;{{ id }}&quot;</code>）、外部入力に対する安易な <code>| safe</code> フィルタの適用は避けてください。</li>
+</ul>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">Path</span> <span class="k">as</span> <span class="n">PathParam</span><span class="p">,</span> <span class="n">Request</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.responses</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTMLResponse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.staticfiles</span><span class="w"> </span><span class="kn">import</span> <span class="n">StaticFiles</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.templating</span><span class="w"> </span><span class="kn">import</span> <span class="n">Jinja2Templates</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">create_ssr_app</span><span class="p">(</span><span class="n">static_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">templates_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FastAPI</span><span class="p">:</span>
+    <span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">()</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">mount</span><span class="p">(</span><span class="s2">"/static"</span><span class="p">,</span> <span class="n">StaticFiles</span><span class="p">(</span><span class="n">directory</span><span class="o">=</span><span class="n">static_dir</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s2">"static"</span><span class="p">)</span>
+    <span class="n">templates</span> <span class="o">=</span> <span class="n">Jinja2Templates</span><span class="p">(</span><span class="n">directory</span><span class="o">=</span><span class="n">templates_dir</span><span class="p">)</span>
+
+    <span class="c1"># templates/item.html:</span>
+    <span class="c1"># &lt;link href="{{ url_for('static', path='/styles.css') }}" rel="stylesheet"&gt;</span>
+    <span class="c1"># &lt;h1 data-item-id="{{ id }}"&gt;Item: {{ title }}&lt;/h1&gt;</span>
+    <span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/items/</span><span class="si">{id}</span><span class="s2">"</span><span class="p">,</span> <span class="n">response_class</span><span class="o">=</span><span class="n">HTMLResponse</span><span class="p">)</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">read_item_page</span><span class="p">(</span>
+        <span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">,</span>
+        <span class="nb">id</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">PathParam</span><span class="p">(</span><span class="n">pattern</span><span class="o">=</span><span class="sa">r</span><span class="s2">"^[a-zA-Z0-9_-]+$"</span><span class="p">)],</span>
+        <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"Wireless Keyboard"</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HTMLResponse</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">templates</span><span class="o">.</span><span class="n">TemplateResponse</span><span class="p">(</span>
+            <span class="n">request</span><span class="o">=</span><span class="n">request</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">"item.html"</span><span class="p">,</span>
+            <span class="n">context</span><span class="o">=</span><span class="p">{</span><span class="s2">"id"</span><span class="p">:</span> <span class="nb">id</span><span class="p">,</span> <span class="s2">"title"</span><span class="p">:</span> <span class="n">title</span><span class="p">},</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">app</span>
+</code></pre>
+<h2>4. 独立サブアプリケーションと <code>a2wsgi</code> によるレガシー WSGI 移行</h2>
+<h3>独立サブアプリと ASGI <code>root_path</code> の自動伝播</h3>
+<p>ルート定義を単一の OpenAPI スキーマと共通ミドルウェア層へ統合する <code>app.include_router()</code> とは対照的に、<code>app.mount(&quot;/subapi&quot;, subapi)</code> は <strong>完全に独立した別の ASGI アプリケーション</strong> を指定パス配下に接続します。</p>
+<ul>
+<li><strong>OpenAPI スキーマと Docs UI の完全分離</strong>: 親アプリは親ルートのみを含む <code>/openapi.json</code> と <code>/docs</code> を公開し、<code>subapi</code> は独自の <code>/subapi/openapi.json</code> と <code>/subapi/docs</code> を独立して提供します。</li>
+<li><strong>ASGI <code>root_path</code> の自動設定</strong>: Starlette の <code>Mount</code> が <code>subapi</code> 呼び出し時に <code>scope[&quot;root_path&quot;]</code> へ <code>&quot;/subapi&quot;</code> を自動付与するため、<code>/subapi/docs</code> の Swagger UI はスキーマ取得先や「Try it out」の送信先 URL を自動的に <code>/subapi/...</code> 基準で解決します。</li>
+<li><strong><code>lifespan</code> 実行に関する注意点</strong>: マウントされたサブアプリの <code>lifespan</code> イベントは Starlette の <code>Mount</code> からは自動実行されません。共有リソースの初期化は親アプリの <code>lifespan</code> に集約するか、<code>contextlib.AsyncExitStack</code> でサブアプリの lifespan を明示的に連結してください（詳細は <a href="../02_enterprise_architecture/di_lifespan_testing.html">大規模 DI・Lifespan 管理・テスト戦略</a> を参照）。</li>
+</ul>
+<h3><code>a2wsgi.WSGIMiddleware</code> による段階的 WSGI 移行（ストラングラーパターン）</h3>
+<p>既存の Flask や Django モノリスを一括書き換えせずに段階的に FastAPI へ移行する場合、レガシー WSGI アプリを特定プレフィックスにマウントし、新規エンドポイントから順に外側の FastAPI 側で非同期実装していくストラングラーパターン（Strangler Fig Pattern）が有効です。Starlette 旧内蔵の <code>starlette.middleware.wsgi.WSGIMiddleware</code> は非推奨化されているため、FastAPI 公式ドキュメントでは <strong><code>a2wsgi.WSGIMiddleware</code></strong>（<code>pip install a2wsgi</code>）の利用が推奨されています。<code>a2wsgi</code> は非同期イベントループと同期 WSGI ワーカースレッド間のストリーム変換を安全に仲介し、マウントパスを <code>SCRIPT_NAME</code> として自動伝播します。</p>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">a2wsgi</span><span class="w"> </span><span class="kn">import</span> <span class="n">WSGIMiddleware</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">Request</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flask</span><span class="w"> </span><span class="kn">import</span> <span class="n">Flask</span><span class="p">,</span> <span class="n">jsonify</span><span class="p">,</span> <span class="n">request</span> <span class="k">as</span> <span class="n">flask_request</span>
+
+<span class="c1"># 1. Independent FastAPI sub-application with isolated /subapi/docs</span>
+<span class="n">subapi</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">"Partner Sub-API"</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s2">"2.0.0"</span><span class="p">)</span>
+
+
+<span class="nd">@subapi</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/sub"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_sub</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"message"</span><span class="p">:</span> <span class="s2">"Hello from sub-application"</span><span class="p">,</span>
+        <span class="s2">"root_path"</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">scope</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"root_path"</span><span class="p">,</span> <span class="s2">""</span><span class="p">),</span>
+    <span class="p">}</span>
+
+
+<span class="c1"># 2. Legacy synchronous Flask (WSGI) application</span>
+<span class="n">flask_app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="nd">@flask_app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/orders"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">legacy_orders</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">jsonify</span><span class="p">({</span><span class="s2">"service"</span><span class="p">:</span> <span class="s2">"legacy-flask"</span><span class="p">,</span> <span class="s2">"script_name"</span><span class="p">:</span> <span class="n">flask_request</span><span class="o">.</span><span class="n">script_root</span><span class="p">})</span>
+
+
+<span class="c1"># 3. Unified FastAPI host mounting both the sub-app and WSGI bridge</span>
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">"Main Gateway API"</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s2">"1.0.0"</span><span class="p">)</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/app"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_main</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"message"</span><span class="p">:</span> <span class="s2">"Hello World from main app"</span><span class="p">}</span>
+
+
+<span class="n">app</span><span class="o">.</span><span class="n">mount</span><span class="p">(</span><span class="s2">"/subapi"</span><span class="p">,</span> <span class="n">subapi</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">mount</span><span class="p">(</span><span class="s2">"/v1"</span><span class="p">,</span> <span class="n">WSGIMiddleware</span><span class="p">(</span><span class="n">flask_app</span><span class="p">))</span>
+</code></pre>
+<p>次節 <strong><a href="webhooks_callbacks_sdks.html">Webhooks・Callbacks・SDK 生成・Docs UI</a></strong> では、OpenAPI <code>3.1.0</code> を活用した非同期イベント仕様の公開、クリーンなクライアント SDK 自動生成、および閉域網向け Swagger UI / ReDoc 自己配信パターンを解説します。リバースプロキシ配下での <code>--forwarded-allow-ips</code> 運用については <strong><a href="../08_ecosystem_and_operations/cli_proxy_graphql_ai.html">FastAPI CLI・プロキシ・GraphQL・AI 連携</a></strong> もあわせて参照してください。</p>
+
+            </main>
+            <footer class="footer">
+                
+                FastAPI® は Sebastián Ramírez（<a href="https://github.com/tiangolo" target="_blank" rel="noopener noreferrer">@tiangolo</a>）の登録商標です。本サイトは非公式ガイドであり、公式プロジェクトとは提携していません。公式ドキュメントは <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">fastapi.tiangolo.com</a> をご参照ください。
+                
+            </footer>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Theme toggle
+            const themeBtn = document.getElementById('theme-toggle');
+            if (themeBtn) {
+                themeBtn.addEventListener('click', function() {
+                    const current = document.documentElement.getAttribute('data-theme');
+                    const next = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    localStorage.setItem('drawlib-theme', next);
+                });
+            }
+
+            // Language dropdown outside-click & Escape close
+            const langDropdowns = document.querySelectorAll('.lang-dropdown');
+            if (langDropdowns.length > 0) {
+                document.addEventListener('click', function(e) {
+                    langDropdowns.forEach(function(dd) {
+                        if (dd.hasAttribute('open') && !dd.contains(e.target)) {
+                            dd.removeAttribute('open');
+                        }
+                    });
+                });
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        langDropdowns.forEach(function(dd) {
+                            dd.removeAttribute('open');
+                        });
+                    }
+                });
+            }
+
+            // Mobile menu toggle
+            const menuBtn = document.getElementById('menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            if (menuBtn && sidebar) {
+                function setMenuOpen(open) {
+                    sidebar.classList.toggle('is-open', open);
+                    menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    document.body.classList.toggle('menu-open', open);
+                    if (open) {
+                        const menu = sidebar.querySelector('.sidebar-menu');
+                        if (menu) {
+                            menu.scrollTop = 0;
+                        }
+                    }
+                }
+
+                menuBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const willOpen = !sidebar.classList.contains('is-open');
+                    setMenuOpen(willOpen);
+                });
+
+                // Close menu when clicking outside sidebar
+                document.addEventListener('click', function(e) {
+                    if (sidebar.classList.contains('is-open') && !sidebar.contains(e.target)) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                // Close menu when a navigation link is clicked
+                const navLinks = sidebar.querySelectorAll('.nav-item a');
+                navLinks.forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        setMenuOpen(false);
+                    });
+                });
+
+                // Close on Escape key
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                // Reset menu state when resized above mobile breakpoint
+                window.addEventListener('resize', function() {
+                    if (window.innerWidth > 768 && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

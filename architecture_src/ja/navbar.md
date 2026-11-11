@@ -24,8 +24,9 @@
 - [get_openapi()・$defs 集約・Docs UI](06_openapi_and_docs/openapi_synthesis_engine.md)
 
 ## 関連ガイド & 公式リンク
-- [FastAPI ユーザーガイド](https://fastapi.drawlib.com/)
+- [ポータル一覧（ショーケース）](https://fastapi.drawlib.com/)
+- [FastAPI ユーザーガイド](https://fastapi.drawlib.com/user_guide/)
 - [FastAPI API リファレンス](https://fastapi.drawlib.com/api/)
-- [PNI501 診断レポート](https://fastapi.drawlib.com/reports/pni501/)
+- [PNI501 診断レポート](https://fastapi.drawlib.com/pni501/)
 - [FastAPI 公式ドキュメント](https://fastapi.tiangolo.com/)
 - [GitHub リポジトリ](https://github.com/yuichi110/drawlib-fastapi)

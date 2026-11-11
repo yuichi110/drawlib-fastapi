@@ -70,25 +70,32 @@
     
 </head>
 <body>
+    
+    
+    
     <div class="demo-banner" role="region" aria-label="ポータルナビゲーション">
         <div class="demo-banner-inner">
-            <span class="demo-banner-badge">INTERNAL ARCHITECTURE</span>
+            <span class="demo-banner-badge">DRAWLIB SHOWCASE</span>
             
             <span class="demo-banner-text">
-                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a>（v0.162.2）内部アーキテクチャ解説（非公式）
+                <a href="https://www.drawlib.com/" target="_blank" rel="noopener noreferrer">Drawlib</a> で構築された <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a>（v0.162.2）非公式ドキュメント
             </span>
             <span class="demo-banner-links">
-                <a href="https://fastapi.drawlib.com/">User Guide</a>
+                <a href="../../index.html">All Portals</a>
                 <span class="demo-banner-sep">·</span>
-                <a href="https://fastapi.drawlib.com/api/">API Reference</a>
+                <a href="../../user_guide/ja/index.html">User Guide</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="../../api/ja/index.html">API Reference</a>
                 <span class="demo-banner-sep">·</span>
                 <strong style="color:#ffffff;">Architecture</strong>
                 <span class="demo-banner-sep">·</span>
-                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Audit</a>
+                <a href="../../pni501/index.html">PNI501 Audit</a>
                 <span class="demo-banner-sep">·</span>
                 <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official Docs ↗</a>
                 <span class="demo-banner-sep">·</span>
                 <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://www.drawlib.com/" target="_blank" rel="noopener noreferrer">Drawlib ↗</a>
             </span>
             
         </div>
@@ -209,7 +216,11 @@
                         <ul class="nav-list">
                             
                             <li class="nav-item ">
-                                <a href="https://fastapi.drawlib.com/" target="_blank" rel="noopener noreferrer">FastAPI ユーザーガイド<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                                <a href="https://fastapi.drawlib.com/" target="_blank" rel="noopener noreferrer">ポータル一覧（ショーケース）<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/user_guide/" target="_blank" rel="noopener noreferrer">FastAPI ユーザーガイド<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
                             </li>
                             
                             <li class="nav-item ">
@@ -217,7 +228,7 @@
                             </li>
                             
                             <li class="nav-item ">
-                                <a href="https://fastapi.drawlib.com/reports/pni501/" target="_blank" rel="noopener noreferrer">PNI501 診断レポート<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                                <a href="https://fastapi.drawlib.com/pni501/" target="_blank" rel="noopener noreferrer">PNI501 診断レポート<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
                             </li>
                             
                             <li class="nav-item ">
@@ -269,7 +280,7 @@
             </header>
             <main class="main-content">
                 <h1>FastAPI v0.162.2 — 内部アーキテクチャガイド</h1>
-<p>FastAPI（<code>v0.162.2</code> · Python モジュール <code>52</code> 個 · <code>19,837</code> 行 · 循環 import <code>0</code> 件）は、再帰的な依存関係解決（DI）、Pydantic v2 による型検証・直列化、そして OpenAPI <code>3.1.0</code> 自動合成を備えながら、素の ASGI サーバに迫るスループットを実現しています。その中核にある設計原則が <strong>「起動時・import 時にリフレクション処理を 1 回だけコンパイルし、リクエスト実行時は軽量な束縛済みクロージャのみをディスパッチする（Compile-Once, Dispatch Closures）」</strong> というアーキテクチャ不変条件です。本サイトは、アプリケーション設計パターンを扱う姉妹編 <a href="https://fastapi.drawlib.com/">FastAPI ユーザーガイド</a> と対をなし、FastAPI 本体のコンパイラ・解決エンジン・ASGI スタックの内部実装をソースコードレベルで解剖する非公式リファレンスです。</p>
+<p>FastAPI（<code>v0.162.2</code> · Python モジュール <code>52</code> 個 · <code>19,837</code> 行 · 循環 import <code>0</code> 件）は、再帰的な依存関係解決（DI）、Pydantic v2 による型検証・直列化、そして OpenAPI <code>3.1.0</code> 自動合成を備えながら、素の ASGI サーバに迫るスループットを実現しています。その中核にある設計原則が <strong>「起動時・import 時にリフレクション処理を 1 回だけコンパイルし、リクエスト実行時は軽量な束縛済みクロージャのみをディスパッチする（Compile-Once, Dispatch Closures）」</strong> というアーキテクチャ不変条件です。本サイトは、アプリケーション設計パターンを扱う姉妹編 <a href="https://fastapi.drawlib.com/user_guide/">FastAPI ユーザーガイド</a> と対をなし、FastAPI 本体のコンパイラ・解決エンジン・ASGI スタックの内部実装をソースコードレベルで解剖する非公式リファレンスです。</p>
 <figure class="drawlib-image" style="text-align: center;">
   <img src="../images/index/arch_compile_dispatch_anim.png" alt="index_1" />
   <figcaption class="drawlib-caption">FastAPI v0.162.2 起動時コンパイルパイプラインとリクエスト単位のゼロリフレクション ASGI ホットパス</figcaption>
@@ -428,7 +439,7 @@
 </table>
 <h2>関連ポータルと上流プロジェクトへの謝辞</h2>
 <ul>
-<li><strong>姉妹ポータルとの連携</strong>: 大規模モジュラーモノリス（<code>100,000+</code> LOC）、OAuth2/JWT 実装、SQL セッション管理、本番運用パターンについては <strong><a href="https://fastapi.drawlib.com/">FastAPI ユーザーガイド</a></strong> を参照してください。また、静的 AST 解析・依存関係・セキュリティ品質評価（総合スコア <code>93 / 100</code>、評価 <code>Grade S</code>）については <strong><a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 診断レポート</a></strong> を併せて確認できます。</li>
+<li><strong>姉妹ポータルとの連携</strong>: 大規模モジュラーモノリス（<code>100,000+</code> LOC）、OAuth2/JWT 実装、SQL セッション管理、本番運用パターンについては <strong><a href="https://fastapi.drawlib.com/user_guide/">FastAPI ユーザーガイド</a></strong> を参照してください。また、静的 AST 解析・依存関係・セキュリティ品質評価（総合スコア <code>93 / 100</code>、評価 <code>Grade S</code>）については <strong><a href="https://fastapi.drawlib.com/pni501/">PNI501 診断レポート</a></strong> を併せて確認できます。</li>
 <li><strong>上流プロジェクトへの敬意と帰属表示</strong>: FastAPI は <strong>Sebastián Ramírez（<code>@tiangolo</code>）</strong> 氏および FastAPI コミュニティによって MIT ライセンスの下で開発・保守されています。公式ドキュメントおよびリリースノートについては必ず <strong><a href="https://fastapi.tiangolo.com/">https://fastapi.tiangolo.com/</a></strong> を参照してください。まずは <strong><a href="01_package_and_layers/module_hierarchy.html">第1章：5層モジュール構造と Starlette 再公開</a></strong> から、循環参照ゼロのパッケージ設計を読み進めましょう。</li>
 </ul>
 

@@ -1,0 +1,670 @@
+<!--
+ Copyright (c) 2026 Yuichi Ito (yuichi@yuichi.com)
+
+ This software is licensed under the Apache License, Version 2.0.
+ For more information, please visit: https://github.com/yuichi110/drawlib
+
+ This software is provided "as is", without warranty of any kind,
+ express or implied, including but not limited to the warranties of
+ merchantability, fitness for a particular purpose and noninfringement.
+-->
+<!DOCTYPE html>
+<html lang="ja" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>カスタム Request と APIRoute クラスの拡張 — FastAPI User Guide (Unofficial)</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-S9N5BZ1VRC');
+    </script>
+    <script>
+        (function() {
+            const saved = localStorage.getItem('drawlib-theme');
+            if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    
+    <link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/03_routing_and_models/custom_request_and_route.html">
+    
+    <link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/03_routing_and_models/custom_request_and_route.html">
+    
+    <link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/03_routing_and_models/custom_request_and_route.html">
+    
+    
+    
+    <meta name="description" content="APIRoute.get_route_handler() と Starlette の Request をサブクラス化すると、ルーターのパス照合が成功した直後かつ FastAPI が JSON デコードや Pydantic 検証を実行する直前に処理を挟み込むことができ、ルーター単位での透過的 gzip…">
+    <link rel="canonical" href="https://fastapi.drawlib.com/user_guide/ja/03_routing_and_models/custom_request_and_route.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="FastAPI ユーザーガイド">
+    <meta property="og:title" content="カスタム Request と APIRoute クラスの拡張 — FastAPI ユーザーガイド">
+    <meta property="og:description" content="APIRoute.get_route_handler() と Starlette の Request をサブクラス化すると、ルーターのパス照合が成功した直後かつ FastAPI が JSON デコードや Pydantic 検証を実行する直前に処理を挟み込むことができ、ルーター単位での透過的 gzip…">
+    <meta property="og:url" content="https://fastapi.drawlib.com/user_guide/ja/03_routing_and_models/custom_request_and_route.html">
+    <meta property="og:image" content="https://fastapi.drawlib.com/user_guide/_assets/ogp.png">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:locale:alternate" content="en_US">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="カスタム Request と APIRoute クラスの拡張 — FastAPI ユーザーガイド">
+    <meta name="twitter:description" content="APIRoute.get_route_handler() と Starlette の Request をサブクラス化すると、ルーターのパス照合が成功した直後かつ FastAPI が JSON デコードや Pydantic 検証を実行する直前に処理を挟み込むことができ、ルーター単位での透過的 gzip…">
+    <meta name="twitter:image" content="https://fastapi.drawlib.com/user_guide/_assets/ogp.png">
+    
+    
+    <link rel="icon" type="image/png" href="../../_assets/favicon.png">
+    
+    
+    <link rel="stylesheet" href="../style.css">
+    
+    
+</head>
+<body>
+    
+    
+    
+    <div class="demo-banner" role="region" aria-label="ポータルナビゲーション">
+        <div class="demo-banner-inner">
+            <span class="demo-banner-badge">DRAWLIB SHOWCASE</span>
+            
+            <span class="demo-banner-text">
+                <a href="https://www.drawlib.com/" target="_blank" rel="noopener noreferrer">Drawlib</a> で構築された <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a>（v0.162.2）非公式ドキュメント
+            </span>
+            <span class="demo-banner-links">
+                <a href="../../../index.html">All Portals</a>
+                <span class="demo-banner-sep">·</span>
+                <strong style="color:#ffffff;">User Guide</strong>
+                <span class="demo-banner-sep">·</span>
+                <a href="../../../api/ja/index.html">API Reference</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="../../../architecture/ja/index.html">Architecture</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="../../../pni501/index.html">PNI501 Audit</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official Docs ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://www.drawlib.com/" target="_blank" rel="noopener noreferrer">Drawlib ↗</a>
+            </span>
+            
+        </div>
+    </div>
+    
+    <div class="doc-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI ユーザーガイド">
+                    
+                    FastAPI ユーザーガイド
+                    
+                </a>
+                <div class="sidebar-header-actions">
+                    <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">
+                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                    <button type="button" id="menu-toggle" class="menu-toggle-btn" aria-label="Toggle navigation" aria-expanded="false">
+                        <svg class="icon-hamburger" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        <svg class="icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="sidebar-menu">
+                
+                    
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../index.html" >ガイド概要</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">1. イントロ &amp; クイックスタート</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../01_getting_started/overview.html" >FastAPI の設計思想と基本概念</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../01_getting_started/quickstart.html" >クイックスタートと自動生成 Docs</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">2. 10万行規模の設計ベストプラクティス</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../02_enterprise_architecture/modular_design.html" >境界づけられたコンテキストと階層化</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../02_enterprise_architecture/di_lifespan_testing.html" >大規模 DI・Lifespan 管理・テスト戦略</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">3. ルーティング・入力検証・スキーマ</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="parameters_and_validation.html" >Path・Query・Header・Cookie・Body</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="responses_and_openapi.html" >レスポンス直列化と OpenAPI 3.1</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="advanced_types_and_models.html" >パラメータモデル合成・特殊型・例示</a>
+                            </li>
+                            
+                            <li class="nav-item active">
+                                <a href="custom_request_and_route.html" >カスタム Request と APIRoute 拡張</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">4. 依存性注入（DI）とセキュリティ</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../04_dependencies_and_security/dependency_injection.html" >依存グラフ・キャッシュ・yield スコープ</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../04_dependencies_and_security/security_and_auth.html" >認証・OAuth2 スコープ認可・抽出器</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../04_dependencies_and_security/jwt_and_websocket_security.html" >JWT (PyJWT + Argon2) と WS 認可</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">5. 非同期並行・ミドルウェア・ストリーミング</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../05_async_and_realtime/concurrency_and_middleware.html" >ASGI ミドルウェアとスレッドプール制御</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../05_async_and_realtime/sse_websockets_streaming.html" >ネイティブ SSE・JSONL・WebSocket</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">6. 可観測性・例外設計・実践テスト</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../06_observability_and_testing/telemetry_and_errors.html" >ネイティブ OpenTelemetry と例外処理</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../06_observability_and_testing/testing_and_deployment.html" >実践テスト手法と本番 ASGI 運用</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">7. フロントエンド・マウント・OpenAPI 拡張</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../07_frontend_and_openapi_ext/frontend_templates_mounts.html" >SPA frontend()・静的配信・マウント統合</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../07_frontend_and_openapi_ext/webhooks_callbacks_sdks.html" >Webhooks・Callbacks・SDK 生成・Docs UI</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">8. 設定管理・SQL DB・CLI・エコシステム</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../08_ecosystem_and_operations/settings_and_databases.html" >pydantic-settings 設定管理と SQL DB</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../08_ecosystem_and_operations/cli_proxy_graphql_ai.html" >FastAPI CLI・プロキシ・GraphQL・AI 連携</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">関連ガイド &amp; 公式リンク</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/" target="_blank" rel="noopener noreferrer">ポータル一覧（ショーケース）<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/api/" target="_blank" rel="noopener noreferrer">FastAPI API リファレンス<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/architecture/" target="_blank" rel="noopener noreferrer">FastAPI 内部アーキテクチャ解説<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/pni501/" target="_blank" rel="noopener noreferrer">PNI501 診断レポート<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI 公式ドキュメント<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub リポジトリ<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                        </ul>
+                    
+                
+            </div>
+        </aside>
+        <div class="content-wrapper">
+            <header class="top-bar">
+                <div class="breadcrumbs">
+                    <span class="crumb">Docs</span>
+                    <span class="crumb-separator">&raquo;</span>
+                    <span class="crumb active">カスタム Request と APIRoute クラスの拡張</span>
+                </div>
+                
+                <div class="lang-switcher">
+                    <details class="lang-dropdown">
+                        <summary class="lang-dropdown-btn" aria-label="Select language">
+                            <svg class="lang-globe-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            <span class="lang-current-label">日本語</span>
+                            <svg class="lang-caret-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </summary>
+                        <div class="lang-dropdown-menu" role="menu">
+                            
+                            <a href="../../en/03_routing_and_models/custom_request_and_route.html" class="lang-option" lang="en" hreflang="en" >
+                                <span>English</span>
+                                
+                            </a>
+                            
+                            <a href="custom_request_and_route.html" class="lang-option active" lang="ja" hreflang="ja" aria-current="page">
+                                <span>日本語</span>
+                                
+                                <svg class="lang-check-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                
+                            </a>
+                            
+                        </div>
+                    </details>
+                </div>
+                
+            </header>
+            <main class="main-content">
+                <h1>カスタム Request と APIRoute クラスの拡張</h1>
+<p><code>APIRoute.get_route_handler()</code> と Starlette の <code>Request</code> をサブクラス化すると、ルーターのパス照合が成功した<strong>直後</strong>かつ FastAPI が JSON デコードや Pydantic 検証を実行する<strong>直前</strong>に処理を挟み込むことができ、ルーター単位での透過的 <code>gzip</code> 解凍・生バイト列に対する HMAC 署名検証・オペレーション別レイテンシ計測・構造化 <code>422</code> エラー拡張を実現できます。</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/03_routing_and_models/custom_request_and_route/custom_apiroute_interception.png" alt="custom_request_and_route_1" />
+  <figcaption class="drawlib-caption">インターセプト境界の比較: グローバル ASGI ミドルウェアとルーター単位の APIRoute.get_route_handler()</figcaption>
+</figure>
+<p>FastAPI で横断的関心事を実装する際は、ASGI ライフサイクルの<strong>どの時点</strong>で介入する必要があるか、そして<strong>どの範囲のルーター</strong>に適用すべきかに応じて拡張フックを選択します。</p>
+<h2>1. ASGI ミドルウェアと <code>APIRoute.get_route_handler()</code> のライフサイクル</h2>
+<p><code>APIRouter</code> に登録される各パスオペレーションは <code>APIRoute</code> インスタンス（または <code>APIRouter(route_class=...)</code> に指定したカスタムサブクラス）を生成し、<code>self.get_route_handler()</code> を呼び出してリクエストハンドラを構築します。さらに子ルーターを <code>app.include_router()</code> で統合する際も、<strong>ルーターのプレフィックスおよび依存関係の継承</strong>が自動適用されたうえで統合先ごとに <code>get_route_handler()</code> が構築されるため、親ルーターから引き継いだ設定を含むハンドラを確実にラップでき、他の兄弟ルーターには一切影響を与えません。</p>
+<p>FastAPI 標準のルートハンドラ内部における実行順序を理解すると、<code>Depends()</code> ではなくカスタム <code>APIRoute</code> が必要となる場面が明確になります。</p>
+<ol>
+<li><strong>ボディ読み取りと JSON デコード（<code>await request.body()</code> / <code>await request.json()</code>）<strong>が</strong>最初</strong>に実行され、JSON 構文が不正な場合は即座に <code>RequestValidationError(type=&quot;json_invalid&quot;)</code> が送出されます。</li>
+<li><strong>依存関係の解決とパラメータ検証</strong>はその<strong>後</strong>に実行されます。したがって、<code>Depends()</code> 関数では <code>request.json()</code> が失敗する前に <code>gzip</code> 圧縮ストリームを解凍することはできず、ボディやパラメータ検証が送出する <code>RequestValidationError</code> を捕捉することもできません。</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">比較軸</th>
+<th style="text-align:left">グローバル純粋 ASGI ミドルウェア</th>
+<th style="text-align:left"><code>APIRouter(route_class=CustomRoute)</code></th>
+<th style="text-align:left"><code>Depends()</code> / <code>Security()</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>実行タイミング</strong></td>
+<td style="text-align:left">ルーティング前（<code>404</code>・<code>/static</code>・全ルーターで常時実行）</td>
+<td style="text-align:left">ルート照合成功後、<strong>JSON 解析および <code>Depends()</code> の直前</strong></td>
+<td style="text-align:left">FastAPI による JSON／Form 解析の<strong>後</strong></td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>適用スコープの粒度</strong></td>
+<td style="text-align:left"><code>FastAPI</code> アプリ全体（またはマウントされたサブアプリ）</td>
+<td style="text-align:left">対象の <code>APIRouter</code> サブツリーのみ（<code>route_class=...</code>）</td>
+<td style="text-align:left">アプリ・<code>APIRouter</code>・ルート <code>dependencies</code>・個別引数</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>Request</code>（<code>body()</code>）の差し替え</strong></td>
+<td style="text-align:left">低レベル ASGI <code>receive</code> ラッパーの手動実装が必要</td>
+<td style="text-align:left">ネイティブ対応（<code>CustomRequest(request.scope, request.receive)</code>）</td>
+<td style="text-align:left">不可（すでに <code>request.json()</code> が実行済み）</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>RequestValidationError</code> の捕捉</strong></td>
+<td style="text-align:left">不可（アプリ全体の <code>@app.exception_handler</code> で処理）</td>
+<td style="text-align:left"><strong>可能</strong>（<code>try: await original_route_handler(request)</code> で捕捉）</td>
+<td style="text-align:left">不可（エンドポイント実行前の検証段階で送出されるため）</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>ルートメタデータへの参照</strong></td>
+<td style="text-align:left">ルーティング前のため <code>scope[&quot;route&quot;]</code> 未確定</td>
+<td style="text-align:left"><code>self.operation_id</code>・<code>self.path</code>・<code>self.tags</code>・<code>self.name</code> を直接参照</td>
+<td style="text-align:left"><code>request.scope[&quot;route&quot;]</code> 経由のみ</td>
+</tr>
+</tbody>
+</table>
+<h2>2. 透過的 <code>GzipRequest</code>・<code>422</code> エラー拡張・Webhook HMAC 検証ルート</h2>
+<p>カスタム <code>Request</code> サブクラスとカスタム <code>APIRoute</code> を組み合わせることで、各エンドポイントの関数シグネチャを一切汚さずにストリーム変換や暗号学的署名検証を組み込めます。</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/03_routing_and_models/custom_request_and_route/gzip_and_hmac_route_pipeline.png" alt="custom_request_and_route_2" />
+  <figcaption class="drawlib-caption">カスタム APIRoute の実行シーケンス: 上限付き GzipRequest 解凍・定数時間 HMAC-SHA256 検証・422 エラー拡張</figcaption>
+</figure>
+<h3>上限付き <code>GzipRequest</code> と <code>GzipRoute</code> による透過解凍</h3>
+<p>Starlette の <code>Request.json()</code> は内部で <code>await self.body()</code> を呼び出し、読み取ったバイト列をリクエスト期間中メモリ上にキャッシュします。<code>GzipRequest</code> で <code>async def body(self) -&gt; bytes</code> をオーバーライドし、無制限な <code>gzip.decompress()</code> ではなく <code>gzip.GzipFile.read(MAX_DECOMPRESSED_BYTES + 1)</code> で展開バイト数に上限を設けることで、gzip 圧縮爆弾（DoS）を <code>413 Content Too Large</code> で遮断しつつ、解凍済み UTF-8 JSON を <code>original_route_handler</code> へ透過的に引き渡せます。</p>
+<pre><code class="language-python"><span class="kn">import</span><span class="w"> </span><span class="nn">gzip</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Coroutine</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">Request</span><span class="p">,</span> <span class="n">Response</span><span class="p">,</span> <span class="n">status</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.routing</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRoute</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span>
+
+<span class="n">MAX_DECOMPRESSED_BYTES</span> <span class="o">=</span> <span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span>  <span class="c1"># 1 MiB decompression ceiling against zip bombs</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">GzipRequest</span><span class="p">(</span><span class="n">Request</span><span class="p">):</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">body</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"_body"</span><span class="p">):</span>
+            <span class="n">raw_body</span> <span class="o">=</span> <span class="k">await</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">body</span><span class="p">()</span>
+            <span class="n">encodings</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">token</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">header</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">getlist</span><span class="p">(</span><span class="s2">"Content-Encoding"</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">header</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">","</span><span class="p">)</span>
+            <span class="p">]</span>
+            <span class="k">if</span> <span class="s2">"gzip"</span> <span class="ow">in</span> <span class="n">encodings</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">with</span> <span class="n">gzip</span><span class="o">.</span><span class="n">GzipFile</span><span class="p">(</span><span class="n">fileobj</span><span class="o">=</span><span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">raw_body</span><span class="p">))</span> <span class="k">as</span> <span class="n">gz_stream</span><span class="p">:</span>
+                        <span class="n">decompressed</span> <span class="o">=</span> <span class="n">gz_stream</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">MAX_DECOMPRESSED_BYTES</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">EOFError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+                        <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+                        <span class="n">detail</span><span class="o">=</span><span class="s2">"Malformed gzip request stream"</span><span class="p">,</span>
+                    <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">decompressed</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">MAX_DECOMPRESSED_BYTES</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+                        <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_413_CONTENT_TOO_LARGE</span><span class="p">,</span>
+                        <span class="n">detail</span><span class="o">=</span><span class="s2">"Decompressed payload exceeds 1 MiB limit"</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="n">raw_body</span> <span class="o">=</span> <span class="n">decompressed</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_body</span> <span class="o">=</span> <span class="n">raw_body</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_body</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">GzipRoute</span><span class="p">(</span><span class="n">APIRoute</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_route_handler</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Request</span><span class="p">],</span> <span class="n">Coroutine</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Response</span><span class="p">]]:</span>
+        <span class="n">original_route_handler</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_route_handler</span><span class="p">()</span>
+
+        <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">custom_route_handler</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Response</span><span class="p">:</span>
+            <span class="n">gzip_request</span> <span class="o">=</span> <span class="n">GzipRequest</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">scope</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">receive</span><span class="p">)</span>
+            <span class="k">return</span> <span class="k">await</span> <span class="n">original_route_handler</span><span class="p">(</span><span class="n">gzip_request</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">custom_route_handler</span>
+
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">"Telemetry Ingest API"</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s2">"1.0.0"</span><span class="p">)</span>
+<span class="n">ingest_router</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">"/ingest"</span><span class="p">,</span> <span class="n">route_class</span><span class="o">=</span><span class="n">GzipRoute</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MetricBatch</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">service</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">samples</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
+
+
+<span class="nd">@ingest_router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/metrics"</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">ingest_metrics</span><span class="p">(</span><span class="n">batch</span><span class="p">:</span> <span class="n">MetricBatch</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"service"</span><span class="p">:</span> <span class="n">batch</span><span class="o">.</span><span class="n">service</span><span class="p">,</span>
+        <span class="s2">"count"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">batch</span><span class="o">.</span><span class="n">samples</span><span class="p">),</span>
+        <span class="s2">"sum"</span><span class="p">:</span> <span class="nb">sum</span><span class="p">(</span><span class="n">batch</span><span class="o">.</span><span class="n">samples</span><span class="p">),</span>
+    <span class="p">}</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/healthz"</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">healthz</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"status"</span><span class="p">:</span> <span class="s2">"ok"</span><span class="p">}</span>
+
+
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">ingest_router</span><span class="p">)</span>
+</code></pre>
+<h3>レイテンシ計測・構造化 <code>422</code> ラッピング・HMAC-SHA256 署名検証</h3>
+<p>Webhook 受信エンドポイントでは、JSON デシリアライズを実行する<strong>前</strong>に、受信した<strong>生のバイト列</strong>に対して定数時間比較 <code>hmac.compare_digest()</code> で <code>X-Hub-Signature-256</code> を検証する必要があります。これにより、偽造されたリクエストに対してスキーマ解析の CPU コストを消費したり内部検証エラーを漏洩したりすることなく <code>401 Unauthorized</code> で即座に拒否できます。さらに同じ <code>APIRoute</code> サブクラス内で <code>await original_route_handler(request)</code> をラップすれば、<code>X-Response-Time-Ms</code> ヘッダの付与と、正規送信元のスキーマ不整合（<code>RequestValidationError</code>）に対する <code>operation_id</code> および長さ制限付き生ボディプレビューを含む構造化 <code>422</code> 応答を同時に実装できます。</p>
+<pre><code class="language-python"><span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">hmac</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">secrets</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Coroutine</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">Request</span><span class="p">,</span> <span class="n">Response</span><span class="p">,</span> <span class="n">status</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">RequestValidationError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.responses</span><span class="w"> </span><span class="kn">import</span> <span class="n">JSONResponse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.routing</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRoute</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">load_webhook_secret</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+    <span class="n">configured</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"WEBHOOK_HMAC_SECRET"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">configured</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">configured</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"WEBHOOK_HMAC_SECRET unset; using ephemeral instance-isolated key"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">secrets</span><span class="o">.</span><span class="n">token_bytes</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span>
+
+
+<span class="n">WEBHOOK_SECRET</span><span class="p">:</span> <span class="nb">bytes</span> <span class="o">=</span> <span class="n">load_webhook_secret</span><span class="p">()</span>
+<span class="n">MAX_PREVIEW_CHARS</span> <span class="o">=</span> <span class="mi">256</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">HmacTimedRoute</span><span class="p">(</span><span class="n">APIRoute</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_route_handler</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Request</span><span class="p">],</span> <span class="n">Coroutine</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Response</span><span class="p">]]:</span>
+        <span class="n">original_route_handler</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_route_handler</span><span class="p">()</span>
+        <span class="n">operation_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">operation_id</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+
+        <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">custom_route_handler</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Response</span><span class="p">:</span>
+            <span class="n">started</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+
+            <span class="c1"># 1. Verify HMAC-SHA256 over raw bytes BEFORE Pydantic parses JSON</span>
+            <span class="n">raw_body</span> <span class="o">=</span> <span class="k">await</span> <span class="n">request</span><span class="o">.</span><span class="n">body</span><span class="p">()</span>
+            <span class="n">provided_sig</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"X-Hub-Signature-256"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+            <span class="n">expected_sig</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">"sha256="</span>
+                <span class="o">+</span> <span class="n">hmac</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">WEBHOOK_SECRET</span><span class="p">,</span> <span class="n">raw_body</span><span class="p">,</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">)</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">hmac</span><span class="o">.</span><span class="n">compare_digest</span><span class="p">(</span><span class="n">expected_sig</span><span class="p">,</span> <span class="n">provided_sig</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+                    <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_401_UNAUTHORIZED</span><span class="p">,</span>
+                    <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid or missing X-Hub-Signature-256 header"</span><span class="p">,</span>
+                <span class="p">)</span>
+
+            <span class="c1"># 2. Execute inner FastAPI handler &amp; catch RequestValidationError</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="n">original_route_handler</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">RequestValidationError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                <span class="n">elapsed_ms</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">started</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1000.0</span>
+                <span class="n">preview</span> <span class="o">=</span> <span class="n">raw_body</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">"replace"</span><span class="p">)[:</span><span class="n">MAX_PREVIEW_CHARS</span><span class="p">]</span>
+                <span class="k">return</span> <span class="n">JSONResponse</span><span class="p">(</span>
+                    <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_422_UNPROCESSABLE_CONTENT</span><span class="p">,</span>
+                    <span class="n">content</span><span class="o">=</span><span class="p">{</span>
+                        <span class="s2">"operation_id"</span><span class="p">:</span> <span class="n">operation_id</span><span class="p">,</span>
+                        <span class="s2">"detail"</span><span class="p">:</span> <span class="n">exc</span><span class="o">.</span><span class="n">errors</span><span class="p">(),</span>
+                        <span class="s2">"raw_body_preview"</span><span class="p">:</span> <span class="n">preview</span><span class="p">,</span>
+                    <span class="p">},</span>
+                    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">"X-Response-Time-Ms"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">elapsed_ms</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">"</span><span class="p">},</span>
+                <span class="p">)</span>
+
+            <span class="n">elapsed_ms</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">started</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1000.0</span>
+            <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">"X-Response-Time-Ms"</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">elapsed_ms</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">"</span>
+            <span class="k">return</span> <span class="n">response</span>
+
+        <span class="k">return</span> <span class="n">custom_route_handler</span>
+
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">"Signed Webhook Receiver"</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s2">"1.0.0"</span><span class="p">)</span>
+<span class="n">webhook_router</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">"/webhooks"</span><span class="p">,</span> <span class="n">route_class</span><span class="o">=</span><span class="n">HmacTimedRoute</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">PaymentDeliveredEvent</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">event_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">invoice_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">amount_cents</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">gt</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+
+<span class="nd">@webhook_router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/payments"</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">receive_payment_webhook</span><span class="p">(</span>
+    <span class="n">event</span><span class="p">:</span> <span class="n">PaymentDeliveredEvent</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"accepted"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">"event_id"</span><span class="p">:</span> <span class="n">event</span><span class="o">.</span><span class="n">event_id</span><span class="p">}</span>
+
+
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">webhook_router</span><span class="p">)</span>
+</code></pre>
+<blockquote>
+<p>[!TIP]
+<code>await request.body()</code> は読み取った生バイト列を <code>Request</code> インスタンス上のメモリにキャッシュするため、<code>HmacTimedRoute</code> 内で先に <code>await request.body()</code> を呼び出しても後続の <code>original_route_handler(request)</code> で ASGI ストリームが枯渇することはなく、標準ルートハンドラはキャッシュ済みのバイト列を即座に再利用します。ただし数メガバイト規模のマルチパートファイルアップロード（<code>request.stream()</code> から <code>SpooledTemporaryFile</code> へ逐次書き出すルート）では、メモリ一括展開を避けるため <code>Request.body()</code> の事前読み取りを行わないルーターへ分離してください。</p>
+</blockquote>
+<p>以上で第 3 章（<a href="parameters_and_validation.html">Path・Query・Header・Cookie・Body</a>、<a href="responses_and_openapi.html">レスポンス直列化と OpenAPI 3.1</a>、<a href="advanced_types_and_models.html">パラメータモデル合成・特殊型・例示</a>、および本ページ）のルーティング・モデル基盤が完結します。続いて第 4 章の <a href="../04_dependencies_and_security/dependency_injection.html">依存グラフ・キャッシュ・yield スコープ</a>、トランスポート層ミドルウェアを扱う <a href="../05_async_and_realtime/concurrency_and_middleware.html">ASGI ミドルウェアとスレッドプール制御</a>、アプリ全体の例外ハンドラを扱う <a href="../06_observability_and_testing/telemetry_and_errors.html">ネイティブ OpenTelemetry と例外処理</a>、および <code>@app.webhooks</code> スキーマ文書化を扱う <a href="../07_frontend_and_openapi_ext/webhooks_callbacks_sdks.html">Webhooks・Callbacks・SDK 生成・Docs UI</a> へ進んでください。</p>
+
+            </main>
+            <footer class="footer">
+                
+                FastAPI® は Sebastián Ramírez（<a href="https://github.com/tiangolo" target="_blank" rel="noopener noreferrer">@tiangolo</a>）の登録商標です。本サイトは非公式ガイドであり、公式プロジェクトとは提携していません。公式ドキュメントは <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">fastapi.tiangolo.com</a> をご参照ください。
+                
+            </footer>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Theme toggle
+            const themeBtn = document.getElementById('theme-toggle');
+            if (themeBtn) {
+                themeBtn.addEventListener('click', function() {
+                    const current = document.documentElement.getAttribute('data-theme');
+                    const next = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    localStorage.setItem('drawlib-theme', next);
+                });
+            }
+
+            // Language dropdown outside-click & Escape close
+            const langDropdowns = document.querySelectorAll('.lang-dropdown');
+            if (langDropdowns.length > 0) {
+                document.addEventListener('click', function(e) {
+                    langDropdowns.forEach(function(dd) {
+                        if (dd.hasAttribute('open') && !dd.contains(e.target)) {
+                            dd.removeAttribute('open');
+                        }
+                    });
+                });
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        langDropdowns.forEach(function(dd) {
+                            dd.removeAttribute('open');
+                        });
+                    }
+                });
+            }
+
+            // Mobile menu toggle
+            const menuBtn = document.getElementById('menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            if (menuBtn && sidebar) {
+                function setMenuOpen(open) {
+                    sidebar.classList.toggle('is-open', open);
+                    menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    document.body.classList.toggle('menu-open', open);
+                    if (open) {
+                        const menu = sidebar.querySelector('.sidebar-menu');
+                        if (menu) {
+                            menu.scrollTop = 0;
+                        }
+                    }
+                }
+
+                menuBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const willOpen = !sidebar.classList.contains('is-open');
+                    setMenuOpen(willOpen);
+                });
+
+                // Close menu when clicking outside sidebar
+                document.addEventListener('click', function(e) {
+                    if (sidebar.classList.contains('is-open') && !sidebar.contains(e.target)) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                // Close menu when a navigation link is clicked
+                const navLinks = sidebar.querySelectorAll('.nav-item a');
+                navLinks.forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        setMenuOpen(false);
+                    });
+                });
+
+                // Close on Escape key
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                // Reset menu state when resized above mobile breakpoint
+                window.addEventListener('resize', function() {
+                    if (window.innerWidth > 768 && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

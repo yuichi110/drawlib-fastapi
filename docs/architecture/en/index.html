@@ -68,25 +68,32 @@
     
 </head>
 <body>
+    
+    
+    
     <div class="demo-banner" role="region" aria-label="Portal Navigation">
         <div class="demo-banner-inner">
-            <span class="demo-banner-badge">INTERNAL ARCHITECTURE</span>
+            <span class="demo-banner-badge">DRAWLIB SHOWCASE</span>
             
             <span class="demo-banner-text">
-                Unofficial Internal Architecture Guide to <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a> (v0.162.2)
+                Unofficial <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a> (v0.162.2) Documentation built with <a href="https://www.drawlib.com/" target="_blank" rel="noopener noreferrer">Drawlib</a>
             </span>
             <span class="demo-banner-links">
-                <a href="https://fastapi.drawlib.com/">User Guide</a>
+                <a href="../../index.html">All Portals</a>
                 <span class="demo-banner-sep">·</span>
-                <a href="https://fastapi.drawlib.com/api/">API Reference</a>
+                <a href="../../user_guide/index.html">User Guide</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="../../api/index.html">API Reference</a>
                 <span class="demo-banner-sep">·</span>
                 <strong style="color:#ffffff;">Architecture</strong>
                 <span class="demo-banner-sep">·</span>
-                <a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Audit</a>
+                <a href="../../pni501/index.html">PNI501 Audit</a>
                 <span class="demo-banner-sep">·</span>
                 <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official Docs ↗</a>
                 <span class="demo-banner-sep">·</span>
                 <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://www.drawlib.com/" target="_blank" rel="noopener noreferrer">Drawlib ↗</a>
             </span>
             
         </div>
@@ -207,7 +214,11 @@
                         <ul class="nav-list">
                             
                             <li class="nav-item ">
-                                <a href="https://fastapi.drawlib.com/" target="_blank" rel="noopener noreferrer">FastAPI User Guide<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                                <a href="https://fastapi.drawlib.com/" target="_blank" rel="noopener noreferrer">All Portals (Showcase Hub)<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/user_guide/" target="_blank" rel="noopener noreferrer">FastAPI User Guide<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
                             </li>
                             
                             <li class="nav-item ">
@@ -215,7 +226,7 @@
                             </li>
                             
                             <li class="nav-item ">
-                                <a href="https://fastapi.drawlib.com/reports/pni501/" target="_blank" rel="noopener noreferrer">PNI501 Diagnostic Report<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                                <a href="https://fastapi.drawlib.com/pni501/" target="_blank" rel="noopener noreferrer">PNI501 Diagnostic Report<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
                             </li>
                             
                             <li class="nav-item ">
@@ -267,7 +278,7 @@
             </header>
             <main class="main-content">
                 <h1>FastAPI v0.162.2 — Internal Architecture Guide</h1>
-<p>FastAPI (<code>v0.162.2</code> · <code>52</code> Python modules · <code>19,837</code> LOC · <code>0</code> circular imports) achieves near-raw ASGI throughput while providing rich dependency injection, Pydantic v2 validation, and OpenAPI <code>3.1.0</code> synthesis through one central engineering invariant: <strong>compile reflection-heavy metadata once at import/startup time, and dispatch lightweight pre-bound closures on every request</strong>. This unofficial source-level guide dissects how FastAPI's internal compiler, solver, and ASGI stack work under the hood, complementing the application-focused <a href="https://fastapi.drawlib.com/">FastAPI User Guide</a>.</p>
+<p>FastAPI (<code>v0.162.2</code> · <code>52</code> Python modules · <code>19,837</code> LOC · <code>0</code> circular imports) achieves near-raw ASGI throughput while providing rich dependency injection, Pydantic v2 validation, and OpenAPI <code>3.1.0</code> synthesis through one central engineering invariant: <strong>compile reflection-heavy metadata once at import/startup time, and dispatch lightweight pre-bound closures on every request</strong>. This unofficial source-level guide dissects how FastAPI's internal compiler, solver, and ASGI stack work under the hood, complementing the application-focused <a href="https://fastapi.drawlib.com/user_guide/">FastAPI User Guide</a>.</p>
 <figure class="drawlib-image" style="text-align: center;">
   <img src="../images/index/arch_compile_dispatch_anim.png" alt="index_1" />
   <figcaption class="drawlib-caption">FastAPI v0.162.2 Compile-Once Startup Pipeline vs Per-Request Zero-Reflection ASGI Hot Path</figcaption>
@@ -426,7 +437,7 @@
 </table>
 <h2>Companion Portals &amp; Upstream Attribution</h2>
 <ul>
-<li><strong>Companion Engineering Guides</strong>: For production application patterns (<code>100,000+</code> LOC modular monoliths, OAuth2/JWT, SQL sessions, and deployment), visit the <strong><a href="https://fastapi.drawlib.com/">FastAPI User Guide</a></strong>. For static AST, dependency health, and security metrics (<code>93 / 100</code>, Grade <code>S</code>), consult the <strong><a href="https://fastapi.drawlib.com/reports/pni501/">PNI501 Diagnostic Report</a></strong>.</li>
+<li><strong>Companion Engineering Guides</strong>: For production application patterns (<code>100,000+</code> LOC modular monoliths, OAuth2/JWT, SQL sessions, and deployment), visit the <strong><a href="https://fastapi.drawlib.com/user_guide/">FastAPI User Guide</a></strong>. For static AST, dependency health, and security metrics (<code>93 / 100</code>, Grade <code>S</code>), consult the <strong><a href="https://fastapi.drawlib.com/pni501/">PNI501 Diagnostic Report</a></strong>.</li>
 <li><strong>Upstream Attribution</strong>: FastAPI was created and is maintained by <strong>Sebastián Ramírez (<code>@tiangolo</code>)</strong> and the FastAPI community under the MIT License. Always refer to <strong><a href="https://fastapi.tiangolo.com/">https://fastapi.tiangolo.com/</a></strong> for official release notes and normative framework documentation. Continue to <strong><a href="01_package_and_layers/module_hierarchy.html">Chapter 1: 5-Tier Module Hierarchy &amp; Shims</a></strong> to trace FastAPI's acyclic module graph from leaf types up to <code>FastAPI()</code>.</li>
 </ul>
 

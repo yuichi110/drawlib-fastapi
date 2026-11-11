@@ -1,6 +1,6 @@
 # FastAPI v0.162.2 — Internal Architecture Guide
 
-FastAPI (`v0.162.2` · `52` Python modules · `19,837` LOC · `0` circular imports) achieves near-raw ASGI throughput while providing rich dependency injection, Pydantic v2 validation, and OpenAPI `3.1.0` synthesis through one central engineering invariant: **compile reflection-heavy metadata once at import/startup time, and dispatch lightweight pre-bound closures on every request**. This unofficial source-level guide dissects how FastAPI's internal compiler, solver, and ASGI stack work under the hood, complementing the application-focused [FastAPI User Guide](https://fastapi.drawlib.com/).
+FastAPI (`v0.162.2` · `52` Python modules · `19,837` LOC · `0` circular imports) achieves near-raw ASGI throughput while providing rich dependency injection, Pydantic v2 validation, and OpenAPI `3.1.0` synthesis through one central engineering invariant: **compile reflection-heavy metadata once at import/startup time, and dispatch lightweight pre-bound closures on every request**. This unofficial source-level guide dissects how FastAPI's internal compiler, solver, and ASGI stack work under the hood, complementing the application-focused [FastAPI User Guide](https://fastapi.drawlib.com/user_guide/).
 
 ```drawlib align=center code=hide file=arch_compile_dispatch_anim.png caption="FastAPI v0.162.2 Compile-Once Startup Pipeline vs Per-Request Zero-Reflection ASGI Hot Path"
 from drawlib.anim import Animation
@@ -437,5 +437,5 @@ save()
 
 ## Companion Portals & Upstream Attribution
 
-- **Companion Engineering Guides**: For production application patterns (`100,000+` LOC modular monoliths, OAuth2/JWT, SQL sessions, and deployment), visit the **[FastAPI User Guide](https://fastapi.drawlib.com/)**. For static AST, dependency health, and security metrics (`93 / 100`, Grade `S`), consult the **[PNI501 Diagnostic Report](https://fastapi.drawlib.com/reports/pni501/)**.
+- **Companion Engineering Guides**: For production application patterns (`100,000+` LOC modular monoliths, OAuth2/JWT, SQL sessions, and deployment), visit the **[FastAPI User Guide](https://fastapi.drawlib.com/user_guide/)**. For static AST, dependency health, and security metrics (`93 / 100`, Grade `S`), consult the **[PNI501 Diagnostic Report](https://fastapi.drawlib.com/pni501/)**.
 - **Upstream Attribution**: FastAPI was created and is maintained by **Sebastián Ramírez (`@tiangolo`)** and the FastAPI community under the MIT License. Always refer to **[https://fastapi.tiangolo.com/](https://fastapi.tiangolo.com/)** for official release notes and normative framework documentation. Continue to **[Chapter 1: 5-Tier Module Hierarchy & Shims](01_package_and_layers/module_hierarchy.md)** to trace FastAPI's acyclic module graph from leaf types up to `FastAPI()`.

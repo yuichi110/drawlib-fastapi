@@ -1,0 +1,751 @@
+<!--
+ Copyright (c) 2026 Yuichi Ito (yuichi@yuichi.com)
+
+ This software is licensed under the Apache License, Version 2.0.
+ For more information, please visit: https://github.com/yuichi110/drawlib
+
+ This software is provided "as is", without warranty of any kind,
+ express or implied, including but not limited to the warranties of
+ merchantability, fitness for a particular purpose and noninfringement.
+-->
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parameter Models, Extra Types &amp; Schema Examples — FastAPI User Guide (Unofficial)</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-S9N5BZ1VRC');
+    </script>
+    <script>
+        (function() {
+            const saved = localStorage.getItem('drawlib-theme');
+            if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    
+    
+    
+    <link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/03_routing_and_models/advanced_types_and_models.html">
+    
+    <link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/03_routing_and_models/advanced_types_and_models.html">
+    
+    <link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/03_routing_and_models/advanced_types_and_models.html">
+    
+    
+    
+    <meta name="description" content="FastAPI v0.157.0–v0.162.2 elevates Pydantic parameter models (Query(), Header(), Cookie(), Form()) into composable, optional, and union-capable extractors…">
+    <link rel="canonical" href="https://fastapi.drawlib.com/user_guide/en/03_routing_and_models/advanced_types_and_models.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="FastAPI User Guide">
+    <meta property="og:title" content="Parameter Models, Extra Types &amp; Schema Examples — FastAPI User Guide">
+    <meta property="og:description" content="FastAPI v0.157.0–v0.162.2 elevates Pydantic parameter models (Query(), Header(), Cookie(), Form()) into composable, optional, and union-capable extractors…">
+    <meta property="og:url" content="https://fastapi.drawlib.com/user_guide/en/03_routing_and_models/advanced_types_and_models.html">
+    <meta property="og:image" content="https://fastapi.drawlib.com/user_guide/_assets/ogp.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="ja_JP">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Parameter Models, Extra Types &amp; Schema Examples — FastAPI User Guide">
+    <meta name="twitter:description" content="FastAPI v0.157.0–v0.162.2 elevates Pydantic parameter models (Query(), Header(), Cookie(), Form()) into composable, optional, and union-capable extractors…">
+    <meta name="twitter:image" content="https://fastapi.drawlib.com/user_guide/_assets/ogp.png">
+    
+    
+    <link rel="icon" type="image/png" href="../../_assets/favicon.png">
+    
+    
+    <link rel="stylesheet" href="../style.css">
+    
+    
+</head>
+<body>
+    
+    
+    
+    <div class="demo-banner" role="region" aria-label="Portal Navigation">
+        <div class="demo-banner-inner">
+            <span class="demo-banner-badge">DRAWLIB SHOWCASE</span>
+            
+            <span class="demo-banner-text">
+                Unofficial <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a> (v0.162.2) Documentation built with <a href="https://www.drawlib.com/" target="_blank" rel="noopener noreferrer">Drawlib</a>
+            </span>
+            <span class="demo-banner-links">
+                <a href="../../../index.html">All Portals</a>
+                <span class="demo-banner-sep">·</span>
+                <strong style="color:#ffffff;">User Guide</strong>
+                <span class="demo-banner-sep">·</span>
+                <a href="../../../api/index.html">API Reference</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="../../../architecture/index.html">Architecture</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="../../../pni501/index.html">PNI501 Audit</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official Docs ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://www.drawlib.com/" target="_blank" rel="noopener noreferrer">Drawlib ↗</a>
+            </span>
+            
+        </div>
+    </div>
+    
+    <div class="doc-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI User Guide">
+                    
+                    FastAPI User Guide
+                    
+                </a>
+                <div class="sidebar-header-actions">
+                    <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">
+                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                    <button type="button" id="menu-toggle" class="menu-toggle-btn" aria-label="Toggle navigation" aria-expanded="false">
+                        <svg class="icon-hamburger" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        <svg class="icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="sidebar-menu">
+                
+                    
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../index.html" >Guide Overview</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">1. Introduction &amp; Quickstart</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../01_getting_started/overview.html" >Why FastAPI &amp; Design Philosophy</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../01_getting_started/quickstart.html" >Quickstart &amp; Interactive OpenAPI</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">2. Scaling to 100k+ LOC</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../02_enterprise_architecture/modular_design.html" >Bounded Contexts &amp; Layering</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../02_enterprise_architecture/di_lifespan_testing.html" >Enterprise DI, Lifespan &amp; Testing</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">3. Routing, Validation &amp; Models</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="parameters_and_validation.html" >Path, Query, Header, Cookie &amp; Body</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="responses_and_openapi.html" >Response Serialization &amp; OpenAPI 3.1</a>
+                            </li>
+                            
+                            <li class="nav-item active">
+                                <a href="advanced_types_and_models.html" >Parameter Models, Extra Types &amp; Examples</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="custom_request_and_route.html" >Custom Request &amp; APIRoute Classes</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">4. Dependency Injection &amp; Security</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../04_dependencies_and_security/dependency_injection.html" >Dependency Graph, Caching &amp; Scopes</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../04_dependencies_and_security/security_and_auth.html" >Authentication &amp; OAuth2 Scopes</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../04_dependencies_and_security/jwt_and_websocket_security.html" >JWT (PyJWT + Argon2) &amp; WS Security</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">5. Async, Middleware &amp; Streaming</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../05_async_and_realtime/concurrency_and_middleware.html" >ASGI Middleware &amp; Threadpool</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../05_async_and_realtime/sse_websockets_streaming.html" >Native SSE, JSONL &amp; WebSockets</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">6. Observability, Errors &amp; Testing</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../06_observability_and_testing/telemetry_and_errors.html" >Native OpenTelemetry &amp; Exceptions</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../06_observability_and_testing/testing_and_deployment.html" >Testing Patterns &amp; Production ASGI</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">7. Frontend, Sub-Apps &amp; OpenAPI</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../07_frontend_and_openapi_ext/frontend_templates_mounts.html" >SPA frontend(), StaticFiles &amp; Mounts</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../07_frontend_and_openapi_ext/webhooks_callbacks_sdks.html" >Webhooks, Callbacks, SDKs &amp; Docs UI</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">8. Settings, Databases &amp; Ecosystem</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../08_ecosystem_and_operations/settings_and_databases.html" >pydantic-settings &amp; SQL Databases</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../08_ecosystem_and_operations/cli_proxy_graphql_ai.html" >FastAPI CLI, Proxies, GraphQL &amp; AI</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">Companion Guides &amp; Links</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/" target="_blank" rel="noopener noreferrer">All Portals (Showcase Hub)<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/api/" target="_blank" rel="noopener noreferrer">FastAPI API Reference<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/architecture/" target="_blank" rel="noopener noreferrer">FastAPI Internal Architecture<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/pni501/" target="_blank" rel="noopener noreferrer">PNI501 Diagnostic Report<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official FastAPI Docs<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub Repository<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                        </ul>
+                    
+                
+            </div>
+        </aside>
+        <div class="content-wrapper">
+            <header class="top-bar">
+                <div class="breadcrumbs">
+                    <span class="crumb">Docs</span>
+                    <span class="crumb-separator">&raquo;</span>
+                    <span class="crumb active">Parameter Models, Extra Types &amp; Schema Examples</span>
+                </div>
+                
+                <div class="lang-switcher">
+                    <details class="lang-dropdown">
+                        <summary class="lang-dropdown-btn" aria-label="Select language">
+                            <svg class="lang-globe-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            <span class="lang-current-label">English</span>
+                            <svg class="lang-caret-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </summary>
+                        <div class="lang-dropdown-menu" role="menu">
+                            
+                            <a href="advanced_types_and_models.html" class="lang-option active" lang="en" hreflang="en" aria-current="page">
+                                <span>English</span>
+                                
+                                <svg class="lang-check-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                
+                            </a>
+                            
+                            <a href="../../ja/03_routing_and_models/advanced_types_and_models.html" class="lang-option" lang="ja" hreflang="ja" >
+                                <span>日本語</span>
+                                
+                            </a>
+                            
+                        </div>
+                    </details>
+                </div>
+                
+            </header>
+            <main class="main-content">
+                <h1>Parameter Models, Extra Types &amp; Schema Examples</h1>
+<p>FastAPI <code>v0.157.0</code>–<code>v0.162.2</code> elevates Pydantic parameter models (<code>Query()</code>, <code>Header()</code>, <code>Cookie()</code>, <code>Form()</code>) into composable, optional, and union-capable extractors while enforcing strict JSON <code>null</code> vs. omitted semantics, HTML checkbox <code>Form</code> defaults, rich standard-library/Pydantic data types, and multi-tier OpenAPI 3.1 examples.</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/03_routing_and_models/advanced_types_and_models/parameter_models_composition.png" alt="advanced_types_and_models_1" />
+  <figcaption class="drawlib-caption">FastAPI v0.157–v0.162 Parameter Model Composition: Multi-Model Extraction, Optional/Union Resolution & Sibling extra='forbid' Rule</figcaption>
+</figure>
+<p>Grouping related HTTP inputs into reusable Pydantic <code>BaseModel</code> classes keeps endpoint signatures concise while preserving full <code>@model_validator</code> invariants across query strings, headers, cookies, and form bodies.</p>
+<h2>1. Composing Parameter Models (<code>Query</code>, <code>Header</code>, <code>Cookie</code>, <code>Form</code>)</h2>
+<p>Across FastAPI <code>v0.157.0</code>–<code>v0.162.2</code>, <code>fastapi/dependencies/utils.py</code> generalizes parameter models from isolated single-model annotations into composable building blocks across endpoints and <code>Depends()</code> sub-graphs:</p>
+<ol>
+<li><strong>Multi-Model Composition &amp; OpenAPI Flattening</strong>:
+<ul>
+<li>For <code>Query()</code>, <code>Header()</code>, and <code>Cookie()</code>, <code>_get_param_model()</code> unwraps both <code>Model</code> and <code>Model | None</code>, expanding each model's cached fields via <code>get_flat_params()</code> into flat OpenAPI parameter entries while validating each model independently inside <code>_request_param_model_to_args()</code>.</li>
+<li>For <code>Form()</code>, <code>_get_form_models()</code> composes multiple form models (across both route parameters and <code>Depends()</code>) into an OpenAPI <code>allOf</code> request body schema and extracts each model's fields independently from the raw <code>FormData</code> inside <code>_extract_form_model()</code>.</li>
+</ul>
+</li>
+<li><strong>Per-Model <code>Header(convert_underscores=...)</code> Isolation</strong>:
+<ul>
+<li><code>_request_param_model_to_args()</code> resolves <code>convert_underscores</code> per <code>Header()</code> parameter without mutating <code>Model.model_fields</code> in place—allowing the same <code>BaseModel</code> to be reused across <code>Header()</code>, <code>Header(convert_underscores=False)</code>, and <code>Query()</code>. When <code>loc_by_alias=True</code> (default), validation errors automatically report wire-format hyphenated names (such as <code>[&quot;header&quot;, &quot;x-retry-attempt&quot;]</code>).</li>
+</ul>
+</li>
+<li><strong>Optional (<code>Model | None = None</code>) &amp; Discriminated Union <code>Form()</code> Models</strong>:
+<ul>
+<li>Declaring <code>Annotated[RangeModel | None, Query()] = None</code> (or <code>Header()</code>, <code>Cookie()</code>, <code>Form()</code>) checks whether <em>any</em> alias declared on <code>RangeModel</code> appears in the incoming request (<code>own_names.intersection(received_params)</code> / <code>_is_form_model_supplied()</code>). When completely absent, FastAPI passes <code>Undefined</code> so the argument resolves to <code>None</code>; when partially supplied (for example <code>?min_cents=500</code> without <code>max_cents</code>), Pydantic validates the model and raises <code>422</code> for the missing sibling field. <em>(Omitting <code>= None</code> keeps the parameter required even if its type union includes <code>None</code>.)</em></li>
+<li>Declaring <code>Annotated[WebhookForm | EmailForm | None, Form(discriminator=&quot;channel&quot;)] = None</code> triggers <code>_add_form_union_validators()</code>, wrapping each union branch in a <code>BeforeValidator(_normalize_form_model)</code> so repeated form entries (<code>list[str]</code> vs. scalar <code>str</code>) are normalized per branch.</li>
+</ul>
+</li>
+<li><strong>The <code>v0.160.0</code> Sibling <code>extra=&quot;forbid&quot;</code> Rule</strong>:
+<ul>
+<li>Because query parameters, headers, cookies, and flat HTML forms each occupy a single shared namespace on the wire, <code>_request_param_model_to_args()</code> and <code>_extract_form_items()</code> forward all unclaimed keys in that location to every parameter model so each model's <code>model_config[&quot;extra&quot;]</code> policy can execute.</li>
+</ul>
+</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Composition Pattern</th>
+<th style="text-align:left">Recommended <code>extra</code> Policy</th>
+<th style="text-align:left">Runtime Behavior in FastAPI <code>v0.160.0</code>–<code>v0.162.2</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>Single <code>Query</code> / <code>Cookie</code> / <code>Form</code> model</strong> (no sibling params in same location)</td>
+<td style="text-align:left"><code>extra=&quot;forbid&quot;</code> or <code>&quot;ignore&quot;</code></td>
+<td style="text-align:left">Rejects unknown client typos (<code>422 extra_forbidden</code>) cleanly</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Multiple sibling models</strong> or <strong>model + scalar param / <code>Depends()</code></strong> in same location</td>
+<td style="text-align:left"><code>extra=&quot;ignore&quot;</code> <em>(Pydantic default)</em></td>
+<td style="text-align:left">Each model validates its own fields and ignores sibling keys; setting <code>extra=&quot;forbid&quot;</code> causes Model A to reject Model B's keys with <code>422</code>!</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>Header()</code> parameter model</strong></td>
+<td style="text-align:left"><code>extra=&quot;ignore&quot;</code> <em>(mandatory in practice)</em></td>
+<td style="text-align:left">Clients always send standard HTTP headers (<code>host</code>, <code>user-agent</code>, <code>accept</code>), which trigger <code>422 extra_forbidden</code> under <code>extra=&quot;forbid&quot;</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>[!WARNING]
+If you need strict unknown-key rejection (<code>extra=&quot;forbid&quot;</code>) across modular <code>Query()</code> or <code>Form()</code> slices, combine them via Pydantic multiple inheritance (<code>class CombinedQuery(PaginationParams, SortParams): model_config = ConfigDict(extra=&quot;forbid&quot;)</code>) rather than declaring two separate <code>extra=&quot;forbid&quot;</code> parameters on the same route. Also define parameter models at module scope so stringified annotations (<code>from __future__ import annotations</code>) resolve <code>BaseModel</code> subclasses during registration.</p>
+</blockquote>
+<h3>Composing Multi-Model Queries, Optional Headers/Cookies &amp; Union Forms</h3>
+<p>The following verified application composes a shared <code>Depends()</code> pagination model with optional <code>Query()</code>, <code>Header()</code>, and <code>Cookie()</code> models, contrasts them with a single-owner <code>extra=&quot;forbid&quot;</code> cursor endpoint, and parses an optional discriminated union <code>Form()</code>:</p>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Literal</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">Cookie</span><span class="p">,</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">Form</span><span class="p">,</span> <span class="n">Header</span><span class="p">,</span> <span class="n">Query</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">ConfigDict</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">model_validator</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">"Parameter Model Composition API"</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s2">"1.0.0"</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">PaginationParams</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="c1"># Keep default extra="ignore" when composing multiple sibling models!</span>
+    <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">le</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Maximum rows per page"</span><span class="p">)</span>
+    <span class="n">offset</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Zero-based row offset"</span><span class="p">)</span>
+    <span class="n">sort</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"recent"</span><span class="p">,</span> <span class="s2">"amount"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"recent"</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">AmountRangeParams</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">min_cents</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">max_cents</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"AmountRangeParams"</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_cents</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_cents</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"min_cents must not exceed max_cents"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">TraceHeaders</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">x_correlation_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">min_length</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+    <span class="n">x_retry_attempt</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">le</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">SessionPrefsCookie</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">ui_locale</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"en"</span><span class="p">,</span> <span class="s2">"ja"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"en"</span>
+    <span class="n">compact_table</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">StrictCursorQuery</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="c1"># Safe on endpoints where this single model owns the entire query namespace</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">)</span>
+
+    <span class="n">cursor</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">min_length</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="mi">25</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">le</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">WebhookChannelForm</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">channel</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"webhook"</span><span class="p">]</span>
+    <span class="n">endpoint_url</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">headers_tag</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">EmailChannelForm</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">channel</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"email"</span><span class="p">]</span>
+    <span class="n">recipients</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">digest_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_pagination</span><span class="p">(</span>
+    <span class="n">page</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">PaginationParams</span><span class="p">,</span> <span class="n">Query</span><span class="p">()],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PaginationParams</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">page</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/ledger/entries"</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">list_ledger_entries</span><span class="p">(</span>
+    <span class="n">page</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">PaginationParams</span><span class="p">,</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_pagination</span><span class="p">)],</span>
+    <span class="n">amount_range</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">AmountRangeParams</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Query</span><span class="p">()]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">trace</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">TraceHeaders</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Header</span><span class="p">()]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">prefs</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">SessionPrefsCookie</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Cookie</span><span class="p">()]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"page"</span><span class="p">:</span> <span class="n">page</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(),</span>
+        <span class="s2">"amount_range"</span><span class="p">:</span> <span class="n">amount_range</span><span class="o">.</span><span class="n">model_dump</span><span class="p">()</span> <span class="k">if</span> <span class="n">amount_range</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"trace"</span><span class="p">:</span> <span class="n">trace</span><span class="o">.</span><span class="n">model_dump</span><span class="p">()</span> <span class="k">if</span> <span class="n">trace</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"prefs"</span><span class="p">:</span> <span class="n">prefs</span><span class="o">.</span><span class="n">model_dump</span><span class="p">()</span> <span class="k">if</span> <span class="n">prefs</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">}</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/ledger/cursor"</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">list_by_strict_cursor</span><span class="p">(</span>
+    <span class="n">params</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">StrictCursorQuery</span><span class="p">,</span> <span class="n">Query</span><span class="p">()],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="n">params</span><span class="o">.</span><span class="n">model_dump</span><span class="p">()</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/alerts/subscription"</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">upsert_subscription</span><span class="p">(</span>
+    <span class="n">target</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span>
+        <span class="n">WebhookChannelForm</span> <span class="o">|</span> <span class="n">EmailChannelForm</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">Form</span><span class="p">(</span><span class="n">discriminator</span><span class="o">=</span><span class="s2">"channel"</span><span class="p">),</span>
+    <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"target"</span><span class="p">:</span> <span class="n">target</span><span class="o">.</span><span class="n">model_dump</span><span class="p">()</span> <span class="k">if</span> <span class="n">target</span> <span class="k">else</span> <span class="kc">None</span><span class="p">}</span>
+</code></pre>
+<h2>2. Rich Python Types, Strict <code>null</code> Semantics &amp; OpenAPI 3.1 Examples</h2>
+<p>Beyond primitive <code>int</code>, <code>str</code>, and <code>bool</code> scalars, FastAPI and Pydantic v2 compile rich domain types directly into Rust validators and JSON Schema 2020-12 formats while enforcing unambiguous distinctions between <strong>omitted inputs</strong>, <strong>explicit JSON <code>null</code></strong>, and <strong>empty HTML form strings</strong>.</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/03_routing_and_models/advanced_types_and_models/extra_types_and_null_semantics.png" alt="advanced_types_and_models_2" />
+  <figcaption class="drawlib-caption">Extra Types Matrix, v0.151 JSON null vs v0.162 Form Checkbox Semantics & 3-Tier OpenAPI 3.1 Examples</figcaption>
+</figure>
+<h3>Key Type &amp; Default Guarantees in <code>v0.151.0</code>–<code>v0.162.2</code></h3>
+<ol>
+<li><strong>Rich Domain Types &amp; Standard <code>@dataclass</code> Support</strong>:
+<ul>
+<li><strong><code>Enum</code> / <code>StrEnum</code></strong>: Restricts path, query, and body fields to a closed OpenAPI <code>enum</code> set (<code>422</code> on unlisted values).</li>
+<li><strong><code>UUID</code>, <code>datetime</code>, <code>timedelta</code>, <code>Decimal</code>, <code>frozenset</code>, <code>Base64Bytes</code></strong>: <code>timedelta</code> accepts numeric seconds or ISO-8601 durations (<code>&quot;PT15M&quot;</code>); <code>Decimal</code> avoids IEEE-754 rounding drift and generates split <code>-Input</code> (<code>number | string</code>) and <code>-Output</code> (<code>string</code>) OpenAPI schemas; <code>frozenset[str]</code> deduplicates elements into an immutable set with <code>uniqueItems: true</code>; <code>pydantic.Base64Bytes</code> decodes standard base64 payloads into <code>bytes</code>; and standard <code>@dataclass</code> classes work directly as request bodies or <code>response_model</code> targets via <code>TypeAdapter</code> without inheriting <code>BaseModel</code>.</li>
+</ul>
+</li>
+<li><strong><code>v0.151.0</code> Explicit JSON <code>null</code> vs. Omitted Defaults &amp; <code>strict_content_type</code></strong>:
+<ul>
+<li>Omitting <code>&quot;retry_limit&quot;</code> from a JSON object applies <code>retry_limit: int = 3</code> (<code>&quot;retry_limit&quot; not in model.model_fields_set</code>). Sending <code>{&quot;retry_limit&quot;: null}</code>, however, explicitly supplies <code>None</code>—which FastAPI <code>v0.151.0</code>+ rejects with <code>422 int_type</code> unless the annotation explicitly includes <code>| None</code> (<code>int | None = 3</code>). Likewise, a required <code>BaseModel</code> body parameter (<code>instruction: PayoutInstruction</code>) rejects an empty body even if every field inside the model has a default.</li>
+<li>By default (<code>strict_content_type=True</code> on <code>FastAPI</code>, <code>APIRouter</code>, and route decorators), <code>get_request_handler()</code> requires an <code>application/json</code> or <code>application/*+json</code> <code>Content-Type</code> header before decoding JSON bytes; pass <code>strict_content_type=False</code> only when interoperating with legacy callers that omit <code>Content-Type</code>.</li>
+</ul>
+</li>
+<li><strong><code>v0.162.0</code> HTML Form Empty Strings &amp; Omitted Checkboxes</strong>:
+<ul>
+<li>HTML browsers submit <code>&quot;&quot;</code> for blank text/numeric inputs and omit unchecked <code>&lt;input type=&quot;checkbox&quot;&gt;</code> fields altogether (sending <code>&quot;on&quot;</code> when checked). Inside <code>_get_multidict_value()</code>, FastAPI normalizes missing <code>FormData</code> keys and empty strings <code>&quot;&quot;</code> to <code>Undefined</code> <em>before</em> Pydantic runs:
+<ul>
+<li>Optional checkboxes (<code>marketing_opt_in: Annotated[bool, Form()] = False</code>) evaluate to <code>False</code> when omitted and <code>True</code> when <code>&quot;on&quot;</code> is submitted, while required checkboxes (<code>accept_terms: Annotated[bool, Form()]</code>) fail with <code>422 missing</code> if unchecked.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>3-Tier OpenAPI 3.1 Examples</strong>:
+<ul>
+<li>Combine property-level <code>Field(examples=[...])</code>, schema-level <code>ConfigDict(json_schema_extra={&quot;examples&quot;: [...]})</code>, and parameter-level <code>Body(openapi_examples={...})</code> (<code>summary</code>, <code>description</code>, <code>value</code>) to populate both <code>components.schemas</code> and interactive scenario dropdowns in <code>/docs</code>.</li>
+</ul>
+</li>
+</ol>
+<h3>Extra Types, Strict Null/Form Defaults &amp; Named OpenAPI Examples</h3>
+<p>The following verified service combines rich domain types, <code>@dataclass</code> response serialization, all three OpenAPI 3.1 example tiers, <code>v0.151.0</code> non-nullable JSON defaults, and <code>v0.162.0</code> HTML form checkbox handling:</p>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">decimal</span><span class="w"> </span><span class="kn">import</span> <span class="n">Decimal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">Enum</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span><span class="p">,</span> <span class="n">Any</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">Body</span><span class="p">,</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">Form</span><span class="p">,</span> <span class="n">status</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">Base64Bytes</span><span class="p">,</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">ConfigDict</span><span class="p">,</span> <span class="n">Field</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">"Extra Types &amp; Strict Semantics API"</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s2">"1.0.0"</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">SettlementEnvironment</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+    <span class="n">SANDBOX</span> <span class="o">=</span> <span class="s2">"sandbox"</span>
+    <span class="n">PRODUCTION</span> <span class="o">=</span> <span class="s2">"production"</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">PayoutInstruction</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span>
+        <span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">,</span>
+        <span class="n">json_schema_extra</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"examples"</span><span class="p">:</span> <span class="p">[</span>
+                <span class="p">{</span>
+                    <span class="s2">"idempotency_key"</span><span class="p">:</span> <span class="s2">"550e8400-e29b-41d4-a716-446655440000"</span><span class="p">,</span>
+                    <span class="s2">"scheduled_at"</span><span class="p">:</span> <span class="s2">"2026-11-08T15:00:00Z"</span><span class="p">,</span>
+                    <span class="s2">"settlement_window"</span><span class="p">:</span> <span class="s2">"PT30M"</span><span class="p">,</span>
+                    <span class="s2">"amount"</span><span class="p">:</span> <span class="s2">"1250.50"</span><span class="p">,</span>
+                    <span class="s2">"scopes"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"payouts:write"</span><span class="p">,</span> <span class="s2">"audit:read"</span><span class="p">],</span>
+                    <span class="s2">"signature_der"</span><span class="p">:</span> <span class="s2">"aGVsbG8td29ybGQ="</span><span class="p">,</span>
+                    <span class="s2">"retry_limit"</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+                    <span class="s2">"memo"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">]</span>
+        <span class="p">},</span>
+    <span class="p">)</span>
+
+    <span class="n">idempotency_key</span><span class="p">:</span> <span class="n">UUID</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">examples</span><span class="o">=</span><span class="p">[</span><span class="s2">"550e8400-e29b-41d4-a716-446655440000"</span><span class="p">],</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Client-generated UUIDv4 idempotency token"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">scheduled_at</span><span class="p">:</span> <span class="n">datetime</span>
+    <span class="n">settlement_window</span><span class="p">:</span> <span class="n">timedelta</span> <span class="o">=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+    <span class="n">amount</span><span class="p">:</span> <span class="n">Decimal</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">gt</span><span class="o">=</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">"0"</span><span class="p">),</span> <span class="n">decimal_places</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">scopes</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">()</span>
+    <span class="n">signature_der</span><span class="p">:</span> <span class="n">Base64Bytes</span>
+    <span class="c1"># v0.151+: Omitting uses 3, but explicit JSON {"retry_limit": null} raises 422!</span>
+    <span class="n">retry_limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">le</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="c1"># Explicit union with None allows both omission and JSON {"memo": null}</span>
+    <span class="n">memo</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">PayoutReceipt</span><span class="p">:</span>
+    <span class="n">environment</span><span class="p">:</span> <span class="n">SettlementEnvironment</span>
+    <span class="n">idempotency_key</span><span class="p">:</span> <span class="n">UUID</span>
+    <span class="n">settled_by</span><span class="p">:</span> <span class="n">datetime</span>
+    <span class="n">amount</span><span class="p">:</span> <span class="n">Decimal</span>
+    <span class="n">unique_scope_count</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">signature_byte_len</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">retry_limit</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">explicit_fields</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+    <span class="s2">"/settlements/</span><span class="si">{env}</span><span class="s2">/payouts"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">PayoutReceipt</span><span class="p">,</span>
+    <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_201_CREATED</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">create_payout</span><span class="p">(</span>
+    <span class="n">env</span><span class="p">:</span> <span class="n">SettlementEnvironment</span><span class="p">,</span>
+    <span class="n">instruction</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span>
+        <span class="n">PayoutInstruction</span><span class="p">,</span>
+        <span class="n">Body</span><span class="p">(</span>
+            <span class="n">openapi_examples</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"instant_wire"</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">"summary"</span><span class="p">:</span> <span class="s2">"Immediate high-priority payout"</span><span class="p">,</span>
+                    <span class="s2">"description"</span><span class="p">:</span> <span class="s2">"Uses explicit retry_limit and two deduplicated scopes."</span><span class="p">,</span>
+                    <span class="s2">"value"</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s2">"idempotency_key"</span><span class="p">:</span> <span class="s2">"550e8400-e29b-41d4-a716-446655440000"</span><span class="p">,</span>
+                        <span class="s2">"scheduled_at"</span><span class="p">:</span> <span class="s2">"2026-11-08T15:00:00Z"</span><span class="p">,</span>
+                        <span class="s2">"settlement_window"</span><span class="p">:</span> <span class="s2">"PT15M"</span><span class="p">,</span>
+                        <span class="s2">"amount"</span><span class="p">:</span> <span class="s2">"499.95"</span><span class="p">,</span>
+                        <span class="s2">"scopes"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"payouts:write"</span><span class="p">,</span> <span class="s2">"payouts:write"</span><span class="p">],</span>
+                        <span class="s2">"signature_der"</span><span class="p">:</span> <span class="s2">"c2lnLWJ5dGVz"</span><span class="p">,</span>
+                        <span class="s2">"retry_limit"</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+                    <span class="p">},</span>
+                <span class="p">},</span>
+                <span class="s2">"minimal_defaults"</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">"summary"</span><span class="p">:</span> <span class="s2">"Minimal payload relying on field defaults"</span><span class="p">,</span>
+                    <span class="s2">"value"</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s2">"idempotency_key"</span><span class="p">:</span> <span class="s2">"7c9e6679-7425-40de-944b-e07fc1f90ae7"</span><span class="p">,</span>
+                        <span class="s2">"scheduled_at"</span><span class="p">:</span> <span class="s2">"2026-11-08T18:00:00Z"</span><span class="p">,</span>
+                        <span class="s2">"amount"</span><span class="p">:</span> <span class="s2">"25.00"</span><span class="p">,</span>
+                        <span class="s2">"signature_der"</span><span class="p">:</span> <span class="s2">"c2lnLW1pbg=="</span><span class="p">,</span>
+                    <span class="p">},</span>
+                <span class="p">},</span>
+            <span class="p">}</span>
+        <span class="p">),</span>
+    <span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PayoutReceipt</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">PayoutReceipt</span><span class="p">(</span>
+        <span class="n">environment</span><span class="o">=</span><span class="n">env</span><span class="p">,</span>
+        <span class="n">idempotency_key</span><span class="o">=</span><span class="n">instruction</span><span class="o">.</span><span class="n">idempotency_key</span><span class="p">,</span>
+        <span class="n">settled_by</span><span class="o">=</span><span class="n">instruction</span><span class="o">.</span><span class="n">scheduled_at</span> <span class="o">+</span> <span class="n">instruction</span><span class="o">.</span><span class="n">settlement_window</span><span class="p">,</span>
+        <span class="n">amount</span><span class="o">=</span><span class="n">instruction</span><span class="o">.</span><span class="n">amount</span><span class="p">,</span>
+        <span class="n">unique_scope_count</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">instruction</span><span class="o">.</span><span class="n">scopes</span><span class="p">),</span>
+        <span class="n">signature_byte_len</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">instruction</span><span class="o">.</span><span class="n">signature_der</span><span class="p">),</span>
+        <span class="n">retry_limit</span><span class="o">=</span><span class="n">instruction</span><span class="o">.</span><span class="n">retry_limit</span><span class="p">,</span>
+        <span class="n">explicit_fields</span><span class="o">=</span><span class="nb">sorted</span><span class="p">(</span><span class="n">instruction</span><span class="o">.</span><span class="n">model_fields_set</span><span class="p">),</span>
+    <span class="p">)</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/consents/preferences"</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">submit_consent_form</span><span class="p">(</span>
+    <span class="n">accept_terms</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">Form</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">"Mandatory TOS checkbox"</span><span class="p">)],</span>
+    <span class="n">marketing_opt_in</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">Form</span><span class="p">()]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">nickname</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Form</span><span class="p">()]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"accept_terms"</span><span class="p">:</span> <span class="n">accept_terms</span><span class="p">,</span>
+        <span class="s2">"marketing_opt_in"</span><span class="p">:</span> <span class="n">marketing_opt_in</span><span class="p">,</span>
+        <span class="s2">"nickname"</span><span class="p">:</span> <span class="n">nickname</span><span class="p">,</span>
+    <span class="p">}</span>
+</code></pre>
+<p>For baseline parameter classification rules and outbound DTO serialization, revisit <a href="parameters_and_validation.html">Path, Query, Header, Cookie &amp; Body</a> and <a href="responses_and_openapi.html">Response Serialization &amp; OpenAPI 3.1</a>. When an API needs to transform raw request streams—such as decompressing <code>gzip</code> bodies or verifying webhook HMAC digests <em>before</em> Pydantic parses JSON—continue to <a href="custom_request_and_route.html">Custom Request &amp; APIRoute Classes</a>.</p>
+
+            </main>
+            <footer class="footer">
+                
+                FastAPI® is a registered trademark of Sebastián Ramírez (<a href="https://github.com/tiangolo" target="_blank" rel="noopener noreferrer">@tiangolo</a>). Unofficial guide — not affiliated with or endorsed by the official FastAPI project (<a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">fastapi.tiangolo.com</a>).
+                
+            </footer>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Theme toggle
+            const themeBtn = document.getElementById('theme-toggle');
+            if (themeBtn) {
+                themeBtn.addEventListener('click', function() {
+                    const current = document.documentElement.getAttribute('data-theme');
+                    const next = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    localStorage.setItem('drawlib-theme', next);
+                });
+            }
+
+            // Language dropdown outside-click & Escape close
+            const langDropdowns = document.querySelectorAll('.lang-dropdown');
+            if (langDropdowns.length > 0) {
+                document.addEventListener('click', function(e) {
+                    langDropdowns.forEach(function(dd) {
+                        if (dd.hasAttribute('open') && !dd.contains(e.target)) {
+                            dd.removeAttribute('open');
+                        }
+                    });
+                });
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        langDropdowns.forEach(function(dd) {
+                            dd.removeAttribute('open');
+                        });
+                    }
+                });
+            }
+
+            // Mobile menu toggle
+            const menuBtn = document.getElementById('menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            if (menuBtn && sidebar) {
+                function setMenuOpen(open) {
+                    sidebar.classList.toggle('is-open', open);
+                    menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    document.body.classList.toggle('menu-open', open);
+                    if (open) {
+                        const menu = sidebar.querySelector('.sidebar-menu');
+                        if (menu) {
+                            menu.scrollTop = 0;
+                        }
+                    }
+                }
+
+                menuBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const willOpen = !sidebar.classList.contains('is-open');
+                    setMenuOpen(willOpen);
+                });
+
+                // Close menu when clicking outside sidebar
+                document.addEventListener('click', function(e) {
+                    if (sidebar.classList.contains('is-open') && !sidebar.contains(e.target)) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                // Close menu when a navigation link is clicked
+                const navLinks = sidebar.querySelectorAll('.nav-item a');
+                navLinks.forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        setMenuOpen(false);
+                    });
+                });
+
+                // Close on Escape key
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                // Reset menu state when resized above mobile breakpoint
+                window.addEventListener('resize', function() {
+                    if (window.innerWidth > 768 && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

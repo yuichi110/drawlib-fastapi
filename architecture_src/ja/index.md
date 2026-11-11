@@ -1,6 +1,6 @@
 # FastAPI v0.162.2 — 内部アーキテクチャガイド
 
-FastAPI（`v0.162.2` · Python モジュール `52` 個 · `19,837` 行 · 循環 import `0` 件）は、再帰的な依存関係解決（DI）、Pydantic v2 による型検証・直列化、そして OpenAPI `3.1.0` 自動合成を備えながら、素の ASGI サーバに迫るスループットを実現しています。その中核にある設計原則が **「起動時・import 時にリフレクション処理を 1 回だけコンパイルし、リクエスト実行時は軽量な束縛済みクロージャのみをディスパッチする（Compile-Once, Dispatch Closures）」** というアーキテクチャ不変条件です。本サイトは、アプリケーション設計パターンを扱う姉妹編 [FastAPI ユーザーガイド](https://fastapi.drawlib.com/) と対をなし、FastAPI 本体のコンパイラ・解決エンジン・ASGI スタックの内部実装をソースコードレベルで解剖する非公式リファレンスです。
+FastAPI（`v0.162.2` · Python モジュール `52` 個 · `19,837` 行 · 循環 import `0` 件）は、再帰的な依存関係解決（DI）、Pydantic v2 による型検証・直列化、そして OpenAPI `3.1.0` 自動合成を備えながら、素の ASGI サーバに迫るスループットを実現しています。その中核にある設計原則が **「起動時・import 時にリフレクション処理を 1 回だけコンパイルし、リクエスト実行時は軽量な束縛済みクロージャのみをディスパッチする（Compile-Once, Dispatch Closures）」** というアーキテクチャ不変条件です。本サイトは、アプリケーション設計パターンを扱う姉妹編 [FastAPI ユーザーガイド](https://fastapi.drawlib.com/user_guide/) と対をなし、FastAPI 本体のコンパイラ・解決エンジン・ASGI スタックの内部実装をソースコードレベルで解剖する非公式リファレンスです。
 
 ```drawlib align=center code=hide file=arch_compile_dispatch_anim.png caption="FastAPI v0.162.2 起動時コンパイルパイプラインとリクエスト単位のゼロリフレクション ASGI ホットパス"
 from drawlib.anim import Animation
@@ -437,5 +437,5 @@ save()
 
 ## 関連ポータルと上流プロジェクトへの謝辞
 
-- **姉妹ポータルとの連携**: 大規模モジュラーモノリス（`100,000+` LOC）、OAuth2/JWT 実装、SQL セッション管理、本番運用パターンについては **[FastAPI ユーザーガイド](https://fastapi.drawlib.com/)** を参照してください。また、静的 AST 解析・依存関係・セキュリティ品質評価（総合スコア `93 / 100`、評価 `Grade S`）については **[PNI501 診断レポート](https://fastapi.drawlib.com/reports/pni501/)** を併せて確認できます。
+- **姉妹ポータルとの連携**: 大規模モジュラーモノリス（`100,000+` LOC）、OAuth2/JWT 実装、SQL セッション管理、本番運用パターンについては **[FastAPI ユーザーガイド](https://fastapi.drawlib.com/user_guide/)** を参照してください。また、静的 AST 解析・依存関係・セキュリティ品質評価（総合スコア `93 / 100`、評価 `Grade S`）については **[PNI501 診断レポート](https://fastapi.drawlib.com/pni501/)** を併せて確認できます。
 - **上流プロジェクトへの敬意と帰属表示**: FastAPI は **Sebastián Ramírez（`@tiangolo`）** 氏および FastAPI コミュニティによって MIT ライセンスの下で開発・保守されています。公式ドキュメントおよびリリースノートについては必ず **[https://fastapi.tiangolo.com/](https://fastapi.tiangolo.com/)** を参照してください。まずは **[第1章：5層モジュール構造と Starlette 再公開](01_package_and_layers/module_hierarchy.md)** から、循環参照ゼロのパッケージ設計を読み進めましょう。

@@ -1,0 +1,595 @@
+<!--
+ Copyright (c) 2026 Yuichi Ito (yuichi@yuichi.com)
+
+ This software is licensed under the Apache License, Version 2.0.
+ For more information, please visit: https://github.com/yuichi110/drawlib
+
+ This software is provided "as is", without warranty of any kind,
+ express or implied, including but not limited to the warranties of
+ merchantability, fitness for a particular purpose and noninfringement.
+-->
+<!DOCTYPE html>
+<html lang="ja" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastAPI の設計思想と基本概念 — FastAPI User Guide (Unofficial)</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-S9N5BZ1VRC');
+    </script>
+    <script>
+        (function() {
+            const saved = localStorage.getItem('drawlib-theme');
+            if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    
+    <link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/01_getting_started/overview.html">
+    
+    <link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/01_getting_started/overview.html">
+    
+    <link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/01_getting_started/overview.html">
+    
+    
+    
+    <meta name="description" content="FastAPI（v0.162.2）は、「Python 標準の型アノテーションを単一の実行可能な契約（Single Executable Contract）とする」 という明快かつ強力な設計思想に基づいています。1 つの関数シグネチャから HTTP…">
+    <link rel="canonical" href="https://fastapi.drawlib.com/user_guide/ja/01_getting_started/overview.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="FastAPI ユーザーガイド">
+    <meta property="og:title" content="FastAPI の設計思想と基本概念 — FastAPI ユーザーガイド">
+    <meta property="og:description" content="FastAPI（v0.162.2）は、「Python 標準の型アノテーションを単一の実行可能な契約（Single Executable Contract）とする」 という明快かつ強力な設計思想に基づいています。1 つの関数シグネチャから HTTP…">
+    <meta property="og:url" content="https://fastapi.drawlib.com/user_guide/ja/01_getting_started/overview.html">
+    <meta property="og:image" content="https://fastapi.drawlib.com/user_guide/_assets/ogp.png">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:locale:alternate" content="en_US">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="FastAPI の設計思想と基本概念 — FastAPI ユーザーガイド">
+    <meta name="twitter:description" content="FastAPI（v0.162.2）は、「Python 標準の型アノテーションを単一の実行可能な契約（Single Executable Contract）とする」 という明快かつ強力な設計思想に基づいています。1 つの関数シグネチャから HTTP…">
+    <meta name="twitter:image" content="https://fastapi.drawlib.com/user_guide/_assets/ogp.png">
+    
+    
+    <link rel="icon" type="image/png" href="../../_assets/favicon.png">
+    
+    
+    <link rel="stylesheet" href="../style.css">
+    
+    
+</head>
+<body>
+    
+    
+    
+    <div class="demo-banner" role="region" aria-label="ポータルナビゲーション">
+        <div class="demo-banner-inner">
+            <span class="demo-banner-badge">DRAWLIB SHOWCASE</span>
+            
+            <span class="demo-banner-text">
+                <a href="https://www.drawlib.com/" target="_blank" rel="noopener noreferrer">Drawlib</a> で構築された <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a>（v0.162.2）非公式ドキュメント
+            </span>
+            <span class="demo-banner-links">
+                <a href="../../../index.html">All Portals</a>
+                <span class="demo-banner-sep">·</span>
+                <strong style="color:#ffffff;">User Guide</strong>
+                <span class="demo-banner-sep">·</span>
+                <a href="../../../api/ja/index.html">API Reference</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="../../../architecture/ja/index.html">Architecture</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="../../../pni501/index.html">PNI501 Audit</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official Docs ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://www.drawlib.com/" target="_blank" rel="noopener noreferrer">Drawlib ↗</a>
+            </span>
+            
+        </div>
+    </div>
+    
+    <div class="doc-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI ユーザーガイド">
+                    
+                    FastAPI ユーザーガイド
+                    
+                </a>
+                <div class="sidebar-header-actions">
+                    <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">
+                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                    <button type="button" id="menu-toggle" class="menu-toggle-btn" aria-label="Toggle navigation" aria-expanded="false">
+                        <svg class="icon-hamburger" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        <svg class="icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="sidebar-menu">
+                
+                    
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../index.html" >ガイド概要</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">1. イントロ &amp; クイックスタート</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item active">
+                                <a href="overview.html" >FastAPI の設計思想と基本概念</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="quickstart.html" >クイックスタートと自動生成 Docs</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">2. 10万行規模の設計ベストプラクティス</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../02_enterprise_architecture/modular_design.html" >境界づけられたコンテキストと階層化</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../02_enterprise_architecture/di_lifespan_testing.html" >大規模 DI・Lifespan 管理・テスト戦略</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">3. ルーティング・入力検証・スキーマ</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../03_routing_and_models/parameters_and_validation.html" >Path・Query・Header・Cookie・Body</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../03_routing_and_models/responses_and_openapi.html" >レスポンス直列化と OpenAPI 3.1</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../03_routing_and_models/advanced_types_and_models.html" >パラメータモデル合成・特殊型・例示</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../03_routing_and_models/custom_request_and_route.html" >カスタム Request と APIRoute 拡張</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">4. 依存性注入（DI）とセキュリティ</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../04_dependencies_and_security/dependency_injection.html" >依存グラフ・キャッシュ・yield スコープ</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../04_dependencies_and_security/security_and_auth.html" >認証・OAuth2 スコープ認可・抽出器</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../04_dependencies_and_security/jwt_and_websocket_security.html" >JWT (PyJWT + Argon2) と WS 認可</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">5. 非同期並行・ミドルウェア・ストリーミング</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../05_async_and_realtime/concurrency_and_middleware.html" >ASGI ミドルウェアとスレッドプール制御</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../05_async_and_realtime/sse_websockets_streaming.html" >ネイティブ SSE・JSONL・WebSocket</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">6. 可観測性・例外設計・実践テスト</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../06_observability_and_testing/telemetry_and_errors.html" >ネイティブ OpenTelemetry と例外処理</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../06_observability_and_testing/testing_and_deployment.html" >実践テスト手法と本番 ASGI 運用</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">7. フロントエンド・マウント・OpenAPI 拡張</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../07_frontend_and_openapi_ext/frontend_templates_mounts.html" >SPA frontend()・静的配信・マウント統合</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../07_frontend_and_openapi_ext/webhooks_callbacks_sdks.html" >Webhooks・Callbacks・SDK 生成・Docs UI</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">8. 設定管理・SQL DB・CLI・エコシステム</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../08_ecosystem_and_operations/settings_and_databases.html" >pydantic-settings 設定管理と SQL DB</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../08_ecosystem_and_operations/cli_proxy_graphql_ai.html" >FastAPI CLI・プロキシ・GraphQL・AI 連携</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">関連ガイド &amp; 公式リンク</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/" target="_blank" rel="noopener noreferrer">ポータル一覧（ショーケース）<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/api/" target="_blank" rel="noopener noreferrer">FastAPI API リファレンス<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/architecture/" target="_blank" rel="noopener noreferrer">FastAPI 内部アーキテクチャ解説<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/pni501/" target="_blank" rel="noopener noreferrer">PNI501 診断レポート<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI 公式ドキュメント<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub リポジトリ<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                        </ul>
+                    
+                
+            </div>
+        </aside>
+        <div class="content-wrapper">
+            <header class="top-bar">
+                <div class="breadcrumbs">
+                    <span class="crumb">Docs</span>
+                    <span class="crumb-separator">&raquo;</span>
+                    <span class="crumb active">FastAPI の設計思想と基本概念</span>
+                </div>
+                
+                <div class="lang-switcher">
+                    <details class="lang-dropdown">
+                        <summary class="lang-dropdown-btn" aria-label="Select language">
+                            <svg class="lang-globe-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            <span class="lang-current-label">日本語</span>
+                            <svg class="lang-caret-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </summary>
+                        <div class="lang-dropdown-menu" role="menu">
+                            
+                            <a href="../../en/01_getting_started/overview.html" class="lang-option" lang="en" hreflang="en" >
+                                <span>English</span>
+                                
+                            </a>
+                            
+                            <a href="overview.html" class="lang-option active" lang="ja" hreflang="ja" aria-current="page">
+                                <span>日本語</span>
+                                
+                                <svg class="lang-check-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                
+                            </a>
+                            
+                        </div>
+                    </details>
+                </div>
+                
+            </header>
+            <main class="main-content">
+                <h1>FastAPI の設計思想と基本概念</h1>
+<p>FastAPI（<code>v0.162.2</code>）は、<strong>「Python 標準の型アノテーションを単一の実行可能な契約（Single Executable Contract）とする」</strong> という明快かつ強力な設計思想に基づいています。1 つの関数シグネチャから HTTP パラメータ抽出、実行時バリデーション、依存性注入、エディタ補完・静的型検査、そして OpenAPI スキーマ生成が一貫して駆動されます。</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/01_getting_started/overview/fastapi_design_pillars.png" alt="overview_1" />
+  <figcaption class="drawlib-caption">FastAPI v0.162.2 の設計基盤 — Python 型ヒントから ASGI ルーティング・Pydantic v2・OpenAPI 3.1・OpenTelemetry への統合</figcaption>
+</figure>
+<h2>重複コードと仕様乖離（ドリフト）の解消</h2>
+<p>従来の命令型 Web フレームワークでは、API フィールドを 1 つ追加・変更するたびに「<code>request</code> からの手動取得コード」「バリデータ定義」「レスポンス変換 DTO」「手動管理の OpenAPI YAML」という 4 つの成果物を同期して書き換える必要がありました。どこか 1 箇所でも更新が漏れると、本番環境で仕様と実装のサイレントな乖離（ドリフト）が発生します。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">設計上の関心事</th>
+<th style="text-align:left">従来の命令型フレームワーク（4 箇所の二重管理）</th>
+<th style="text-align:left">FastAPI <code>v0.162.2</code>（単一シグネチャ）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>HTTP パラメータ抽出</strong></td>
+<td style="text-align:left"><code>request.query_params</code> や <code>request.json()</code> の手動参照</td>
+<td style="text-align:left">パステンプレート・スカラ型・<code>BaseModel</code> から自動推論</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>境界での入力検証</strong></td>
+<td style="text-align:left">別ファイルのバリデータや手続き的な <code>if</code> 文</td>
+<td style="text-align:left"><code>Path(...)</code>・<code>Query(...)</code> と Rust 製 <code>pydantic-core</code> が境界で強制</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>静的型安全性（<code>mypy</code> / <code>pyright</code>）</strong></td>
+<td style="text-align:left">型なしの <code>dict[str, Any]</code> がドメイン層へ流入</td>
+<td style="text-align:left"><code>PEP 561</code> <code>py.typed</code> により絞り込まれた正確な型を関数内で保証</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>OpenAPI 仕様書 &amp; SDK 生成</strong></td>
+<td style="text-align:left">手書き YAML が実装コードと乖離しやすい</td>
+<td style="text-align:left">OpenAPI <code>3.1.0</code> + <code>PEP 727</code> <code>Doc()</code> 説明文として決定論的に自動生成</td>
+</tr>
+</tbody>
+</table>
+<h2>起動時の 1 回解析とリクエスト実行フェーズの分離</h2>
+<p>「型ヒントを使うフレームワークはリクエストごとに遅い <code>inspect.signature()</code> を呼んでいるのではないか」と誤解されることがありますが、FastAPI は <strong>ルート登録時の 1 回限りの解析フェーズ</strong> と <strong>本番トラフィックを処理するリクエスト実行パイプライン</strong> を明確に分離しています。</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/01_getting_started/overview/startup_vs_hotpath_split.png" alt="overview_2" />
+  <figcaption class="drawlib-caption">起動時の 1 回セットアップとリクエスト実行フェーズの分離 — 本番トラフィックにおける署名リフレクションゼロ設計</figcaption>
+</figure>
+<p>エンドポイント関数や <code>Depends()</code> の型シグネチャはルート登録時点で解析されるため、HTTP リクエストを 1 件も受け付ける前から <code>app.openapi()</code> を呼び出して OpenAPI <code>3.1.0</code> 契約を確認できます。</p>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">annotated_doc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Doc</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">Path</span><span class="p">,</span> <span class="n">Query</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">ConfigDict</span><span class="p">,</span> <span class="n">Field</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">"Order Service"</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s2">"1.0.0"</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">OrderPayload</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">)</span>
+    <span class="n">sku</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">min_length</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">quantity</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">ge</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">le</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_region</span><span class="p">(</span><span class="n">x_region</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"us-east"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">x_region</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/orders/</span><span class="si">{order_id}</span><span class="s2">"</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">create_order</span><span class="p">(</span>
+    <span class="n">order_id</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="n">ge</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">Doc</span><span class="p">(</span><span class="s2">"Numeric order identifier."</span><span class="p">)],</span>
+    <span class="n">payload</span><span class="p">:</span> <span class="n">OrderPayload</span><span class="p">,</span>
+    <span class="n">region</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_region</span><span class="p">)],</span>
+    <span class="n">dry_run</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">Query</span><span class="p">(),</span> <span class="n">Doc</span><span class="p">(</span><span class="s2">"Validate without persisting."</span><span class="p">)]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"order_id"</span><span class="p">:</span> <span class="n">order_id</span><span class="p">,</span> <span class="s2">"sku"</span><span class="p">:</span> <span class="n">payload</span><span class="o">.</span><span class="n">sku</span><span class="p">,</span> <span class="s2">"region"</span><span class="p">:</span> <span class="n">region</span><span class="p">,</span> <span class="s2">"dry_run"</span><span class="p">:</span> <span class="n">dry_run</span><span class="p">}</span>
+
+
+<span class="n">schema</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">openapi</span><span class="p">()</span>
+<span class="n">operation</span> <span class="o">=</span> <span class="n">schema</span><span class="p">[</span><span class="s2">"paths"</span><span class="p">][</span><span class="s2">"/orders/</span><span class="si">{order_id}</span><span class="s2">"</span><span class="p">][</span><span class="s2">"post"</span><span class="p">]</span>
+<span class="k">assert</span> <span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">operation</span><span class="p">[</span><span class="s2">"parameters"</span><span class="p">]]</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"order_id"</span><span class="p">,</span> <span class="s2">"dry_run"</span><span class="p">,</span> <span class="s2">"x_region"</span><span class="p">]</span>
+<span class="k">assert</span> <span class="s2">"OrderPayload"</span> <span class="ow">in</span> <span class="n">schema</span><span class="p">[</span><span class="s2">"components"</span><span class="p">][</span><span class="s2">"schemas"</span><span class="p">]</span>
+</code></pre>
+<h2>コア実行時依存パッケージと主要 API 構成</h2>
+<h3>コア実行時依存スタック</h3>
+<p>FastAPI は必須ランタイム依存を意図的に最小限へ絞り込んでおり、<code>pyproject.toml</code> に宣言された直接依存パッケージはわずか <strong>6 つ</strong> です。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">パッケージ（<code>pyproject.toml</code>）</th>
+<th style="text-align:left">最小バージョン</th>
+<th style="text-align:left">FastAPI <code>v0.162.2</code> アプリケーションにおける役割</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong><code>starlette</code></strong></td>
+<td style="text-align:left"><code>&gt;=0.46.0</code></td>
+<td style="text-align:left">高速な ASGI <code>3.0</code> 基盤、URL ルータ、<code>Request</code>/<code>Response</code> プリミティブ、WebSocket、ミドルウェア群</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>pydantic</code></strong></td>
+<td style="text-align:left"><code>&gt;=2.9.0</code></td>
+<td style="text-align:left">Rust 製 <code>pydantic-core</code> による高速入力検証・型変換・レスポンス直列化・JSON Schema <code>2020-12</code> 生成</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>typing-extensions</code></strong></td>
+<td style="text-align:left"><code>&gt;=4.8.0</code></td>
+<td style="text-align:left">Python <code>3.10</code> ～ <code>3.14</code> 間での最新型ヒント構文の互換性維持</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>typing-inspection</code></strong></td>
+<td style="text-align:left"><code>&gt;=0.4.2</code></td>
+<td style="text-align:left"><code>Annotated[...]</code>・型エイリアス・ジェネリクス・Union 型の起動時における正確な展開</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>annotated-doc</code></strong></td>
+<td style="text-align:left"><code>&gt;=0.0.2</code></td>
+<td style="text-align:left"><code>PEP 727</code> <code>Doc(&quot;...&quot;)</code> による <code>Annotated</code> 内インライン OpenAPI ドキュメント記述</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>opentelemetry-api</code></strong></td>
+<td style="text-align:left"><code>&gt;=1.44.0</code></td>
+<td style="text-align:left">SDK 未導入時にはゼロオーバーヘッドで動作する標準 OpenTelemetry 計装（<code>fastapi.telemetry</code>）基盤</td>
+</tr>
+</tbody>
+</table>
+<h3>アプリケーション構築の 5 大ビルディングブロック</h3>
+<p>FastAPI で Web サービスを構築する際に利用する公開 API は、次の 5 つの機能領域に整理されています。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">機能領域</th>
+<th style="text-align:left">主な公開クラス・関数</th>
+<th style="text-align:left">代表的なインポート元</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>アプリ本体 &amp; モジュラールーティング</strong></td>
+<td style="text-align:left"><code>FastAPI</code>, <code>APIRouter</code>, <code>APIRoute</code>, <code>Request</code>, <code>Response</code>, <code>lifespan</code></td>
+<td style="text-align:left"><code>fastapi</code>, <code>fastapi.routing</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>パラメータ・モデル &amp; ドキュメント</strong></td>
+<td style="text-align:left"><code>Annotated</code>, <code>Path</code>, <code>Query</code>, <code>Header</code>, <code>Cookie</code>, <code>Body</code>, <code>Form</code>, <code>UploadFile</code>, <code>BaseModel</code>, <code>Doc()</code></td>
+<td style="text-align:left"><code>fastapi</code>, <code>pydantic</code>, <code>annotated_doc</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>依存性注入（DI） &amp; セキュリティ</strong></td>
+<td style="text-align:left"><code>Depends</code>, <code>Security</code>, <code>SecurityScopes</code>, <code>OAuth2PasswordBearer</code>, <code>APIKeyHeader</code>, <code>HTTPBearer</code></td>
+<td style="text-align:left"><code>fastapi</code>, <code>fastapi.security</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>非同期タスク・配信 &amp; リアルタイム</strong></td>
+<td style="text-align:left"><code>BackgroundTasks</code>, <code>EventSourceResponse</code>, <code>ServerSentEvent</code>, <code>WebSocket</code>, <code>WebSocketDisconnect</code></td>
+<td style="text-align:left"><code>fastapi</code>, <code>fastapi.sse</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>可観測性・例外処理 &amp; テスト</strong></td>
+<td style="text-align:left"><code>HTTPException</code>, <code>RequestValidationError</code>, <code>TelemetryConfig</code>, <code>get_telemetry_data()</code>, <code>TestClient</code></td>
+<td style="text-align:left"><code>fastapi</code>, <code>fastapi.exceptions</code>, <code>fastapi.telemetry</code>, <code>fastapi.testclient</code></td>
+</tr>
+</tbody>
+</table>
+<p>次のステップとして、<strong><a href="quickstart.html">クイックスタートと自動生成 Docs</a></strong> で実際に API を立ち上げるか、<strong><a href="../02_enterprise_architecture/modular_design.html">第 2 章：境界づけられたコンテキストと階層化</a></strong> で大規模コードベースの構造化パターンを確認してください。</p>
+
+            </main>
+            <footer class="footer">
+                
+                FastAPI® は Sebastián Ramírez（<a href="https://github.com/tiangolo" target="_blank" rel="noopener noreferrer">@tiangolo</a>）の登録商標です。本サイトは非公式ガイドであり、公式プロジェクトとは提携していません。公式ドキュメントは <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">fastapi.tiangolo.com</a> をご参照ください。
+                
+            </footer>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Theme toggle
+            const themeBtn = document.getElementById('theme-toggle');
+            if (themeBtn) {
+                themeBtn.addEventListener('click', function() {
+                    const current = document.documentElement.getAttribute('data-theme');
+                    const next = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    localStorage.setItem('drawlib-theme', next);
+                });
+            }
+
+            // Language dropdown outside-click & Escape close
+            const langDropdowns = document.querySelectorAll('.lang-dropdown');
+            if (langDropdowns.length > 0) {
+                document.addEventListener('click', function(e) {
+                    langDropdowns.forEach(function(dd) {
+                        if (dd.hasAttribute('open') && !dd.contains(e.target)) {
+                            dd.removeAttribute('open');
+                        }
+                    });
+                });
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        langDropdowns.forEach(function(dd) {
+                            dd.removeAttribute('open');
+                        });
+                    }
+                });
+            }
+
+            // Mobile menu toggle
+            const menuBtn = document.getElementById('menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            if (menuBtn && sidebar) {
+                function setMenuOpen(open) {
+                    sidebar.classList.toggle('is-open', open);
+                    menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    document.body.classList.toggle('menu-open', open);
+                    if (open) {
+                        const menu = sidebar.querySelector('.sidebar-menu');
+                        if (menu) {
+                            menu.scrollTop = 0;
+                        }
+                    }
+                }
+
+                menuBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const willOpen = !sidebar.classList.contains('is-open');
+                    setMenuOpen(willOpen);
+                });
+
+                // Close menu when clicking outside sidebar
+                document.addEventListener('click', function(e) {
+                    if (sidebar.classList.contains('is-open') && !sidebar.contains(e.target)) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                // Close menu when a navigation link is clicked
+                const navLinks = sidebar.querySelectorAll('.nav-item a');
+                navLinks.forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        setMenuOpen(false);
+                    });
+                });
+
+                // Close on Escape key
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                // Reset menu state when resized above mobile breakpoint
+                window.addEventListener('resize', function() {
+                    if (window.innerWidth > 768 && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

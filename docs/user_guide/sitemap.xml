@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://fastapi.drawlib.com/user_guide/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/user_guide/en/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/user_guide/en/01_getting_started/overview.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/01_getting_started/overview.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/01_getting_started/overview.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/01_getting_started/overview.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/user_guide/en/01_getting_started/quickstart.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/01_getting_started/quickstart.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/01_getting_started/quickstart.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/01_getting_started/quickstart.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/user_guide/en/02_enterprise_architecture/di_lifespan_testing.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/02_enterprise_architecture/di_lifespan_testing.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/02_enterprise_architecture/di_lifespan_testing.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/02_enterprise_architecture/di_lifespan_testing.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/user_guide/en/02_enterprise_architecture/modular_design.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/02_enterprise_architecture/modular_design.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/02_enterprise_architecture/modular_design.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/02_enterprise_architecture/modular_design.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/user_guide/en/03_routing_and_models/advanced_types_and_models.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/03_routing_and_models/advanced_types_and_models.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/03_routing_and_models/advanced_types_and_models.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/03_routing_and_models/advanced_types_and_models.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/user_guide/en/03_routing_and_models/custom_request_and_route.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/03_routing_and_models/custom_request_and_route.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/03_routing_and_models/custom_request_and_route.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/03_routing_and_models/custom_request_and_route.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/user_guide/en/03_routing_and_models/parameters_and_validation.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/03_routing_and_models/parameters_and_validation.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/03_routing_and_models/parameters_and_validation.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/03_routing_and_models/parameters_and_validation.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/user_guide/en/03_routing_and_models/responses_and_openapi.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/03_routing_and_models/responses_and_openapi.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/03_routing_and_models/responses_and_openapi.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/03_routing_and_models/responses_and_openapi.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/user_guide/en/04_dependencies_and_security/dependency_injection.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/04_dependencies_and_security/dependency_injection.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/04_dependencies_and_security/dependency_injection.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/04_dependencies_and_security/dependency_injection.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/user_guide/en/04_dependencies_and_security/jwt_and_websocket_security.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/04_dependencies_and_security/jwt_and_websocket_security.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/04_dependencies_and_security/jwt_and_websocket_security.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/04_dependencies_and_security/jwt_and_websocket_security.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/user_guide/en/04_dependencies_and_security/security_and_auth.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/04_dependencies_and_security/security_and_auth.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/04_dependencies_and_security/security_and_auth.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/04_dependencies_and_security/security_and_auth.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/user_guide/en/05_async_and_realtime/concurrency_and_middleware.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/05_async_and_realtime/concurrency_and_middleware.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/05_async_and_realtime/concurrency_and_middleware.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/05_async_and_realtime/concurrency_and_middleware.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/user_guide/en/05_async_and_realtime/sse_websockets_streaming.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/05_async_and_realtime/sse_websockets_streaming.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/05_async_and_realtime/sse_websockets_streaming.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/05_async_and_realtime/sse_websockets_streaming.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/user_guide/en/06_observability_and_testing/telemetry_and_errors.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/06_observability_and_testing/telemetry_and_errors.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/06_observability_and_testing/telemetry_and_errors.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/06_observability_and_testing/telemetry_and_errors.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/user_guide/en/06_observability_and_testing/testing_and_deployment.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/06_observability_and_testing/testing_and_deployment.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/06_observability_and_testing/testing_and_deployment.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/06_observability_and_testing/testing_and_deployment.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/user_guide/en/07_frontend_and_openapi_ext/frontend_templates_mounts.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/07_frontend_and_openapi_ext/frontend_templates_mounts.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/07_frontend_and_openapi_ext/frontend_templates_mounts.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/07_frontend_and_openapi_ext/frontend_templates_mounts.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/user_guide/en/07_frontend_and_openapi_ext/webhooks_callbacks_sdks.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/07_frontend_and_openapi_ext/webhooks_callbacks_sdks.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/07_frontend_and_openapi_ext/webhooks_callbacks_sdks.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/07_frontend_and_openapi_ext/webhooks_callbacks_sdks.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/user_guide/en/08_ecosystem_and_operations/cli_proxy_graphql_ai.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/08_ecosystem_and_operations/cli_proxy_graphql_ai.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/08_ecosystem_and_operations/cli_proxy_graphql_ai.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/08_ecosystem_and_operations/cli_proxy_graphql_ai.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/user_guide/en/08_ecosystem_and_operations/settings_and_databases.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/08_ecosystem_and_operations/settings_and_databases.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/08_ecosystem_and_operations/settings_and_databases.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/08_ecosystem_and_operations/settings_and_databases.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/user_guide/ja/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/user_guide/ja/01_getting_started/overview.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/01_getting_started/overview.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/01_getting_started/overview.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/01_getting_started/overview.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/user_guide/ja/01_getting_started/quickstart.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/01_getting_started/quickstart.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/01_getting_started/quickstart.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/01_getting_started/quickstart.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/user_guide/ja/02_enterprise_architecture/di_lifespan_testing.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/02_enterprise_architecture/di_lifespan_testing.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/02_enterprise_architecture/di_lifespan_testing.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/02_enterprise_architecture/di_lifespan_testing.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/user_guide/ja/02_enterprise_architecture/modular_design.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/02_enterprise_architecture/modular_design.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/02_enterprise_architecture/modular_design.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/02_enterprise_architecture/modular_design.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/user_guide/ja/03_routing_and_models/advanced_types_and_models.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/03_routing_and_models/advanced_types_and_models.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/03_routing_and_models/advanced_types_and_models.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/03_routing_and_models/advanced_types_and_models.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/user_guide/ja/03_routing_and_models/custom_request_and_route.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/03_routing_and_models/custom_request_and_route.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/03_routing_and_models/custom_request_and_route.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/03_routing_and_models/custom_request_and_route.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/user_guide/ja/03_routing_and_models/parameters_and_validation.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/03_routing_and_models/parameters_and_validation.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/03_routing_and_models/parameters_and_validation.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/03_routing_and_models/parameters_and_validation.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/user_guide/ja/03_routing_and_models/responses_and_openapi.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/03_routing_and_models/responses_and_openapi.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/03_routing_and_models/responses_and_openapi.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/03_routing_and_models/responses_and_openapi.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/user_guide/ja/04_dependencies_and_security/dependency_injection.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/04_dependencies_and_security/dependency_injection.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/04_dependencies_and_security/dependency_injection.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/04_dependencies_and_security/dependency_injection.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/user_guide/ja/04_dependencies_and_security/jwt_and_websocket_security.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/04_dependencies_and_security/jwt_and_websocket_security.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/04_dependencies_and_security/jwt_and_websocket_security.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/04_dependencies_and_security/jwt_and_websocket_security.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/user_guide/ja/04_dependencies_and_security/security_and_auth.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/04_dependencies_and_security/security_and_auth.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/04_dependencies_and_security/security_and_auth.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/04_dependencies_and_security/security_and_auth.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/user_guide/ja/05_async_and_realtime/concurrency_and_middleware.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/05_async_and_realtime/concurrency_and_middleware.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/05_async_and_realtime/concurrency_and_middleware.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/05_async_and_realtime/concurrency_and_middleware.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/user_guide/ja/05_async_and_realtime/sse_websockets_streaming.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/05_async_and_realtime/sse_websockets_streaming.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/05_async_and_realtime/sse_websockets_streaming.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/05_async_and_realtime/sse_websockets_streaming.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/user_guide/ja/06_observability_and_testing/telemetry_and_errors.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/06_observability_and_testing/telemetry_and_errors.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/06_observability_and_testing/telemetry_and_errors.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/06_observability_and_testing/telemetry_and_errors.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/user_guide/ja/06_observability_and_testing/testing_and_deployment.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/06_observability_and_testing/testing_and_deployment.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/06_observability_and_testing/testing_and_deployment.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/06_observability_and_testing/testing_and_deployment.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/user_guide/ja/07_frontend_and_openapi_ext/frontend_templates_mounts.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/07_frontend_and_openapi_ext/frontend_templates_mounts.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/07_frontend_and_openapi_ext/frontend_templates_mounts.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/07_frontend_and_openapi_ext/frontend_templates_mounts.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/user_guide/ja/07_frontend_and_openapi_ext/webhooks_callbacks_sdks.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/07_frontend_and_openapi_ext/webhooks_callbacks_sdks.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/07_frontend_and_openapi_ext/webhooks_callbacks_sdks.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/07_frontend_and_openapi_ext/webhooks_callbacks_sdks.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/user_guide/ja/08_ecosystem_and_operations/cli_proxy_graphql_ai.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/08_ecosystem_and_operations/cli_proxy_graphql_ai.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/08_ecosystem_and_operations/cli_proxy_graphql_ai.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/08_ecosystem_and_operations/cli_proxy_graphql_ai.html" />
+  </url>
+  <url>
+    <loc>https://fastapi.drawlib.com/user_guide/ja/08_ecosystem_and_operations/settings_and_databases.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/08_ecosystem_and_operations/settings_and_databases.html" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/08_ecosystem_and_operations/settings_and_databases.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/08_ecosystem_and_operations/settings_and_databases.html" />
+  </url>
+</urlset>

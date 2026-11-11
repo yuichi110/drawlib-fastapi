@@ -1,0 +1,713 @@
+<!--
+ Copyright (c) 2026 Yuichi Ito (yuichi@yuichi.com)
+
+ This software is licensed under the Apache License, Version 2.0.
+ For more information, please visit: https://github.com/yuichi110/drawlib
+
+ This software is provided "as is", without warranty of any kind,
+ express or implied, including but not limited to the warranties of
+ merchantability, fitness for a particular purpose and noninfringement.
+-->
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pydantic-settings &amp; SQL Databases — FastAPI User Guide (Unofficial)</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-S9N5BZ1VRC"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-S9N5BZ1VRC');
+    </script>
+    <script>
+        (function() {
+            const saved = localStorage.getItem('drawlib-theme');
+            if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    
+    
+    
+    <link rel="alternate" hreflang="en" href="https://fastapi.drawlib.com/user_guide/en/08_ecosystem_and_operations/settings_and_databases.html">
+    
+    <link rel="alternate" hreflang="ja" href="https://fastapi.drawlib.com/user_guide/ja/08_ecosystem_and_operations/settings_and_databases.html">
+    
+    <link rel="alternate" hreflang="x-default" href="https://fastapi.drawlib.com/user_guide/en/08_ecosystem_and_operations/settings_and_databases.html">
+    
+    
+    
+    <meta name="description" content="FastAPI v0.162.2 pairs typed 12-Factor environment configuration (pydantic-settings with @lru_cache dependency caching) and unified relational ORM/schema…">
+    <link rel="canonical" href="https://fastapi.drawlib.com/user_guide/en/08_ecosystem_and_operations/settings_and_databases.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="FastAPI User Guide">
+    <meta property="og:title" content="pydantic-settings &amp; SQL Databases — FastAPI User Guide">
+    <meta property="og:description" content="FastAPI v0.162.2 pairs typed 12-Factor environment configuration (pydantic-settings with @lru_cache dependency caching) and unified relational ORM/schema…">
+    <meta property="og:url" content="https://fastapi.drawlib.com/user_guide/en/08_ecosystem_and_operations/settings_and_databases.html">
+    <meta property="og:image" content="https://fastapi.drawlib.com/user_guide/_assets/ogp.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="ja_JP">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="pydantic-settings &amp; SQL Databases — FastAPI User Guide">
+    <meta name="twitter:description" content="FastAPI v0.162.2 pairs typed 12-Factor environment configuration (pydantic-settings with @lru_cache dependency caching) and unified relational ORM/schema…">
+    <meta name="twitter:image" content="https://fastapi.drawlib.com/user_guide/_assets/ogp.png">
+    
+    
+    <link rel="icon" type="image/png" href="../../_assets/favicon.png">
+    
+    
+    <link rel="stylesheet" href="../style.css">
+    
+    
+</head>
+<body>
+    
+    
+    
+    <div class="demo-banner" role="region" aria-label="Portal Navigation">
+        <div class="demo-banner-inner">
+            <span class="demo-banner-badge">DRAWLIB SHOWCASE</span>
+            
+            <span class="demo-banner-text">
+                Unofficial <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">FastAPI</a> (v0.162.2) Documentation built with <a href="https://www.drawlib.com/" target="_blank" rel="noopener noreferrer">Drawlib</a>
+            </span>
+            <span class="demo-banner-links">
+                <a href="../../../index.html">All Portals</a>
+                <span class="demo-banner-sep">·</span>
+                <strong style="color:#ffffff;">User Guide</strong>
+                <span class="demo-banner-sep">·</span>
+                <a href="../../../api/index.html">API Reference</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="../../../architecture/index.html">Architecture</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="../../../pni501/index.html">PNI501 Audit</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official Docs ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+                <span class="demo-banner-sep">·</span>
+                <a href="https://www.drawlib.com/" target="_blank" rel="noopener noreferrer">Drawlib ↗</a>
+            </span>
+            
+        </div>
+    </div>
+    
+    <div class="doc-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-brand" aria-label="FastAPI User Guide">
+                    
+                    FastAPI User Guide
+                    
+                </a>
+                <div class="sidebar-header-actions">
+                    <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">
+                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                    <button type="button" id="menu-toggle" class="menu-toggle-btn" aria-label="Toggle navigation" aria-expanded="false">
+                        <svg class="icon-hamburger" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        <svg class="icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="sidebar-menu">
+                
+                    
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../index.html" >Guide Overview</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">1. Introduction &amp; Quickstart</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../01_getting_started/overview.html" >Why FastAPI &amp; Design Philosophy</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../01_getting_started/quickstart.html" >Quickstart &amp; Interactive OpenAPI</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">2. Scaling to 100k+ LOC</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../02_enterprise_architecture/modular_design.html" >Bounded Contexts &amp; Layering</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../02_enterprise_architecture/di_lifespan_testing.html" >Enterprise DI, Lifespan &amp; Testing</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">3. Routing, Validation &amp; Models</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../03_routing_and_models/parameters_and_validation.html" >Path, Query, Header, Cookie &amp; Body</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../03_routing_and_models/responses_and_openapi.html" >Response Serialization &amp; OpenAPI 3.1</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../03_routing_and_models/advanced_types_and_models.html" >Parameter Models, Extra Types &amp; Examples</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../03_routing_and_models/custom_request_and_route.html" >Custom Request &amp; APIRoute Classes</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">4. Dependency Injection &amp; Security</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../04_dependencies_and_security/dependency_injection.html" >Dependency Graph, Caching &amp; Scopes</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../04_dependencies_and_security/security_and_auth.html" >Authentication &amp; OAuth2 Scopes</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../04_dependencies_and_security/jwt_and_websocket_security.html" >JWT (PyJWT + Argon2) &amp; WS Security</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">5. Async, Middleware &amp; Streaming</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../05_async_and_realtime/concurrency_and_middleware.html" >ASGI Middleware &amp; Threadpool</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../05_async_and_realtime/sse_websockets_streaming.html" >Native SSE, JSONL &amp; WebSockets</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">6. Observability, Errors &amp; Testing</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../06_observability_and_testing/telemetry_and_errors.html" >Native OpenTelemetry &amp; Exceptions</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../06_observability_and_testing/testing_and_deployment.html" >Testing Patterns &amp; Production ASGI</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">7. Frontend, Sub-Apps &amp; OpenAPI</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="../07_frontend_and_openapi_ext/frontend_templates_mounts.html" >SPA frontend(), StaticFiles &amp; Mounts</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="../07_frontend_and_openapi_ext/webhooks_callbacks_sdks.html" >Webhooks, Callbacks, SDKs &amp; Docs UI</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">8. Settings, Databases &amp; Ecosystem</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item active">
+                                <a href="settings_and_databases.html" >pydantic-settings &amp; SQL Databases</a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="cli_proxy_graphql_ai.html" >FastAPI CLI, Proxies, GraphQL &amp; AI</a>
+                            </li>
+                            
+                        </ul>
+                    
+                        
+                        <div class="sidebar-heading">Companion Guides &amp; Links</div>
+                        
+                        <ul class="nav-list">
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/" target="_blank" rel="noopener noreferrer">All Portals (Showcase Hub)<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/api/" target="_blank" rel="noopener noreferrer">FastAPI API Reference<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/architecture/" target="_blank" rel="noopener noreferrer">FastAPI Internal Architecture<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.drawlib.com/pni501/" target="_blank" rel="noopener noreferrer">PNI501 Diagnostic Report<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">Official FastAPI Docs<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                            <li class="nav-item ">
+                                <a href="https://github.com/yuichi110/drawlib-fastapi" target="_blank" rel="noopener noreferrer">GitHub Repository<svg class="nav-external-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></a>
+                            </li>
+                            
+                        </ul>
+                    
+                
+            </div>
+        </aside>
+        <div class="content-wrapper">
+            <header class="top-bar">
+                <div class="breadcrumbs">
+                    <span class="crumb">Docs</span>
+                    <span class="crumb-separator">&raquo;</span>
+                    <span class="crumb active">pydantic-settings &amp; SQL Databases</span>
+                </div>
+                
+                <div class="lang-switcher">
+                    <details class="lang-dropdown">
+                        <summary class="lang-dropdown-btn" aria-label="Select language">
+                            <svg class="lang-globe-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            <span class="lang-current-label">English</span>
+                            <svg class="lang-caret-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </summary>
+                        <div class="lang-dropdown-menu" role="menu">
+                            
+                            <a href="settings_and_databases.html" class="lang-option active" lang="en" hreflang="en" aria-current="page">
+                                <span>English</span>
+                                
+                                <svg class="lang-check-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                
+                            </a>
+                            
+                            <a href="../../ja/08_ecosystem_and_operations/settings_and_databases.html" class="lang-option" lang="ja" hreflang="ja" >
+                                <span>日本語</span>
+                                
+                            </a>
+                            
+                        </div>
+                    </details>
+                </div>
+                
+            </header>
+            <main class="main-content">
+                <h1>pydantic-settings &amp; SQL Databases</h1>
+<p>FastAPI <code>v0.162.2</code> pairs typed 12-Factor environment configuration (<code>pydantic-settings</code> with <code>@lru_cache</code> dependency caching) and unified relational ORM/schema models (<code>SQLModel</code> with per-request <code>yield</code> sessions) so external infrastructure remains 100% swappable in tests via <code>app.dependency_overrides</code>.</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/08_ecosystem_and_operations/settings_and_databases/pydantic_settings_di_flow.png" alt="settings_and_databases_1" />
+  <figcaption class="drawlib-caption">Typed 12-Factor Configuration Pipeline: Environment Sources -> BaseSettings -> @lru_cache DI -> Hermetic Test Override</figcaption>
+</figure>
+<h2>1. Typed 12-Factor Configuration with <code>pydantic-settings</code></h2>
+<p>Hardcoding URLs or scattering untyped <code>os.getenv()</code> calls across modules hides missing environment variables until a cold code path executes in production. Installing <code>fastapi[standard]</code> includes <code>pydantic-settings &gt;=2.0.0</code>, allowing your application to validate environment variables, <code>.env</code> files, and mounted secret files through the exact same Rust-backed Pydantic v2 engine used for HTTP request bodies.</p>
+<h3>Source Precedence, <code>SettingsConfigDict</code> &amp; <code>SecretStr</code></h3>
+<p>When <code>BaseSettings</code> initializes, it merges configuration sources in strict priority order so explicit test keyword arguments and container environment variables always win over local developer <code>.env</code> files:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Priority</th>
+<th style="text-align:left">Configuration Source</th>
+<th style="text-align:left">Typical Operational Usage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>1 (Highest)</strong></td>
+<td style="text-align:left">Explicit <code>__init__</code> keyword arguments</td>
+<td style="text-align:left"><code>Settings(app_name=&quot;Test API&quot;)</code> inside <code>pytest</code> dependency overrides</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>2</strong></td>
+<td style="text-align:left">OS Environment Variables (<code>os.environ</code>)</td>
+<td style="text-align:left">Kubernetes <code>ConfigMap</code> / <code>Secret</code> env vars &amp; Cloud Run runtime config</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>3</strong></td>
+<td style="text-align:left"><code>.env</code> dotenv file (<code>env_file=&quot;.env&quot;</code>)</td>
+<td style="text-align:left">Local developer workstation defaults (excluded via <code>.gitignore</code>)</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>4</strong></td>
+<td style="text-align:left">Mounted secret directory (<code>secrets_dir</code>)</td>
+<td style="text-align:left">Container secret volume mounts (<code>secrets_dir=&quot;/run/secrets&quot;</code>)</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>5 (Lowest)</strong></td>
+<td style="text-align:left">Class field default values</td>
+<td style="text-align:left">Safe non-sensitive defaults (<code>items_per_user: int = 50</code>)</td>
+</tr>
+</tbody>
+</table>
+<p>Two defensive rules eliminate configuration leaks and startup crashes in shared environments:</p>
+<ol>
+<li><strong>Configure <code>SettingsConfigDict(env_file=&quot;.env&quot;, extra=&quot;ignore&quot;)</code></strong>: Local developer <code>.env</code> files frequently contain auxiliary variables for Docker Compose or frontend tooling. Setting <code>extra=&quot;ignore&quot;</code> prevents unrelated keys from raising a <code>ValidationError</code> on boot.</li>
+<li><strong>Wrap Credentials in <code>SecretStr</code></strong>: Storing API keys, database passwords, or webhook signing keys as <code>SecretStr</code> redacts them to <code>'**********'</code> whenever <code>Settings</code> is formatted into logs, tracebacks, or structured telemetry, requiring explicit <code>.get_secret_value()</code> access at the call site.</li>
+</ol>
+<h3>Why <code>@lru_cache</code> + <code>Depends()</code> Beats Module Globals</h3>
+<p>Instantiating <code>settings = Settings()</code> at module import time forces every test module that imports <code>app.main</code> to have production environment variables present immediately, and makes parallel <code>pytest-xdist</code> tests race if they mutate <code>os.environ</code>.</p>
+<p>Wrapping <code>Settings()</code> in <code>@lru_cache def get_settings() -&gt; Settings:</code> and injecting <code>SettingsDep = Annotated[Settings, Depends(get_settings)]</code> gives you the best of both worlds (extending the <a href="../04_dependencies_and_security/dependency_injection.html">Dependant DAG &amp; Caching</a> pattern):</p>
+<ul>
+<li><strong>Parsed Once in Production</strong>: <code>@lru_cache</code> reads <code>.env</code> from disk and runs Pydantic validation only on the first call, serving subsequent requests from memory in nanoseconds.</li>
+<li><strong>Zero-Env-Mutation Test Isolation</strong>: Tests replace <code>app.dependency_overrides[get_settings]</code> with a function returning <code>Settings(...)</code> directly via constructor arguments—never touching <code>.env</code> or <code>os.environ</code> (and calling <code>get_settings.cache_clear()</code> only if testing <code>get_settings</code> itself).</li>
+</ul>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">lru_cache</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">FastAPI</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.testclient</span><span class="w"> </span><span class="kn">import</span> <span class="n">TestClient</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">SecretStr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic_settings</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseSettings</span><span class="p">,</span> <span class="n">SettingsConfigDict</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Settings</span><span class="p">(</span><span class="n">BaseSettings</span><span class="p">):</span>
+    <span class="n">app_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"Billing Ledger API"</span>
+    <span class="n">admin_email</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"ops@example.com"</span>
+    <span class="n">items_per_user</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span>
+    <span class="n">webhook_signing_secret</span><span class="p">:</span> <span class="n">SecretStr</span> <span class="o">=</span> <span class="n">SecretStr</span><span class="p">(</span><span class="s2">"whsec_dev_placeholder"</span><span class="p">)</span>
+
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">SettingsConfigDict</span><span class="p">(</span>
+        <span class="n">env_file</span><span class="o">=</span><span class="s2">".env"</span><span class="p">,</span>
+        <span class="n">env_file_encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">,</span>
+        <span class="n">extra</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="nd">@lru_cache</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_settings</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Settings</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">Settings</span><span class="p">()</span>
+
+
+<span class="n">SettingsDep</span> <span class="o">=</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Settings</span><span class="p">,</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_settings</span><span class="p">)]</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">"Settings Demo"</span><span class="p">)</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/info"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_service_info</span><span class="p">(</span><span class="n">settings</span><span class="p">:</span> <span class="n">SettingsDep</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">bool</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"app_name"</span><span class="p">:</span> <span class="n">settings</span><span class="o">.</span><span class="n">app_name</span><span class="p">,</span>
+        <span class="s2">"admin_email"</span><span class="p">:</span> <span class="n">settings</span><span class="o">.</span><span class="n">admin_email</span><span class="p">,</span>
+        <span class="s2">"items_per_user"</span><span class="p">:</span> <span class="n">settings</span><span class="o">.</span><span class="n">items_per_user</span><span class="p">,</span>
+        <span class="s2">"masked_repr"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">webhook_signing_secret</span><span class="p">),</span>
+        <span class="s2">"has_signing_key"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">webhook_signing_secret</span><span class="o">.</span><span class="n">get_secret_value</span><span class="p">())</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_settings_dependency_override_isolation</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_settings_override</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Settings</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Settings</span><span class="p">(</span>
+            <span class="n">app_name</span><span class="o">=</span><span class="s2">"Test Billing API"</span><span class="p">,</span>
+            <span class="n">admin_email</span><span class="o">=</span><span class="s2">"ci-test@example.com"</span><span class="p">,</span>
+            <span class="n">webhook_signing_secret</span><span class="o">=</span><span class="n">SecretStr</span><span class="p">(</span><span class="s2">"whsec_test_isolated_key"</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="n">app</span><span class="o">.</span><span class="n">dependency_overrides</span><span class="p">[</span><span class="n">get_settings</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_settings_override</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">TestClient</span><span class="p">(</span><span class="n">app</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/info"</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="n">res</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span>
+            <span class="k">assert</span> <span class="n">res</span><span class="o">.</span><span class="n">json</span><span class="p">()</span> <span class="o">==</span> <span class="p">{</span>
+                <span class="s2">"app_name"</span><span class="p">:</span> <span class="s2">"Test Billing API"</span><span class="p">,</span>
+                <span class="s2">"admin_email"</span><span class="p">:</span> <span class="s2">"ci-test@example.com"</span><span class="p">,</span>
+                <span class="s2">"items_per_user"</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span>
+                <span class="s2">"masked_repr"</span><span class="p">:</span> <span class="s2">"**********"</span><span class="p">,</span>
+                <span class="s2">"has_signing_key"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="p">}</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">app</span><span class="o">.</span><span class="n">dependency_overrides</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+</code></pre>
+<hr />
+<h2>2. Relational Persistence &amp; Hermetic Testing with <code>SQLModel</code></h2>
+<p>Created by the author of FastAPI (<code>@tiangolo</code>), <strong><code>SQLModel</code></strong> unifies <strong>SQLAlchemy 2.0</strong> and <strong>Pydantic v2</strong> under a single class hierarchy so database table definitions and HTTP validation schemas share field types, constraints, and editor autocomplete without duplicating boilerplate.</p>
+<figure class="drawlib-image" style="text-align: center;">
+  <img src="../../images/08_ecosystem_and_operations/settings_and_databases/sqlmodel_session_and_testing.png" alt="settings_and_databases_2" />
+  <figcaption class="drawlib-caption">FastAPI + SQLModel Multi-Model Architecture, Per-Request Session Yield Lifecycle & StaticPool SQLite Test Isolation</figcaption>
+</figure>
+<h3>The 4-Model <code>SQLModel</code> Pattern (Preventing Leaks &amp; Nullable IDs)</h3>
+<p>Exposing a single <code>table=True</code> ORM model directly in request and response signatures introduces three classic API flaws: clients can spoof primary keys on <code>POST</code>, internal columns (<code>secret_name</code>, password hashes) leak in JSON responses, and generated TypeScript SDKs mark <code>id</code> as <code>int | null</code> even though persisted rows always have an integer <code>id</code>.</p>
+<p>Splitting responsibilities across four lightweight <code>SQLModel</code> classes eliminates all three flaws while keeping <a href="../03_routing_and_models/responses_and_openapi.html">OpenAPI 3.1 response serialization</a> exact:</p>
+<ol>
+<li><strong><code>HeroBase(SQLModel)</code></strong>: Declares shared validated columns (<code>name</code>, <code>age</code>) once with <code>table=False</code> (the default).</li>
+<li><strong><code>Hero(HeroBase, table=True)</code></strong>: Represents the physical SQL table (<code>id: int | None = Field(default=None, primary_key=True)</code> because <code>id</code> is <code>None</code> in Python until the database assigns it on <code>session.commit()</code>, plus server-only columns like <code>secret_name</code>).</li>
+<li><strong><code>HeroCreate(HeroBase)</code> &amp; <code>HeroPublic(HeroBase)</code></strong>: Pure Pydantic data schemas (<code>table=False</code>). <code>HeroCreate</code> accepts <code>secret_name</code> on input without allowing <code>id</code> injection; <code>HeroPublic</code> declares <code>id: int</code> (strictly non-null in OpenAPI!) and omits <code>secret_name</code> so sensitive columns are stripped automatically during Rust response serialization.</li>
+<li><strong><code>HeroUpdate(SQLModel)</code></strong>: Declares all mutable fields as optional (<code>None</code> defaults) so <code>PATCH</code> handlers can call <code>hero.model_dump(exclude_unset=True)</code> and apply sparse updates cleanly with <code>hero_db.sqlmodel_update(hero_data)</code>.</li>
+</ol>
+<h3>Per-Request <code>Session</code> Lifecycle &amp; <code>StaticPool</code> SQLite Testing</h3>
+<p>Database sessions hold stateful identity maps and open transactions, so <strong>never share a <code>Session</code> globally across requests</strong>. Instead, yield a fresh <code>Session(engine)</code> per request via <code>SessionDep = Annotated[Session, Depends(get_session)]</code>, declaring synchronous SQLModel endpoints with standard <code>def</code> so FastAPI executes blocking SQL I/O safely on its worker threadpool.</p>
+<p>When testing SQLModel endpoints against an in-memory SQLite database (<code>sqlite://</code>), two engine options are mandatory:</p>
+<ul>
+<li><strong><code>poolclass=StaticPool</code></strong>: By default, SQLite opens an empty, isolated in-memory database for every new connection checkout. <code>StaticPool</code> reuses a single underlying connection across the fixture setup (<code>SQLModel.metadata.create_all(engine)</code>) and all <code>TestClient</code> requests within that test.</li>
+<li><strong><code>connect_args={&quot;check_same_thread&quot;: False}</code></strong>: Because <code>pytest</code> initializes tables on the main thread while FastAPI dispatches synchronous <code>def</code> routes in a worker threadpool thread, <code>check_same_thread=False</code> allows SQLite to safely cross that thread boundary during a single request cycle.</li>
+</ul>
+<pre><code class="language-python"><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Generator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">Query</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.testclient</span><span class="w"> </span><span class="kn">import</span> <span class="n">TestClient</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pytest</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlmodel</span><span class="w"> </span><span class="kn">import</span> <span class="n">Field</span><span class="p">,</span> <span class="n">Session</span><span class="p">,</span> <span class="n">SQLModel</span><span class="p">,</span> <span class="n">create_engine</span><span class="p">,</span> <span class="n">select</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlmodel.pool</span><span class="w"> </span><span class="kn">import</span> <span class="n">StaticPool</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">HeroBase</span><span class="p">(</span><span class="n">SQLModel</span><span class="p">):</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">min_length</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">80</span><span class="p">)</span>
+    <span class="n">age</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">le</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Hero</span><span class="p">(</span><span class="n">HeroBase</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="nb">id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">secret_name</span><span class="p">:</span> <span class="nb">str</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">HeroCreate</span><span class="p">(</span><span class="n">HeroBase</span><span class="p">):</span>
+    <span class="n">secret_name</span><span class="p">:</span> <span class="nb">str</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">HeroPublic</span><span class="p">(</span><span class="n">HeroBase</span><span class="p">):</span>
+    <span class="nb">id</span><span class="p">:</span> <span class="nb">int</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">HeroUpdate</span><span class="p">(</span><span class="n">SQLModel</span><span class="p">):</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">min_length</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">80</span><span class="p">)</span>
+    <span class="n">age</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">le</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
+    <span class="n">secret_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<span class="n">prod_engine</span> <span class="o">=</span> <span class="n">create_engine</span><span class="p">(</span>
+    <span class="s2">"sqlite:///./database.db"</span><span class="p">,</span>
+    <span class="n">connect_args</span><span class="o">=</span><span class="p">{</span><span class="s2">"check_same_thread"</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_session</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">Session</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+    <span class="k">with</span> <span class="n">Session</span><span class="p">(</span><span class="n">prod_engine</span><span class="p">)</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="n">session</span>
+
+
+<span class="n">SessionDep</span> <span class="o">=</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Session</span><span class="p">,</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_session</span><span class="p">)]</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">"SQLModel Heroes API"</span><span class="p">)</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/heroes/"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">HeroPublic</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">201</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_hero</span><span class="p">(</span><span class="n">hero</span><span class="p">:</span> <span class="n">HeroCreate</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">SessionDep</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Hero</span><span class="p">:</span>
+    <span class="n">db_hero</span> <span class="o">=</span> <span class="n">Hero</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">hero</span><span class="p">)</span>
+    <span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">db_hero</span><span class="p">)</span>
+    <span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="n">session</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">db_hero</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">db_hero</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/heroes/"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="nb">list</span><span class="p">[</span><span class="n">HeroPublic</span><span class="p">])</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_heroes</span><span class="p">(</span>
+    <span class="n">session</span><span class="p">:</span> <span class="n">SessionDep</span><span class="p">,</span>
+    <span class="n">offset</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Query</span><span class="p">(</span><span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">limit</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Query</span><span class="p">(</span><span class="n">ge</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">le</span><span class="o">=</span><span class="mi">100</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Hero</span><span class="p">]:</span>
+    <span class="n">statement</span> <span class="o">=</span> <span class="n">select</span><span class="p">(</span><span class="n">Hero</span><span class="p">)</span><span class="o">.</span><span class="n">offset</span><span class="p">(</span><span class="n">offset</span><span class="p">)</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="n">limit</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">exec</span><span class="p">(</span><span class="n">statement</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">())</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s2">"/heroes/</span><span class="si">{hero_id}</span><span class="s2">"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">HeroPublic</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">update_hero</span><span class="p">(</span><span class="n">hero_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">hero</span><span class="p">:</span> <span class="n">HeroUpdate</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">SessionDep</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Hero</span><span class="p">:</span>
+    <span class="n">hero_db</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">Hero</span><span class="p">,</span> <span class="n">hero_id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">hero_db</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Hero not found"</span><span class="p">)</span>
+    <span class="n">hero_data</span> <span class="o">=</span> <span class="n">hero</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">exclude_unset</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">hero_db</span><span class="o">.</span><span class="n">sqlmodel_update</span><span class="p">(</span><span class="n">hero_data</span><span class="p">)</span>
+    <span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">hero_db</span><span class="p">)</span>
+    <span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="n">session</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">hero_db</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">hero_db</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s2">"/heroes/</span><span class="si">{hero_id}</span><span class="s2">"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">delete_hero</span><span class="p">(</span><span class="n">hero_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">SessionDep</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]:</span>
+    <span class="n">hero_db</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">Hero</span><span class="p">,</span> <span class="n">hero_id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">hero_db</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Hero not found"</span><span class="p">)</span>
+    <span class="n">session</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">hero_db</span><span class="p">)</span>
+    <span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"ok"</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+
+
+<span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"session"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">session_fixture</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">Session</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+    <span class="n">engine</span> <span class="o">=</span> <span class="n">create_engine</span><span class="p">(</span>
+        <span class="s2">"sqlite://"</span><span class="p">,</span>
+        <span class="n">connect_args</span><span class="o">=</span><span class="p">{</span><span class="s2">"check_same_thread"</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+        <span class="n">poolclass</span><span class="o">=</span><span class="n">StaticPool</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">SQLModel</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">create_all</span><span class="p">(</span><span class="n">engine</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">Session</span><span class="p">(</span><span class="n">engine</span><span class="p">)</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="n">session</span>
+
+
+<span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"client"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">client_fixture</span><span class="p">(</span><span class="n">session</span><span class="p">:</span> <span class="n">Session</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">TestClient</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_session_override</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Session</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">session</span>
+
+    <span class="n">app</span><span class="o">.</span><span class="n">dependency_overrides</span><span class="p">[</span><span class="n">get_session</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_session_override</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">TestClient</span><span class="p">(</span><span class="n">app</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">client</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">app</span><span class="o">.</span><span class="n">dependency_overrides</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_sqlmodel_crud_and_secret_filtering</span><span class="p">(</span><span class="n">client</span><span class="p">:</span> <span class="n">TestClient</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">created</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+        <span class="s2">"/heroes/"</span><span class="p">,</span>
+        <span class="n">json</span><span class="o">=</span><span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"Deadpond"</span><span class="p">,</span> <span class="s2">"age"</span><span class="p">:</span> <span class="mi">34</span><span class="p">,</span> <span class="s2">"secret_name"</span><span class="p">:</span> <span class="s2">"Dive Wilson"</span><span class="p">},</span>
+    <span class="p">)</span>
+    <span class="k">assert</span> <span class="n">created</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">201</span>
+    <span class="k">assert</span> <span class="n">created</span><span class="o">.</span><span class="n">json</span><span class="p">()</span> <span class="o">==</span> <span class="p">{</span><span class="s2">"id"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"Deadpond"</span><span class="p">,</span> <span class="s2">"age"</span><span class="p">:</span> <span class="mi">34</span><span class="p">}</span>
+
+    <span class="n">patched</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s2">"/heroes/1"</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="p">{</span><span class="s2">"age"</span><span class="p">:</span> <span class="mi">35</span><span class="p">})</span>
+    <span class="k">assert</span> <span class="n">patched</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span>
+    <span class="k">assert</span> <span class="n">patched</span><span class="o">.</span><span class="n">json</span><span class="p">()</span> <span class="o">==</span> <span class="p">{</span><span class="s2">"id"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"Deadpond"</span><span class="p">,</span> <span class="s2">"age"</span><span class="p">:</span> <span class="mi">35</span><span class="p">}</span>
+
+    <span class="n">listed</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/heroes/?offset=0&amp;limit=10"</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">listed</span><span class="o">.</span><span class="n">json</span><span class="p">()</span> <span class="o">==</span> <span class="p">[{</span><span class="s2">"id"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"Deadpond"</span><span class="p">,</span> <span class="s2">"age"</span><span class="p">:</span> <span class="mi">35</span><span class="p">}]</span>
+
+    <span class="k">assert</span> <span class="n">client</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s2">"/heroes/1"</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span> <span class="o">==</span> <span class="p">{</span><span class="s2">"ok"</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+    <span class="k">assert</span> <span class="n">client</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s2">"/heroes/1"</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="p">{</span><span class="s2">"age"</span><span class="p">:</span> <span class="mi">36</span><span class="p">})</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">404</span>
+</code></pre>
+<p>Continue to <a href="cli_proxy_graphql_ai.html">FastAPI CLI, Proxies, GraphQL &amp; AI</a> to explore <code>fastapi dev</code> / <code>fastapi run</code>, reverse proxy <code>--root-path</code> configuration, Strawberry GraphQL routers, and AI-assisted development with <code>library-skills</code>.</p>
+
+            </main>
+            <footer class="footer">
+                
+                FastAPI® is a registered trademark of Sebastián Ramírez (<a href="https://github.com/tiangolo" target="_blank" rel="noopener noreferrer">@tiangolo</a>). Unofficial guide — not affiliated with or endorsed by the official FastAPI project (<a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">fastapi.tiangolo.com</a>).
+                
+            </footer>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Theme toggle
+            const themeBtn = document.getElementById('theme-toggle');
+            if (themeBtn) {
+                themeBtn.addEventListener('click', function() {
+                    const current = document.documentElement.getAttribute('data-theme');
+                    const next = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    localStorage.setItem('drawlib-theme', next);
+                });
+            }
+
+            // Language dropdown outside-click & Escape close
+            const langDropdowns = document.querySelectorAll('.lang-dropdown');
+            if (langDropdowns.length > 0) {
+                document.addEventListener('click', function(e) {
+                    langDropdowns.forEach(function(dd) {
+                        if (dd.hasAttribute('open') && !dd.contains(e.target)) {
+                            dd.removeAttribute('open');
+                        }
+                    });
+                });
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        langDropdowns.forEach(function(dd) {
+                            dd.removeAttribute('open');
+                        });
+                    }
+                });
+            }
+
+            // Mobile menu toggle
+            const menuBtn = document.getElementById('menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            if (menuBtn && sidebar) {
+                function setMenuOpen(open) {
+                    sidebar.classList.toggle('is-open', open);
+                    menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    document.body.classList.toggle('menu-open', open);
+                    if (open) {
+                        const menu = sidebar.querySelector('.sidebar-menu');
+                        if (menu) {
+                            menu.scrollTop = 0;
+                        }
+                    }
+                }
+
+                menuBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const willOpen = !sidebar.classList.contains('is-open');
+                    setMenuOpen(willOpen);
+                });
+
+                // Close menu when clicking outside sidebar
+                document.addEventListener('click', function(e) {
+                    if (sidebar.classList.contains('is-open') && !sidebar.contains(e.target)) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                // Close menu when a navigation link is clicked
+                const navLinks = sidebar.querySelectorAll('.nav-item a');
+                navLinks.forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        setMenuOpen(false);
+                    });
+                });
+
+                // Close on Escape key
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                // Reset menu state when resized above mobile breakpoint
+                window.addEventListener('resize', function() {
+                    if (window.innerWidth > 768 && sidebar.classList.contains('is-open')) {
+                        setMenuOpen(false);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
